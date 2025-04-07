@@ -15,9 +15,12 @@ const OrdersTable: React.FC = () => {
   const [filter, setFilter] = useState<"all" | OrderStatus>("all");
   const navigate = useNavigate();
 
+  // Safety check: ensure orders is an array before filtering
+  const safeOrders = Array.isArray(orders) ? orders : [];
+
   const filteredOrders = filter === "all" 
-    ? orders
-    : orders.filter(order => order.status === filter);
+    ? safeOrders
+    : safeOrders.filter(order => order.status === filter);
 
   const handleStatusChange = (index: number, status: OrderStatus) => {
     updateOrderStatus(index, status);
@@ -92,7 +95,7 @@ const OrdersTable: React.FC = () => {
                         </SelectContent>
                       </Select>
                     </td>
-                    <td>{order.items.length}</td>
+                    <td>{order.items && order.items.length ? order.items.length : 0}</td>
                     <td>{formatCurrency(order.total)}</td>
                     <td className="flex flex-wrap gap-1">
                       <Button 
