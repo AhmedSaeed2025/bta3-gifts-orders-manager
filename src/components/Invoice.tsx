@@ -5,6 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Order, ORDER_STATUS_LABELS } from "@/types";
 import { formatCurrency } from "@/lib/utils";
 import { useReactToPrint } from "react-to-print";
+import { Facebook } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface InvoiceProps {
   order: Order;
@@ -70,37 +72,47 @@ const Invoice: React.FC<InvoiceProps> = ({ order }) => {
           </div>
           
           <h3 className="font-semibold mb-2 text-lg">تفاصيل الطلب</h3>
-          <table className="gift-table mb-6">
-            <thead>
-              <tr>
-                <th>نوع المنتج</th>
-                <th>المقاس</th>
-                <th>الكمية</th>
-                <th>سعر الوحدة</th>
-                <th>الإجمالي</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>{order.productType}</td>
-                <td>{order.size}</td>
-                <td>{order.quantity}</td>
-                <td>{formatCurrency(order.price)}</td>
-                <td>{formatCurrency(order.price * order.quantity)}</td>
-              </tr>
-            </tbody>
-          </table>
+          <Table className="mb-6">
+            <TableHeader>
+              <TableRow>
+                <TableHead>نوع المنتج</TableHead>
+                <TableHead>المقاس</TableHead>
+                <TableHead>الكمية</TableHead>
+                <TableHead>سعر الوحدة</TableHead>
+                <TableHead>الإجمالي</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {order.items.map((item, index) => (
+                <TableRow key={index}>
+                  <TableCell>{item.productType}</TableCell>
+                  <TableCell>{item.size}</TableCell>
+                  <TableCell>{item.quantity}</TableCell>
+                  <TableCell>{formatCurrency(item.price)}</TableCell>
+                  <TableCell>{formatCurrency(item.price * item.quantity)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
           
           <div className="flex justify-end">
             <div className="w-full md:w-64">
               <div className="flex justify-between py-2">
-                <span className="font-medium">الإجمالي:</span>
-                <span>{formatCurrency(order.price * order.quantity)}</span>
+                <span className="font-medium">إجمالي المنتجات:</span>
+                <span>{formatCurrency(order.items.reduce((sum, item) => sum + item.price * item.quantity, 0))}</span>
               </div>
-              <div className="flex justify-between py-2 border-t border-gray-200">
-                <span className="font-medium">الخصم:</span>
-                <span>{formatCurrency(order.discount)}</span>
-              </div>
+              {order.shippingCost > 0 && (
+                <div className="flex justify-between py-2 border-t border-gray-200">
+                  <span className="font-medium">مصاريف الشحن:</span>
+                  <span>{formatCurrency(order.shippingCost)}</span>
+                </div>
+              )}
+              {order.discount > 0 && (
+                <div className="flex justify-between py-2 border-t border-gray-200">
+                  <span className="font-medium">الخصم:</span>
+                  <span>{formatCurrency(order.discount)}</span>
+                </div>
+              )}
               <div className="flex justify-between py-2 border-t border-gray-200">
                 <span className="font-bold text-lg">المجموع الكلي:</span>
                 <span className="font-bold text-lg">{formatCurrency(order.total)}</span>
@@ -110,7 +122,16 @@ const Invoice: React.FC<InvoiceProps> = ({ order }) => {
           
           <div className="mt-8 pt-6 border-t text-center text-sm text-gray-500">
             <p>شكراً لثقتكم في #بتاع_هدايا_الأصلى</p>
-            <p>للتواصل: 01234567890</p>
+            <div className="flex justify-center items-center gap-2 mt-2">
+              <span>للتواصل: 01113977005</span>
+            </div>
+            <div className="flex justify-center items-center gap-2 mt-2">
+              <Facebook size={16} />
+              <a href="https://www.facebook.com/D4Uofficial" className="text-blue-600 hover:underline">
+                https://www.facebook.com/D4Uofficial
+              </a>
+            </div>
+            <p className="mt-4 text-xs">جميع الحقوق محفوظة #بتاع_هدايا_الأصلي 2025</p>
           </div>
         </CardContent>
       </Card>

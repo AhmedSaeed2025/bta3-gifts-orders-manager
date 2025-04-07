@@ -8,88 +8,137 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useOrders } from "@/context/OrderContext";
 import { usePrices } from "@/context/PriceContext";
 import { calculateTotal, calculateProfit } from "@/lib/utils";
+import { Plus, Trash2 } from "lucide-react";
+import { OrderItem } from "@/types";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const OrderForm = () => {
   const { addOrder } = useOrders();
   const { proposedPrices, getProposedPrice } = usePrices();
   
-  const [formData, setFormData] = useState({
+  const [customerData, setCustomerData] = useState({
     paymentMethod: "",
     clientName: "",
     phone: "",
     deliveryMethod: "",
     address: "",
     governorate: "",
+    shippingCost: 0,
+    discount: 0,
+  });
+  
+  const [currentItem, setCurrentItem] = useState({
     productType: "",
     size: "",
     quantity: 1,
     cost: 0,
     price: 0,
-    discount: 0,
   });
+  
+  const [items, setItems] = useState<OrderItem[]>([]);
+
+  // Calculate totals
+  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const totalAmount = subtotal + customerData.shippingCost - customerData.discount;
+  const totalProfit = items.reduce((sum, item) => sum + (item.price - item.cost) * item.quantity, 0);
 
   // Check for proposed prices when product type or size changes
   useEffect(() => {
-    const proposedPrice = getProposedPrice(formData.productType, formData.size);
+    const proposedPrice = getProposedPrice(currentItem.productType, currentItem.size);
     
     if (proposedPrice) {
-      setFormData(prev => ({
+      setCurrentItem(prev => ({
         ...prev,
         cost: proposedPrice.cost,
         price: proposedPrice.price
       }));
     }
-  }, [formData.productType, formData.size, getProposedPrice]);
+  }, [currentItem.productType, currentItem.size, getProposedPrice]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCustomerDataChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type } = e.target;
-    setFormData(prev => ({
+    setCustomerData(prev => ({
       ...prev,
       [name]: type === "number" ? parseFloat(value) || 0 : value,
     }));
   };
 
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({
+  const handleItemChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type } = e.target;
+    setCurrentItem(prev => ({
       ...prev,
-      [name]: value,
+      [name]: type === "number" ? parseFloat(value) || 0 : value,
     }));
+  };
+
+  const handleSelectChange = (section: "customer" | "item", name: string, value: string) => {
+    if (section === "customer") {
+      setCustomerData(prev => ({
+        ...prev,
+        [name]: value,
+      }));
+    } else {
+      setCurrentItem(prev => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
+  };
+  
+  const addItem = () => {
+    if (!currentItem.productType || !currentItem.size || currentItem.quantity < 1) {
+      return;
+    }
+    
+    const profit = (currentItem.price - currentItem.cost) * currentItem.quantity;
+    
+    setItems(prev => [...prev, { ...currentItem, profit }]);
+    
+    // Reset current item form
+    setCurrentItem({
+      productType: "",
+      size: "",
+      quantity: 1,
+      cost: 0,
+      price: 0,
+    });
+  };
+  
+  const removeItem = (index: number) => {
+    setItems(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
-    const total = calculateTotal(formData.price, formData.quantity, formData.discount);
-    const profit = calculateProfit(formData.price, formData.cost, formData.quantity);
+    if (items.length === 0) {
+      alert("يجب إضافة منتج واحد على الأقل");
+      return;
+    }
     
     addOrder({
-      ...formData,
-      address: formData.address || "-",
-      governorate: formData.governorate || "-",
-      quantity: Number(formData.quantity),
-      cost: Number(formData.cost),
-      price: Number(formData.price),
-      discount: Number(formData.discount),
-      total,
-      profit,
+      ...customerData,
+      address: customerData.address || "-",
+      governorate: customerData.governorate || "-",
+      items,
+      total: totalAmount,
+      profit: totalProfit,
       status: "pending"
     });
     
     // Reset form
-    setFormData({
+    setCustomerData({
       paymentMethod: "",
       clientName: "",
       phone: "",
       deliveryMethod: "",
       address: "",
       governorate: "",
-      productType: "",
-      size: "",
-      quantity: 1,
-      cost: 0,
-      price: 0,
+      shippingCost: 0,
       discount: 0,
     });
+    setItems([]);
   };
 
   return (
@@ -98,13 +147,13 @@ const OrderForm = () => {
         <CardTitle className="text-xl">إضافة طلب جديد</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="paymentMethod">طريقة السداد</Label>
               <Select 
-                value={formData.paymentMethod}
-                onValueChange={(value) => handleSelectChange("paymentMethod", value)}
+                value={customerData.paymentMethod}
+                onValueChange={(value) => handleSelectChange("customer", "paymentMethod", value)}
                 required
               >
                 <SelectTrigger>
@@ -123,8 +172,8 @@ const OrderForm = () => {
               <Input 
                 id="clientName" 
                 name="clientName" 
-                value={formData.clientName}
-                onChange={handleChange} 
+                value={customerData.clientName}
+                onChange={handleCustomerDataChange} 
                 required
               />
             </div>
@@ -135,8 +184,8 @@ const OrderForm = () => {
                 id="phone" 
                 name="phone" 
                 type="tel" 
-                value={formData.phone}
-                onChange={handleChange} 
+                value={customerData.phone}
+                onChange={handleCustomerDataChange} 
                 required
               />
             </div>
@@ -144,8 +193,8 @@ const OrderForm = () => {
             <div className="space-y-2">
               <Label htmlFor="deliveryMethod">طريقة الاستلام</Label>
               <Select 
-                value={formData.deliveryMethod}
-                onValueChange={(value) => handleSelectChange("deliveryMethod", value)}
+                value={customerData.deliveryMethod}
+                onValueChange={(value) => handleSelectChange("customer", "deliveryMethod", value)}
                 required
               >
                 <SelectTrigger>
@@ -163,8 +212,8 @@ const OrderForm = () => {
               <Input 
                 id="address" 
                 name="address" 
-                value={formData.address}
-                onChange={handleChange} 
+                value={customerData.address}
+                onChange={handleCustomerDataChange} 
               />
             </div>
             
@@ -173,93 +222,21 @@ const OrderForm = () => {
               <Input 
                 id="governorate" 
                 name="governorate" 
-                value={formData.governorate}
-                onChange={handleChange} 
+                value={customerData.governorate}
+                onChange={handleCustomerDataChange} 
               />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="productType">نوع المنتج</Label>
-              <Select 
-                value={formData.productType}
-                onValueChange={(value) => handleSelectChange("productType", value)}
-                required
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="اختر النوع" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="تابلوه">تابلوه</SelectItem>
-                  <SelectItem value="ماكيت">ماكيت</SelectItem>
-                  <SelectItem value="ميدالية اكليريك">ميدالية اكليريك</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="size">المقاس</Label>
-              <Select 
-                value={formData.size}
-                onValueChange={(value) => handleSelectChange("size", value)}
-                required
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="اختر المقاس" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="15*20 سم">15*20 سم</SelectItem>
-                  <SelectItem value="20*30 سم">20*30 سم</SelectItem>
-                  <SelectItem value="30*40 سم">30*40 سم</SelectItem>
-                  <SelectItem value="40*50 سم">40*50 سم</SelectItem>
-                  <SelectItem value="50*60 سم">50*60 سم</SelectItem>
-                  <SelectItem value="50*70 سم">50*70 سم</SelectItem>
-                  <SelectItem value="ميدالية أكليريك مستطيلة">ميدالية أكليريك مستطيلة</SelectItem>
-                  <SelectItem value="ميدالية اكليريك مجسمة">ميدالية اكليريك مجسمة</SelectItem>
-                  <SelectItem value="دلاية عربية اكليريك ( قطعة )">دلاية عربية اكليريك ( قطعة )</SelectItem>
-                  <SelectItem value="دلاية عربية أكليريك ( قطعتين )">دلاية عربية أكليريك ( قطعتين )</SelectItem>
-                  <SelectItem value="أخرى">أخرى</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="quantity">الكمية</Label>
+              <Label htmlFor="shippingCost">مصاريف الشحن</Label>
               <Input 
-                id="quantity" 
-                name="quantity" 
-                type="number" 
-                min="1"
-                value={formData.quantity}
-                onChange={handleChange} 
-                required
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="cost">تكلفة الصنف</Label>
-              <Input 
-                id="cost" 
-                name="cost" 
-                type="number" 
+                id="shippingCost" 
+                name="shippingCost" 
+                type="number"
                 min="0"
-                step="0.01"
-                value={formData.cost}
-                onChange={handleChange} 
-                required
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="price">سعر البيع</Label>
-              <Input 
-                id="price" 
-                name="price" 
-                type="number" 
-                min="0"
-                step="0.01"
-                value={formData.price}
-                onChange={handleChange} 
-                required
+                step="0.01" 
+                value={customerData.shippingCost}
+                onChange={handleCustomerDataChange} 
               />
             </div>
             
@@ -271,13 +248,167 @@ const OrderForm = () => {
                 type="number" 
                 min="0"
                 step="0.01"
-                value={formData.discount}
-                onChange={handleChange} 
+                value={customerData.discount}
+                onChange={handleCustomerDataChange} 
               />
             </div>
           </div>
           
-          <Button type="submit" className="bg-gift-primary hover:bg-gift-primaryHover">
+          <div className="border-t pt-4">
+            <h3 className="text-lg font-medium mb-4">إضافة المنتجات</h3>
+            
+            <div className="grid md:grid-cols-2 gap-4 mb-4">
+              <div className="space-y-2">
+                <Label htmlFor="productType">نوع المنتج</Label>
+                <Select 
+                  value={currentItem.productType}
+                  onValueChange={(value) => handleSelectChange("item", "productType", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="اختر النوع" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="تابلوه">تابلوه</SelectItem>
+                    <SelectItem value="ماكيت">ماكيت</SelectItem>
+                    <SelectItem value="ميدالية اكليريك">ميدالية اكليريك</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="size">المقاس</Label>
+                <Select 
+                  value={currentItem.size}
+                  onValueChange={(value) => handleSelectChange("item", "size", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="اختر المقاس" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="15*20 سم">15*20 سم</SelectItem>
+                    <SelectItem value="20*30 سم">20*30 سم</SelectItem>
+                    <SelectItem value="30*40 سم">30*40 سم</SelectItem>
+                    <SelectItem value="40*50 سم">40*50 سم</SelectItem>
+                    <SelectItem value="50*60 سم">50*60 سم</SelectItem>
+                    <SelectItem value="50*70 سم">50*70 سم</SelectItem>
+                    <SelectItem value="ميدالية أكليريك مستطيلة">ميدالية أكليريك مستطيلة</SelectItem>
+                    <SelectItem value="ميدالية اكليريك مجسمة">ميدالية اكليريك مجسمة</SelectItem>
+                    <SelectItem value="دلاية عربية اكليريك ( قطعة )">دلاية عربية اكليريك ( قطعة )</SelectItem>
+                    <SelectItem value="دلاية عربية أكليريك ( قطعتين )">دلاية عربية أكليريك ( قطعتين )</SelectItem>
+                    <SelectItem value="أخرى">أخرى</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="quantity">الكمية</Label>
+                <Input 
+                  id="quantity" 
+                  name="quantity" 
+                  type="number" 
+                  min="1"
+                  value={currentItem.quantity}
+                  onChange={handleItemChange} 
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="cost">تكلفة الصنف</Label>
+                <Input 
+                  id="cost" 
+                  name="cost" 
+                  type="number" 
+                  min="0"
+                  step="0.01"
+                  value={currentItem.cost}
+                  onChange={handleItemChange} 
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="price">سعر البيع</Label>
+                <Input 
+                  id="price" 
+                  name="price" 
+                  type="number" 
+                  min="0"
+                  step="0.01"
+                  value={currentItem.price}
+                  onChange={handleItemChange} 
+                />
+              </div>
+              
+              <div className="flex items-end">
+                <Button 
+                  type="button" 
+                  className="bg-green-600 hover:bg-green-700 w-full"
+                  onClick={addItem}
+                >
+                  <Plus className="ms-1" size={16} />
+                  إضافة منتج
+                </Button>
+              </div>
+            </div>
+            
+            {items.length > 0 && (
+              <div className="mt-4">
+                <h4 className="font-medium mb-2">المنتجات المضافة:</h4>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>نوع المنتج</TableHead>
+                      <TableHead>المقاس</TableHead>
+                      <TableHead>الكمية</TableHead>
+                      <TableHead>سعر الوحدة</TableHead>
+                      <TableHead>الإجمالي</TableHead>
+                      <TableHead>إجراء</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {items.map((item, idx) => (
+                      <TableRow key={idx}>
+                        <TableCell>{item.productType}</TableCell>
+                        <TableCell>{item.size}</TableCell>
+                        <TableCell>{item.quantity}</TableCell>
+                        <TableCell>{item.price} جنيه</TableCell>
+                        <TableCell>{item.price * item.quantity} جنيه</TableCell>
+                        <TableCell>
+                          <Button 
+                            variant="destructive" 
+                            size="sm" 
+                            onClick={() => removeItem(idx)}
+                          >
+                            <Trash2 size={16} />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                
+                <div className="mt-4 border-t pt-4">
+                  <div className="flex justify-between">
+                    <span>إجمالي سعر المنتجات:</span>
+                    <span>{subtotal} جنيه</span>
+                  </div>
+                  <div className="flex justify-between mt-1">
+                    <span>+ مصاريف الشحن:</span>
+                    <span>{customerData.shippingCost} جنيه</span>
+                  </div>
+                  <div className="flex justify-between mt-1">
+                    <span>- الخصم:</span>
+                    <span>{customerData.discount} جنيه</span>
+                  </div>
+                  <div className="flex justify-between mt-2 text-lg font-bold">
+                    <span>الإجمالي الكلي:</span>
+                    <span>{totalAmount} جنيه</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <Button type="submit" className="bg-gift-primary hover:bg-gift-primaryHover" disabled={items.length === 0}>
             إضافة الطلب
           </Button>
         </form>

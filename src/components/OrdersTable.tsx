@@ -7,6 +7,7 @@ import { useOrders } from "@/context/OrderContext";
 import { ORDER_STATUS_LABELS, OrderStatus } from "@/types";
 import { formatCurrency } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import { Printer } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 const OrdersTable: React.FC = () => {
@@ -62,12 +63,8 @@ const OrdersTable: React.FC = () => {
                 <th>اسم العميل</th>
                 <th>الحالة</th>
                 <th>تعديل الحالة</th>
-                <th>نوع المنتج</th>
-                <th>المقاس</th>
-                <th>الكمية</th>
-                <th>سعر البيع</th>
-                <th>الخصم</th>
-                <th>الإجمالي</th>
+                <th>عدد المنتجات</th>
+                <th>المجموع</th>
                 <th>إجراءات</th>
               </tr>
             </thead>
@@ -95,11 +92,7 @@ const OrdersTable: React.FC = () => {
                         </SelectContent>
                       </Select>
                     </td>
-                    <td>{order.productType}</td>
-                    <td>{order.size}</td>
-                    <td>{order.quantity}</td>
-                    <td>{formatCurrency(order.price)}</td>
-                    <td>{formatCurrency(order.discount)}</td>
+                    <td>{order.items.length}</td>
                     <td>{formatCurrency(order.total)}</td>
                     <td className="flex flex-wrap gap-1">
                       <Button 
@@ -107,6 +100,13 @@ const OrdersTable: React.FC = () => {
                         onClick={() => viewOrderDetails(order.serial)}
                       >
                         عرض
+                      </Button>
+                      <Button
+                        className="h-7 text-xs bg-green-600 hover:bg-green-700"
+                        onClick={() => viewOrderDetails(order.serial)}
+                      >
+                        <Printer size={14} className="ml-1" />
+                        فاتورة
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
@@ -137,7 +137,7 @@ const OrdersTable: React.FC = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={11} className="text-center py-4">لا توجد طلبات متاحة</td>
+                  <td colSpan={7} className="text-center py-4">لا توجد طلبات متاحة</td>
                 </tr>
               )}
             </tbody>

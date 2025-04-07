@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { Order, OrderStatus } from "@/types";
+import { Order, OrderStatus, OrderItem } from "@/types";
 import { toast } from "sonner";
 
 interface OrderContextType {

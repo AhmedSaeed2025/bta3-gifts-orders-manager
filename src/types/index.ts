@@ -1,4 +1,13 @@
 
+export interface OrderItem {
+  productType: string;
+  size: string;
+  quantity: number;
+  cost: number;
+  price: number;
+  profit: number;
+}
+
 export interface Order {
   serial: string;
   paymentMethod: string;
@@ -7,11 +16,8 @@ export interface Order {
   deliveryMethod: string;
   address: string;
   governorate: string;
-  productType: string;
-  size: string;
-  quantity: number;
-  cost: number;
-  price: number;
+  items: OrderItem[];
+  shippingCost: number;
   discount: number;
   total: number;
   profit: number;

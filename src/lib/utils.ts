@@ -26,23 +26,27 @@ export function generateMonthlyReport(orders: Order[]): MonthlyReport {
     const orderDate = new Date(order.dateCreated)
     const month = orderDate.toLocaleString('default', { month: 'long' })
     
-    if (!report[month]) {
-      report[month] = {}
-    }
-    
-    if (!report[month][order.productType]) {
-      report[month][order.productType] = { totalCost: 0, totalSales: 0 }
-    }
-    
-    report[month][order.productType].totalCost += order.cost * order.quantity
-    report[month][order.productType].totalSales += order.price * order.quantity
+    order.items.forEach(item => {
+      if (!report[month]) {
+        report[month] = {}
+      }
+      
+      if (!report[month][item.productType]) {
+        report[month][item.productType] = { totalCost: 0, totalSales: 0 }
+      }
+      
+      report[month][item.productType].totalCost += item.cost * item.quantity
+      report[month][item.productType].totalSales += item.price * item.quantity
+    })
   })
   
   return report
 }
 
 export function calculateTotals(orders: Order[]) {
-  const totalCost = orders.reduce((sum, order) => sum + (order.cost * order.quantity), 0)
+  const totalCost = orders.reduce((sum, order) => 
+    sum + order.items.reduce((itemSum, item) => itemSum + (item.cost * item.quantity), 0), 0)
+    
   const totalSales = orders.reduce((sum, order) => sum + order.total, 0)
   const netProfit = totalSales - totalCost
   

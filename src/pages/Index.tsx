@@ -7,6 +7,7 @@ import OrdersTable from "@/components/OrdersTable";
 import SummaryReport from "@/components/SummaryReport";
 import ProfitReport from "@/components/ProfitReport";
 import PriceManagement from "@/components/PriceManagement";
+import InvoiceTab from "@/components/InvoiceTab";
 
 const Index = () => {
   return (
@@ -21,6 +22,10 @@ const Index = () => {
           
           <Tabs.Tab label="جميع الطلبات" value="orders">
             <OrdersTable />
+          </Tabs.Tab>
+          
+          <Tabs.Tab label="الفاتورة" value="invoice">
+            <InvoiceTab />
           </Tabs.Tab>
           
           <Tabs.Tab label="التقرير" value="summary">
