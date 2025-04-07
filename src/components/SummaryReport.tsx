@@ -12,6 +12,9 @@ const SummaryReport = () => {
     exportToExcel("summaryTable", "تقرير_الطلبات");
   };
 
+  // Ensure orders is an array to prevent "map" errors
+  const safeOrders = Array.isArray(orders) ? orders : [];
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -43,9 +46,12 @@ const SummaryReport = () => {
               </tr>
             </thead>
             <tbody>
-              {orders.length > 0 ? (
-                orders.flatMap((order, orderIndex) => 
-                  order.items.map((item, itemIndex) => (
+              {safeOrders.length > 0 ? (
+                safeOrders.flatMap((order, orderIndex) => {
+                  // Ensure items array exists before mapping through it
+                  const items = order.items || [];
+                  
+                  return items.map((item, itemIndex) => (
                     <tr key={`${order.serial}-${itemIndex}`}>
                       <td>{order.clientName}</td>
                       <td>{order.phone}</td>
@@ -60,8 +66,8 @@ const SummaryReport = () => {
                       <td>{orderIndex === 0 && itemIndex === 0 ? formatCurrency(order.discount) : "0.00 جنيه"}</td>
                       <td>{itemIndex === 0 ? formatCurrency(order.total) : "-"}</td>
                     </tr>
-                  ))
-                )
+                  ));
+                })
               ) : (
                 <tr>
                   <td colSpan={12} className="text-center py-4">لا توجد بيانات متاحة</td>
