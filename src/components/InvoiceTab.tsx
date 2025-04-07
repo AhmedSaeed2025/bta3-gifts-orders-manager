@@ -9,11 +9,11 @@ import { Label } from "./ui/label";
 const InvoiceTab = () => {
   const { orders } = useOrders();
   const [selectedOrderSerial, setSelectedOrderSerial] = useState<string>("");
-  const [selectedOrder, setSelectedOrder] = useState(orders[0]);
+  const [selectedOrder, setSelectedOrder] = useState(orders && orders.length > 0 ? orders[0] : undefined);
 
   // Update order options when orders change
   useEffect(() => {
-    if (orders.length > 0 && !selectedOrderSerial) {
+    if (orders && orders.length > 0 && !selectedOrderSerial) {
       setSelectedOrderSerial(orders[0].serial);
       setSelectedOrder(orders[0]);
     }
@@ -34,7 +34,7 @@ const InvoiceTab = () => {
         <CardTitle className="text-xl">طباعة الفاتورة</CardTitle>
       </CardHeader>
       <CardContent>
-        {orders.length === 0 ? (
+        {!orders || orders.length === 0 ? (
           <p className="text-center py-4">لا توجد طلبات متاحة لعرض الفاتورة</p>
         ) : (
           <div>

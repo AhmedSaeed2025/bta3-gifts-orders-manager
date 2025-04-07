@@ -15,10 +15,18 @@ interface InvoiceProps {
 const Invoice: React.FC<InvoiceProps> = ({ order }) => {
   const printRef = useRef<HTMLDivElement>(null);
 
+  // Safety check - ensure order exists
+  if (!order) {
+    return <div>لا توجد بيانات للفاتورة</div>;
+  }
+
   const handlePrint = useReactToPrint({
     content: () => printRef.current,
     documentTitle: `فاتورة_${order.serial}`
   });
+
+  // Ensure items array exists, or default to empty array
+  const items = order.items || [];
 
   return (
     <div>
@@ -83,7 +91,7 @@ const Invoice: React.FC<InvoiceProps> = ({ order }) => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {order.items.map((item, index) => (
+              {items.map((item, index) => (
                 <TableRow key={index}>
                   <TableCell>{item.productType}</TableCell>
                   <TableCell>{item.size}</TableCell>
@@ -99,7 +107,7 @@ const Invoice: React.FC<InvoiceProps> = ({ order }) => {
             <div className="w-full md:w-64">
               <div className="flex justify-between py-2">
                 <span className="font-medium">إجمالي المنتجات:</span>
-                <span>{formatCurrency(order.items.reduce((sum, item) => sum + item.price * item.quantity, 0))}</span>
+                <span>{formatCurrency(items.reduce((sum, item) => sum + item.price * item.quantity, 0))}</span>
               </div>
               {order.shippingCost > 0 && (
                 <div className="flex justify-between py-2 border-t border-gray-200">
