@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Order, ORDER_STATUS_LABELS } from "@/types";
 import { formatCurrency } from "@/lib/utils";
 import { useReactToPrint } from "react-to-print";
-import { Facebook } from "lucide-react";
+import { Facebook, Phone, Home, Map } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface InvoiceProps {
@@ -43,12 +43,14 @@ const Invoice: React.FC<InvoiceProps> = ({ order }) => {
         <CardContent className="p-6">
           <div className="text-center mb-6">
             <h1 className="text-2xl font-bold text-gift-primary">#بتاع_هدايا_الأصلى</h1>
-            <p className="text-sm text-gray-600 mt-1">فاتورة طلب</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">فاتورة طلب</p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div>
-              <h3 className="font-semibold mb-2 text-lg">بيانات الفاتورة</h3>
+            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+              <h3 className="font-semibold mb-2 text-lg flex items-center gap-2">
+                <Map size={18} /> بيانات الفاتورة
+              </h3>
               <div className="space-y-1">
                 <p><span className="font-medium">رقم الفاتورة:</span> {order.serial}</p>
                 <p><span className="font-medium">حالة الطلب:</span> {ORDER_STATUS_LABELS[order.status]}</p>
@@ -56,8 +58,10 @@ const Invoice: React.FC<InvoiceProps> = ({ order }) => {
               </div>
             </div>
             
-            <div>
-              <h3 className="font-semibold mb-2 text-lg">بيانات العميل</h3>
+            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+              <h3 className="font-semibold mb-2 text-lg flex items-center gap-2">
+                <Phone size={18} /> بيانات العميل
+              </h3>
               <div className="space-y-1">
                 <p><span className="font-medium">اسم العميل:</span> {order.clientName}</p>
                 <p><span className="font-medium">رقم التليفون:</span> {order.phone}</p>
@@ -66,8 +70,10 @@ const Invoice: React.FC<InvoiceProps> = ({ order }) => {
             </div>
           </div>
           
-          <div className="mb-6">
-            <h3 className="font-semibold mb-2 text-lg">معلومات التوصيل</h3>
+          <div className="mb-6 bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+            <h3 className="font-semibold mb-2 text-lg flex items-center gap-2">
+              <Home size={18} /> معلومات التوصيل
+            </h3>
             <div className="space-y-1">
               <p><span className="font-medium">طريقة الاستلام:</span> {order.deliveryMethod}</p>
               {order.deliveryMethod === "شحن للمنزل" && (
@@ -79,29 +85,35 @@ const Invoice: React.FC<InvoiceProps> = ({ order }) => {
             </div>
           </div>
           
-          <h3 className="font-semibold mb-2 text-lg">تفاصيل الطلب</h3>
-          <Table className="mb-6">
-            <TableHeader>
-              <TableRow>
-                <TableHead>نوع المنتج</TableHead>
-                <TableHead>المقاس</TableHead>
-                <TableHead>الكمية</TableHead>
-                <TableHead>سعر الوحدة</TableHead>
-                <TableHead>الإجمالي</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {items.map((item, index) => (
-                <TableRow key={index}>
-                  <TableCell>{item.productType}</TableCell>
-                  <TableCell>{item.size}</TableCell>
-                  <TableCell>{item.quantity}</TableCell>
-                  <TableCell>{formatCurrency(item.price)}</TableCell>
-                  <TableCell>{formatCurrency(item.price * item.quantity)}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <div className="mb-6">
+            <h3 className="font-semibold mb-2 text-lg">تفاصيل الطلب</h3>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>نوع المنتج</TableHead>
+                    <TableHead>المقاس</TableHead>
+                    <TableHead>الكمية</TableHead>
+                    <TableHead>سعر الوحدة</TableHead>
+                    <TableHead>التكلفة</TableHead>
+                    <TableHead>الإجمالي</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {items.map((item, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{item.productType}</TableCell>
+                      <TableCell>{item.size}</TableCell>
+                      <TableCell>{item.quantity}</TableCell>
+                      <TableCell>{formatCurrency(item.price)}</TableCell>
+                      <TableCell>{formatCurrency(item.cost)}</TableCell>
+                      <TableCell>{formatCurrency(item.price * item.quantity)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
           
           <div className="flex justify-end">
             <div className="w-full md:w-64">
@@ -110,27 +122,28 @@ const Invoice: React.FC<InvoiceProps> = ({ order }) => {
                 <span>{formatCurrency(items.reduce((sum, item) => sum + item.price * item.quantity, 0))}</span>
               </div>
               {order.shippingCost > 0 && (
-                <div className="flex justify-between py-2 border-t border-gray-200">
+                <div className="flex justify-between py-2 border-t border-gray-200 dark:border-gray-700">
                   <span className="font-medium">مصاريف الشحن:</span>
                   <span>{formatCurrency(order.shippingCost)}</span>
                 </div>
               )}
               {order.discount > 0 && (
-                <div className="flex justify-between py-2 border-t border-gray-200">
+                <div className="flex justify-between py-2 border-t border-gray-200 dark:border-gray-700">
                   <span className="font-medium">الخصم:</span>
                   <span>{formatCurrency(order.discount)}</span>
                 </div>
               )}
-              <div className="flex justify-between py-2 border-t border-gray-200">
+              <div className="flex justify-between py-2 border-t border-gray-200 dark:border-gray-700">
                 <span className="font-bold text-lg">المجموع الكلي:</span>
                 <span className="font-bold text-lg">{formatCurrency(order.total)}</span>
               </div>
             </div>
           </div>
           
-          <div className="mt-8 pt-6 border-t text-center text-sm text-gray-500">
+          <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 text-center text-sm text-gray-500 dark:text-gray-400">
             <p>شكراً لثقتكم في #بتاع_هدايا_الأصلى</p>
             <div className="flex justify-center items-center gap-2 mt-2">
+              <Phone size={16} />
               <span>للتواصل: 01113977005</span>
             </div>
             <div className="flex justify-center items-center gap-2 mt-2">

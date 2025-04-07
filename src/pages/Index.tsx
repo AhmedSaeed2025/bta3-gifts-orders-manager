@@ -8,19 +8,22 @@ import SummaryReport from "@/components/SummaryReport";
 import ProfitReport from "@/components/ProfitReport";
 import PriceManagement from "@/components/PriceManagement";
 import InvoiceTab from "@/components/InvoiceTab";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Index = () => {
+  const isMobile = useIsMobile();
+
   return (
-    <div className="min-h-screen bg-gift-accent">
-      <div className="container mx-auto px-4 py-6">
+    <div className="min-h-screen bg-gift-accent dark:bg-gray-900 transition-colors duration-300">
+      <div className="container mx-auto px-3 md:px-4 py-4 md:py-6">
         <Logo />
         
-        <Tabs defaultValue="addOrder" className="mt-6">
-          <Tabs.Tab label="إضافة طلب" value="addOrder">
+        <Tabs defaultValue="addOrder" className="mt-4 md:mt-6">
+          <Tabs.Tab label={isMobile ? "إضافة" : "إضافة طلب"} value="addOrder">
             <OrderForm />
           </Tabs.Tab>
           
-          <Tabs.Tab label="جميع الطلبات" value="orders">
+          <Tabs.Tab label={isMobile ? "الطلبات" : "جميع الطلبات"} value="orders">
             <OrdersTable />
           </Tabs.Tab>
           
@@ -28,15 +31,15 @@ const Index = () => {
             <InvoiceTab />
           </Tabs.Tab>
           
-          <Tabs.Tab label="التقرير" value="summary">
+          <Tabs.Tab label={isMobile ? "التقرير" : "تقرير الطلبات"} value="summary">
             <SummaryReport />
           </Tabs.Tab>
           
-          <Tabs.Tab label="تقرير الأرباح والتكاليف" value="profitReport">
+          <Tabs.Tab label={isMobile ? "الأرباح" : "تقرير الأرباح"} value="profitReport">
             <ProfitReport />
           </Tabs.Tab>
           
-          <Tabs.Tab label="أسعار مقترحة" value="proposedPrices">
+          <Tabs.Tab label={isMobile ? "الأسعار" : "أسعار مقترحة"} value="proposedPrices">
             <PriceManagement />
           </Tabs.Tab>
         </Tabs>
