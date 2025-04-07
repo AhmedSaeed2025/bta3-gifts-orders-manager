@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -97,5 +98,58 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family: "Tajawal", sans-serif;
   }
+  
+  /* Custom scrollbar for RTL support */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: #e74c3c;
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: #c0392b;
+  }
+}
+
+/* RTL specific styles */
+.rtl {
+  direction: rtl;
+  text-align: right;
+}
+
+.rtl .mr-auto {
+  margin-right: 0;
+  margin-left: auto;
+}
+
+.rtl .ml-auto {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+/* Custom table classes */
+.gift-table {
+  @apply w-full border-collapse my-2;
+}
+
+.gift-table th, .gift-table td {
+  @apply border border-gray-300 p-2 text-center;
+}
+
+.gift-table th {
+  @apply bg-gift-accent font-bold;
+}
+
+.gift-table tr:nth-child(even) {
+  @apply bg-gift-accent/50;
 }

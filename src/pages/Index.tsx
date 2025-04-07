@@ -1,11 +1,40 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import React from "react";
+import Logo from "@/components/Logo";
+import Tabs from "@/components/Tabs";
+import OrderForm from "@/components/OrderForm";
+import OrdersTable from "@/components/OrdersTable";
+import SummaryReport from "@/components/SummaryReport";
+import ProfitReport from "@/components/ProfitReport";
+import PriceManagement from "@/components/PriceManagement";
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
+    <div className="min-h-screen bg-gift-accent">
+      <div className="container mx-auto px-4 py-6">
+        <Logo />
+        
+        <Tabs defaultValue="addOrder" className="mt-6">
+          <Tabs.Tab label="إضافة طلب" value="addOrder">
+            <OrderForm />
+          </Tabs.Tab>
+          
+          <Tabs.Tab label="جميع الطلبات" value="orders">
+            <OrdersTable />
+          </Tabs.Tab>
+          
+          <Tabs.Tab label="التقرير" value="summary">
+            <SummaryReport />
+          </Tabs.Tab>
+          
+          <Tabs.Tab label="تقرير الأرباح والتكاليف" value="profitReport">
+            <ProfitReport />
+          </Tabs.Tab>
+          
+          <Tabs.Tab label="أسعار مقترحة" value="proposedPrices">
+            <PriceManagement />
+          </Tabs.Tab>
+        </Tabs>
       </div>
     </div>
   );
