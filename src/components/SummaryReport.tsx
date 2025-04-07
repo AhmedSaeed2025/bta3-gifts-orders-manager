@@ -44,22 +44,24 @@ const SummaryReport = () => {
             </thead>
             <tbody>
               {orders.length > 0 ? (
-                orders.map((order) => (
-                  <tr key={order.serial}>
-                    <td>{order.clientName}</td>
-                    <td>{order.phone}</td>
-                    <td>{order.paymentMethod}</td>
-                    <td>{order.deliveryMethod}</td>
-                    <td>{order.address}</td>
-                    <td>{order.governorate}</td>
-                    <td>{order.productType}</td>
-                    <td>{order.size}</td>
-                    <td>{order.quantity}</td>
-                    <td>{formatCurrency(order.price)}</td>
-                    <td>{formatCurrency(order.discount)}</td>
-                    <td>{formatCurrency(order.total)}</td>
-                  </tr>
-                ))
+                orders.flatMap((order, orderIndex) => 
+                  order.items.map((item, itemIndex) => (
+                    <tr key={`${order.serial}-${itemIndex}`}>
+                      <td>{order.clientName}</td>
+                      <td>{order.phone}</td>
+                      <td>{order.paymentMethod}</td>
+                      <td>{order.deliveryMethod}</td>
+                      <td>{order.address}</td>
+                      <td>{order.governorate}</td>
+                      <td>{item.productType}</td>
+                      <td>{item.size}</td>
+                      <td>{item.quantity}</td>
+                      <td>{formatCurrency(item.price)}</td>
+                      <td>{orderIndex === 0 && itemIndex === 0 ? formatCurrency(order.discount) : "0.00 جنيه"}</td>
+                      <td>{itemIndex === 0 ? formatCurrency(order.total) : "-"}</td>
+                    </tr>
+                  ))
+                )
               ) : (
                 <tr>
                   <td colSpan={12} className="text-center py-4">لا توجد بيانات متاحة</td>
