@@ -19,33 +19,46 @@ export function calculateProfit(price: number, cost: number, quantity: number): 
   return (price - cost) * quantity
 }
 
-export function generateMonthlyReport(orders: Order[]): MonthlyReport {
+export function generateMonthlyReport(orders: Order[] | undefined): MonthlyReport {
   const report: MonthlyReport = {}
+  
+  // Guard clause to handle undefined or empty orders array
+  if (!orders || orders.length === 0) {
+    return report;
+  }
   
   orders.forEach(order => {
     const orderDate = new Date(order.dateCreated)
     const month = orderDate.toLocaleString('default', { month: 'long' })
     
-    order.items.forEach(item => {
-      if (!report[month]) {
-        report[month] = {}
-      }
-      
-      if (!report[month][item.productType]) {
-        report[month][item.productType] = { totalCost: 0, totalSales: 0 }
-      }
-      
-      report[month][item.productType].totalCost += item.cost * item.quantity
-      report[month][item.productType].totalSales += item.price * item.quantity
-    })
+    // Check if order.items exists before trying to iterate over it
+    if (order.items && Array.isArray(order.items)) {
+      order.items.forEach(item => {
+        if (!report[month]) {
+          report[month] = {}
+        }
+        
+        if (!report[month][item.productType]) {
+          report[month][item.productType] = { totalCost: 0, totalSales: 0 }
+        }
+        
+        report[month][item.productType].totalCost += item.cost * item.quantity
+        report[month][item.productType].totalSales += item.price * item.quantity
+      })
+    }
   })
   
   return report
 }
 
-export function calculateTotals(orders: Order[]) {
+export function calculateTotals(orders: Order[] | undefined) {
+  // Default values when orders is undefined or empty
+  if (!orders || orders.length === 0) {
+    return { totalCost: 0, totalSales: 0, netProfit: 0 };
+  }
+
   const totalCost = orders.reduce((sum, order) => 
-    sum + order.items.reduce((itemSum, item) => itemSum + (item.cost * item.quantity), 0), 0)
+    sum + (order.items ? order.items.reduce((itemSum, item) => itemSum + (item.cost * item.quantity), 0) : 0), 0)
     
   const totalSales = orders.reduce((sum, order) => sum + order.total, 0)
   const netProfit = totalSales - totalCost

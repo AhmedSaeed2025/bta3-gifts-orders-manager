@@ -8,8 +8,11 @@ import { formatCurrency, generateMonthlyReport, calculateTotals, exportToExcel }
 const ProfitReport = () => {
   const { orders } = useOrders();
   
-  const monthlyReport = useMemo(() => generateMonthlyReport(orders), [orders]);
-  const { totalCost, totalSales, netProfit } = useMemo(() => calculateTotals(orders), [orders]);
+  // Ensure orders is an array
+  const safeOrders = Array.isArray(orders) ? orders : [];
+  
+  const monthlyReport = useMemo(() => generateMonthlyReport(safeOrders), [safeOrders]);
+  const { totalCost, totalSales, netProfit } = useMemo(() => calculateTotals(safeOrders), [safeOrders]);
 
   const handleExport = () => {
     exportToExcel("profitReportTable", "تقرير_الربح");
