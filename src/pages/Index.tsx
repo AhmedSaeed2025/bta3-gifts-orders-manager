@@ -1,62 +1,48 @@
 
 import React from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Logo from "@/components/Logo";
+import Tabs from "@/components/Tabs";
 import OrderForm from "@/components/OrderForm";
 import OrdersTable from "@/components/OrdersTable";
-import PriceManagement from "@/components/PriceManagement";
 import SummaryReport from "@/components/SummaryReport";
 import ProfitReport from "@/components/ProfitReport";
+import PriceManagement from "@/components/PriceManagement";
 import InvoiceTab from "@/components/InvoiceTab";
-import ProductsManagement from "@/components/ProductsManagement";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Index = () => {
+  const isMobile = useIsMobile();
+
   return (
     <div className="min-h-screen bg-gift-accent dark:bg-gray-900 transition-colors duration-300">
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-3 md:px-4 py-4 md:py-6">
         <Logo />
         
-        <div className="mt-8">
-          <Tabs defaultValue="orders" className="w-full">
-            <TabsList className="w-full mb-6 flex flex-wrap gap-2">
-              <TabsTrigger value="orders">الطلبات</TabsTrigger>
-              <TabsTrigger value="add-order">إضافة طلب</TabsTrigger>
-              <TabsTrigger value="products">المنتجات</TabsTrigger>
-              <TabsTrigger value="prices">الأسعار</TabsTrigger>
-              <TabsTrigger value="invoice">الفواتير</TabsTrigger>
-              <TabsTrigger value="report">تقرير عام</TabsTrigger>
-              <TabsTrigger value="profit">الأرباح والتكاليف</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="orders" className="space-y-4">
-              <OrdersTable />
-            </TabsContent>
-            
-            <TabsContent value="add-order" className="space-y-4">
-              <OrderForm />
-            </TabsContent>
-            
-            <TabsContent value="products" className="space-y-4">
-              <ProductsManagement />
-            </TabsContent>
-            
-            <TabsContent value="prices" className="space-y-4">
-              <PriceManagement />
-            </TabsContent>
-            
-            <TabsContent value="invoice" className="space-y-4">
-              <InvoiceTab />
-            </TabsContent>
-            
-            <TabsContent value="report" className="space-y-4">
-              <SummaryReport />
-            </TabsContent>
-            
-            <TabsContent value="profit" className="space-y-4">
-              <ProfitReport />
-            </TabsContent>
-          </Tabs>
-        </div>
+        <Tabs defaultValue="addOrder" className="mt-4 md:mt-6">
+          <Tabs.Tab label={isMobile ? "إضافة" : "إضافة طلب"} value="addOrder">
+            <OrderForm />
+          </Tabs.Tab>
+          
+          <Tabs.Tab label={isMobile ? "الطلبات" : "جميع الطلبات"} value="orders">
+            <OrdersTable />
+          </Tabs.Tab>
+          
+          <Tabs.Tab label="الفاتورة" value="invoice">
+            <InvoiceTab />
+          </Tabs.Tab>
+          
+          <Tabs.Tab label={isMobile ? "التقرير" : "تقرير الطلبات"} value="summary">
+            <SummaryReport />
+          </Tabs.Tab>
+          
+          <Tabs.Tab label={isMobile ? "الأرباح" : "تقرير الأرباح"} value="profitReport">
+            <ProfitReport />
+          </Tabs.Tab>
+          
+          <Tabs.Tab label={isMobile ? "الأسعار" : "أسعار مقترحة"} value="proposedPrices">
+            <PriceManagement />
+          </Tabs.Tab>
+        </Tabs>
       </div>
     </div>
   );

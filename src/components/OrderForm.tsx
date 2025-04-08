@@ -12,7 +12,6 @@ import { Plus, Trash2 } from "lucide-react";
 import { OrderItem } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Textarea } from "@/components/ui/textarea";
 
 const OrderForm = () => {
   const { addOrder } = useOrders();
@@ -27,8 +26,6 @@ const OrderForm = () => {
     governorate: "",
     shippingCost: 0,
     discount: 0,
-    deposit: 0,
-    notes: "",
   });
   
   const [currentItem, setCurrentItem] = useState({
@@ -59,8 +56,8 @@ const OrderForm = () => {
     }
   }, [currentItem.productType, currentItem.size, getProposedPrice]);
 
-  const handleCustomerDataChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target as HTMLInputElement; // Cast to HTMLInputElement to access 'type'
+  const handleCustomerDataChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type } = e.target;
     setCustomerData(prev => ({
       ...prev,
       [name]: type === "number" ? parseFloat(value) || 0 : value,
@@ -140,8 +137,6 @@ const OrderForm = () => {
       governorate: "",
       shippingCost: 0,
       discount: 0,
-      deposit: 0,
-      notes: "",
     });
     setItems([]);
   };
@@ -255,31 +250,6 @@ const OrderForm = () => {
                 step="0.01"
                 value={customerData.discount}
                 onChange={handleCustomerDataChange} 
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="deposit">العربون (إذا وجد)</Label>
-              <Input 
-                id="deposit" 
-                name="deposit" 
-                type="number" 
-                min="0"
-                step="0.01"
-                value={customerData.deposit}
-                onChange={handleCustomerDataChange} 
-              />
-            </div>
-            
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="notes">ملاحظات</Label>
-              <Textarea 
-                id="notes" 
-                name="notes" 
-                value={customerData.notes}
-                onChange={handleCustomerDataChange} 
-                placeholder="أي ملاحظات خاصة بالطلب"
-                className="min-h-[80px]"
               />
             </div>
           </div>
@@ -427,24 +397,12 @@ const OrderForm = () => {
                   </div>
                   <div className="flex justify-between mt-1">
                     <span>- الخصم:</span>
-                    <span className="text-red-600">{customerData.discount} جنيه</span>
+                    <span>{customerData.discount} جنيه</span>
                   </div>
                   <div className="flex justify-between mt-2 text-lg font-bold">
                     <span>الإجمالي الكلي:</span>
                     <span>{totalAmount} جنيه</span>
                   </div>
-                  {customerData.deposit > 0 && (
-                    <div className="flex justify-between mt-1">
-                      <span>العربون:</span>
-                      <span>{customerData.deposit} جنيه</span>
-                    </div>
-                  )}
-                  {customerData.deposit > 0 && (
-                    <div className="flex justify-between mt-1 font-bold">
-                      <span>المتبقي:</span>
-                      <span>{totalAmount - customerData.deposit} جنيه</span>
-                    </div>
-                  )}
                 </div>
               </div>
             )}

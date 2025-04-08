@@ -19,8 +19,6 @@ export interface Order {
   items: OrderItem[];
   shippingCost: number;
   discount: number;
-  deposit: number;
-  notes: string;
   total: number;
   profit: number;
   status: OrderStatus;
@@ -55,12 +53,4 @@ export interface MonthlyReport {
       totalSales: number;
     };
   };
-}
-
-export interface Product {
-  id: string;
-  productType: string;
-  size: string;
-  cost: number;
-  price: number;
 }
