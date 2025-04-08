@@ -59,8 +59,11 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
     // Generate serial number
     const serial = `${month}-${String(updatedCounters[month]).padStart(3, '0')}`;
     
+    // Ensure deposit is set, even if not provided
+    const orderWithDeposit = { ...newOrder, deposit: newOrder.deposit || 0 };
+    
     const orderWithSerial = {
-      ...newOrder,
+      ...orderWithDeposit,
       serial,
       dateCreated: currentDate.toISOString(),
     };

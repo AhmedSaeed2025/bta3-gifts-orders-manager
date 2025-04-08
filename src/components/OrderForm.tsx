@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useOrders } from "@/context/OrderContext";
 import { usePrices } from "@/context/PriceContext";
+import { useProducts } from "@/context/ProductContext";
 import { calculateTotal, calculateProfit } from "@/lib/utils";
 import { Plus, Trash2 } from "lucide-react";
 import { OrderItem } from "@/types";
@@ -16,6 +17,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 const OrderForm = () => {
   const { addOrder } = useOrders();
   const { proposedPrices, getProposedPrice } = usePrices();
+  const { products } = useProducts();
   
   const [customerData, setCustomerData] = useState({
     paymentMethod: "",
@@ -26,6 +28,7 @@ const OrderForm = () => {
     governorate: "",
     shippingCost: 0,
     discount: 0,
+    deposit: 0, // Added deposit field
   });
   
   const [currentItem, setCurrentItem] = useState({
@@ -37,24 +40,49 @@ const OrderForm = () => {
   });
   
   const [items, setItems] = useState<OrderItem[]>([]);
+  
+  // Get available product types from the products context
+  const availableProductTypes = [...new Set(products.map(p => p.name))];
+  
+  // Get available sizes based on selected product type
+  const availableSizes = currentItem.productType ? 
+    products
+      .find(p => p.name === currentItem.productType)?.sizes
+      .map(s => s.size) || [] 
+    : [];
 
   // Calculate totals
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const totalAmount = subtotal + customerData.shippingCost - customerData.discount;
+  const totalAmount = subtotal + customerData.shippingCost - customerData.discount - customerData.deposit;
   const totalProfit = items.reduce((sum, item) => sum + (item.price - item.cost) * item.quantity, 0);
 
-  // Check for proposed prices when product type or size changes
+  // Check for product prices when product type or size changes
   useEffect(() => {
-    const proposedPrice = getProposedPrice(currentItem.productType, currentItem.size);
-    
-    if (proposedPrice) {
-      setCurrentItem(prev => ({
-        ...prev,
-        cost: proposedPrice.cost,
-        price: proposedPrice.price
-      }));
+    if (currentItem.productType && currentItem.size) {
+      // First check for product price from products context
+      const selectedProduct = products.find(p => p.name === currentItem.productType);
+      const selectedSize = selectedProduct?.sizes.find(s => s.size === currentItem.size);
+      
+      if (selectedSize) {
+        setCurrentItem(prev => ({
+          ...prev,
+          cost: selectedSize.cost,
+          price: selectedSize.price
+        }));
+      } else {
+        // Fallback to proposed prices if not found in products
+        const proposedPrice = getProposedPrice(currentItem.productType, currentItem.size);
+        
+        if (proposedPrice) {
+          setCurrentItem(prev => ({
+            ...prev,
+            cost: proposedPrice.cost,
+            price: proposedPrice.price
+          }));
+        }
+      }
     }
-  }, [currentItem.productType, currentItem.size, getProposedPrice]);
+  }, [currentItem.productType, currentItem.size, products, getProposedPrice]);
 
   const handleCustomerDataChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type } = e.target;
@@ -137,6 +165,7 @@ const OrderForm = () => {
       governorate: "",
       shippingCost: 0,
       discount: 0,
+      deposit: 0,
     });
     setItems([]);
   };
@@ -252,6 +281,19 @@ const OrderForm = () => {
                 onChange={handleCustomerDataChange} 
               />
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="deposit">العربون (إذا وجد)</Label>
+              <Input 
+                id="deposit" 
+                name="deposit" 
+                type="number" 
+                min="0"
+                step="0.01"
+                value={customerData.deposit}
+                onChange={handleCustomerDataChange} 
+              />
+            </div>
           </div>
           
           <div className="border-t pt-4">
@@ -268,9 +310,17 @@ const OrderForm = () => {
                     <SelectValue placeholder="اختر النوع" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="تابلوه">تابلوه</SelectItem>
-                    <SelectItem value="ماكيت">ماكيت</SelectItem>
-                    <SelectItem value="ميدالية اكليريك">ميدالية اكليريك</SelectItem>
+                    {availableProductTypes.length > 0 ? (
+                      availableProductTypes.map(type => (
+                        <SelectItem key={type} value={type}>{type}</SelectItem>
+                      ))
+                    ) : (
+                      <>
+                        <SelectItem value="تابلوه">تابلوه</SelectItem>
+                        <SelectItem value="ماكيت">ماكيت</SelectItem>
+                        <SelectItem value="ميدالية اكليريك">ميدالية اكليريك</SelectItem>
+                      </>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -285,17 +335,25 @@ const OrderForm = () => {
                     <SelectValue placeholder="اختر المقاس" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="15*20 سم">15*20 سم</SelectItem>
-                    <SelectItem value="20*30 سم">20*30 سم</SelectItem>
-                    <SelectItem value="30*40 سم">30*40 سم</SelectItem>
-                    <SelectItem value="40*50 سم">40*50 سم</SelectItem>
-                    <SelectItem value="50*60 سم">50*60 سم</SelectItem>
-                    <SelectItem value="50*70 سم">50*70 سم</SelectItem>
-                    <SelectItem value="ميدالية أكليريك مستطيلة">ميدالية أكليريك مستطيلة</SelectItem>
-                    <SelectItem value="ميدالية اكليريك مجسمة">ميدالية اكليريك مجسمة</SelectItem>
-                    <SelectItem value="دلاية عربية اكليريك ( قطعة )">دلاية عربية اكليريك ( قطعة )</SelectItem>
-                    <SelectItem value="دلاية عربية أكليريك ( قطعتين )">دلاية عربية أكليريك ( قطعتين )</SelectItem>
-                    <SelectItem value="أخرى">أخرى</SelectItem>
+                    {availableSizes.length > 0 ? (
+                      availableSizes.map(size => (
+                        <SelectItem key={size} value={size}>{size}</SelectItem>
+                      ))
+                    ) : (
+                      <>
+                        <SelectItem value="15*20 سم">15*20 سم</SelectItem>
+                        <SelectItem value="20*30 سم">20*30 سم</SelectItem>
+                        <SelectItem value="30*40 سم">30*40 سم</SelectItem>
+                        <SelectItem value="40*50 سم">40*50 سم</SelectItem>
+                        <SelectItem value="50*60 سم">50*60 سم</SelectItem>
+                        <SelectItem value="50*70 سم">50*70 سم</SelectItem>
+                        <SelectItem value="ميدالية أكليريك مستطيلة">ميدالية أكليريك مستطيلة</SelectItem>
+                        <SelectItem value="ميدالية اكليريك مجسمة">ميدالية اكليريك مجسمة</SelectItem>
+                        <SelectItem value="دلاية عربية اكليريك ( قطعة )">دلاية عربية اكليريك ( قطعة )</SelectItem>
+                        <SelectItem value="دلاية عربية أكليريك ( قطعتين )">دلاية عربية أكليريك ( قطعتين )</SelectItem>
+                        <SelectItem value="أخرى">أخرى</SelectItem>
+                      </>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -399,6 +457,12 @@ const OrderForm = () => {
                     <span>- الخصم:</span>
                     <span>{customerData.discount} جنيه</span>
                   </div>
+                  {customerData.deposit > 0 && (
+                    <div className="flex justify-between mt-1">
+                      <span>- العربون المدفوع:</span>
+                      <span>{customerData.deposit} جنيه</span>
+                    </div>
+                  )}
                   <div className="flex justify-between mt-2 text-lg font-bold">
                     <span>الإجمالي الكلي:</span>
                     <span>{totalAmount} جنيه</span>

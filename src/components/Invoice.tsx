@@ -133,6 +133,12 @@ const Invoice: React.FC<InvoiceProps> = ({ order }) => {
                   <span>{formatCurrency(order.discount)}</span>
                 </div>
               )}
+              {order.deposit > 0 && (
+                <div className="flex justify-between py-2 border-t border-gray-200 dark:border-gray-700">
+                  <span className="font-medium">العربون المدفوع:</span>
+                  <span>{formatCurrency(order.deposit)}</span>
+                </div>
+              )}
               <div className="flex justify-between py-2 border-t border-gray-200 dark:border-gray-700">
                 <span className="font-bold text-lg">المجموع الكلي:</span>
                 <span className="font-bold text-lg">{formatCurrency(order.total)}</span>
