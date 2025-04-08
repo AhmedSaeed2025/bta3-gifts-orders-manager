@@ -8,6 +8,7 @@ import SummaryReport from "@/components/SummaryReport";
 import ProfitReport from "@/components/ProfitReport";
 import PriceManagement from "@/components/PriceManagement";
 import InvoiceTab from "@/components/InvoiceTab";
+import ProductsTab from "@/components/ProductsTab";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const Index = () => {
@@ -41,6 +42,10 @@ const Index = () => {
           
           <Tabs.Tab label={isMobile ? "الأسعار" : "أسعار مقترحة"} value="proposedPrices">
             <PriceManagement />
+          </Tabs.Tab>
+          
+          <Tabs.Tab label={isMobile ? "المنتجات" : "إدارة المنتجات"} value="products">
+            <ProductsTab />
           </Tabs.Tab>
         </Tabs>
       </div>

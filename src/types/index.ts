@@ -54,3 +54,15 @@ export interface MonthlyReport {
     };
   };
 }
+
+export interface Product {
+  id: string;
+  name: string;
+  sizes: ProductSize[];
+}
+
+export interface ProductSize {
+  size: string;
+  cost: number;
+  price: number;
+}
