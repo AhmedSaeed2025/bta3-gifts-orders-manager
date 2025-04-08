@@ -1,11 +1,18 @@
-
 import React, { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Order, ORDER_STATUS_LABELS } from "@/types";
 import { formatCurrency } from "@/lib/utils";
 import { useReactToPrint } from "react-to-print";
-import { Facebook, Phone, Home, Map, Instagram, Telegram, TikTok } from "lucide-react";
+import { 
+  Facebook, 
+  Phone, 
+  Home, 
+  Map, 
+  Instagram, 
+  Send,
+  Link 
+} from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface InvoiceProps {
@@ -15,7 +22,6 @@ interface InvoiceProps {
 const Invoice: React.FC<InvoiceProps> = ({ order }) => {
   const printRef = useRef<HTMLDivElement>(null);
 
-  // Safety check - ensure order exists
   if (!order) {
     return <div>لا توجد بيانات للفاتورة</div>;
   }
@@ -27,7 +33,6 @@ const Invoice: React.FC<InvoiceProps> = ({ order }) => {
     removeAfterPrint: true
   });
 
-  // Ensure items array exists, or default to empty array
   const items = order.items || [];
 
   return (
@@ -182,21 +187,21 @@ const Invoice: React.FC<InvoiceProps> = ({ order }) => {
               </div>
               
               <div className="flex items-center gap-1">
-                <Telegram size={10} />
+                <Send size={10} />
                 <a href="https://t.me/GiftsEg" className="text-blue-500 hover:underline">
                   GiftsEg
                 </a>
               </div>
               
               <div className="flex items-center gap-1">
-                <TikTok size={10} />
+                <Link size={10} />
                 <a href="https://www.tiktok.com/@giftstore2022" className="text-black dark:text-white hover:underline">
                   giftstore2022
                 </a>
               </div>
             </div>
             
-            <p className="mt-2 text-[8px]">جميع الحقوق محفوظة #بتاع_هدايا_الأصلي 2025</p>
+            <p className="mt-2 text-[8px]">جميع الحقوق محفوظة #بتاع_هدايا_الأصلى 2025</p>
           </div>
         </CardContent>
       </Card>
