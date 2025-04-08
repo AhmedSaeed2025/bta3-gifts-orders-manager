@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Order, ORDER_STATUS_LABELS } from "@/types";
 import { formatCurrency } from "@/lib/utils";
 import { useReactToPrint } from "react-to-print";
-import { Facebook, Phone, Home, Map } from "lucide-react";
+import { Facebook, Phone, Home, Map, Instagram, Telegram, TikTok } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface InvoiceProps {
@@ -22,7 +22,9 @@ const Invoice: React.FC<InvoiceProps> = ({ order }) => {
 
   const handlePrint = useReactToPrint({
     content: () => printRef.current,
-    documentTitle: `فاتورة_${order.serial}`
+    documentTitle: `فاتورة_${order.serial}`,
+    pageStyle: '@page { size: A5; margin: 10mm; }',
+    removeAfterPrint: true
   });
 
   // Ensure items array exists, or default to empty array
@@ -39,17 +41,17 @@ const Invoice: React.FC<InvoiceProps> = ({ order }) => {
         </Button>
       </div>
       
-      <Card ref={printRef} className="print:shadow-none print:border-none">
-        <CardContent className="p-6">
-          <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold text-gift-primary">#بتاع_هدايا_الأصلى</h1>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">فاتورة طلب</p>
+      <Card ref={printRef} className="print:shadow-none print:border-none max-w-md mx-auto">
+        <CardContent className="p-4 text-sm">
+          <div className="text-center mb-4">
+            <h1 className="text-xl font-bold text-gift-primary">#بتاع_هدايا_الأصلى</h1>
+            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">فاتورة طلب</p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-              <h3 className="font-semibold mb-2 text-lg flex items-center gap-2">
-                <Map size={18} /> بيانات الفاتورة
+          <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
+            <div className="bg-gray-50 dark:bg-gray-800 p-2 rounded-lg">
+              <h3 className="font-semibold mb-1 text-sm flex items-center gap-1">
+                <Map size={14} /> بيانات الفاتورة
               </h3>
               <div className="space-y-1">
                 <p><span className="font-medium">رقم الفاتورة:</span> {order.serial}</p>
@@ -58,9 +60,9 @@ const Invoice: React.FC<InvoiceProps> = ({ order }) => {
               </div>
             </div>
             
-            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-              <h3 className="font-semibold mb-2 text-lg flex items-center gap-2">
-                <Phone size={18} /> بيانات العميل
+            <div className="bg-gray-50 dark:bg-gray-800 p-2 rounded-lg">
+              <h3 className="font-semibold mb-1 text-sm flex items-center gap-1">
+                <Phone size={14} /> بيانات العميل
               </h3>
               <div className="space-y-1">
                 <p><span className="font-medium">اسم العميل:</span> {order.clientName}</p>
@@ -70,9 +72,9 @@ const Invoice: React.FC<InvoiceProps> = ({ order }) => {
             </div>
           </div>
           
-          <div className="mb-6 bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-            <h3 className="font-semibold mb-2 text-lg flex items-center gap-2">
-              <Home size={18} /> معلومات التوصيل
+          <div className="mb-3 bg-gray-50 dark:bg-gray-800 p-2 rounded-lg text-xs">
+            <h3 className="font-semibold mb-1 text-sm flex items-center gap-1">
+              <Home size={14} /> معلومات التوصيل
             </h3>
             <div className="space-y-1">
               <p><span className="font-medium">طريقة الاستلام:</span> {order.deliveryMethod}</p>
@@ -85,29 +87,34 @@ const Invoice: React.FC<InvoiceProps> = ({ order }) => {
             </div>
           </div>
           
-          <div className="mb-6">
-            <h3 className="font-semibold mb-2 text-lg">تفاصيل الطلب</h3>
+          {order.notes && (
+            <div className="mb-3 bg-gray-50 dark:bg-gray-800 p-2 rounded-lg text-xs">
+              <h3 className="font-semibold mb-1 text-sm">ملاحظات</h3>
+              <p className="whitespace-pre-wrap">{order.notes}</p>
+            </div>
+          )}
+          
+          <div className="mb-3">
+            <h3 className="font-semibold mb-1 text-sm">تفاصيل الطلب</h3>
             <div className="overflow-x-auto">
-              <Table>
+              <Table className="text-xs w-full">
                 <TableHeader>
                   <TableRow>
-                    <TableHead>نوع المنتج</TableHead>
-                    <TableHead>المقاس</TableHead>
-                    <TableHead>الكمية</TableHead>
-                    <TableHead>سعر الوحدة</TableHead>
-                    <TableHead>التكلفة</TableHead>
-                    <TableHead>الإجمالي</TableHead>
+                    <TableHead className="text-xs">المنتج</TableHead>
+                    <TableHead className="text-xs">المقاس</TableHead>
+                    <TableHead className="text-xs">الكمية</TableHead>
+                    <TableHead className="text-xs">السعر</TableHead>
+                    <TableHead className="text-xs">الإجمالي</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {items.map((item, index) => (
                     <TableRow key={index}>
-                      <TableCell>{item.productType}</TableCell>
-                      <TableCell>{item.size}</TableCell>
-                      <TableCell>{item.quantity}</TableCell>
-                      <TableCell>{formatCurrency(item.price)}</TableCell>
-                      <TableCell>{formatCurrency(item.cost)}</TableCell>
-                      <TableCell>{formatCurrency(item.price * item.quantity)}</TableCell>
+                      <TableCell className="text-xs p-1">{item.productType}</TableCell>
+                      <TableCell className="text-xs p-1">{item.size}</TableCell>
+                      <TableCell className="text-xs p-1">{item.quantity}</TableCell>
+                      <TableCell className="text-xs p-1">{formatCurrency(item.price)}</TableCell>
+                      <TableCell className="text-xs p-1">{formatCurrency(item.price * item.quantity)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -116,43 +123,80 @@ const Invoice: React.FC<InvoiceProps> = ({ order }) => {
           </div>
           
           <div className="flex justify-end">
-            <div className="w-full md:w-64">
-              <div className="flex justify-between py-2">
+            <div className="w-full">
+              <div className="flex justify-between py-1 text-xs">
                 <span className="font-medium">إجمالي المنتجات:</span>
                 <span>{formatCurrency(items.reduce((sum, item) => sum + item.price * item.quantity, 0))}</span>
               </div>
               {order.shippingCost > 0 && (
-                <div className="flex justify-between py-2 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex justify-between py-1 border-t border-gray-200 dark:border-gray-700 text-xs">
                   <span className="font-medium">مصاريف الشحن:</span>
                   <span>{formatCurrency(order.shippingCost)}</span>
                 </div>
               )}
-              {order.discount > 0 && (
-                <div className="flex justify-between py-2 border-t border-gray-200 dark:border-gray-700">
-                  <span className="font-medium">الخصم:</span>
-                  <span>{formatCurrency(order.discount)}</span>
+              {order.deposit > 0 && (
+                <div className="flex justify-between py-1 border-t border-gray-200 dark:border-gray-700 text-xs">
+                  <span className="font-medium">العربون:</span>
+                  <span>{formatCurrency(order.deposit)}</span>
                 </div>
               )}
-              <div className="flex justify-between py-2 border-t border-gray-200 dark:border-gray-700">
-                <span className="font-bold text-lg">المجموع الكلي:</span>
-                <span className="font-bold text-lg">{formatCurrency(order.total)}</span>
+              {order.discount > 0 && (
+                <div className="flex justify-between py-1 border-t border-gray-200 dark:border-gray-700 text-xs">
+                  <span className="font-medium">الخصم:</span>
+                  <span className="text-red-600">{formatCurrency(order.discount)}</span>
+                </div>
+              )}
+              <div className="flex justify-between py-1 border-t border-gray-200 dark:border-gray-700 text-sm">
+                <span className="font-bold">المجموع الكلي:</span>
+                <span className="font-bold">{formatCurrency(order.total)}</span>
               </div>
+              {order.deposit > 0 && (
+                <div className="flex justify-between py-1 border-t border-gray-200 dark:border-gray-700 text-sm">
+                  <span className="font-bold">المتبقي:</span>
+                  <span className="font-bold">{formatCurrency(order.total - order.deposit)}</span>
+                </div>
+              )}
             </div>
           </div>
           
-          <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 text-center text-sm text-gray-500 dark:text-gray-400">
+          <div className="mt-4 pt-2 border-t border-gray-200 dark:border-gray-700 text-center text-[10px] text-gray-500 dark:text-gray-400">
             <p>شكراً لثقتكم في #بتاع_هدايا_الأصلى</p>
-            <div className="flex justify-center items-center gap-2 mt-2">
-              <Phone size={16} />
+            <div className="flex justify-center items-center gap-1 mt-1">
+              <Phone size={10} />
               <span>للتواصل: 01113977005</span>
             </div>
-            <div className="flex justify-center items-center gap-2 mt-2">
-              <Facebook size={16} />
-              <a href="https://www.facebook.com/D4Uofficial" className="text-blue-600 hover:underline">
-                https://www.facebook.com/D4Uofficial
-              </a>
+            
+            <div className="flex flex-wrap justify-center items-center gap-x-2 gap-y-1 mt-1">
+              <div className="flex items-center gap-1">
+                <Facebook size={10} />
+                <a href="https://www.facebook.com/D4Uofficial" className="text-blue-600 hover:underline">
+                  D4Uofficial
+                </a>
+              </div>
+              
+              <div className="flex items-center gap-1">
+                <Instagram size={10} />
+                <a href="https://www.instagram.com/design4you_gift_store" className="text-purple-600 hover:underline">
+                  design4you_gift_store
+                </a>
+              </div>
+              
+              <div className="flex items-center gap-1">
+                <Telegram size={10} />
+                <a href="https://t.me/GiftsEg" className="text-blue-500 hover:underline">
+                  GiftsEg
+                </a>
+              </div>
+              
+              <div className="flex items-center gap-1">
+                <TikTok size={10} />
+                <a href="https://www.tiktok.com/@giftstore2022" className="text-black dark:text-white hover:underline">
+                  giftstore2022
+                </a>
+              </div>
             </div>
-            <p className="mt-4 text-xs">جميع الحقوق محفوظة #بتاع_هدايا_الأصلي 2025</p>
+            
+            <p className="mt-2 text-[8px]">جميع الحقوق محفوظة #بتاع_هدايا_الأصلي 2025</p>
           </div>
         </CardContent>
       </Card>

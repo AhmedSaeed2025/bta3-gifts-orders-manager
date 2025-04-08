@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useOrders } from "@/context/OrderContext";
 import { formatCurrency, generateMonthlyReport, calculateTotals, exportToExcel } from "@/lib/utils";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
 import { DownloadCloud, TrendingUp, TrendingDown, FileText } from "lucide-react";
 
 const ProfitReport = () => {
@@ -38,6 +38,14 @@ const ProfitReport = () => {
 
   const handleExport = () => {
     exportToExcel("profitReportTable", "تقرير_الربح");
+  };
+
+  // Fixed tooltip formatter to handle strings correctly
+  const formatTooltipValue = (value: any) => {
+    if (typeof value === 'number') {
+      return `${value.toFixed(2)} جنيه`;
+    }
+    return value;
   };
 
   return (
@@ -100,7 +108,7 @@ const ProfitReport = () => {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis />
-                  <Tooltip formatter={(value) => `${value.toFixed(2)} جنيه`} />
+                  <RechartsTooltip formatter={formatTooltipValue} />
                   <Legend />
                   <Bar dataKey="تكاليف" fill="#ef4444" />
                   <Bar dataKey="مبيعات" fill="#3b82f6" />
