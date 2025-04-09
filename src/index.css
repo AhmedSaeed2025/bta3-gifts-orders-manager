@@ -2,7 +2,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
+ 
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -10,179 +10,143 @@
 
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
-
+ 
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-
+ 
     --primary: 222.2 47.4% 11.2%;
     --primary-foreground: 210 40% 98%;
-
+ 
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
-
+ 
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-
+ 
     --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
-
+ 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
-
+ 
     --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --gift-primary: #FD0606;
+    --gift-primary-foreground: #ffffff;
+    --gift-secondary: #223e96;
+    --gift-secondaryHover: #14285e;
+    --gift-accent: #f6f8ff;
+    --gift-positive: #16a34a;
+    --gift-negative: #dc2626;
   }
-
+ 
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
-
+ 
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
-
+ 
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-
+ 
     --primary: 210 40% 98%;
     --primary-foreground: 222.2 47.4% 11.2%;
-
+ 
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
-
+ 
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
-
+ 
     --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
-
+ 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-
+ 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
 
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --gift-primary: #FF6B6B;
+    --gift-primary-foreground: #ffffff;
+    --gift-secondary: #4E73DF;
+    --gift-secondaryHover: #3A5EC8;
+    --gift-accent: #10161f;
+    --gift-positive: #22c55e;
+    --gift-negative: #ef4444;
   }
 }
-
+ 
 @layer base {
   * {
     @apply border-border;
   }
-
   body {
     @apply bg-background text-foreground;
-    font-family: "Tajawal", sans-serif;
-  }
-  
-  /* Custom scrollbar for RTL support */
-  ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-  
-  ::-webkit-scrollbar-track {
-    @apply bg-gray-100 dark:bg-gray-800;
-  }
-  
-  ::-webkit-scrollbar-thumb {
-    @apply bg-gift-primary dark:bg-gift-primaryHover rounded;
-  }
-  
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-gift-primaryHover dark:bg-gift-primary;
   }
 }
 
-/* RTL specific styles */
-.rtl {
-  direction: rtl;
-  text-align: right;
-}
-
-.rtl .mr-auto {
-  margin-right: 0;
-  margin-left: auto;
-}
-
-.rtl .ml-auto {
-  margin-left: 0;
-  margin-right: auto;
-}
-
-/* Custom table classes */
 .gift-table {
-  @apply w-full border-collapse my-2;
+  width: 100%;
+  border-collapse: collapse;
 }
 
-.gift-table th, .gift-table td {
-  @apply border border-gray-300 dark:border-gray-700 p-2 text-center;
+.gift-table th,
+.gift-table td {
+  padding: 0.75rem;
+  text-align: right;
+  border: 1px solid #e2e8f0;
 }
 
 .gift-table th {
-  @apply bg-gift-accent dark:bg-gray-800 font-bold;
+  background-color: #f8fafc;
+  font-weight: 600;
 }
 
 .gift-table tr:nth-child(even) {
-  @apply bg-gift-accent/50 dark:bg-gray-800/50;
+  background-color: #f8fafc;
 }
 
-/* Responsive styles */
-@media (max-width: 768px) {
-  .container {
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
-  }
-  
-  .gift-table {
-    @apply text-sm;
-  }
-  
-  .gift-table th, .gift-table td {
-    @apply p-1;
-  }
-}
-
-/* Dark mode specific styles */
-.dark .text-gift-primary {
-  color: #ff6b6b;
-}
-
-.dark .bg-gift-accent {
-  background-color: #1a1a2e;
-}
-
-/* Print styles */
+/* Printing styles */
 @media print {
-  body {
-    background-color: white;
+  @page {
+    size: auto;
+    margin: 5mm;
   }
   
-  .no-print {
+  body {
+    background-color: white !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .printing-invoice * {
+    visibility: visible;
+  }
+
+  .printing-invoice .print\:hidden {
     display: none !important;
   }
   
-  .print-only {
-    display: block !important;
+  .print-container,
+  .print-container * {
+    visibility: visible;
+  }
+
+  .print-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
   }
 }
+

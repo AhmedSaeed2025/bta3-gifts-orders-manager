@@ -27,8 +27,11 @@ import {
   SheetTitle, 
   SheetFooter 
 } from "@/components/ui/sheet";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, RotateCcw, AlertCircle } from "lucide-react";
 import { ProductSize } from "@/types";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 
 const ProductForm = ({ 
   initialName = "", 
@@ -116,7 +119,7 @@ const SizeForm = ({
       </div>
       <div>
         <label htmlFor="price" className="block text-sm mb-1">
-          السعر
+          سعر البيع المقترح
         </label>
         <Input
           id="price"
@@ -128,6 +131,20 @@ const SizeForm = ({
           step={0.01}
           required
         />
+      </div>
+      <div className="border border-blue-100 bg-blue-50 p-3 rounded-md mt-2">
+        <div className="flex justify-between text-sm">
+          <span>الربح:</span>
+          <span className="font-bold">
+            {Number(price - cost).toFixed(2)} جنيه
+          </span>
+        </div>
+        <div className="flex justify-between text-sm mt-1">
+          <span>نسبة الربح:</span>
+          <span className="font-bold">
+            {cost > 0 ? Math.round(((price - cost) / cost) * 100) : 0}%
+          </span>
+        </div>
       </div>
       <Button type="submit" className="w-full">
         {initialSize.size ? "تحديث" : "إضافة"}
@@ -144,13 +161,16 @@ const ProductsTab = () => {
     deleteProduct,
     addProductSize,
     updateProductSize,
-    deleteProductSize
+    deleteProductSize,
+    clearAllProducts
   } = useProducts();
+  
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
   const [isAddSizeOpen, setIsAddSizeOpen] = useState(false);
   const [editingSizeIndex, setEditingSizeIndex] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
+  const [isClearAllDialogOpen, setIsClearAllDialogOpen] = useState(false);
 
   const product = selectedProduct 
     ? products.find(p => p.id === selectedProduct) 
@@ -185,12 +205,22 @@ const ProductsTab = () => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
       <div className="md:col-span-2">
-        <Card>
-          <CardHeader>
+        <Card className="h-full">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xl font-bold">المنتجات</CardTitle>
+            <div className="flex space-x-2">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                onClick={() => setIsClearAllDialogOpen(true)}
+              >
+                <RotateCcw size={16} />
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="max-h-[400px] overflow-y-auto">
+            <ScrollArea className="h-[400px] rounded-md">
               {products.length === 0 ? (
                 <div className="p-4 text-center text-gray-500">
                   لا توجد منتجات مضافة
@@ -201,20 +231,20 @@ const ProductsTab = () => {
                     <li key={product.id}>
                       <button
                         onClick={() => setSelectedProduct(product.id)}
-                        className={`w-full text-right px-4 py-2 hover:bg-gray-100 flex justify-between items-center ${
+                        className={`w-full text-right px-4 py-3 hover:bg-gray-100 flex justify-between items-center ${
                           selectedProduct === product.id ? "bg-gray-100" : ""
                         }`}
                       >
-                        <span>{product.name}</span>
-                        <span className="text-xs text-gray-500">
+                        <span className="font-medium">{product.name}</span>
+                        <Badge variant="outline" className="rounded-full">
                           {product.sizes.length} مقاس
-                        </span>
+                        </Badge>
                       </button>
                     </li>
                   ))}
                 </ul>
               )}
-            </div>
+            </ScrollArea>
           </CardContent>
           <CardFooter className="p-4">
             <Dialog>
@@ -268,55 +298,64 @@ const ProductsTab = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>المقاس</TableHead>
-                    <TableHead>التكلفة</TableHead>
-                    <TableHead>السعر</TableHead>
-                    <TableHead>الربح</TableHead>
-                    <TableHead className="w-[100px]">إجراءات</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {product.sizes.length === 0 ? (
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8">
-                        لم يتم إضافة أي مقاسات بعد
-                      </TableCell>
+                      <TableHead>المقاس</TableHead>
+                      <TableHead>التكلفة</TableHead>
+                      <TableHead>السعر المقترح</TableHead>
+                      <TableHead>الربح</TableHead>
+                      <TableHead className="w-[100px]">إجراءات</TableHead>
                     </TableRow>
-                  ) : (
-                    product.sizes.map((size) => (
-                      <TableRow key={size.size}>
-                        <TableCell>{size.size}</TableCell>
-                        <TableCell>{size.cost}</TableCell>
-                        <TableCell>{size.price}</TableCell>
-                        <TableCell>{(size.price - size.cost).toFixed(2)}</TableCell>
-                        <TableCell>
-                          <div className="flex space-x-1">
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              onClick={() => handleEditSize(size.size)}
-                            >
-                              <Edit size={14} />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              onClick={() => handleDeleteSize(size.size)}
-                            >
-                              <Trash2 size={14} />
-                            </Button>
-                          </div>
+                  </TableHeader>
+                  <TableBody>
+                    {product.sizes.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-8">
+                          لم يتم إضافة أي مقاسات بعد
                         </TableCell>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
+                    ) : (
+                      product.sizes.map((size) => (
+                        <TableRow key={size.size}>
+                          <TableCell className="font-medium">{size.size}</TableCell>
+                          <TableCell>{size.cost}</TableCell>
+                          <TableCell>{size.price}</TableCell>
+                          <TableCell className="text-green-600 font-medium">
+                            {(size.price - size.cost).toFixed(2)}
+                            <span className="text-xs text-gray-500 mr-1">
+                              ({Math.round(((size.price - size.cost) / size.cost) * 100)}%)
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex space-x-1">
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => handleEditSize(size.size)}
+                              >
+                                <Edit size={14} />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                onClick={() => handleDeleteSize(size.size)}
+                              >
+                                <Trash2 size={14} />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
-            <CardFooter>
+            <Separator className="my-2" />
+            <CardFooter className="pt-4">
               <Button 
                 className="w-full"
                 onClick={() => setIsAddSizeOpen(true)}
@@ -336,12 +375,16 @@ const ProductsTab = () => {
         )}
       </div>
 
+      {/* Delete product confirmation dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>تأكيد الحذف</DialogTitle>
           </DialogHeader>
-          <p>هل أنت متأكد من رغبتك في حذف هذا المنتج؟ لا يمكن التراجع عن هذه العملية.</p>
+          <div className="flex items-center gap-2 text-red-500">
+            <AlertCircle size={20} />
+            <p>هل أنت متأكد من رغبتك في حذف هذا المنتج؟ لا يمكن التراجع عن هذه العملية.</p>
+          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
               إلغاء
@@ -353,6 +396,35 @@ const ProductsTab = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Clear all products confirmation dialog */}
+      <Dialog open={isClearAllDialogOpen} onOpenChange={setIsClearAllDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>حذف جميع المنتجات</DialogTitle>
+          </DialogHeader>
+          <div className="flex items-center gap-2 text-red-500">
+            <AlertCircle size={20} />
+            <p>هل أنت متأكد من رغبتك في حذف جميع المنتجات؟ لا يمكن التراجع عن هذه العملية.</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsClearAllDialogOpen(false)}>
+              إلغاء
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={() => {
+                clearAllProducts();
+                setIsClearAllDialogOpen(false);
+                setSelectedProduct(null);
+              }}
+            >
+              حذف الكل
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add size sheet */}
       <Sheet open={isAddSizeOpen} onOpenChange={setIsAddSizeOpen}>
         <SheetContent>
           <SheetHeader>
@@ -376,6 +448,7 @@ const ProductsTab = () => {
         </SheetContent>
       </Sheet>
 
+      {/* Edit size sheet */}
       <Sheet open={!!editingSizeIndex} onOpenChange={() => setEditingSizeIndex(null)}>
         <SheetContent>
           <SheetHeader>

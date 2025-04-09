@@ -12,6 +12,7 @@ interface ProductContextType {
   addProductSize: (productId: string, size: ProductSize) => void;
   updateProductSize: (productId: string, size: string, updatedSize: ProductSize) => void;
   deleteProductSize: (productId: string, size: string) => void;
+  clearAllProducts: () => void;
 }
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
@@ -19,13 +20,12 @@ const ProductContext = createContext<ProductContextType | undefined>(undefined);
 export const ProductProvider = ({ children }: { children: React.ReactNode }) => {
   const [products, setProducts] = useState<Product[]>([]);
 
-  // Load products from local storage
+  // Load products from local storage - starting with empty array
   useEffect(() => {
-    const savedProducts = localStorage.getItem("products");
-    
-    if (savedProducts) {
-      setProducts(JSON.parse(savedProducts));
-    }
+    // Start with empty array - clear previous data as requested
+    setProducts([]);
+    // Remove from localStorage to ensure we start fresh
+    localStorage.removeItem("products");
   }, []);
 
   // Save products to local storage whenever they change
@@ -99,6 +99,12 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
     toast.success("تم حذف المقاس بنجاح");
   };
 
+  const clearAllProducts = () => {
+    setProducts([]);
+    localStorage.removeItem("products");
+    toast.success("تم حذف جميع المنتجات بنجاح");
+  };
+
   return (
     <ProductContext.Provider 
       value={{ 
@@ -108,7 +114,8 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
         deleteProduct, 
         addProductSize, 
         updateProductSize, 
-        deleteProductSize 
+        deleteProductSize,
+        clearAllProducts
       }}
     >
       {children}
