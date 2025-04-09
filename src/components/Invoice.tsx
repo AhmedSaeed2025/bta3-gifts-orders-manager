@@ -95,7 +95,6 @@ const Invoice: React.FC<InvoiceProps> = ({ order }) => {
                     <TableHead>المقاس</TableHead>
                     <TableHead>الكمية</TableHead>
                     <TableHead>سعر الوحدة</TableHead>
-                    <TableHead>التكلفة</TableHead>
                     <TableHead>الإجمالي</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -106,7 +105,6 @@ const Invoice: React.FC<InvoiceProps> = ({ order }) => {
                       <TableCell>{item.size}</TableCell>
                       <TableCell>{item.quantity}</TableCell>
                       <TableCell>{formatCurrency(item.price)}</TableCell>
-                      <TableCell>{formatCurrency(item.cost)}</TableCell>
                       <TableCell>{formatCurrency(item.price * item.quantity)}</TableCell>
                     </TableRow>
                   ))}
@@ -130,13 +128,13 @@ const Invoice: React.FC<InvoiceProps> = ({ order }) => {
               {order.discount > 0 && (
                 <div className="flex justify-between py-2 border-t border-gray-200 dark:border-gray-700">
                   <span className="font-medium">الخصم:</span>
-                  <span>{formatCurrency(order.discount)}</span>
+                  <span className="text-destructive font-medium">- {formatCurrency(order.discount)}</span>
                 </div>
               )}
               {order.deposit > 0 && (
                 <div className="flex justify-between py-2 border-t border-gray-200 dark:border-gray-700">
                   <span className="font-medium">العربون المدفوع:</span>
-                  <span>{formatCurrency(order.deposit)}</span>
+                  <span className="text-destructive font-medium">- {formatCurrency(order.deposit)}</span>
                 </div>
               )}
               <div className="flex justify-between py-2 border-t border-gray-200 dark:border-gray-700">

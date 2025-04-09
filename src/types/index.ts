@@ -19,7 +19,7 @@ export interface Order {
   items: OrderItem[];
   shippingCost: number;
   discount: number;
-  deposit: number; // Added deposit field
+  deposit: number;
   total: number;
   profit: number;
   status: OrderStatus;
