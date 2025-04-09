@@ -40,6 +40,15 @@ const ProfitReport = () => {
     exportToExcel("profitReportTable", "تقرير_الربح");
   };
 
+  // Fixed: type safe formatter function
+  const tooltipFormatter = (value: any) => {
+    // Make sure value is a number before calling toFixed
+    if (typeof value === 'number') {
+      return `${value.toFixed(2)} جنيه`;
+    }
+    return `${value} جنيه`;
+  };
+
   return (
     <Card className="overflow-hidden">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -100,7 +109,7 @@ const ProfitReport = () => {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis />
-                  <Tooltip formatter={(value) => `${value.toFixed(2)} جنيه`} />
+                  <Tooltip formatter={tooltipFormatter} />
                   <Legend />
                   <Bar dataKey="تكاليف" fill="#ef4444" />
                   <Bar dataKey="مبيعات" fill="#3b82f6" />
