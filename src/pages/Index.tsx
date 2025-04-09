@@ -16,10 +16,10 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gift-accent dark:bg-gray-900 transition-colors duration-300">
-      <div className="container mx-auto px-3 md:px-4 py-4 md:py-6">
+      <div className="container mx-auto px-2 md:px-4 py-3 md:py-6">
         <Logo />
         
-        <Tabs defaultValue="addOrder" className="mt-4 md:mt-6">
+        <Tabs defaultValue="addOrder" className="mt-3 md:mt-6">
           <Tabs.Tab label={isMobile ? "إضافة" : "إضافة طلب"} value="addOrder">
             <OrderForm />
           </Tabs.Tab>
@@ -28,7 +28,7 @@ const Index = () => {
             <OrdersTable />
           </Tabs.Tab>
           
-          <Tabs.Tab label="الفاتورة" value="invoice">
+          <Tabs.Tab label={isMobile ? "الفاتورة" : "الفاتورة"} value="invoice">
             <InvoiceTab />
           </Tabs.Tab>
           

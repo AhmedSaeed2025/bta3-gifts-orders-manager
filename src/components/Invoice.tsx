@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Order, ORDER_STATUS_LABELS } from "@/types";
 import { formatCurrency } from "@/lib/utils";
 import { useReactToPrint } from "react-to-print";
-import { Facebook, Phone, Home, Map } from "lucide-react";
+import { Facebook, Phone, Home, Map, Instagram, Send } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface InvoiceProps {
@@ -48,16 +48,16 @@ const Invoice: React.FC<InvoiceProps> = ({ order }) => {
       </div>
       
       <Card ref={printRef} className="print:shadow-none print:border-none">
-        <CardContent className="p-2 print:p-0 text-sm">
+        <CardContent className="p-2 print:p-0 text-xs">
           <div className="text-center mb-3">
-            <h1 className="text-xl font-bold text-gift-primary">#بتاع_هدايا_الأصلى</h1>
+            <h1 className="text-lg md:text-xl font-bold text-gift-primary">#بتاع_هدايا_الأصلى</h1>
             <p className="text-xs text-gray-600 dark:text-gray-400">فاتورة طلب</p>
           </div>
           
-          <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3 text-xs">
             <div className="bg-gray-50 dark:bg-gray-800 p-2 rounded-lg">
-              <h3 className="font-semibold mb-1 text-sm flex items-center gap-1">
-                <Map size={14} /> بيانات الفاتورة
+              <h3 className="font-semibold mb-1 text-xs flex items-center gap-1">
+                <Map size={12} /> بيانات الفاتورة
               </h3>
               <div className="space-y-0.5">
                 <p><span className="font-medium">رقم الفاتورة:</span> {order.serial}</p>
@@ -67,8 +67,8 @@ const Invoice: React.FC<InvoiceProps> = ({ order }) => {
             </div>
             
             <div className="bg-gray-50 dark:bg-gray-800 p-2 rounded-lg">
-              <h3 className="font-semibold mb-1 text-sm flex items-center gap-1">
-                <Phone size={14} /> بيانات العميل
+              <h3 className="font-semibold mb-1 text-xs flex items-center gap-1">
+                <Phone size={12} /> بيانات العميل
               </h3>
               <div className="space-y-0.5">
                 <p><span className="font-medium">اسم العميل:</span> {order.clientName}</p>
@@ -79,8 +79,8 @@ const Invoice: React.FC<InvoiceProps> = ({ order }) => {
           </div>
           
           <div className="mb-3 bg-gray-50 dark:bg-gray-800 p-2 rounded-lg text-xs">
-            <h3 className="font-semibold mb-1 text-sm flex items-center gap-1">
-              <Home size={14} /> معلومات التوصيل
+            <h3 className="font-semibold mb-1 text-xs flex items-center gap-1">
+              <Home size={12} /> معلومات التوصيل
             </h3>
             <div className="space-y-0.5">
               <p><span className="font-medium">طريقة الاستلام:</span> {order.deliveryMethod}</p>
@@ -94,26 +94,26 @@ const Invoice: React.FC<InvoiceProps> = ({ order }) => {
           </div>
           
           <div className="mb-3">
-            <h3 className="font-semibold mb-1 text-sm">تفاصيل الطلب</h3>
+            <h3 className="font-semibold mb-1 text-xs">تفاصيل الطلب</h3>
             <div className="overflow-x-auto">
               <Table className="text-xs border-collapse">
                 <TableHeader>
                   <TableRow className="bg-gray-50">
-                    <TableHead className="py-1 px-2">المنتج</TableHead>
-                    <TableHead className="py-1 px-2">المقاس</TableHead>
-                    <TableHead className="py-1 px-2">العدد</TableHead>
-                    <TableHead className="py-1 px-2">السعر</TableHead>
-                    <TableHead className="py-1 px-2">الإجمالي</TableHead>
+                    <TableHead className="py-1 px-1">المنتج</TableHead>
+                    <TableHead className="py-1 px-1">المقاس</TableHead>
+                    <TableHead className="py-1 px-1">العدد</TableHead>
+                    <TableHead className="py-1 px-1">السعر</TableHead>
+                    <TableHead className="py-1 px-1">الإجمالي</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {items.map((item, index) => (
                     <TableRow key={index} className="border-b border-gray-200">
-                      <TableCell className="py-1 px-2">{item.productType}</TableCell>
-                      <TableCell className="py-1 px-2">{item.size}</TableCell>
-                      <TableCell className="py-1 px-2">{item.quantity}</TableCell>
-                      <TableCell className="py-1 px-2">{formatCurrency(item.price)}</TableCell>
-                      <TableCell className="py-1 px-2 font-medium">{formatCurrency(item.price * item.quantity)}</TableCell>
+                      <TableCell className="py-1 px-1">{item.productType}</TableCell>
+                      <TableCell className="py-1 px-1">{item.size}</TableCell>
+                      <TableCell className="py-1 px-1">{item.quantity}</TableCell>
+                      <TableCell className="py-1 px-1">{formatCurrency(item.price)}</TableCell>
+                      <TableCell className="py-1 px-1 font-medium">{formatCurrency(item.price * item.quantity)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -155,16 +155,40 @@ const Invoice: React.FC<InvoiceProps> = ({ order }) => {
           <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700 text-center text-xs text-gray-500 dark:text-gray-400">
             <p>شكراً لثقتكم في #بتاع_هدايا_الأصلى</p>
             <div className="flex justify-center items-center gap-1 mt-1">
-              <Phone size={12} />
+              <Phone size={10} />
               <span>للتواصل: 01113977005</span>
             </div>
-            <div className="flex justify-center items-center gap-1 mt-1">
-              <Facebook size={12} />
-              <a href="https://www.facebook.com/D4Uofficial" className="text-blue-600 hover:underline">
-                facebook.com/D4Uofficial
+            
+            <div className="flex flex-wrap justify-center items-center gap-3 mt-2">
+              <a href="https://www.facebook.com/D4Uofficial" className="flex items-center gap-1 text-blue-600 hover:underline">
+                <Facebook size={10} />
+                <span>D4Uofficial</span>
+              </a>
+              
+              <a href="https://www.instagram.com/design4you_gift_store" className="flex items-center gap-1 text-pink-600 hover:underline">
+                <Instagram size={10} />
+                <span>design4you_gift_store</span>
+              </a>
+              
+              <a href="https://www.tiktok.com/@giftstore2022" className="flex items-center gap-1 text-gray-800 hover:underline">
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 12a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"></path>
+                  <path d="M15 8c0 1 .1 2 2 2"></path>
+                  <path d="M12 16c-1.9 0-3-1.1-3-3V9"></path>
+                  <path d="M14 4c0 1 2 2 2 2"></path>
+                  <path d="M14 8c4 0 4-4 4-4"></path>
+                  <path d="M15 12V4"></path>
+                </svg>
+                <span>giftstore2022</span>
+              </a>
+              
+              <a href="https://t.me/GiftsEg" className="flex items-center gap-1 text-blue-500 hover:underline">
+                <Send size={10} />
+                <span>GiftsEg</span>
               </a>
             </div>
-            <p className="mt-2 text-[10px]">جميع الحقوق محفوظة #بتاع_هدايا_الأصلي 2025</p>
+            
+            <p className="mt-2 text-[9px]">جميع الحقوق محفوظة #بتاع_هدايا_الأصلي 2025</p>
           </div>
         </CardContent>
       </Card>

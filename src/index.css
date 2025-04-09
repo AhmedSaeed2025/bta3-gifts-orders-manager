@@ -98,9 +98,10 @@
 
 .gift-table th,
 .gift-table td {
-  padding: 0.75rem;
+  padding: 0.5rem;
   text-align: right;
   border: 1px solid #e2e8f0;
+  font-size: 0.75rem;
 }
 
 .gift-table th {
@@ -123,6 +124,7 @@
     background-color: white !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+    font-size: 10px !important;
   }
 
   body * {
@@ -148,5 +150,25 @@
     top: 0;
     width: 100%;
   }
+  
+  /* Ensure proper table formatting when printing */
+  .gift-table th,
+  .gift-table td {
+    padding: 2px;
+    font-size: 8px;
+  }
+  
+  /* Make social links smaller when printing */
+  .social-links {
+    font-size: 7px;
+  }
 }
 
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  .gift-table th,
+  .gift-table td {
+    padding: 0.25rem;
+    font-size: 0.7rem;
+  }
+}

@@ -29,27 +29,27 @@ const InvoiceTab = () => {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-xl">طباعة الفاتورة</CardTitle>
+    <Card className="shadow-sm">
+      <CardHeader className="py-3">
+        <CardTitle className="text-base md:text-xl">طباعة الفاتورة</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-2 md:p-4">
         {!orders || orders.length === 0 ? (
-          <p className="text-center py-4">لا توجد طلبات متاحة لعرض الفاتورة</p>
+          <p className="text-center py-3 text-sm">لا توجد طلبات متاحة لعرض الفاتورة</p>
         ) : (
           <div>
-            <div className="mb-6">
-              <Label htmlFor="orderSelect">اختر الطلب:</Label>
+            <div className="mb-4">
+              <Label htmlFor="orderSelect" className="text-xs md:text-sm mb-1 block">اختر الطلب:</Label>
               <Select 
                 value={selectedOrderSerial}
                 onValueChange={handleOrderChange}
               >
-                <SelectTrigger className="w-full md:w-80">
+                <SelectTrigger className="w-full text-xs md:text-sm h-8 md:h-10">
                   <SelectValue placeholder="اختر الطلب" />
                 </SelectTrigger>
                 <SelectContent>
                   {orders.map((order) => (
-                    <SelectItem key={order.serial} value={order.serial}>
+                    <SelectItem key={order.serial} value={order.serial} className="text-xs md:text-sm">
                       {`${order.serial} - ${order.clientName}`}
                     </SelectItem>
                   ))}

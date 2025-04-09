@@ -30,13 +30,13 @@ const Tabs: React.FC<TabsProps> & { Tab: typeof Tab } = ({ defaultValue, classNa
 
   return (
     <div className={cn("w-full", className)}>
-      <div className="overflow-hidden border border-gray-300 bg-white rounded-md mb-4">
-        <div className="flex flex-wrap">
+      <div className="overflow-x-auto border border-gray-300 bg-white rounded-md mb-4">
+        <div className="flex flex-nowrap min-w-full">
           {tabs.map((tab) => (
             <button
               key={tab.props.value}
               className={cn(
-                "py-3 px-4 transition-colors font-medium",
+                "py-2 px-3 transition-colors font-medium text-xs md:text-sm whitespace-nowrap flex-shrink-0",
                 activeTab === tab.props.value
                   ? "bg-gift-primary text-white"
                   : "hover:bg-gift-primary hover:text-white"
@@ -49,7 +49,7 @@ const Tabs: React.FC<TabsProps> & { Tab: typeof Tab } = ({ defaultValue, classNa
         </div>
       </div>
       
-      <div className="border border-gray-300 bg-white rounded-md p-4">
+      <div className="border border-gray-300 bg-white rounded-md p-2 md:p-4">
         {tabs.find((tab) => tab.props.value === activeTab)?.props.children}
       </div>
     </div>
