@@ -8,8 +8,8 @@ import SummaryReport from "@/components/SummaryReport";
 import ProfitReport from "@/components/ProfitReport";
 import PriceManagement from "@/components/PriceManagement";
 import InvoiceTab from "@/components/InvoiceTab";
+import ProductsManagement from "@/components/ProductsManagement";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ThemeToggle } from "@/components/ThemeToggle";
 
 const Index = () => {
   const isMobile = useIsMobile();
@@ -19,7 +19,6 @@ const Index = () => {
       <div className="container mx-auto px-2 md:px-4 py-3 md:py-6">
         <div className="flex items-center justify-between mb-4">
           <Logo />
-          <ThemeToggle />
         </div>
         
         <Tabs defaultValue="addOrder" className="mt-2 md:mt-4">
@@ -45,6 +44,10 @@ const Index = () => {
           
           <Tabs.Tab label={isMobile ? "الأسعار" : "أسعار مقترحة"} value="proposedPrices">
             <PriceManagement />
+          </Tabs.Tab>
+          
+          <Tabs.Tab label={isMobile ? "المنتجات" : "إدارة المنتجات"} value="productsManagement">
+            <ProductsManagement />
           </Tabs.Tab>
         </Tabs>
       </div>
