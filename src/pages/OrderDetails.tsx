@@ -7,6 +7,7 @@ import { useOrders } from "@/context/OrderContext";
 import Logo from "@/components/Logo";
 import Invoice from "@/components/Invoice";
 import { ArrowRight } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const OrderDetails = () => {
   const { serial } = useParams<{ serial: string }>();
@@ -34,14 +35,17 @@ const OrderDetails = () => {
   
   return (
     <div className="min-h-screen bg-gift-accent dark:bg-gray-900 transition-colors duration-300">
-      <div className="container mx-auto px-4 py-6">
-        <Logo />
+      <div className="container mx-auto px-4 py-4 md:py-6">
+        <div className="flex items-center justify-between mb-4">
+          <Logo />
+          <ThemeToggle />
+        </div>
         
-        <div className="mb-4 mt-6">
+        <div className="mb-4">
           <Button 
             onClick={() => navigate("/")}
             variant="outline"
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 text-xs md:text-sm h-8 md:h-10"
           >
             <ArrowRight size={16} />
             العودة للرئيسية
@@ -50,7 +54,7 @@ const OrderDetails = () => {
         
         <Card>
           <CardHeader>
-            <CardTitle className="text-xl">تفاصيل الطلب - {order.serial}</CardTitle>
+            <CardTitle className="text-lg md:text-xl">تفاصيل الطلب - {order.serial}</CardTitle>
           </CardHeader>
           <CardContent>
             <Invoice order={order} />

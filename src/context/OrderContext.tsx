@@ -73,11 +73,25 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const updateOrder = (index: number, updatedOrder: Order) => {
+    // Calculate new total based on updated fields
+    const items = updatedOrder.items || [];
+    let subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    
+    // Recalculate total based on updated values
+    const total = subtotal + (updatedOrder.shippingCost || 0) - (updatedOrder.discount || 0) - (updatedOrder.deposit || 0);
+    
+    // Create final updated order with recalculated total
+    const finalUpdatedOrder = {
+      ...updatedOrder,
+      total: Math.max(0, total) // Ensure total is not negative
+    };
+    
     setOrders(prevOrders => {
       const newOrders = [...prevOrders];
-      newOrders[index] = updatedOrder;
+      newOrders[index] = finalUpdatedOrder;
       return newOrders;
     });
+    
     toast.success("تم تحديث الطلب بنجاح");
   };
 

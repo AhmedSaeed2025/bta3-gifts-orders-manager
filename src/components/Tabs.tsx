@@ -30,16 +30,16 @@ const Tabs: React.FC<TabsProps> & { Tab: typeof Tab } = ({ defaultValue, classNa
 
   return (
     <div className={cn("w-full", className)}>
-      <div className="overflow-x-auto border border-gray-300 bg-white rounded-md mb-4">
+      <div className="overflow-x-auto border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-md mb-4 shadow-sm">
         <div className="flex flex-nowrap min-w-full">
           {tabs.map((tab) => (
             <button
               key={tab.props.value}
               className={cn(
-                "py-2 px-3 transition-colors font-medium text-xs md:text-sm whitespace-nowrap flex-shrink-0",
+                "py-1.5 md:py-2 px-2 md:px-3 transition-colors font-medium text-[10px] md:text-sm whitespace-nowrap flex-shrink-0",
                 activeTab === tab.props.value
-                  ? "bg-gift-primary text-white"
-                  : "hover:bg-gift-primary hover:text-white"
+                  ? "bg-gift-primary dark:bg-gift-primary text-white"
+                  : "hover:bg-gift-primary/10 dark:hover:bg-gift-primary/20 hover:text-gift-primary dark:hover:text-white"
               )}
               onClick={() => handleTabClick(tab.props.value)}
             >
@@ -49,7 +49,7 @@ const Tabs: React.FC<TabsProps> & { Tab: typeof Tab } = ({ defaultValue, classNa
         </div>
       </div>
       
-      <div className="border border-gray-300 bg-white rounded-md p-2 md:p-4">
+      <div className="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-md p-2 md:p-4 shadow-sm">
         {tabs.find((tab) => tab.props.value === activeTab)?.props.children}
       </div>
     </div>

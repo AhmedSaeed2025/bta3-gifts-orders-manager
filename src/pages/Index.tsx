@@ -10,6 +10,7 @@ import PriceManagement from "@/components/PriceManagement";
 import InvoiceTab from "@/components/InvoiceTab";
 import ProductsTab from "@/components/ProductsTab";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const Index = () => {
   const isMobile = useIsMobile();
@@ -17,9 +18,12 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gift-accent dark:bg-gray-900 transition-colors duration-300">
       <div className="container mx-auto px-2 md:px-4 py-3 md:py-6">
-        <Logo />
+        <div className="flex items-center justify-between mb-4">
+          <Logo />
+          <ThemeToggle />
+        </div>
         
-        <Tabs defaultValue="addOrder" className="mt-3 md:mt-6">
+        <Tabs defaultValue="addOrder" className="mt-2 md:mt-4">
           <Tabs.Tab label={isMobile ? "إضافة" : "إضافة طلب"} value="addOrder">
             <OrderForm />
           </Tabs.Tab>
