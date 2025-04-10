@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useOrders } from "@/context/OrderContext";
@@ -9,10 +8,13 @@ import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { Input } from "./ui/input";
 import { FormEvent } from "react";
-import { Pencil } from "lucide-react";
+import { Pencil, Download } from "lucide-react";
 import { Order, OrderItem, OrderStatus } from "@/types";
 import { Textarea } from "./ui/textarea";
 import { toast } from "sonner";
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const InvoiceTab = () => {
   const { orders, updateOrder } = useOrders();
@@ -21,6 +23,8 @@ const InvoiceTab = () => {
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editItems, setEditItems] = useState<OrderItem[]>([]);
+  const invoiceRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
 
   // Update order options when orders change
   useEffect(() => {
@@ -116,22 +120,77 @@ const InvoiceTab = () => {
     setEditItems(updatedItems);
   };
 
+  // Export invoice to PDF
+  const exportToPDF = async () => {
+    if (!invoiceRef.current || !selectedOrder) return;
+
+    try {
+      toast.info("جاري إنشاء ملف PDF، يرجى الانتظار...");
+
+      const invoiceElement = invoiceRef.current;
+      const canvas = await html2canvas(invoiceElement, {
+        scale: 2, // Higher scale for better quality
+        useCORS: true,
+        logging: false,
+        allowTaint: true,
+        backgroundColor: "#ffffff",
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      // Calculate the width and height
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      const imgX = (pdfWidth - imgWidth * ratio) / 2;
+      
+      // Add the image to the PDF
+      pdf.addImage(imgData, 'PNG', imgX, 0, imgWidth * ratio, imgHeight * ratio);
+      
+      // Save PDF with client name in the filename
+      pdf.save(`فاتورة-${selectedOrder.clientName}-${selectedOrder.serial}.pdf`);
+      toast.success("تم تصدير الفاتورة بنجاح");
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      toast.error("حدث خطأ أثناء إنشاء ملف PDF");
+    }
+  };
+
   return (
     <Card className="shadow-sm">
       <CardHeader className="py-3">
         <CardTitle className="text-base md:text-xl flex items-center justify-between">
           <span>طباعة الفاتورة</span>
-          {selectedOrder && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleEditClick}
-              className="text-xs flex items-center gap-1 h-7"
-            >
-              <Pencil size={14} />
-              تعديل الطلب
-            </Button>
-          )}
+          <div className="flex gap-2">
+            {selectedOrder && (
+              <>
+                <Button
+                  onClick={exportToPDF}
+                  size={isMobile ? "sm" : "default"}
+                  className={`${isMobile ? "text-xs h-7" : ""} flex items-center gap-1 bg-blue-500 hover:bg-blue-600`}
+                >
+                  <Download size={isMobile ? 14 : 16} />
+                  {isMobile ? "PDF" : "تصدير PDF"}
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size={isMobile ? "sm" : "default"}
+                  onClick={handleEditClick}
+                  className={`${isMobile ? "text-xs h-7" : ""} flex items-center gap-1`}
+                >
+                  <Pencil size={isMobile ? 14 : 16} />
+                  {isMobile ? "تعديل" : "تعديل الطلب"}
+                </Button>
+              </>
+            )}
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent className="p-2 md:p-4">
@@ -159,7 +218,9 @@ const InvoiceTab = () => {
             </div>
 
             {selectedOrder && (
-              <Invoice order={selectedOrder} />
+              <div ref={invoiceRef}>
+                <Invoice order={selectedOrder} />
+              </div>
             )}
             
             {/* Edit Order Dialog */}
@@ -229,9 +290,9 @@ const InvoiceTab = () => {
                           <SelectValue placeholder="اختر طريقة الدفع" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="كاش">كاش</SelectItem>
-                          <SelectItem value="تحويل بنكي">تحويل بنكي</SelectItem>
-                          <SelectItem value="فوري">فوري</SelectItem>
+                          <SelectItem value="نقدي عند الاستلام">نقدي عند الاستلام</SelectItem>
+                          <SelectItem value="انستا باي">انستا باي</SelectItem>
+                          <SelectItem value="محفظة الكترونية">محفظة الكترونية</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -246,7 +307,7 @@ const InvoiceTab = () => {
                           <SelectValue placeholder="اختر طريقة التوصيل" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="استلام من المتجر">استلام من المتجر</SelectItem>
+                          <SelectItem value="استلام من المعادي">استلام من المعادي</SelectItem>
                           <SelectItem value="شحن للمنزل">شحن للمنزل</SelectItem>
                         </SelectContent>
                       </Select>
@@ -288,11 +349,11 @@ const InvoiceTab = () => {
                         <SelectValue placeholder="اختر حالة الطلب" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="جديد">جديد</SelectItem>
-                        <SelectItem value="جاري التجهيز">جاري التجهيز</SelectItem>
-                        <SelectItem value="جاهز للتسليم">جاهز للتسليم</SelectItem>
-                        <SelectItem value="تم التسليم">تم التسليم</SelectItem>
-                        <SelectItem value="ملغي">ملغي</SelectItem>
+                        <SelectItem value="pending">في انتظار التأكيد</SelectItem>
+                        <SelectItem value="confirmed">تم التأكيد</SelectItem>
+                        <SelectItem value="sentToPrinter">تم الأرسال للمطبعة</SelectItem>
+                        <SelectItem value="readyForDelivery">تحت التسليم</SelectItem>
+                        <SelectItem value="shipped">تم الشحن</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

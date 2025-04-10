@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,7 +27,7 @@ const OrderForm = () => {
     governorate: "",
     shippingCost: 0,
     discount: 0,
-    deposit: 0, // Added deposit field
+    deposit: 0,
   });
   
   const [currentItem, setCurrentItem] = useState({
@@ -41,25 +40,20 @@ const OrderForm = () => {
   
   const [items, setItems] = useState<OrderItem[]>([]);
   
-  // Get available product types from the products context
   const availableProductTypes = [...new Set(products.map(p => p.name))];
   
-  // Get available sizes based on selected product type
   const availableSizes = currentItem.productType ? 
     products
       .find(p => p.name === currentItem.productType)?.sizes
       .map(s => s.size) || [] 
     : [];
 
-  // Calculate totals
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const totalAmount = subtotal + customerData.shippingCost - customerData.discount - customerData.deposit;
   const totalProfit = items.reduce((sum, item) => sum + (item.price - item.cost) * item.quantity, 0);
 
-  // Check for product prices when product type or size changes
   useEffect(() => {
     if (currentItem.productType && currentItem.size) {
-      // First check for product price from products context
       const selectedProduct = products.find(p => p.name === currentItem.productType);
       const selectedSize = selectedProduct?.sizes.find(s => s.size === currentItem.size);
       
@@ -70,7 +64,6 @@ const OrderForm = () => {
           price: selectedSize.price
         }));
       } else {
-        // Fallback to proposed prices if not found in products
         const proposedPrice = getProposedPrice(currentItem.productType, currentItem.size);
         
         if (proposedPrice) {
@@ -123,7 +116,6 @@ const OrderForm = () => {
     
     setItems(prev => [...prev, { ...currentItem, profit }]);
     
-    // Reset current item form
     setCurrentItem({
       productType: "",
       size: "",
@@ -155,7 +147,6 @@ const OrderForm = () => {
       status: "pending"
     });
     
-    // Reset form
     setCustomerData({
       paymentMethod: "",
       clientName: "",
@@ -347,6 +338,7 @@ const OrderForm = () => {
                         <SelectItem value="40*50 سم">40*50 سم</SelectItem>
                         <SelectItem value="50*60 سم">50*60 سم</SelectItem>
                         <SelectItem value="50*70 سم">50*70 سم</SelectItem>
+                        <SelectItem value="100*60 سم">100*60 سم</SelectItem>
                         <SelectItem value="ميدالية أكليريك مستطيلة">ميدالية أكليريك مستطيلة</SelectItem>
                         <SelectItem value="ميدالية اكليريك مجسمة">ميدالية اكليريك مجسمة</SelectItem>
                         <SelectItem value="دلاية عربية اكليريك ( قطعة )">دلاية عربية اكليريك ( قطعة )</SelectItem>
