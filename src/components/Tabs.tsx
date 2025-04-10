@@ -36,7 +36,7 @@ const Tabs: React.FC<TabsProps> & { Tab: typeof Tab } = ({ defaultValue, classNa
             <button
               key={tab.props.value}
               className={cn(
-                "py-1.5 md:py-2 px-2 md:px-3 transition-colors font-medium text-[10px] md:text-sm whitespace-nowrap flex-shrink-0",
+                "py-1.5 md:py-2 px-1.5 md:px-3 transition-colors font-medium text-[10px] md:text-sm whitespace-nowrap flex-shrink-0",
                 activeTab === tab.props.value
                   ? "bg-gift-primary dark:bg-gift-primary text-white"
                   : "hover:bg-gift-primary/10 dark:hover:bg-gift-primary/20 hover:text-gift-primary dark:hover:text-white"

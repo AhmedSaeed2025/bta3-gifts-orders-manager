@@ -17,15 +17,32 @@ interface ProductContextType {
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
 
+// Default product sizes
+const DEFAULT_PRODUCT_SIZES: ProductSize[] = [
+  { size: "مقاس افتراضي", cost: 100, price: 150 },
+  { size: "100×60 سم", cost: 120, price: 180 }
+];
+
 export const ProductProvider = ({ children }: { children: React.ReactNode }) => {
   const [products, setProducts] = useState<Product[]>([]);
 
-  // Load products from local storage - starting with empty array
+  // Load products from local storage
   useEffect(() => {
-    // Start with empty array - clear previous data as requested
-    setProducts([]);
-    // Remove from localStorage to ensure we start fresh
-    localStorage.removeItem("products");
+    const savedProducts = localStorage.getItem("products");
+    
+    if (savedProducts) {
+      setProducts(JSON.parse(savedProducts));
+    } else {
+      // Create a default product if none exists
+      const defaultProduct: Product = {
+        id: uuidv4(),
+        name: "منتج افتراضي",
+        sizes: DEFAULT_PRODUCT_SIZES
+      };
+      
+      setProducts([defaultProduct]);
+      localStorage.setItem("products", JSON.stringify([defaultProduct]));
+    }
   }, []);
 
   // Save products to local storage whenever they change
@@ -37,7 +54,7 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
     const newProduct: Product = {
       id: uuidv4(),
       name,
-      sizes: []
+      sizes: DEFAULT_PRODUCT_SIZES // Add default sizes to new products
     };
     
     setProducts(prevProducts => [...prevProducts, newProduct]);
@@ -100,9 +117,16 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
   };
 
   const clearAllProducts = () => {
-    setProducts([]);
-    localStorage.removeItem("products");
-    toast.success("تم حذف جميع المنتجات بنجاح");
+    // Create a default product
+    const defaultProduct: Product = {
+      id: uuidv4(),
+      name: "منتج افتراضي",
+      sizes: DEFAULT_PRODUCT_SIZES
+    };
+    
+    setProducts([defaultProduct]);
+    localStorage.setItem("products", JSON.stringify([defaultProduct]));
+    toast.success("تم إعادة تعيين المنتجات");
   };
 
   return (

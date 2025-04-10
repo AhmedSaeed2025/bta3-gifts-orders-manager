@@ -9,6 +9,7 @@ import { Facebook, Phone, Home, Map, Instagram, Send, Download, FileText } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
+import { toast } from "sonner";
 
 interface InvoiceProps {
   order: Order;
@@ -28,11 +29,9 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
     content: () => printRef.current,
     documentTitle: `فاتورة_${order.serial}`,
     onBeforePrint: () => {
-      // Add a print-specific class to body before printing
       document.body.classList.add('printing-invoice');
     },
     onAfterPrint: () => {
-      // Remove the print-specific class after printing
       document.body.classList.remove('printing-invoice');
     }
   });
@@ -40,26 +39,50 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
   const handleExportPDF = async () => {
     if (!printRef.current) return;
     
-    const canvas = await html2canvas(printRef.current, {
-      scale: 2, // Higher scale for better quality
-      useCORS: true,
-      logging: false,
-      backgroundColor: "#ffffff"
-    });
-    
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: 'a4',
-    });
-    
-    const imgWidth = 210; // A4 width in mm
-    const pageHeight = 297; // A4 height in mm
-    const imgHeight = canvas.height * imgWidth / canvas.width;
-    
-    pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-    pdf.save(`فاتورة_${order.serial}.pdf`);
+    try {
+      toast.info("جاري إنشاء ملف PDF...");
+      
+      const canvas = await html2canvas(printRef.current, {
+        scale: 2, // Higher scale for better quality
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff",
+        windowHeight: printRef.current.scrollHeight,
+        height: printRef.current.scrollHeight
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+      
+      const imgWidth = 210; // A4 width in mm
+      const pageHeight = 297; // A4 height in mm
+      const imgHeight = canvas.height * imgWidth / canvas.width;
+      
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      // First page
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      // Add pages if content overflows
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight; // top of new page
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+      
+      pdf.save(`فاتورة_${order.serial}.pdf`);
+      toast.success("تم إنشاء ملف PDF بنجاح");
+    } catch (error) {
+      console.error("PDF export error:", error);
+      toast.error("حدث خطأ أثناء إنشاء ملف PDF");
+    }
   };
 
   // Ensure items array exists, or default to empty array
