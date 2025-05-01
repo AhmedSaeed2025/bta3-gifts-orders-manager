@@ -11,10 +11,12 @@ import { formatCurrency } from "@/lib/utils";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const PriceManagement = () => {
   const { proposedPrices, addProposedPrice, deleteProposedPrice } = usePrices();
   const { products } = useProducts();
+  const isMobile = useIsMobile();
   
   const [formData, setFormData] = useState({
     productType: "",
@@ -22,6 +24,8 @@ const PriceManagement = () => {
     cost: 0,
     price: 0,
   });
+
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type } = e.target;
@@ -68,6 +72,14 @@ const PriceManagement = () => {
     }
   };
 
+  // Filter products based on search query
+  const filteredProducts = products.filter(product => 
+    product.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Get all available product types from registered products
+  const productTypes = Array.from(new Set(products.map(product => product.name)));
+
   return (
     <Card>
       <CardHeader>
@@ -75,9 +87,9 @@ const PriceManagement = () => {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="proposedPrices" className="w-full">
-          <TabsList className="mb-4">
-            <TabsTrigger value="proposedPrices">الأسعار المقترحة</TabsTrigger>
-            <TabsTrigger value="productPrices">أسعار المنتجات المسجلة</TabsTrigger>
+          <TabsList className="mb-4 w-full justify-start overflow-x-auto">
+            <TabsTrigger value="proposedPrices">{isMobile ? "الأسعار المقترحة" : "الأسعار المقترحة"}</TabsTrigger>
+            <TabsTrigger value="productPrices">{isMobile ? "أسعار المنتجات" : "أسعار المنتجات المسجلة"}</TabsTrigger>
           </TabsList>
           
           <TabsContent value="proposedPrices">
@@ -94,6 +106,12 @@ const PriceManagement = () => {
                       <SelectValue placeholder="اختر النوع" />
                     </SelectTrigger>
                     <SelectContent>
+                      {/* Include product types from registered products */}
+                      {productTypes.map((productType) => (
+                        <SelectItem key={productType} value={productType}>
+                          {productType}
+                        </SelectItem>
+                      ))}
                       <SelectItem value="تابلوه">تابلوه</SelectItem>
                       <SelectItem value="ماكيت">ماكيت</SelectItem>
                       <SelectItem value="ميدالية اكليريك">ميدالية اكليريك</SelectItem>
@@ -112,6 +130,18 @@ const PriceManagement = () => {
                       <SelectValue placeholder="اختر المقاس" />
                     </SelectTrigger>
                     <SelectContent>
+                      {/* Get unique sizes from all products */}
+                      {Array.from(
+                        new Set(
+                          products.flatMap(product => 
+                            product.sizes.map(size => size.size)
+                          )
+                        )
+                      ).map(size => (
+                        <SelectItem key={size} value={size}>
+                          {size}
+                        </SelectItem>
+                      ))}
                       <SelectItem value="15*20 سم">15*20 سم</SelectItem>
                       <SelectItem value="20*30 سم">20*30 سم</SelectItem>
                       <SelectItem value="30*40 سم">30*40 سم</SelectItem>
@@ -164,6 +194,14 @@ const PriceManagement = () => {
             
             <div className="mt-6">
               <h3 className="text-lg font-medium mb-2">الأسعار المقترحة الحالية</h3>
+              <div className="relative mb-4">
+                <Input
+                  placeholder="بحث عن سعر..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="max-w-xs"
+                />
+              </div>
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
@@ -177,46 +215,54 @@ const PriceManagement = () => {
                   </TableHeader>
                   <TableBody>
                     {Object.entries(proposedPrices).flatMap(([productType, sizes]) =>
-                      Object.entries(sizes).map(([size, data]) => (
-                        <TableRow key={`${productType}-${size}`}>
-                          <TableCell>{productType}</TableCell>
-                          <TableCell>{size}</TableCell>
-                          <TableCell>{formatCurrency(data.cost)}</TableCell>
-                          <TableCell>{formatCurrency(data.price)}</TableCell>
-                          <TableCell className="flex flex-wrap gap-1">
-                            <Button 
-                              className="h-7 text-xs bg-blue-500 hover:bg-blue-600"
-                              onClick={() => handleEditPrice(productType, size)}
-                            >
-                              تعديل
-                            </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button className="h-7 text-xs bg-gift-primary hover:bg-gift-primaryHover">
-                                  حذف
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>تأكيد حذف السعر</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    هل أنت متأكد من حذف هذا السعر المقترح؟
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                                  <AlertDialogAction 
-                                    className="bg-gift-primary hover:bg-gift-primaryHover"
-                                    onClick={() => deleteProposedPrice(productType, size)}
-                                  >
+                      Object.entries(sizes)
+                        .filter(([size]) => {
+                          const searchLower = searchQuery.toLowerCase();
+                          return (
+                            productType.toLowerCase().includes(searchLower) ||
+                            size.toLowerCase().includes(searchLower)
+                          );
+                        })
+                        .map(([size, data]) => (
+                          <TableRow key={`${productType}-${size}`}>
+                            <TableCell>{productType}</TableCell>
+                            <TableCell>{size}</TableCell>
+                            <TableCell>{formatCurrency(data.cost)}</TableCell>
+                            <TableCell>{formatCurrency(data.price)}</TableCell>
+                            <TableCell className="flex flex-wrap gap-1">
+                              <Button 
+                                className="h-7 text-xs bg-blue-500 hover:bg-blue-600"
+                                onClick={() => handleEditPrice(productType, size)}
+                              >
+                                تعديل
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button className="h-7 text-xs bg-gift-primary hover:bg-gift-primaryHover">
                                     حذف
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </TableCell>
-                        </TableRow>
-                      ))
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>تأكيد حذف السعر</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      هل أنت متأكد من حذف هذا السعر المقترح؟
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                                    <AlertDialogAction 
+                                      className="bg-gift-primary hover:bg-gift-primaryHover"
+                                      onClick={() => deleteProposedPrice(productType, size)}
+                                    >
+                                      حذف
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </TableCell>
+                          </TableRow>
+                        ))
                     )}
                     {Object.keys(proposedPrices).length === 0 && (
                       <TableRow>
@@ -233,8 +279,17 @@ const PriceManagement = () => {
             <div className="space-y-6">
               <h3 className="text-lg font-medium mb-2">أسعار المنتجات المسجلة</h3>
               
-              {products.length > 0 ? (
-                products.map(product => (
+              <div className="relative mb-4">
+                <Input
+                  placeholder="بحث عن منتج..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="max-w-xs"
+                />
+              </div>
+              
+              {filteredProducts.length > 0 ? (
+                filteredProducts.map(product => (
                   <div key={product.id} className="border rounded-md p-3">
                     <h4 className="font-medium mb-2">{product.name}</h4>
                     <div className="overflow-x-auto">
