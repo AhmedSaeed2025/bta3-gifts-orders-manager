@@ -16,19 +16,19 @@ const OrderContext = createContext<OrderContextType | undefined>(undefined);
 
 export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
   const [orders, setOrders] = useState<Order[]>([]);
-  const [serialCounters, setSerialCounters] = useState<Record<string, number>>({});
+  const [lastSerialNumber, setLastSerialNumber] = useState<number>(1000);
 
   // Load orders from local storage
   useEffect(() => {
     const savedOrders = localStorage.getItem("orders");
-    const savedCounters = localStorage.getItem("serialCounters");
+    const savedLastSerial = localStorage.getItem("lastSerialNumber");
     
     if (savedOrders) {
       setOrders(JSON.parse(savedOrders));
     }
     
-    if (savedCounters) {
-      setSerialCounters(JSON.parse(savedCounters));
+    if (savedLastSerial) {
+      setLastSerialNumber(Number(savedLastSerial));
     }
   }, []);
 
@@ -37,27 +37,18 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
     localStorage.setItem("orders", JSON.stringify(orders));
   }, [orders]);
 
-  // Save serial counters to local storage whenever they change
+  // Save last serial number to local storage whenever it changes
   useEffect(() => {
-    localStorage.setItem("serialCounters", JSON.stringify(serialCounters));
-  }, [serialCounters]);
+    localStorage.setItem("lastSerialNumber", lastSerialNumber.toString());
+  }, [lastSerialNumber]);
 
   const addOrder = (newOrder: Omit<Order, "serial" | "dateCreated">) => {
-    const currentDate = new Date();
-    const month = currentDate.toLocaleString('default', { month: 'short' });
+    // Generate new serial number
+    const nextSerialNumber = lastSerialNumber + 1;
+    setLastSerialNumber(nextSerialNumber);
     
-    // Update serial counter for current month
-    const updatedCounters = { ...serialCounters };
-    if (!updatedCounters[month]) {
-      updatedCounters[month] = 1;
-    } else {
-      updatedCounters[month]++;
-    }
-    
-    setSerialCounters(updatedCounters);
-    
-    // Generate serial number
-    const serial = `${month}-${String(updatedCounters[month]).padStart(3, '0')}`;
+    // Generate serial number string
+    const serial = nextSerialNumber.toString();
     
     // Ensure deposit is set, even if not provided
     const orderWithDeposit = { ...newOrder, deposit: newOrder.deposit || 0 };
@@ -65,7 +56,7 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
     const orderWithSerial = {
       ...orderWithDeposit,
       serial,
-      dateCreated: currentDate.toISOString(),
+      dateCreated: new Date().toISOString(),
     };
     
     setOrders(prevOrders => [...prevOrders, orderWithSerial]);

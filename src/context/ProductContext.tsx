@@ -97,9 +97,14 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
 
   // Load products from local storage or use defaults
   useEffect(() => {
-    localStorage.removeItem("products"); // Clear existing products first
-    setProducts(DEFAULT_PRODUCTS);
-    localStorage.setItem("products", JSON.stringify(DEFAULT_PRODUCTS));
+    const savedProducts = localStorage.getItem("products");
+    
+    if (savedProducts) {
+      setProducts(JSON.parse(savedProducts));
+    } else {
+      setProducts(DEFAULT_PRODUCTS);
+      localStorage.setItem("products", JSON.stringify(DEFAULT_PRODUCTS));
+    }
   }, []);
 
   // Save products to local storage whenever they change
