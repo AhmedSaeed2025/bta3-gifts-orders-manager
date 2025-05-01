@@ -20,29 +20,86 @@ const ProductContext = createContext<ProductContextType | undefined>(undefined);
 // Default product sizes
 const DEFAULT_PRODUCT_SIZES: ProductSize[] = [
   { size: "مقاس افتراضي", cost: 100, price: 150 },
-  { size: "100×60 سم", cost: 120, price: 180 }
+  { size: "15*20 سم", cost: 120, price: 180 },
+  { size: "20*30 سم", cost: 140, price: 200 },
+  { size: "30*40 سم", cost: 180, price: 250 },
+  { size: "40*50 سم", cost: 220, price: 300 },
+  { size: "50*60 سم", cost: 280, price: 380 },
+  { size: "50*70 سم", cost: 300, price: 400 },
+  { size: "100*60 سم", cost: 350, price: 500 },
+  { size: "160*60 سم", cost: 400, price: 600 },
+  { size: "1 قطعة", cost: 60, price: 90 },
+  { size: "2 قطعة", cost: 100, price: 150 },
+  { size: "3 قطعة", cost: 140, price: 200 },
+];
+
+// Default products
+const DEFAULT_PRODUCTS: Product[] = [
+  {
+    id: uuidv4(),
+    name: "تابلوه",
+    sizes: DEFAULT_PRODUCT_SIZES.filter(size => size.size.includes("سم"))
+  },
+  {
+    id: uuidv4(),
+    name: "ماكيت مجسم",
+    sizes: DEFAULT_PRODUCT_SIZES.filter(size => size.size.includes("سم"))
+  },
+  {
+    id: uuidv4(),
+    name: "ماكيت كاركتيري",
+    sizes: DEFAULT_PRODUCT_SIZES.filter(size => size.size.includes("سم"))
+  },
+  {
+    id: uuidv4(),
+    name: "ميدالية مستطيله",
+    sizes: DEFAULT_PRODUCT_SIZES.filter(size => size.size.includes("سم") || size.size.includes("قطعة"))
+  },
+  {
+    id: uuidv4(),
+    name: "ميدالية مجسمة",
+    sizes: DEFAULT_PRODUCT_SIZES.filter(size => size.size.includes("سم") || size.size.includes("قطعة"))
+  },
+  {
+    id: uuidv4(),
+    name: "دلاية عربيه 1 قطعة",
+    sizes: [DEFAULT_PRODUCT_SIZES.find(size => size.size === "1 قطعة")!]
+  },
+  {
+    id: uuidv4(),
+    name: "دلاية عربيه 2 قطعة",
+    sizes: [DEFAULT_PRODUCT_SIZES.find(size => size.size === "2 قطعة")!]
+  },
+  {
+    id: uuidv4(),
+    name: "دلاية عربيه 3 قطعة",
+    sizes: [DEFAULT_PRODUCT_SIZES.find(size => size.size === "3 قطعة")!]
+  },
+  {
+    id: uuidv4(),
+    name: "مج عادى",
+    sizes: [DEFAULT_PRODUCT_SIZES.find(size => size.size === "مقاس افتراضي")!]
+  },
+  {
+    id: uuidv4(),
+    name: "مج سحري",
+    sizes: [DEFAULT_PRODUCT_SIZES.find(size => size.size === "مقاس افتراضي")!]
+  },
+  {
+    id: uuidv4(),
+    name: "تغليف هدايا",
+    sizes: [DEFAULT_PRODUCT_SIZES.find(size => size.size === "مقاس افتراضي")!]
+  },
 ];
 
 export const ProductProvider = ({ children }: { children: React.ReactNode }) => {
   const [products, setProducts] = useState<Product[]>([]);
 
-  // Load products from local storage
+  // Load products from local storage or use defaults
   useEffect(() => {
-    const savedProducts = localStorage.getItem("products");
-    
-    if (savedProducts) {
-      setProducts(JSON.parse(savedProducts));
-    } else {
-      // Create a default product if none exists
-      const defaultProduct: Product = {
-        id: uuidv4(),
-        name: "منتج افتراضي",
-        sizes: DEFAULT_PRODUCT_SIZES
-      };
-      
-      setProducts([defaultProduct]);
-      localStorage.setItem("products", JSON.stringify([defaultProduct]));
-    }
+    localStorage.removeItem("products"); // Clear existing products first
+    setProducts(DEFAULT_PRODUCTS);
+    localStorage.setItem("products", JSON.stringify(DEFAULT_PRODUCTS));
   }, []);
 
   // Save products to local storage whenever they change
@@ -54,7 +111,7 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
     const newProduct: Product = {
       id: uuidv4(),
       name,
-      sizes: DEFAULT_PRODUCT_SIZES // Add default sizes to new products
+      sizes: [DEFAULT_PRODUCT_SIZES[0]] // Add default size to new products
     };
     
     setProducts(prevProducts => [...prevProducts, newProduct]);
@@ -117,15 +174,8 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
   };
 
   const clearAllProducts = () => {
-    // Create a default product
-    const defaultProduct: Product = {
-      id: uuidv4(),
-      name: "منتج افتراضي",
-      sizes: DEFAULT_PRODUCT_SIZES
-    };
-    
-    setProducts([defaultProduct]);
-    localStorage.setItem("products", JSON.stringify([defaultProduct]));
+    setProducts(DEFAULT_PRODUCTS);
+    localStorage.setItem("products", JSON.stringify(DEFAULT_PRODUCTS));
     toast.success("تم إعادة تعيين المنتجات");
   };
 
