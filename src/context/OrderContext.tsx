@@ -24,11 +24,21 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
     const savedLastSerial = localStorage.getItem("lastSerialNumber");
     
     if (savedOrders) {
-      setOrders(JSON.parse(savedOrders));
+      try {
+        setOrders(JSON.parse(savedOrders));
+      } catch (e) {
+        console.error("Error parsing orders from localStorage", e);
+        setOrders([]);
+      }
     }
     
     if (savedLastSerial) {
-      setLastSerialNumber(Number(savedLastSerial));
+      try {
+        setLastSerialNumber(Number(savedLastSerial));
+      } catch (e) {
+        console.error("Error parsing lastSerialNumber from localStorage", e);
+        setLastSerialNumber(1000);
+      }
     }
   }, []);
 

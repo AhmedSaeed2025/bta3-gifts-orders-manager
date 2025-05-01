@@ -171,4 +171,42 @@
     padding: 0.25rem;
     font-size: 0.7rem;
   }
+  
+  /* Improve mobile scrolling experience */
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Ensure buttons are large enough to tap */
+  button, 
+  [type="button"],
+  [type="submit"] {
+    min-height: 40px;
+    min-width: 40px;
+  }
+  
+  /* Improve input touch targets */
+  input, 
+  select, 
+  textarea {
+    font-size: 16px; /* Prevents iOS zoom on focus */
+  }
+  
+  /* Fix for dialog content on small screens */
+  [role="dialog"] {
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+}
+
+/* Small mobile devices */
+@media (max-width: 360px) {
+  .container {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  
+  h1, h2, h3 {
+    word-break: break-word;
+  }
 }

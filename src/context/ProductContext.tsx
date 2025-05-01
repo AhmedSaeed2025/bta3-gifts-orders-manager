@@ -138,6 +138,13 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
   };
 
   const addProductSize = (productId: string, size: ProductSize) => {
+    // Check if size with same name already exists
+    const productToUpdate = products.find(p => p.id === productId);
+    if (productToUpdate && productToUpdate.sizes.some(s => s.size === size.size)) {
+      toast.error("هذا المقاس موجود بالفعل");
+      return;
+    }
+    
     setProducts(prevProducts => 
       prevProducts.map(product => 
         product.id === productId 
@@ -149,6 +156,15 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
   };
 
   const updateProductSize = (productId: string, sizeToUpdate: string, updatedSize: ProductSize) => {
+    // Check if we're trying to rename to an existing size name
+    if (sizeToUpdate !== updatedSize.size) {
+      const productToUpdate = products.find(p => p.id === productId);
+      if (productToUpdate && productToUpdate.sizes.some(s => s.size === updatedSize.size)) {
+        toast.error("هذا المقاس موجود بالفعل");
+        return;
+      }
+    }
+    
     setProducts(prevProducts => 
       prevProducts.map(product => 
         product.id === productId 

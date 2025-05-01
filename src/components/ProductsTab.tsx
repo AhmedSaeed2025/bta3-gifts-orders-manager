@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useProducts } from "@/context/ProductContext";
 import { Button } from "@/components/ui/button";
@@ -26,7 +27,7 @@ import {
   SheetTitle, 
   SheetFooter 
 } from "@/components/ui/sheet";
-import { Plus, Edit, Trash2, AlertCircle } from "lucide-react";
+import { Plus, Edit, Trash2, AlertCircle, Search, X } from "lucide-react";
 import { ProductSize } from "@/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
@@ -185,6 +186,8 @@ const ProductsTab = () => {
   React.useEffect(() => {
     if (products.length > 0 && !selectedProduct) {
       setSelectedProduct(products[0].id);
+    } else if (products.length === 0) {
+      setSelectedProduct(null);
     }
   }, [products, selectedProduct]);
 
@@ -230,10 +233,15 @@ const ProductsTab = () => {
     s.price.toString().includes(searchQuery)
   ) || [];
 
+  // Clear search query
+  const clearSearch = () => {
+    setSearchQuery("");
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
       {/* Products List */}
-      <div className="md:col-span-2">
+      <div className={isMobile ? "order-2" : "md:col-span-2"}>
         <Card className="h-full">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
@@ -245,7 +253,7 @@ const ProductsTab = () => {
                     <Plus size={16} />
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>إضافة منتج جديد</DialogTitle>
                   </DialogHeader>
@@ -260,15 +268,26 @@ const ProductsTab = () => {
           
           <CardContent className="p-0">
             <div className="p-2">
-              <Input 
-                placeholder="بحث عن منتج..." 
-                className="mb-2" 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+              <div className="relative">
+                <Input 
+                  placeholder="بحث عن منتج..." 
+                  className="mb-2 pr-9" 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                {searchQuery && (
+                  <button 
+                    className="absolute left-2 top-1/2 -translate-y-1/2" 
+                    onClick={clearSearch}
+                    aria-label="مسح البحث"
+                  >
+                    <X size={16} className="text-gray-400" />
+                  </button>
+                )}
+              </div>
             </div>
             
-            <ScrollArea className="h-[300px] md:h-[400px]">
+            <ScrollArea className={isMobile ? "h-[180px]" : "h-[300px] md:h-[400px]"}>
               {filteredProducts.length === 0 ? (
                 <div className="p-4 text-center text-gray-500">
                   {searchQuery ? "لا توجد نتائج للبحث" : "لا توجد منتجات مضافة"}
@@ -309,7 +328,7 @@ const ProductsTab = () => {
       </div>
 
       {/* Product Details */}
-      <div className="md:col-span-3">
+      <div className={isMobile ? "order-1" : "md:col-span-3"}>
         {selectedProduct && product ? (
           <Card>
             <CardHeader className="pb-3">
@@ -323,7 +342,7 @@ const ProductsTab = () => {
                         <Edit size={16} />
                       </Button>
                     </DialogTrigger>
-                    <DialogContent>
+                    <DialogContent className="max-h-[90vh] overflow-y-auto">
                       <DialogHeader>
                         <DialogTitle>تعديل المنتج</DialogTitle>
                       </DialogHeader>
@@ -351,12 +370,23 @@ const ProductsTab = () => {
             
             <CardContent className="p-3 md:p-4">
               <div className="flex justify-between items-center mb-3">
-                <Input 
-                  placeholder="بحث عن مقاس..." 
-                  className="max-w-[200px]" 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+                <div className="relative max-w-[200px] w-full">
+                  <Input 
+                    placeholder="بحث عن مقاس..." 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pr-9"
+                  />
+                  {searchQuery && (
+                    <button 
+                      className="absolute left-2 top-1/2 -translate-y-1/2" 
+                      onClick={clearSearch}
+                      aria-label="مسح البحث"
+                    >
+                      <X size={16} className="text-gray-400" />
+                    </button>
+                  )}
+                </div>
                 
                 <Button 
                   size="sm" 
@@ -434,7 +464,7 @@ const ProductsTab = () => {
                 <DialogTrigger asChild>
                   <Button className="mt-4">إضافة منتج جديد</Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>إضافة منتج جديد</DialogTitle>
                   </DialogHeader>
@@ -478,7 +508,7 @@ const ProductsTab = () => {
           <div className="flex items-center gap-2 text-amber-500">
             <AlertCircle size={20} />
             <p className="text-sm">
-              سيتم إعادة تعيين جميع المنتجات وإنشاء منتج افتراضي جديد. هل تريد الاستمرار؟
+              سيتم إعادة تعيين جميع المنتجات وإنشاء قائمة افتراضية جديدة. هل تريد الاستمرار؟
             </p>
           </div>
           <DialogFooter>
@@ -502,7 +532,7 @@ const ProductsTab = () => {
 
       {/* Add size sheet */}
       <Sheet open={isAddSizeOpen} onOpenChange={setIsAddSizeOpen}>
-        <SheetContent>
+        <SheetContent side={isMobile ? "bottom" : "right"} className={isMobile ? "h-[85vh]" : ""}>
           <SheetHeader>
             <SheetTitle>إضافة مقاس جديد</SheetTitle>
           </SheetHeader>
@@ -527,7 +557,7 @@ const ProductsTab = () => {
 
       {/* Edit size sheet */}
       <Sheet open={!!editingSizeIndex} onOpenChange={() => setEditingSizeIndex(null)}>
-        <SheetContent>
+        <SheetContent side={isMobile ? "bottom" : "right"} className={isMobile ? "h-[85vh]" : ""}>
           <SheetHeader>
             <SheetTitle>تعديل المقاس</SheetTitle>
           </SheetHeader>
