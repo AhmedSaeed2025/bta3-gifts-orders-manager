@@ -53,15 +53,15 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
           productType: item.product_type,
           size: item.size,
           quantity: item.quantity,
-          cost: parseFloat(item.cost),
-          price: parseFloat(item.price),
-          profit: parseFloat(item.profit)
+          cost: Number(item.cost),
+          price: Number(item.price),
+          profit: Number(item.profit)
         })),
-        shippingCost: parseFloat(order.shipping_cost),
-        discount: parseFloat(order.discount),
-        deposit: parseFloat(order.deposit),
-        total: parseFloat(order.total),
-        profit: parseFloat(order.profit),
+        shippingCost: Number(order.shipping_cost),
+        discount: Number(order.discount),
+        deposit: Number(order.deposit),
+        total: Number(order.total),
+        profit: Number(order.profit),
         status: order.status as OrderStatus,
         dateCreated: order.date_created
       })) || [];
