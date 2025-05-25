@@ -6,24 +6,37 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
 import Logo from './Logo';
-import { Chrome, Mail, Eye, EyeOff } from 'lucide-react';
+import { Chrome, Mail, Eye, EyeOff, RefreshCw, Database } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Auth = () => {
-  const { signInWithGoogle, signInWithEmail, signUpWithEmail, loading } = useAuth();
+  const { signInWithGoogle, signInWithEmail, signUpWithEmail, loading, syncLocalData } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [emailLoading, setEmailLoading] = useState(false);
+  const [syncLoading, setSyncLoading] = useState(false);
 
   const handleGoogleSignIn = async () => {
     try {
       await signInWithGoogle();
     } catch (error) {
       console.error('Failed to sign in with Google:', error);
-      toast.error('فشل في تسجيل الدخول عبر Google. جرب الطريقة الأخرى.');
+      toast.error('Google Auth غير مُفعل. استخدم البريد الإلكتروني أو فعّل Google في إعدادات Supabase.');
+    }
+  };
+
+  const handleManualSync = async () => {
+    setSyncLoading(true);
+    try {
+      await syncLocalData();
+    } catch (error) {
+      console.error('Manual sync failed:', error);
+      toast.error('فشل في مزامنة البيانات');
+    } finally {
+      setSyncLoading(false);
     }
   };
 
@@ -50,6 +63,7 @@ const Auth = () => {
         setConfirmPassword('');
       } else {
         await signInWithEmail(email, password);
+        toast.success('مرحباً بك! سيتم مزامنة بياناتك المحلية تلقائياً...');
       }
     } catch (error: any) {
       console.error('Authentication error:', error);
@@ -66,6 +80,12 @@ const Auth = () => {
     }
   };
 
+  // التحقق من وجود بيانات محلية
+  const hasLocalData = () => {
+    const localOrders = localStorage.getItem('orders');
+    return localOrders && JSON.parse(localOrders).length > 0;
+  };
+
   return (
     <div className="min-h-screen bg-gift-accent dark:bg-gray-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -74,6 +94,13 @@ const Auth = () => {
           <p className="text-gray-600 dark:text-gray-400 mt-4">
             سجل دخولك لإدارة طلباتك ومنتجاتك
           </p>
+          {hasLocalData() && (
+            <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+              <p className="text-sm text-blue-700 dark:text-blue-300">
+                📱 تم العثور على بيانات محلية! سيتم مزامنتها تلقائياً عند تسجيل الدخول
+              </p>
+            </div>
+          )}
         </div>
         
         <Card>
@@ -174,6 +201,23 @@ const Auth = () => {
               </Button>
             </form>
 
+            {/* Manual Sync Button (shown only if there's local data) */}
+            {hasLocalData() && (
+              <Button
+                onClick={handleManualSync}
+                disabled={syncLoading || loading || emailLoading}
+                className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700"
+                variant="default"
+              >
+                {syncLoading ? (
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Database className="h-4 w-4" />
+                )}
+                {syncLoading ? 'جاري المزامنة...' : 'مزامنة البيانات المحلية يدوياً'}
+              </Button>
+            )}
+
             <div className="text-center">
               <Button
                 variant="link"
@@ -194,7 +238,7 @@ const Auth = () => {
             
             <div className="text-center text-sm text-gray-600 dark:text-gray-400">
               <p>سيتم حفظ جميع بياناتك بشكل آمن</p>
-              <p>ويمكنك الوصول إليها من أي جهاز</p>
+              <p>ومزامنتها تلقائياً مع قاعدة البيانات</p>
             </div>
           </CardContent>
         </Card>
