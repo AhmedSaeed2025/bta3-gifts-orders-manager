@@ -9,6 +9,7 @@ import ProfitReport from "@/components/ProfitReport";
 import PriceManagement from "@/components/PriceManagement";
 import InvoiceTab from "@/components/InvoiceTab";
 import ProductsTab from "@/components/ProductsTab";
+import UserProfile from "@/components/UserProfile";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const Index = () => {
@@ -19,6 +20,7 @@ const Index = () => {
       <div className="container mx-auto px-2 md:px-4 py-3 md:py-6">
         <div className="flex items-center justify-between mb-4">
           <Logo />
+          <UserProfile />
         </div>
         
         <Tabs defaultValue="addOrder" className="mt-2 md:mt-4">

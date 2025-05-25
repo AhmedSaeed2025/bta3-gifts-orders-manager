@@ -4,17 +4,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useOrders } from "@/context/OrderContext";
+import { useSupabaseOrders } from "@/context/SupabaseOrderContext";
 import { usePrices } from "@/context/PriceContext";
 import { useProducts } from "@/context/ProductContext";
-import { calculateTotal, calculateProfit } from "@/lib/utils";
 import { Plus, Trash2 } from "lucide-react";
 import { OrderItem } from "@/types";
-import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const OrderForm = () => {
-  const { addOrder } = useOrders();
+  const { addOrder } = useSupabaseOrders();
   const { proposedPrices, getProposedPrice } = usePrices();
   const { products } = useProducts();
   
@@ -39,6 +37,7 @@ const OrderForm = () => {
   });
   
   const [items, setItems] = useState<OrderItem[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const availableProductTypes = [...new Set(products.map(p => p.name))];
   
@@ -129,7 +128,7 @@ const OrderForm = () => {
     setItems(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
     if (items.length === 0) {
@@ -137,28 +136,37 @@ const OrderForm = () => {
       return;
     }
     
-    addOrder({
-      ...customerData,
-      address: customerData.address || "-",
-      governorate: customerData.governorate || "-",
-      items,
-      total: totalAmount,
-      profit: totalProfit,
-      status: "pending"
-    });
+    setIsSubmitting(true);
     
-    setCustomerData({
-      paymentMethod: "",
-      clientName: "",
-      phone: "",
-      deliveryMethod: "",
-      address: "",
-      governorate: "",
-      shippingCost: 0,
-      discount: 0,
-      deposit: 0,
-    });
-    setItems([]);
+    try {
+      await addOrder({
+        ...customerData,
+        address: customerData.address || "-",
+        governorate: customerData.governorate || "-",
+        items,
+        total: totalAmount,
+        profit: totalProfit,
+        status: "pending"
+      });
+      
+      // Reset form
+      setCustomerData({
+        paymentMethod: "",
+        clientName: "",
+        phone: "",
+        deliveryMethod: "",
+        address: "",
+        governorate: "",
+        shippingCost: 0,
+        discount: 0,
+        deposit: 0,
+      });
+      setItems([]);
+    } catch (error) {
+      console.error('Error submitting order:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -464,8 +472,12 @@ const OrderForm = () => {
             )}
           </div>
           
-          <Button type="submit" className="bg-gift-primary hover:bg-gift-primaryHover" disabled={items.length === 0}>
-            إضافة الطلب
+          <Button 
+            type="submit" 
+            className="bg-gift-primary hover:bg-gift-primaryHover" 
+            disabled={items.length === 0 || isSubmitting}
+          >
+            {isSubmitting ? "جاري الإضافة..." : "إضافة الطلب"}
           </Button>
         </form>
       </CardContent>

@@ -9,7 +9,217 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      order_items: {
+        Row: {
+          cost: number
+          id: string
+          order_id: string
+          price: number
+          product_type: string
+          profit: number
+          quantity: number
+          size: string
+        }
+        Insert: {
+          cost: number
+          id?: string
+          order_id: string
+          price: number
+          product_type: string
+          profit: number
+          quantity: number
+          size: string
+        }
+        Update: {
+          cost?: number
+          id?: string
+          order_id?: string
+          price?: number
+          product_type?: string
+          profit?: number
+          quantity?: number
+          size?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          address: string | null
+          client_name: string
+          date_created: string
+          delivery_method: string
+          deposit: number | null
+          discount: number | null
+          governorate: string | null
+          id: string
+          payment_method: string
+          phone: string
+          profit: number
+          serial: string
+          shipping_cost: number | null
+          status: string
+          total: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          client_name: string
+          date_created?: string
+          delivery_method: string
+          deposit?: number | null
+          discount?: number | null
+          governorate?: string | null
+          id?: string
+          payment_method: string
+          phone: string
+          profit: number
+          serial: string
+          shipping_cost?: number | null
+          status?: string
+          total: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          client_name?: string
+          date_created?: string
+          delivery_method?: string
+          deposit?: number | null
+          discount?: number | null
+          governorate?: string | null
+          id?: string
+          payment_method?: string
+          phone?: string
+          profit?: number
+          serial?: string
+          shipping_cost?: number | null
+          status?: string
+          total?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      product_sizes: {
+        Row: {
+          cost: number
+          id: string
+          price: number
+          product_id: string
+          size: string
+        }
+        Insert: {
+          cost: number
+          id?: string
+          price: number
+          product_id: string
+          size: string
+        }
+        Update: {
+          cost?: number
+          id?: string
+          price?: number
+          product_id?: string
+          size?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_sizes_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      proposed_prices: {
+        Row: {
+          cost: number
+          created_at: string
+          id: string
+          price: number
+          product_type: string
+          size: string
+          user_id: string
+        }
+        Insert: {
+          cost: number
+          created_at?: string
+          id?: string
+          price: number
+          product_type: string
+          size: string
+          user_id: string
+        }
+        Update: {
+          cost?: number
+          created_at?: string
+          id?: string
+          price?: number
+          product_type?: string
+          size?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

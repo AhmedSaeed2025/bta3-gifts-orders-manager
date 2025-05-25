@@ -3,30 +3,41 @@ import React, { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useOrders } from "@/context/OrderContext";
+import { useSupabaseOrders } from "@/context/SupabaseOrderContext";
 import Logo from "@/components/Logo";
 import Invoice from "@/components/Invoice";
+import UserProfile from "@/components/UserProfile";
 import { ArrowRight } from "lucide-react";
-import { ThemeToggle } from "@/components/ThemeToggle";
 
 const OrderDetails = () => {
   const { serial } = useParams<{ serial: string }>();
-  const { getOrderBySerial } = useOrders();
+  const { getOrderBySerial, loading } = useSupabaseOrders();
   const navigate = useNavigate();
   
   const order = serial ? getOrderBySerial(serial) : undefined;
   
   useEffect(() => {
-    if (!order) {
+    if (!loading && !order) {
       navigate("/");
     }
-  }, [order, navigate]);
+  }, [order, navigate, loading]);
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gift-accent dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center p-8">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gift-primary mx-auto"></div>
+          <h2 className="text-xl font-bold mb-4 mt-4">جاري التحميل...</h2>
+        </div>
+      </div>
+    );
+  }
   
   if (!order) {
     return (
       <div className="min-h-screen bg-gift-accent dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center p-8">
-          <h2 className="text-xl font-bold mb-4">جاري التحميل...</h2>
+          <h2 className="text-xl font-bold mb-4">الطلب غير موجود</h2>
           <Button onClick={() => navigate("/")} variant="outline">العودة للرئيسية</Button>
         </div>
       </div>
@@ -38,7 +49,7 @@ const OrderDetails = () => {
       <div className="container mx-auto px-4 py-4 md:py-6">
         <div className="flex items-center justify-between mb-4">
           <Logo />
-          <ThemeToggle />
+          <UserProfile />
         </div>
         
         <div className="mb-4">
