@@ -20,7 +20,6 @@ interface InvoiceProps {
 const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) => {
   const printRef = useRef<HTMLDivElement>(null);
 
-  // Safety check - ensure order exists
   if (!order) {
     return <div>لا توجد بيانات للفاتورة</div>;
   }
@@ -33,7 +32,19 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
     },
     onAfterPrint: () => {
       document.body.classList.remove('printing-invoice');
-    }
+    },
+    pageStyle: `
+      @media print {
+        @page {
+          size: A4;
+          margin: 10mm;
+        }
+        body {
+          direction: rtl !important;
+          font-family: 'Tajawal', Arial, sans-serif !important;
+        }
+      }
+    `
   });
 
   const handleExportPDF = async () => {
@@ -42,14 +53,22 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
     try {
       toast.info("جاري إنشاء ملف PDF...");
       
+      // Add PDF export class for better styling
+      printRef.current.classList.add('pdf-export');
+      
       const canvas = await html2canvas(printRef.current, {
-        scale: 2, // Higher scale for better quality
+        scale: 2,
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
-        windowHeight: printRef.current.scrollHeight,
-        height: printRef.current.scrollHeight
+        width: printRef.current.scrollWidth,
+        height: printRef.current.scrollHeight,
+        windowWidth: 794, // A4 width
+        windowHeight: 1123 // A4 height
       });
+      
+      // Remove PDF export class
+      printRef.current.classList.remove('pdf-export');
       
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({
@@ -65,13 +84,11 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
       let heightLeft = imgHeight;
       let position = 0;
 
-      // First page
       pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
       heightLeft -= pageHeight;
 
-      // Add pages if content overflows
       while (heightLeft > 0) {
-        position = heightLeft - imgHeight; // top of new page
+        position = heightLeft - imgHeight;
         pdf.addPage();
         pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
         heightLeft -= pageHeight;
@@ -85,11 +102,10 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
     }
   };
 
-  // Ensure items array exists, or default to empty array
   const items = order.items || [];
 
   return (
-    <div>
+    <div className="rtl">
       <div className="mb-4 flex flex-wrap gap-2 justify-end">
         <Button 
           onClick={handlePrint}
@@ -120,7 +136,7 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
                 <Map size={16} className="text-gift-primary" /> بيانات الفاتورة
               </h3>
               <div className="space-y-1 text-sm">
-                <p><span className="font-medium">رقم الفاتورة:</span> {order.serial}</p>
+                <p><span className="font-medium">رقم الفاتورة:</span> GFT{order.serial}</p>
                 <p><span className="font-medium">حالة الطلب:</span> {ORDER_STATUS_LABELS[order.status]}</p>
                 <p><span className="font-medium">تاريخ الإصدار:</span> {new Date(order.dateCreated).toLocaleDateString('ar-EG')}</p>
               </div>
@@ -161,21 +177,21 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
               <Table className="text-xs border-collapse">
                 <TableHeader>
                   <TableRow className="bg-gray-50 dark:bg-gray-800">
-                    <TableHead className="py-1.5 px-2 text-xs font-bold">المنتج</TableHead>
-                    <TableHead className="py-1.5 px-2 text-xs font-bold">المقاس</TableHead>
-                    <TableHead className="py-1.5 px-2 text-xs font-bold">العدد</TableHead>
-                    <TableHead className="py-1.5 px-2 text-xs font-bold">السعر</TableHead>
-                    <TableHead className="py-1.5 px-2 text-xs font-bold">الإجمالي</TableHead>
+                    <TableHead className="py-1.5 px-2 text-xs font-bold text-right">المنتج</TableHead>
+                    <TableHead className="py-1.5 px-2 text-xs font-bold text-right">المقاس</TableHead>
+                    <TableHead className="py-1.5 px-2 text-xs font-bold text-right">العدد</TableHead>
+                    <TableHead className="py-1.5 px-2 text-xs font-bold text-right">السعر</TableHead>
+                    <TableHead className="py-1.5 px-2 text-xs font-bold text-right">الإجمالي</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {items.map((item, index) => (
                     <TableRow key={index} className="border-b border-gray-200 dark:border-gray-700">
-                      <TableCell className="py-1.5 px-2">{item.productType}</TableCell>
-                      <TableCell className="py-1.5 px-2">{item.size}</TableCell>
-                      <TableCell className="py-1.5 px-2">{item.quantity}</TableCell>
-                      <TableCell className="py-1.5 px-2">{formatCurrency(item.price)}</TableCell>
-                      <TableCell className="py-1.5 px-2 font-medium">{formatCurrency(item.price * item.quantity)}</TableCell>
+                      <TableCell className="py-1.5 px-2 text-right">{item.productType}</TableCell>
+                      <TableCell className="py-1.5 px-2 text-right">{item.size}</TableCell>
+                      <TableCell className="py-1.5 px-2 text-right">{item.quantity}</TableCell>
+                      <TableCell className="py-1.5 px-2 text-right">{formatCurrency(item.price)}</TableCell>
+                      <TableCell className="py-1.5 px-2 font-medium text-right">{formatCurrency(item.price * item.quantity)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -221,7 +237,7 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
               <span>للتواصل: 01113977005</span>
             </div>
             
-            <div className="flex flex-wrap justify-center items-center gap-4 mb-3">
+            <div className="flex flex-wrap justify-center items-center gap-4 mb-3 social-links">
               <a href="https://www.facebook.com/D4Uofficial" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-blue-600 hover:underline text-xs">
                 <Facebook size={16} />
                 <span>D4Uofficial</span>

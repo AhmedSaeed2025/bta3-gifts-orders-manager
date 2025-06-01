@@ -88,12 +88,15 @@
   }
   body {
     @apply bg-background text-foreground;
+    direction: rtl;
+    font-family: 'Tajawal', sans-serif;
   }
 }
 
 .gift-table {
   width: 100%;
   border-collapse: collapse;
+  direction: rtl;
 }
 
 .gift-table th,
@@ -113,18 +116,28 @@
   background-color: #f8fafc;
 }
 
-/* Printing styles */
+/* RTL Support */
+.rtl {
+  direction: rtl;
+}
+
+.ltr {
+  direction: ltr;
+}
+
+/* Print styles - Enhanced for better PDF export */
 @media print {
   @page {
-    size: auto;
-    margin: 5mm;
+    size: A4;
+    margin: 10mm;
   }
   
   body {
     background-color: white !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
-    font-size: 10px !important;
+    font-size: 12px !important;
+    direction: rtl !important;
   }
 
   body * {
@@ -151,17 +164,52 @@
     width: 100%;
   }
   
-  /* Ensure proper table formatting when printing */
-  .gift-table th,
-  .gift-table td {
-    padding: 2px;
-    font-size: 8px;
+  /* Better table formatting for PDF */
+  .gift-table {
+    width: 100% !important;
+    font-size: 10px !important;
   }
   
-  /* Make social links smaller when printing */
-  .social-links {
-    font-size: 7px;
+  .gift-table th,
+  .gift-table td {
+    padding: 4px !important;
+    font-size: 10px !important;
+    border: 1px solid #000 !important;
   }
+  
+  /* Social links smaller for print */
+  .social-links {
+    font-size: 8px !important;
+  }
+  
+  /* Hide buttons and non-essential elements */
+  button,
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* PDF Export specific styles */
+.pdf-export {
+  background: white;
+  color: black;
+  font-family: 'Tajawal', Arial, sans-serif;
+  direction: rtl;
+  max-width: 794px; /* A4 width in pixels at 96 DPI */
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.pdf-export .gift-table {
+  font-size: 11px;
+  border-collapse: collapse;
+}
+
+.pdf-export .gift-table th,
+.pdf-export .gift-table td {
+  padding: 6px;
+  border: 1px solid #333;
+  text-align: right;
 }
 
 /* Mobile optimizations */
@@ -172,12 +220,10 @@
     font-size: 0.7rem;
   }
   
-  /* Improve mobile scrolling experience */
   .overflow-x-auto {
     -webkit-overflow-scrolling: touch;
   }
   
-  /* Ensure buttons are large enough to tap */
   button, 
   [type="button"],
   [type="submit"] {
@@ -185,17 +231,30 @@
     min-width: 40px;
   }
   
-  /* Improve input touch targets */
   input, 
   select, 
   textarea {
-    font-size: 16px; /* Prevents iOS zoom on focus */
+    font-size: 16px;
   }
   
-  /* Fix for dialog content on small screens */
   [role="dialog"] {
     max-height: 85vh;
     overflow-y: auto;
+  }
+  
+  /* PDF responsive for mobile */
+  .pdf-export {
+    max-width: 100%;
+    padding: 10px;
+  }
+  
+  .pdf-export .gift-table {
+    font-size: 9px;
+  }
+  
+  .pdf-export .gift-table th,
+  .pdf-export .gift-table td {
+    padding: 3px;
   }
 }
 
