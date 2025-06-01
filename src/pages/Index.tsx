@@ -1,7 +1,7 @@
 
 import React from "react";
 import Logo from "@/components/Logo";
-import Tabs from "@/components/Tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/Tabs";
 import OrderForm from "@/components/OrderForm";
 import OrdersTable from "@/components/OrdersTable";
 import SummaryReport from "@/components/SummaryReport";
@@ -24,33 +24,43 @@ const Index = () => {
         </div>
         
         <Tabs defaultValue="addOrder" className="mt-2 md:mt-4">
-          <Tabs.Tab label={isMobile ? "إضافة" : "إضافة طلب"} value="addOrder">
+          <TabsList className="grid w-full grid-cols-7 gap-1">
+            <TabsTrigger value="addOrder">{isMobile ? "إضافة" : "إضافة طلب"}</TabsTrigger>
+            <TabsTrigger value="orders">{isMobile ? "الطلبات" : "جميع الطلبات"}</TabsTrigger>
+            <TabsTrigger value="invoice">{isMobile ? "الفاتورة" : "الفاتورة"}</TabsTrigger>
+            <TabsTrigger value="summary">{isMobile ? "التقرير" : "تقرير الطلبات"}</TabsTrigger>
+            <TabsTrigger value="profitReport">{isMobile ? "الأرباح" : "تقرير الأرباح"}</TabsTrigger>
+            <TabsTrigger value="proposedPrices">{isMobile ? "الأسعار" : "أسعار مقترحة"}</TabsTrigger>
+            <TabsTrigger value="products">{isMobile ? "المنتجات" : "إدارة المنتجات"}</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="addOrder">
             <OrderForm />
-          </Tabs.Tab>
+          </TabsContent>
           
-          <Tabs.Tab label={isMobile ? "الطلبات" : "جميع الطلبات"} value="orders">
+          <TabsContent value="orders">
             <OrdersTable />
-          </Tabs.Tab>
+          </TabsContent>
           
-          <Tabs.Tab label={isMobile ? "الفاتورة" : "الفاتورة"} value="invoice">
+          <TabsContent value="invoice">
             <InvoiceTab />
-          </Tabs.Tab>
+          </TabsContent>
           
-          <Tabs.Tab label={isMobile ? "التقرير" : "تقرير الطلبات"} value="summary">
+          <TabsContent value="summary">
             <SummaryReport />
-          </Tabs.Tab>
+          </TabsContent>
           
-          <Tabs.Tab label={isMobile ? "الأرباح" : "تقرير الأرباح"} value="profitReport">
+          <TabsContent value="profitReport">
             <ProfitReport />
-          </Tabs.Tab>
+          </TabsContent>
           
-          <Tabs.Tab label={isMobile ? "الأسعار" : "أسعار مقترحة"} value="proposedPrices">
+          <TabsContent value="proposedPrices">
             <PriceManagement />
-          </Tabs.Tab>
+          </TabsContent>
           
-          <Tabs.Tab label={isMobile ? "المنتجات" : "إدارة المنتجات"} value="products">
+          <TabsContent value="products">
             <ProductsTab />
-          </Tabs.Tab>
+          </TabsContent>
         </Tabs>
       </div>
     </div>
