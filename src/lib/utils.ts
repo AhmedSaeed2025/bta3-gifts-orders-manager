@@ -11,14 +11,18 @@ export function formatCurrency(amount: number): string {
   return `${amount.toFixed(2)} جنيه`;
 }
 
-export function generateSerialNumber(): string {
-  const now = new Date();
-  const year = now.getFullYear().toString().slice(-2);
-  const month = (now.getMonth() + 1).toString().padStart(2, '0');
-  const day = now.getDate().toString().padStart(2, '0');
-  const timestamp = now.getTime().toString().slice(-4);
+export function generateSerialNumber(existingOrders: Order[] = []): string {
+  // Get the highest existing serial number
+  let maxSerial = 1000;
   
-  return `${year}${month}${day}${timestamp}`;
+  existingOrders.forEach(order => {
+    const serialNum = parseInt(order.serial);
+    if (!isNaN(serialNum) && serialNum > maxSerial) {
+      maxSerial = serialNum;
+    }
+  });
+  
+  return (maxSerial + 1).toString();
 }
 
 export function generateMonthlyReport(orders: Order[]) {

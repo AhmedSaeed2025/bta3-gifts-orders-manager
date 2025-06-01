@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,10 +8,14 @@ import { formatCurrency } from "@/lib/utils";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Product, ProductSize } from "@/types";
-import { Trash, Pencil, Plus } from "lucide-react";
+import { Trash, Pencil, Plus, Cloud, CloudDownload, Loader2 } from "lucide-react";
+import { useProductSync } from "@/hooks/useProductSync";
+import { useAuth } from "@/hooks/useAuth";
 
 const ProductsManagement = () => {
   const { products, addProduct, updateProduct, deleteProduct, addProductSize, updateProductSize, deleteProductSize, clearAllProducts } = useProducts();
+  const { syncStatus, syncToSupabase, syncFromSupabase } = useProductSync();
+  const { user } = useAuth();
   
   const [editMode, setEditMode] = useState<"product" | "size" | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
@@ -128,17 +131,52 @@ const ProductsManagement = () => {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-xl">إدارة المنتجات والمقاسات</CardTitle>
+    <Card className="mx-2 md:mx-0">
+      <CardHeader className="pb-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <CardTitle className="text-lg md:text-xl">إدارة المنتجات والمقاسات</CardTitle>
+          
+          {user && (
+            <div className="flex flex-wrap gap-2">
+              <Button 
+                onClick={syncToSupabase}
+                disabled={syncStatus === 'syncing'}
+                size="sm"
+                className="bg-blue-600 hover:bg-blue-700 text-xs"
+              >
+                {syncStatus === 'syncing' ? (
+                  <Loader2 className="h-3 w-3 ml-1 animate-spin" />
+                ) : (
+                  <Cloud className="h-3 w-3 ml-1" />
+                )}
+                رفع للسيرفر
+              </Button>
+              <Button 
+                onClick={syncFromSupabase}
+                disabled={syncStatus === 'syncing'}
+                size="sm"
+                variant="outline"
+                className="text-xs"
+              >
+                {syncStatus === 'syncing' ? (
+                  <Loader2 className="h-3 w-3 ml-1 animate-spin" />
+                ) : (
+                  <CloudDownload className="h-3 w-3 ml-1" />
+                )}
+                تحديث من السيرفر
+              </Button>
+            </div>
+          )}
+        </div>
       </CardHeader>
-      <CardContent>
+      
+      <CardContent className="px-4 md:px-6">
         {/* Product Form */}
-        <div className="mb-6 border p-4 rounded-md">
-          <h3 className="font-medium mb-3">{editMode === "product" ? "تعديل منتج" : "إضافة منتج جديد"}</h3>
+        <div className="mb-6 border p-3 md:p-4 rounded-md">
+          <h3 className="font-medium mb-3 text-sm md:text-base">{editMode === "product" ? "تعديل منتج" : "إضافة منتج جديد"}</h3>
           <form onSubmit={handleSubmitProduct} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="productName">اسم المنتج</Label>
+              <Label htmlFor="productName" className="text-xs md:text-sm">اسم المنتج</Label>
               <div className="flex gap-2">
                 <Input
                   id="productName"
@@ -146,10 +184,12 @@ const ProductsManagement = () => {
                   onChange={(e) => setProductName(e.target.value)}
                   placeholder="أدخل اسم المنتج"
                   required
+                  className="text-sm"
                 />
                 <Button 
                   type="submit" 
-                  className="bg-gift-primary hover:bg-gift-primaryHover"
+                  className="bg-gift-primary hover:bg-gift-primaryHover text-xs md:text-sm px-3 md:px-4"
+                  size="sm"
                 >
                   {editMode === "product" ? "تعديل" : "إضافة"}
                 </Button>
@@ -158,6 +198,8 @@ const ProductsManagement = () => {
                     type="button" 
                     variant="outline" 
                     onClick={cancelEdit}
+                    size="sm"
+                    className="text-xs md:text-sm"
                   >
                     إلغاء
                   </Button>
@@ -168,12 +210,12 @@ const ProductsManagement = () => {
         </div>
         
         {/* Size Form */}
-        <div className="mb-6 border p-4 rounded-md">
-          <h3 className="font-medium mb-3">{editMode === "size" ? "تعديل مقاس" : "إضافة مقاس جديد"}</h3>
+        <div className="mb-6 border p-3 md:p-4 rounded-md">
+          <h3 className="font-medium mb-3 text-sm md:text-base">{editMode === "size" ? "تعديل مقاس" : "إضافة مقاس جديد"}</h3>
           <form onSubmit={handleSubmitSize} className="space-y-4">
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="size">المقاس</Label>
+                <Label htmlFor="size" className="text-xs md:text-sm">المقاس</Label>
                 <Input
                   id="size"
                   value={sizeForm.size}
@@ -181,11 +223,12 @@ const ProductsManagement = () => {
                   placeholder="أدخل المقاس"
                   required
                   disabled={!sizeForm.productId}
+                  className="text-sm"
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="cost">التكلفة</Label>
+                <Label htmlFor="cost" className="text-xs md:text-sm">التكلفة</Label>
                 <Input
                   id="cost"
                   type="number"
@@ -195,11 +238,12 @@ const ProductsManagement = () => {
                   onChange={(e) => setSizeForm({...sizeForm, cost: parseFloat(e.target.value) || 0})}
                   required
                   disabled={!sizeForm.productId}
+                  className="text-sm"
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="price">سعر البيع</Label>
+                <Label htmlFor="price" className="text-xs md:text-sm">سعر البيع</Label>
                 <Input
                   id="price"
                   type="number"
@@ -209,6 +253,7 @@ const ProductsManagement = () => {
                   onChange={(e) => setSizeForm({...sizeForm, price: parseFloat(e.target.value) || 0})}
                   required
                   disabled={!sizeForm.productId}
+                  className="text-sm"
                 />
               </div>
             </div>
@@ -217,7 +262,8 @@ const ProductsManagement = () => {
               <div className="flex gap-2">
                 <Button 
                   type="submit" 
-                  className="bg-gift-primary hover:bg-gift-primaryHover"
+                  className="bg-gift-primary hover:bg-gift-primaryHover text-xs md:text-sm"
+                  size="sm"
                 >
                   {editMode === "size" ? "تعديل المقاس" : "إضافة المقاس"}
                 </Button>
@@ -225,6 +271,8 @@ const ProductsManagement = () => {
                   type="button" 
                   variant="outline" 
                   onClick={cancelEdit}
+                  size="sm"
+                  className="text-xs md:text-sm"
                 >
                   إلغاء
                 </Button>
@@ -234,36 +282,36 @@ const ProductsManagement = () => {
         </div>
         
         {/* Products List */}
-        <div className="space-y-8">
+        <div className="space-y-6 md:space-y-8">
           {products.map((product) => (
-            <div key={product.id} className="border rounded-md p-4">
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="text-lg font-medium">{product.name}</h3>
-                <div className="flex gap-2">
+            <div key={product.id} className="border rounded-md p-3 md:p-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-3">
+                <h3 className="text-base md:text-lg font-medium">{product.name}</h3>
+                <div className="flex flex-wrap gap-1 md:gap-2">
                   <Button 
                     size="sm" 
                     variant="outline" 
-                    className="h-8" 
+                    className="h-7 md:h-8 text-xs px-2" 
                     onClick={() => handleAddSizeToProduct(product.id)}
                   >
-                    <Plus className="h-4 w-4 ml-1" /> إضافة مقاس
+                    <Plus className="h-3 w-3 ml-1" /> إضافة مقاس
                   </Button>
                   <Button 
                     size="sm" 
                     variant="outline" 
-                    className="h-8" 
+                    className="h-7 md:h-8 text-xs px-2" 
                     onClick={() => handleEditProduct(product)}
                   >
-                    <Pencil className="h-4 w-4 ml-1" /> تعديل
+                    <Pencil className="h-3 w-3 ml-1" /> تعديل
                   </Button>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button 
                         size="sm" 
                         variant="destructive" 
-                        className="h-8"
+                        className="h-7 md:h-8 text-xs px-2"
                       >
-                        <Trash className="h-4 w-4 ml-1" /> حذف
+                        <Trash className="h-3 w-3 ml-1" /> حذف
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
@@ -292,39 +340,39 @@ const ProductsManagement = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>المقاس</TableHead>
-                      <TableHead>التكلفة</TableHead>
-                      <TableHead>سعر البيع</TableHead>
-                      <TableHead>الربح</TableHead>
-                      <TableHead className="text-left">إجراءات</TableHead>
+                      <TableHead className="text-xs md:text-sm">المقاس</TableHead>
+                      <TableHead className="text-xs md:text-sm">التكلفة</TableHead>
+                      <TableHead className="text-xs md:text-sm">سعر البيع</TableHead>
+                      <TableHead className="text-xs md:text-sm">الربح</TableHead>
+                      <TableHead className="text-left text-xs md:text-sm">إجراءات</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {product.sizes.length > 0 ? (
                       product.sizes.map((size) => (
                         <TableRow key={`${product.id}-${size.size}`}>
-                          <TableCell>{size.size}</TableCell>
-                          <TableCell>{formatCurrency(size.cost)}</TableCell>
-                          <TableCell>{formatCurrency(size.price)}</TableCell>
-                          <TableCell>{formatCurrency(size.price - size.cost)}</TableCell>
+                          <TableCell className="text-xs md:text-sm">{size.size}</TableCell>
+                          <TableCell className="text-xs md:text-sm">{formatCurrency(size.cost)}</TableCell>
+                          <TableCell className="text-xs md:text-sm">{formatCurrency(size.price)}</TableCell>
+                          <TableCell className="text-xs md:text-sm">{formatCurrency(size.price - size.cost)}</TableCell>
                           <TableCell>
                             <div className="flex gap-1">
                               <Button 
                                 size="sm" 
                                 variant="ghost" 
-                                className="h-7 w-7 p-0" 
+                                className="h-6 w-6 p-0" 
                                 onClick={() => handleEditSize(product.id, size)}
                               >
-                                <Pencil className="h-4 w-4" />
+                                <Pencil className="h-3 w-3" />
                               </Button>
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                   <Button 
                                     size="sm" 
                                     variant="ghost" 
-                                    className="h-7 w-7 p-0 text-red-500 hover:text-red-700"
+                                    className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
                                   >
-                                    <Trash className="h-4 w-4" />
+                                    <Trash className="h-3 w-3" />
                                   </Button>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
@@ -351,7 +399,7 @@ const ProductsManagement = () => {
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={5} className="text-center py-4">
+                        <TableCell colSpan={5} className="text-center py-4 text-xs md:text-sm">
                           لا توجد مقاسات لهذا المنتج
                         </TableCell>
                       </TableRow>
@@ -364,10 +412,11 @@ const ProductsManagement = () => {
           
           {products.length === 0 && (
             <div className="text-center py-8 border rounded-md">
-              <p className="text-gray-500 dark:text-gray-400">لا توجد منتجات مسجلة</p>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">لا توجد منتجات مسجلة</p>
               <Button 
-                className="mt-2 bg-gift-primary hover:bg-gift-primaryHover"
+                className="mt-2 bg-gift-primary hover:bg-gift-primaryHover text-xs md:text-sm"
                 onClick={() => setProductName("")}
+                size="sm"
               >
                 إضافة منتج جديد
               </Button>
@@ -381,7 +430,8 @@ const ProductsManagement = () => {
             <AlertDialogTrigger asChild>
               <Button 
                 variant="destructive" 
-                className="w-full md:w-auto"
+                className="w-full md:w-auto text-xs md:text-sm"
+                size="sm"
               >
                 إعادة تعيين جميع المنتجات
               </Button>
