@@ -2,13 +2,13 @@
 import React, { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useOrders } from "@/context/OrderContext";
+import { useSupabaseOrders } from "@/context/SupabaseOrderContext";
 import { formatCurrency, generateMonthlyReport, calculateTotals, exportToExcel } from "@/lib/utils";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { DownloadCloud, TrendingUp, TrendingDown, FileText } from "lucide-react";
 
 const ProfitReport = () => {
-  const { orders } = useOrders();
+  const { orders, loading } = useSupabaseOrders();
   
   // Ensure orders is an array
   const safeOrders = Array.isArray(orders) ? orders : [];
@@ -48,6 +48,19 @@ const ProfitReport = () => {
     }
     return `${value} جنيه`;
   };
+
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center py-8">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gift-primary mx-auto"></div>
+            <p className="mt-2 text-gray-600 dark:text-gray-400">جاري تحميل تقرير الأرباح...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="overflow-hidden">

@@ -8,7 +8,7 @@ interface TabProps {
   children: React.ReactNode;
 }
 
-const Tab: React.FC<TabProps> = ({ label, value, children }) => {
+const Tab: React.FC<TabProps> = ({ children }) => {
   return <>{children}</>;
 };
 
@@ -22,7 +22,10 @@ const Tabs: React.FC<TabsProps> & { Tab: typeof Tab } = ({ defaultValue, classNa
   const [activeTab, setActiveTab] = useState(defaultValue);
 
   // Extract tabs from children
-  const tabs = React.Children.toArray(children) as React.ReactElement<TabProps>[];
+  const tabs = React.Children.toArray(children).filter(
+    (child): child is React.ReactElement<TabProps> => 
+      React.isValidElement(child) && child.type === Tab
+  );
   
   const handleTabClick = (value: string) => {
     setActiveTab(value);

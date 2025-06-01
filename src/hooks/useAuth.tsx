@@ -1,3 +1,4 @@
+
 import { useState, useEffect, createContext, useContext } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,11 +8,11 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
-  syncLocalData: () => Promise<void>;
+  syncAllData: () => Promise<void>;
+  clearLocalData: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,10 +31,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(session?.user ?? null);
         setLoading(false);
         
-        // Auto-sync local data when user signs in
+        // Auto-sync all data when user signs in
         if (event === 'SIGNED_IN' && session?.user) {
           setTimeout(() => {
-            syncLocalData();
+            syncAllData();
           }, 1000); // Delay to ensure database is ready
         }
       }
@@ -49,7 +50,35 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const syncLocalData = async () => {
+  const syncAllData = async () => {
+    if (!user) return;
+
+    try {
+      console.log('بدء مزامنة جميع البيانات المحلية...');
+      
+      let totalSynced = 0;
+      
+      // مزامنة الطلبات
+      await syncOrders();
+      
+      // مزامنة المنتجات
+      await syncProducts();
+      
+      // مزامنة الأسعار المقترحة
+      await syncProposedPrices();
+      
+      toast.success('تمت مزامنة جميع البيانات بنجاح');
+      
+      // حذف البيانات المحلية بعد المزامنة الناجحة
+      clearLocalData();
+      
+    } catch (error) {
+      console.error('خطأ في مزامنة البيانات:', error);
+      toast.error('حدث خطأ أثناء مزامنة البيانات');
+    }
+  };
+
+  const syncOrders = async () => {
     try {
       const localOrders = localStorage.getItem('orders');
       if (!localOrders || !user) return;
@@ -57,8 +86,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const orders = JSON.parse(localOrders);
       if (orders.length === 0) return;
 
-      console.log('بدء مزامنة البيانات المحلية...', orders.length, 'طلب');
-      toast.info(`جاري مزامنة ${orders.length} طلب من التخزين المحلي...`);
+      console.log('مزامنة الطلبات...', orders.length, 'طلب');
 
       let syncedCount = 0;
       for (const order of orders) {
@@ -72,7 +100,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
           if (existingOrder) {
             console.log('الطلب موجود بالفعل:', order.serial);
-            continue; // تخطي إذا كان موجود
+            continue;
           }
 
           // إضافة الطلب إلى قاعدة البيانات
@@ -125,38 +153,173 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           }
 
           syncedCount++;
-          console.log('تم مزامنة الطلب:', order.serial);
         } catch (error) {
           console.error('خطأ في مزامنة الطلب:', order.serial, error);
         }
       }
 
       if (syncedCount > 0) {
-        toast.success(`تم مزامنة ${syncedCount} طلب بنجاح إلى قاعدة البيانات`);
-        // اختياري: احتفظ بنسخة احتياطية من البيانات المحلية
-        localStorage.setItem('orders_backup', localOrders);
-        console.log('تم إنشاء نسخة احتياطية من البيانات المحلية');
-      } else {
-        toast.info('جميع البيانات متزامنة بالفعل');
+        console.log(`تم مزامنة ${syncedCount} طلب`);
       }
     } catch (error) {
-      console.error('خطأ في مزامنة البيانات:', error);
-      toast.error('حدث خطأ أثناء مزامنة البيانات المحلية');
+      console.error('خطأ في مزامنة الطلبات:', error);
     }
   };
 
-  const signInWithGoogle = async () => {
+  const syncProducts = async () => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin
+      const localProducts = localStorage.getItem('products');
+      if (!localProducts || !user) return;
+
+      const products = JSON.parse(localProducts);
+      if (products.length === 0) return;
+
+      console.log('مزامنة المنتجات...', products.length, 'منتج');
+
+      let syncedCount = 0;
+      for (const product of products) {
+        try {
+          // التحقق من وجود المنتج
+          const { data: existingProduct } = await supabase
+            .from('products')
+            .select('id')
+            .eq('name', product.name)
+            .eq('user_id', user.id)
+            .single();
+
+          let productId;
+          if (existingProduct) {
+            productId = existingProduct.id;
+          } else {
+            // إضافة المنتج الجديد
+            const { data: newProduct, error: productError } = await supabase
+              .from('products')
+              .insert({
+                user_id: user.id,
+                name: product.name
+              })
+              .select()
+              .single();
+
+            if (productError) {
+              console.error('خطأ في إضافة المنتج:', productError);
+              continue;
+            }
+            productId = newProduct.id;
+          }
+
+          // مزامنة مقاسات المنتج
+          if (product.sizes && product.sizes.length > 0) {
+            for (const size of product.sizes) {
+              const { data: existingSize } = await supabase
+                .from('product_sizes')
+                .select('id')
+                .eq('product_id', productId)
+                .eq('size', size.size)
+                .single();
+
+              if (!existingSize) {
+                await supabase
+                  .from('product_sizes')
+                  .insert({
+                    product_id: productId,
+                    size: size.size,
+                    cost: size.cost,
+                    price: size.price
+                  });
+              }
+            }
+          }
+
+          syncedCount++;
+        } catch (error) {
+          console.error('خطأ في مزامنة المنتج:', product.name, error);
         }
-      });
-      if (error) throw error;
+      }
+
+      if (syncedCount > 0) {
+        console.log(`تم مزامنة ${syncedCount} منتج`);
+      }
     } catch (error) {
-      console.error('Error signing in with Google:', error);
-      toast.error('فشل في تسجيل الدخول عبر Google. تأكد من تفعيل Google Auth في Supabase أو استخدم البريد الإلكتروني.');
+      console.error('خطأ في مزامنة المنتجات:', error);
+    }
+  };
+
+  const syncProposedPrices = async () => {
+    try {
+      const localProposedPrices = localStorage.getItem('proposedPrices');
+      if (!localProposedPrices || !user) return;
+
+      const proposedPrices = JSON.parse(localProposedPrices);
+      if (Object.keys(proposedPrices).length === 0) return;
+
+      console.log('مزامنة الأسعار المقترحة...');
+
+      let syncedCount = 0;
+      for (const [productType, sizes] of Object.entries(proposedPrices)) {
+        for (const [size, priceData] of Object.entries(sizes as any)) {
+          try {
+            // التحقق من وجود السعر المقترح
+            const { data: existingPrice } = await supabase
+              .from('proposed_prices')
+              .select('id')
+              .eq('product_type', productType)
+              .eq('size', size)
+              .eq('user_id', user.id)
+              .single();
+
+            if (!existingPrice) {
+              await supabase
+                .from('proposed_prices')
+                .insert({
+                  user_id: user.id,
+                  product_type: productType,
+                  size: size,
+                  cost: (priceData as any).cost,
+                  price: (priceData as any).price
+                });
+              syncedCount++;
+            }
+          } catch (error) {
+            console.error('خطأ في مزامنة السعر المقترح:', productType, size, error);
+          }
+        }
+      }
+
+      if (syncedCount > 0) {
+        console.log(`تم مزامنة ${syncedCount} سعر مقترح`);
+      }
+    } catch (error) {
+      console.error('خطأ في مزامنة الأسعار المقترحة:', error);
+    }
+  };
+
+  const clearLocalData = () => {
+    try {
+      // إنشاء نسخة احتياطية قبل الحذف
+      const localOrders = localStorage.getItem('orders');
+      const localProducts = localStorage.getItem('products');
+      const localProposedPrices = localStorage.getItem('proposedPrices');
+      
+      if (localOrders) {
+        localStorage.setItem('orders_backup', localOrders);
+      }
+      if (localProducts) {
+        localStorage.setItem('products_backup', localProducts);
+      }
+      if (localProposedPrices) {
+        localStorage.setItem('proposedPrices_backup', localProposedPrices);
+      }
+
+      // حذف البيانات المحلية
+      localStorage.removeItem('orders');
+      localStorage.removeItem('products');
+      localStorage.removeItem('proposedPrices');
+      
+      console.log('تم حذف البيانات المحلية وإنشاء نسخة احتياطية');
+      toast.success('تم حذف البيانات المحلية بعد المزامنة الناجحة');
+    } catch (error) {
+      console.error('خطأ في حذف البيانات المحلية:', error);
     }
   };
 
@@ -206,11 +369,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       user, 
       session, 
       loading, 
-      signInWithGoogle, 
       signInWithEmail,
       signUpWithEmail,
       signOut,
-      syncLocalData
+      syncAllData,
+      clearLocalData
     }}>
       {children}
     </AuthContext.Provider>

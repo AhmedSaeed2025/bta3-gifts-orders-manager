@@ -6,39 +6,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
 import Logo from './Logo';
-import { Chrome, Mail, Eye, EyeOff, RefreshCw, Database } from 'lucide-react';
+import { Mail, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Auth = () => {
-  const { signInWithGoogle, signInWithEmail, signUpWithEmail, loading, syncLocalData } = useAuth();
+  const { signInWithEmail, signUpWithEmail, loading } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [emailLoading, setEmailLoading] = useState(false);
-  const [syncLoading, setSyncLoading] = useState(false);
-
-  const handleGoogleSignIn = async () => {
-    try {
-      await signInWithGoogle();
-    } catch (error) {
-      console.error('Failed to sign in with Google:', error);
-      toast.error('Google Auth غير مُفعل. استخدم البريد الإلكتروني أو فعّل Google في إعدادات Supabase.');
-    }
-  };
-
-  const handleManualSync = async () => {
-    setSyncLoading(true);
-    try {
-      await syncLocalData();
-    } catch (error) {
-      console.error('Manual sync failed:', error);
-      toast.error('فشل في مزامنة البيانات');
-    } finally {
-      setSyncLoading(false);
-    }
-  };
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,7 +41,7 @@ const Auth = () => {
         setConfirmPassword('');
       } else {
         await signInWithEmail(email, password);
-        toast.success('مرحباً بك! سيتم مزامنة بياناتك المحلية تلقائياً...');
+        toast.success('مرحباً بك! سيتم مزامنة بياناتك تلقائياً...');
       }
     } catch (error: any) {
       console.error('Authentication error:', error);
@@ -83,7 +61,12 @@ const Auth = () => {
   // التحقق من وجود بيانات محلية
   const hasLocalData = () => {
     const localOrders = localStorage.getItem('orders');
-    return localOrders && JSON.parse(localOrders).length > 0;
+    const localProducts = localStorage.getItem('products');
+    const localProposedPrices = localStorage.getItem('proposedPrices');
+    
+    return (localOrders && JSON.parse(localOrders).length > 0) ||
+           (localProducts && JSON.parse(localProducts).length > 0) ||
+           (localProposedPrices && Object.keys(JSON.parse(localProposedPrices)).length > 0);
   };
 
   return (
@@ -110,26 +93,6 @@ const Auth = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Google Sign In */}
-            <Button
-              onClick={handleGoogleSignIn}
-              disabled={loading || emailLoading}
-              className="w-full flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-900 border border-gray-300"
-              variant="outline"
-            >
-              <Chrome className="h-5 w-5" />
-              تسجيل الدخول بـ Google
-            </Button>
-            
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">أو</span>
-              </div>
-            </div>
-
             {/* Email/Password Form */}
             <form onSubmit={handleEmailAuth} className="space-y-4">
               <div className="space-y-2">
@@ -200,23 +163,6 @@ const Auth = () => {
                 {emailLoading ? 'جاري المعالجة...' : (isSignUp ? 'إنشاء حساب' : 'تسجيل الدخول')}
               </Button>
             </form>
-
-            {/* Manual Sync Button (shown only if there's local data) */}
-            {hasLocalData() && (
-              <Button
-                onClick={handleManualSync}
-                disabled={syncLoading || loading || emailLoading}
-                className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700"
-                variant="default"
-              >
-                {syncLoading ? (
-                  <RefreshCw className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Database className="h-4 w-4" />
-                )}
-                {syncLoading ? 'جاري المزامنة...' : 'مزامنة البيانات المحلية يدوياً'}
-              </Button>
-            )}
 
             <div className="text-center">
               <Button
