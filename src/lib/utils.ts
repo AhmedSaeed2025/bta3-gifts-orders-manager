@@ -1,4 +1,3 @@
-
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { Order } from "@/types";
@@ -75,46 +74,8 @@ export function exportToExcel(tableId: string, filename: string) {
     // Create a new workbook
     const wb = XLSX.utils.book_new();
     
-    // Convert table to worksheet with English headers
+    // Convert table to worksheet
     const ws = XLSX.utils.table_to_sheet(table);
-    
-    // Replace Arabic headers with English ones for better Excel compatibility
-    const englishHeaders = {
-      'رقم الطلب': 'Order_Number',
-      'التاريخ': 'Date',
-      'اسم العميل': 'Client_Name',
-      'رقم التليفون': 'Phone',
-      'طريقة السداد': 'Payment_Method',
-      'طريقة الاستلام': 'Delivery_Method',
-      'العنوان': 'Address',
-      'المحافظة': 'Governorate',
-      'نوع المنتج': 'Product_Type',
-      'المقاس': 'Size',
-      'الكمية': 'Quantity',
-      'سعر البيع': 'Sale_Price',
-      'سعر التكلفة': 'Cost_Price',
-      'الخصم': 'Discount',
-      'مصاريف الشحن': 'Shipping_Cost',
-      'الإجمالي': 'Total',
-      'الربح': 'Profit',
-      'حالة الطلب': 'Order_Status',
-      'الشهر': 'Month',
-      'إجمالي التكاليف': 'Total_Costs',
-      'إجمالي المبيعات': 'Total_Sales',
-      'صافي الربح': 'Net_Profit'
-    };
-
-    // Get the range of the worksheet
-    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
-    
-    // Replace headers in the first row
-    for (let col = range.s.c; col <= range.e.c; col++) {
-      const cellRef = XLSX.utils.encode_cell({ r: 0, c: col });
-      const cell = ws[cellRef];
-      if (cell && cell.v && englishHeaders[cell.v as keyof typeof englishHeaders]) {
-        cell.v = englishHeaders[cell.v as keyof typeof englishHeaders];
-      }
-    }
     
     // Add worksheet to workbook
     XLSX.utils.book_append_sheet(wb, ws, 'Report');

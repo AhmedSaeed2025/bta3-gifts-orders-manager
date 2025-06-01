@@ -86,11 +86,29 @@
   * {
     @apply border-border;
   }
+  html {
+    direction: rtl;
+  }
   body {
     @apply bg-background text-foreground;
     direction: rtl;
     font-family: 'Tajawal', sans-serif;
   }
+}
+
+/* Force RTL direction for all elements */
+.rtl {
+  direction: rtl !important;
+}
+
+/* Tabs RTL styling */
+[role="tablist"] {
+  direction: rtl !important;
+  flex-direction: row-reverse;
+}
+
+[role="tab"] {
+  direction: rtl !important;
 }
 
 .gift-table {
@@ -114,15 +132,6 @@
 
 .gift-table tr:nth-child(even) {
   background-color: #f8fafc;
-}
-
-/* RTL Support */
-.rtl {
-  direction: rtl;
-}
-
-.ltr {
-  direction: ltr;
 }
 
 /* Print styles - Enhanced for better PDF export */
