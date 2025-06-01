@@ -1,4 +1,3 @@
-
 import { useState, useEffect, createContext, useContext } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,7 +11,6 @@ interface AuthContextType {
   signUpWithEmail: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   syncAllData: () => Promise<void>;
-  clearLocalData: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -68,9 +66,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       await syncProposedPrices();
       
       toast.success('تمت مزامنة جميع البيانات بنجاح');
-      
-      // حذف البيانات المحلية بعد المزامنة الناجحة
-      clearLocalData();
       
     } catch (error) {
       console.error('خطأ في مزامنة البيانات:', error);
@@ -294,35 +289,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const clearLocalData = () => {
-    try {
-      // إنشاء نسخة احتياطية قبل الحذف
-      const localOrders = localStorage.getItem('orders');
-      const localProducts = localStorage.getItem('products');
-      const localProposedPrices = localStorage.getItem('proposedPrices');
-      
-      if (localOrders) {
-        localStorage.setItem('orders_backup', localOrders);
-      }
-      if (localProducts) {
-        localStorage.setItem('products_backup', localProducts);
-      }
-      if (localProposedPrices) {
-        localStorage.setItem('proposedPrices_backup', localProposedPrices);
-      }
-
-      // حذف البيانات المحلية
-      localStorage.removeItem('orders');
-      localStorage.removeItem('products');
-      localStorage.removeItem('proposedPrices');
-      
-      console.log('تم حذف البيانات المحلية وإنشاء نسخة احتياطية');
-      toast.success('تم حذف البيانات المحلية بعد المزامنة الناجحة');
-    } catch (error) {
-      console.error('خطأ في حذف البيانات المحلية:', error);
-    }
-  };
-
   const signInWithEmail = async (email: string, password: string) => {
     try {
       const { error } = await supabase.auth.signInWithPassword({
@@ -372,8 +338,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       signInWithEmail,
       signUpWithEmail,
       signOut,
-      syncAllData,
-      clearLocalData
+      syncAllData
     }}>
       {children}
     </AuthContext.Provider>

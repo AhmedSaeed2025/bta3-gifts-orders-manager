@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useOrders } from "@/context/OrderContext";
+import { useSupabaseOrders } from "@/context/SupabaseOrderContext";
 import { ORDER_STATUS_LABELS, OrderStatus } from "@/types";
 import { formatCurrency } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { OrderItem } from "@/types";
 
 const OrdersTable: React.FC = () => {
-  const { orders, updateOrderStatus, deleteOrder, updateOrder } = useOrders();
+  const { orders, updateOrderStatus, deleteOrder, updateOrder, loading } = useSupabaseOrders();
   const [filter, setFilter] = useState<"all" | OrderStatus>("all");
   const navigate = useNavigate();
   const [editingOrder, setEditingOrder] = useState<any>(null);
@@ -110,6 +110,19 @@ const OrdersTable: React.FC = () => {
       setEditDialogOpen(false);
     }
   };
+
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center py-8">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gift-primary mx-auto"></div>
+            <p className="mt-2 text-gray-600 dark:text-gray-400">جاري تحميل الطلبات...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>

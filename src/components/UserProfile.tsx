@@ -10,10 +10,11 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/useAuth';
-import { LogOut, User, RefreshCw, Trash2 } from 'lucide-react';
+import { LogOut, User, RefreshCw, Download, Upload } from 'lucide-react';
+import { toast } from 'sonner';
 
 const UserProfile = () => {
-  const { user, signOut, syncAllData, clearLocalData } = useAuth();
+  const { user, signOut, syncAllData } = useAuth();
   const [syncing, setSyncing] = useState(false);
 
   if (!user) return null;
@@ -37,10 +38,68 @@ const UserProfile = () => {
     }
   };
 
-  const handleClearLocal = () => {
-    if (window.confirm('هل أنت متأكد من حذف جميع البيانات المحلية؟ لا يمكن التراجع عن هذا الإجراء.')) {
-      clearLocalData();
+  const handleExportData = () => {
+    try {
+      const data = {
+        orders: JSON.parse(localStorage.getItem('orders') || '[]'),
+        products: JSON.parse(localStorage.getItem('products') || '[]'),
+        proposedPrices: JSON.parse(localStorage.getItem('proposedPrices') || '{}'),
+        exportDate: new Date().toISOString()
+      };
+
+      const dataStr = JSON.stringify(data, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `backup-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      toast.success('تم تصدير البيانات بنجاح');
+    } catch (error) {
+      console.error('Export failed:', error);
+      toast.error('حدث خطأ أثناء تصدير البيانات');
     }
+  };
+
+  const handleImportData = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const importedData = JSON.parse(e.target?.result as string);
+          
+          if (importedData.orders) {
+            localStorage.setItem('orders', JSON.stringify(importedData.orders));
+          }
+          if (importedData.products) {
+            localStorage.setItem('products', JSON.stringify(importedData.products));
+          }
+          if (importedData.proposedPrices) {
+            localStorage.setItem('proposedPrices', JSON.stringify(importedData.proposedPrices));
+          }
+          
+          toast.success('تم استيراد البيانات بنجاح، سيتم إعادة تحميل الصفحة');
+          setTimeout(() => {
+            window.location.reload();
+          }, 1500);
+        } catch (error) {
+          console.error('Import failed:', error);
+          toast.error('حدث خطأ أثناء استيراد البيانات، تأكد من صحة الملف');
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
   };
 
   // التحقق من وجود بيانات محلية
@@ -82,13 +141,21 @@ const UserProfile = () => {
               )}
               {syncing ? 'جاري المزامنة...' : 'مزامنة البيانات'}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleClearLocal} className="text-red-600">
-              <Trash2 className="mr-2 h-4 w-4" />
-              حذف البيانات المحلية
-            </DropdownMenuItem>
             <DropdownMenuSeparator />
           </>
         )}
+        
+        <DropdownMenuItem onClick={handleExportData}>
+          <Download className="mr-2 h-4 w-4" />
+          تصدير البيانات
+        </DropdownMenuItem>
+        
+        <DropdownMenuItem onClick={handleImportData}>
+          <Upload className="mr-2 h-4 w-4" />
+          استيراد البيانات
+        </DropdownMenuItem>
+        
+        <DropdownMenuSeparator />
         
         <DropdownMenuItem onClick={handleSignOut}>
           <LogOut className="mr-2 h-4 w-4" />

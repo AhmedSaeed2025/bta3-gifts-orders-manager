@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useOrders } from "@/context/OrderContext";
+import { useSupabaseOrders } from "@/context/SupabaseOrderContext";
 import Invoice from "./Invoice";
 import { Label } from "./ui/label";
 import { Button } from "./ui/button";
@@ -17,7 +18,7 @@ import { jsPDF } from "jspdf";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const InvoiceTab = () => {
-  const { orders, updateOrder } = useOrders();
+  const { orders, updateOrder, loading } = useSupabaseOrders();
   const [selectedOrderSerial, setSelectedOrderSerial] = useState<string>("");
   const [selectedOrder, setSelectedOrder] = useState<Order | undefined>(orders && orders.length > 0 ? orders[0] : undefined);
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
@@ -162,6 +163,19 @@ const InvoiceTab = () => {
       toast.error("حدث خطأ أثناء إنشاء ملف PDF");
     }
   };
+
+  if (loading) {
+    return (
+      <Card className="shadow-sm">
+        <CardContent className="flex items-center justify-center py-8">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gift-primary mx-auto"></div>
+            <p className="mt-2 text-gray-600 dark:text-gray-400">جاري تحميل الفواتير...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="shadow-sm">
