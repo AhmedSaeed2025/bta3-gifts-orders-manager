@@ -1,4 +1,3 @@
-
 export interface OrderItem {
   productType: string;
   size: string;
@@ -6,6 +5,7 @@ export interface OrderItem {
   cost: number;
   price: number;
   profit: number;
+  itemDiscount?: number; // خصم على مستوى الصنف
 }
 
 export interface Order {

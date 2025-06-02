@@ -34,6 +34,7 @@ const OrderForm = () => {
     quantity: 1,
     cost: 0,
     price: 0,
+    itemDiscount: 0, // خصم على مستوى الصنف
   });
   
   const [items, setItems] = useState<OrderItem[]>([]);
@@ -47,9 +48,15 @@ const OrderForm = () => {
       .map(s => s.size) || [] 
     : [];
 
-  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const subtotal = items.reduce((sum, item) => {
+    const discountedPrice = item.price - (item.itemDiscount || 0);
+    return sum + discountedPrice * item.quantity;
+  }, 0);
   const totalAmount = subtotal + customerData.shippingCost - customerData.discount - customerData.deposit;
-  const totalProfit = items.reduce((sum, item) => sum + (item.price - item.cost) * item.quantity, 0);
+  const totalProfit = items.reduce((sum, item) => {
+    const discountedPrice = item.price - (item.itemDiscount || 0);
+    return sum + (discountedPrice - item.cost) * item.quantity;
+  }, 0);
 
   useEffect(() => {
     if (currentItem.productType && currentItem.size) {
@@ -111,9 +118,14 @@ const OrderForm = () => {
       return;
     }
     
-    const profit = (currentItem.price - currentItem.cost) * currentItem.quantity;
+    const discountedPrice = currentItem.price - (currentItem.itemDiscount || 0);
+    const profit = (discountedPrice - currentItem.cost) * currentItem.quantity;
     
-    setItems(prev => [...prev, { ...currentItem, profit }]);
+    setItems(prev => [...prev, { 
+      ...currentItem, 
+      profit,
+      itemDiscount: currentItem.itemDiscount || 0
+    }]);
     
     setCurrentItem({
       productType: "",
@@ -121,6 +133,7 @@ const OrderForm = () => {
       quantity: 1,
       cost: 0,
       price: 0,
+      itemDiscount: 0,
     });
   };
   
@@ -269,7 +282,7 @@ const OrderForm = () => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="discount">الخصم (إذا وجد)</Label>
+              <Label htmlFor="discount">الخصم الإجمالي (إذا وجد)</Label>
               <Input 
                 id="discount" 
                 name="discount" 
@@ -298,7 +311,7 @@ const OrderForm = () => {
           <div className="border-t pt-4">
             <h3 className="text-lg font-medium mb-4">إضافة المنتجات</h3>
             
-            <div className="grid md:grid-cols-2 gap-4 mb-4">
+            <div className="grid md:grid-cols-3 gap-4 mb-4">
               <div className="space-y-2">
                 <Label htmlFor="productType">نوع المنتج</Label>
                 <Select 
@@ -395,8 +408,22 @@ const OrderForm = () => {
                   onChange={handleItemChange} 
                 />
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="itemDiscount">خصم الصنف (لكل قطعة)</Label>
+                <Input 
+                  id="itemDiscount" 
+                  name="itemDiscount" 
+                  type="number" 
+                  min="0"
+                  step="0.01"
+                  value={currentItem.itemDiscount}
+                  onChange={handleItemChange} 
+                  placeholder="0.00"
+                />
+              </div>
               
-              <div className="flex items-end">
+              <div className="flex items-end col-span-full md:col-span-1">
                 <Button 
                   type="button" 
                   className="bg-green-600 hover:bg-green-700 w-full"
@@ -411,42 +438,51 @@ const OrderForm = () => {
             {items.length > 0 && (
               <div className="mt-4">
                 <h4 className="font-medium mb-2">المنتجات المضافة:</h4>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>نوع المنتج</TableHead>
-                      <TableHead>المقاس</TableHead>
-                      <TableHead>الكمية</TableHead>
-                      <TableHead>سعر الوحدة</TableHead>
-                      <TableHead>الإجمالي</TableHead>
-                      <TableHead>إجراء</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {items.map((item, idx) => (
-                      <TableRow key={idx}>
-                        <TableCell>{item.productType}</TableCell>
-                        <TableCell>{item.size}</TableCell>
-                        <TableCell>{item.quantity}</TableCell>
-                        <TableCell>{item.price} جنيه</TableCell>
-                        <TableCell>{item.price * item.quantity} جنيه</TableCell>
-                        <TableCell>
-                          <Button 
-                            variant="destructive" 
-                            size="sm" 
-                            onClick={() => removeItem(idx)}
-                          >
-                            <Trash2 size={16} />
-                          </Button>
-                        </TableCell>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>نوع المنتج</TableHead>
+                        <TableHead>المقاس</TableHead>
+                        <TableHead>الكمية</TableHead>
+                        <TableHead>السعر الأساسي</TableHead>
+                        <TableHead>خصم القطعة</TableHead>
+                        <TableHead>السعر بعد الخصم</TableHead>
+                        <TableHead>الإجمالي</TableHead>
+                        <TableHead>إجراء</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {items.map((item, idx) => {
+                        const discountedPrice = item.price - (item.itemDiscount || 0);
+                        return (
+                          <TableRow key={idx}>
+                            <TableCell>{item.productType}</TableCell>
+                            <TableCell>{item.size}</TableCell>
+                            <TableCell>{item.quantity}</TableCell>
+                            <TableCell>{item.price} جنيه</TableCell>
+                            <TableCell>{item.itemDiscount || 0} جنيه</TableCell>
+                            <TableCell>{discountedPrice} جنيه</TableCell>
+                            <TableCell>{discountedPrice * item.quantity} جنيه</TableCell>
+                            <TableCell>
+                              <Button 
+                                variant="destructive" 
+                                size="sm" 
+                                onClick={() => removeItem(idx)}
+                              >
+                                <Trash2 size={16} />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
                 
                 <div className="mt-4 border-t pt-4">
                   <div className="flex justify-between">
-                    <span>إجمالي سعر المنتجات:</span>
+                    <span>إجمالي سعر المنتجات (بعد خصم الأصناف):</span>
                     <span>{subtotal} جنيه</span>
                   </div>
                   <div className="flex justify-between mt-1">
@@ -454,7 +490,7 @@ const OrderForm = () => {
                     <span>{customerData.shippingCost} جنيه</span>
                   </div>
                   <div className="flex justify-between mt-1">
-                    <span>- الخصم:</span>
+                    <span>- الخصم الإجمالي:</span>
                     <span>{customerData.discount} جنيه</span>
                   </div>
                   {customerData.deposit > 0 && (

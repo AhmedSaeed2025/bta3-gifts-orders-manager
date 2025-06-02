@@ -1,382 +1,219 @@
 
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@200;300;400;500;700;800;900&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
- 
+
 @layer base {
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
-
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
- 
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
- 
     --primary: 222.2 47.4% 11.2%;
     --primary-foreground: 210 40% 98%;
- 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
- 
-    --muted: 210 40% 96.1%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96%;
     --muted-foreground: 215.4 16.3% 46.9%;
- 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
- 
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
- 
     --radius: 0.5rem;
-    --gift-primary: #FD0606;
-    --gift-primary-foreground: #ffffff;
-    --gift-secondary: #223e96;
-    --gift-secondaryHover: #14285e;
-    --gift-accent: #f6f8ff;
-    --gift-positive: #16a34a;
-    --gift-negative: #dc2626;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --gift-primary: 35 91% 55%;
+    --gift-primary-hover: 35 91% 45%;
+    --gift-secondary: 142 71% 45%;
+    --gift-secondary-hover: 142 71% 35%;
+    --gift-accent: 54 91% 95%;
   }
- 
+
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
- 
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
- 
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
- 
     --primary: 210 40% 98%;
     --primary-foreground: 222.2 47.4% 11.2%;
- 
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
- 
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
- 
     --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
- 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
- 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
-
-    --gift-primary: #FF6B6B;
-    --gift-primary-foreground: #ffffff;
-    --gift-secondary: #4E73DF;
-    --gift-secondaryHover: #3A5EC8;
-    --gift-accent: #10161f;
-    --gift-positive: #22c55e;
-    --gift-negative: #ef4444;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+    --gift-primary: 35 91% 55%;
+    --gift-primary-hover: 35 91% 45%;
+    --gift-secondary: 142 71% 45%;
+    --gift-secondary-hover: 142 71% 35%;
+    --gift-accent: 54 20% 10%;
   }
 }
- 
+
 @layer base {
   * {
     @apply border-border;
   }
-  html {
-    direction: rtl;
-  }
   body {
     @apply bg-background text-foreground;
-    direction: rtl;
     font-family: 'Tajawal', sans-serif;
+    direction: rtl;
   }
 }
 
-/* Force RTL direction for all elements */
 .rtl {
-  direction: rtl !important;
-}
-
-/* Enhanced mobile-first tabs styling */
-[role="tablist"] {
-  direction: rtl !important;
-  flex-direction: row-reverse;
-  overflow-x: auto;
-  scrollbar-width: thin;
-  -webkit-overflow-scrolling: touch;
-}
-
-[role="tab"] {
-  direction: rtl !important;
-  font-size: clamp(0.6rem, 2vw, 0.875rem) !important;
-  padding: 0.25rem 0.5rem !important;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: fit-content;
-  flex-shrink: 0;
-}
-
-/* Mobile responsive tabs */
-@media (max-width: 768px) {
-  [role="tablist"] {
-    height: 28px !important;
-    padding: 2px !important;
-  }
-  
-  [role="tab"] {
-    font-size: 0.6rem !important;
-    padding: 0.2rem 0.4rem !important;
-    border-radius: 0.25rem !important;
-  }
-}
-
-@media (max-width: 480px) {
-  [role="tab"] {
-    font-size: 0.55rem !important;
-    padding: 0.15rem 0.3rem !important;
-  }
-}
-
-.gift-table {
-  width: 100%;
-  border-collapse: collapse;
   direction: rtl;
-}
-
-.gift-table th,
-.gift-table td {
-  padding: 0.5rem;
   text-align: right;
-  border: 1px solid #e2e8f0;
-  font-size: 0.75rem;
 }
 
-.gift-table th {
-  background-color: #f8fafc;
-  font-weight: 600;
+.gift-primary {
+  background-color: hsl(var(--gift-primary));
 }
 
-.gift-table tr:nth-child(even) {
-  background-color: #f8fafc;
+.gift-primary-hover {
+  background-color: hsl(var(--gift-primary-hover));
 }
 
-/* Enhanced mobile responsive styles */
-@media (max-width: 640px) {
-  .gift-table th,
-  .gift-table td {
+.gift-secondary {
+  background-color: hsl(var(--gift-secondary));
+}
+
+.gift-secondary-hover {
+  background-color: hsl(var(--gift-secondary-hover));
+}
+
+.gift-accent {
+  background-color: hsl(var(--gift-accent));
+}
+
+/* تحسينات للموبايل */
+@media (max-width: 768px) {
+  .mobile-text-xs {
+    font-size: 0.6rem;
+    line-height: 0.8rem;
+  }
+  
+  .mobile-text-sm {
+    font-size: 0.7rem;
+    line-height: 0.9rem;
+  }
+  
+  .mobile-compact {
     padding: 0.25rem;
-    font-size: 0.65rem;
+    margin: 0.125rem;
   }
   
-  .overflow-x-auto {
-    -webkit-overflow-scrolling: touch;
-  }
-  
-  button, 
-  [type="button"],
-  [type="submit"] {
-    min-height: 32px;
-    min-width: 32px;
-    font-size: 0.75rem;
-    padding: 0.25rem 0.5rem;
-  }
-  
-  input, 
-  select, 
-  textarea {
-    font-size: 16px;
-    padding: 0.4rem;
-  }
-  
-  [role="dialog"] {
-    max-height: 85vh;
-    overflow-y: auto;
-  }
-  
-  /* Card responsive adjustments */
-  .card {
-    margin: 0.25rem !important;
-    padding: 0.5rem !important;
-  }
-  
-  /* Invoice mobile optimization */
-  .professional-invoice {
-    padding: 0.75rem !important;
-    margin: 0 !important;
-  }
-  
-  .professional-invoice h1 {
-    font-size: 1.25rem !important;
-  }
-  
-  .professional-invoice h2 {
-    font-size: 1rem !important;
-  }
-  
-  .professional-invoice h3 {
-    font-size: 0.875rem !important;
-  }
-  
-  .professional-invoice .text-2xl {
-    font-size: 1.125rem !important;
-  }
-  
-  .professional-invoice .text-xl {
-    font-size: 1rem !important;
-  }
-  
-  .professional-invoice .text-lg {
-    font-size: 0.875rem !important;
+  .tabs-mobile {
+    font-size: 0.65rem !important;
+    padding: 0.25rem 0.5rem !important;
+    height: 2rem !important;
   }
 }
 
-/* Print styles - Enhanced for better PDF export */
+/* تحسينات الطباعة للفاتورة */
 @media print {
-  @page {
-    size: A4;
-    margin: 10mm;
-  }
-  
   body {
-    background-color: white !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-    font-size: 12px !important;
     direction: rtl !important;
-  }
-
-  body * {
-    visibility: hidden;
-  }
-
-  .printing-invoice * {
-    visibility: visible;
-  }
-
-  .printing-invoice .print\:hidden {
-    display: none !important;
+    font-family: 'Tajawal', Arial, sans-serif !important;
+    background: white !important;
+    font-size: 11px !important;
+    line-height: 1.2 !important;
   }
   
-  .print-container,
-  .print-container * {
-    visibility: visible;
-  }
-
-  .print-container {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
+  .professional-invoice {
+    box-shadow: none !important;
+    border: none !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
   
-  /* Better table formatting for PDF */
-  .gift-table {
-    width: 100% !important;
+  .invoice-header {
+    font-size: 12px !important;
+  }
+  
+  .invoice-title {
+    font-size: 14px !important;
+  }
+  
+  .invoice-content {
     font-size: 10px !important;
   }
   
-  .gift-table th,
-  .gift-table td {
-    padding: 4px !important;
-    font-size: 10px !important;
-    border: 1px solid #000 !important;
+  .invoice-table {
+    font-size: 9px !important;
   }
   
-  /* Social links smaller for print */
-  .social-links {
+  .invoice-summary {
+    font-size: 10px !important;
+  }
+  
+  .social-links a {
     font-size: 8px !important;
   }
   
-  /* Hide buttons and non-essential elements */
-  button,
-  .no-print {
+  .print\\:hidden {
     display: none !important;
   }
-}
-
-/* PDF Export specific styles */
-.pdf-export {
-  background: white;
-  color: black;
-  font-family: 'Tajawal', Arial, sans-serif;
-  direction: rtl;
-  max-width: 794px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-.pdf-export .gift-table {
-  font-size: 11px;
-  border-collapse: collapse;
-}
-
-.pdf-export .gift-table th,
-.pdf-export .gift-table td {
-  padding: 6px;
-  border: 1px solid #333;
-  text-align: right;
-}
-
-/* Scrollbar styling for tabs */
-.scrollbar-thin {
-  scrollbar-width: thin;
-}
-
-.scrollbar-track-transparent {
-  scrollbar-color: #cbd5e0 transparent;
-}
-
-.scrollbar-thumb-gray-300::-webkit-scrollbar {
-  height: 4px;
-}
-
-.scrollbar-thumb-gray-300::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.scrollbar-thumb-gray-300::-webkit-scrollbar-thumb {
-  background-color: #cbd5e0;
-  border-radius: 2px;
-}
-
-/* Synchronization indicator */
-.sync-indicator {
-  display: inline-block;
-  animation: sync-pulse 2s infinite;
-}
-
-@keyframes sync-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-/* Very small mobile devices */
-@media (max-width: 360px) {
-  .container {
-    padding-left: 0.125rem;
-    padding-right: 0.125rem;
+  
+  .print\\:shadow-none {
+    box-shadow: none !important;
   }
   
-  h1, h2, h3 {
-    word-break: break-word;
+  .print\\:border-none {
+    border: none !important;
   }
   
-  [role="tab"] {
-    font-size: 0.5rem !important;
-    padding: 0.1rem 0.25rem !important;
-  }
-  
-  .professional-invoice {
+  .print\\:p-2 {
     padding: 0.5rem !important;
   }
-  
-  .professional-invoice .grid {
-    grid-template-columns: 1fr !important;
-    gap: 0.5rem !important;
-  }
+}
+
+/* تحسينات PDF */
+.pdf-export {
+  font-size: 11px !important;
+  line-height: 1.2 !important;
+  max-width: 794px !important;
+  margin: 0 auto !important;
+}
+
+.pdf-export .invoice-header {
+  font-size: 12px !important;
+}
+
+.pdf-export .invoice-title {
+  font-size: 14px !important;
+}
+
+.pdf-export .invoice-content {
+  font-size: 10px !important;
+}
+
+.pdf-export .invoice-table {
+  font-size: 9px !important;
+}
+
+.pdf-export .invoice-summary {
+  font-size: 10px !important;
 }
