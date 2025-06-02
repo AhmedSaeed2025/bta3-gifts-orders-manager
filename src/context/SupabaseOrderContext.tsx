@@ -1,9 +1,9 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Order, OrderStatus, OrderItem } from "@/types";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { generateSerialNumber } from "@/lib/utils";
 
 interface OrderContextType {
   orders: Order[];
@@ -79,13 +79,6 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
     loadOrders();
   }, [user]);
 
-  // Generate serial number
-  const generateSerial = () => {
-    const timestamp = Date.now();
-    const random = Math.floor(Math.random() * 1000);
-    return `${timestamp}${random}`;
-  };
-
   const addOrder = async (newOrder: Omit<Order, "serial" | "dateCreated">) => {
     if (!user) {
       toast.error("يجب تسجيل الدخول أولاً");
@@ -93,7 +86,7 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
     }
 
     try {
-      const serial = generateSerial();
+      const serial = generateSerialNumber(orders);
       
       // Insert order
       const { data: orderData, error: orderError } = await supabase
