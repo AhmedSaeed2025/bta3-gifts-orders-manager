@@ -49,9 +49,14 @@ export const ResponsiveTableHeader: React.FC<{ children: React.ReactNode; classN
   return <th className={className}>{children}</th>;
 };
 
-export const ResponsiveTableCell: React.FC<{ children: React.ReactNode; className?: string }> = ({ 
+export const ResponsiveTableCell: React.FC<{ 
+  children: React.ReactNode; 
+  className?: string;
+  colSpan?: number;
+}> = ({ 
   children, 
-  className = "" 
+  className = "",
+  colSpan
 }) => {
-  return <td className={className}>{children}</td>;
+  return <td className={className} colSpan={colSpan}>{children}</td>;
 };
