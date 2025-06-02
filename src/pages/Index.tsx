@@ -6,9 +6,9 @@ import OrderForm from "@/components/OrderForm";
 import OrdersTable from "@/components/OrdersTable";
 import SummaryReport from "@/components/SummaryReport";
 import ProfitReport from "@/components/ProfitReport";
-import PriceManagement from "@/components/PriceManagement";
 import InvoiceTab from "@/components/InvoiceTab";
 import ProductsTab from "@/components/ProductsTab";
+import AccountStatement from "@/components/AccountStatement";
 import UserProfile from "@/components/UserProfile";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -30,7 +30,7 @@ const Index = () => {
             <TabsTrigger value="invoice">{isMobile ? "الفاتورة" : "الفاتورة"}</TabsTrigger>
             <TabsTrigger value="summary">{isMobile ? "التقرير" : "تقرير الطلبات"}</TabsTrigger>
             <TabsTrigger value="profitReport">{isMobile ? "الأرباح" : "تقرير الأرباح"}</TabsTrigger>
-            <TabsTrigger value="proposedPrices">{isMobile ? "الأسعار" : "أسعار مقترحة"}</TabsTrigger>
+            <TabsTrigger value="accountStatement">{isMobile ? "كشف الحساب" : "كشف حساب"}</TabsTrigger>
             <TabsTrigger value="products">{isMobile ? "المنتجات" : "إدارة المنتجات"}</TabsTrigger>
           </TabsList>
           
@@ -54,8 +54,8 @@ const Index = () => {
             <ProfitReport />
           </TabsContent>
           
-          <TabsContent value="proposedPrices">
-            <PriceManagement />
+          <TabsContent value="accountStatement">
+            <AccountStatement />
           </TabsContent>
           
           <TabsContent value="products">

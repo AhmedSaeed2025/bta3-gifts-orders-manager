@@ -80,10 +80,31 @@ const PriceManagement = () => {
   // Get all available product types from registered products
   const productTypes = Array.from(new Set(products.map(product => product.name)));
 
+  // Get all available sizes from all products
+  const allAvailableSizes = Array.from(
+    new Set([
+      ...products.flatMap(product => 
+        product.sizes.map(size => size.size)
+      ),
+      "15*20 سم",
+      "20*30 سم", 
+      "30*40 سم",
+      "40*50 سم",
+      "50*60 سم",
+      "50*70 سم",
+      "100*60 سم",
+      "ميدالية أكليريك مستطيلة",
+      "ميدالية اكليريك مجسمة",
+      "دلاية عربية اكليريك ( قطعة )",
+      "دلاية عربية أكليريك ( قطعتين )",
+      "أخرى"
+    ])
+  );
+
   return (
-    <Card>
+    <Card className="rtl" style={{ direction: 'rtl' }}>
       <CardHeader>
-        <CardTitle className="text-xl">إدارة الأسعار المقترحة</CardTitle>
+        <CardTitle className="text-lg md:text-xl">إدارة الأسعار المقترحة</CardTitle>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="proposedPrices" className="w-full">
@@ -94,7 +115,7 @@ const PriceManagement = () => {
           
           <TabsContent value="proposedPrices">
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="productType">نوع المنتج</Label>
                   <Select 
@@ -130,30 +151,11 @@ const PriceManagement = () => {
                       <SelectValue placeholder="اختر المقاس" />
                     </SelectTrigger>
                     <SelectContent>
-                      {/* Get unique sizes from all products */}
-                      {Array.from(
-                        new Set(
-                          products.flatMap(product => 
-                            product.sizes.map(size => size.size)
-                          )
-                        )
-                      ).map(size => (
+                      {allAvailableSizes.map(size => (
                         <SelectItem key={size} value={size}>
                           {size}
                         </SelectItem>
                       ))}
-                      <SelectItem value="15*20 سم">15*20 سم</SelectItem>
-                      <SelectItem value="20*30 سم">20*30 سم</SelectItem>
-                      <SelectItem value="30*40 سم">30*40 سم</SelectItem>
-                      <SelectItem value="40*50 سم">40*50 سم</SelectItem>
-                      <SelectItem value="50*60 سم">50*60 سم</SelectItem>
-                      <SelectItem value="50*70 سم">50*70 سم</SelectItem>
-                      <SelectItem value="100*60 سم">100*60 سم</SelectItem>
-                      <SelectItem value="ميدالية أكليريك مستطيلة">ميدالية أكليريك مستطيلة</SelectItem>
-                      <SelectItem value="ميدالية اكليريك مجسمة">ميدالية اكليريك مجسمة</SelectItem>
-                      <SelectItem value="دلاية عربية اكليريك ( قطعة )">دلاية عربية اكليريك ( قطعة )</SelectItem>
-                      <SelectItem value="دلاية عربية أكليريك ( قطعتين )">دلاية عربية أكليريك ( قطعتين )</SelectItem>
-                      <SelectItem value="أخرى">أخرى</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -206,11 +208,11 @@ const PriceManagement = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>نوع المنتج</TableHead>
-                      <TableHead>المقاس</TableHead>
-                      <TableHead>تكلفة الصنف المقترحة</TableHead>
-                      <TableHead>سعر البيع المقترح</TableHead>
-                      <TableHead>إجراءات</TableHead>
+                      <TableHead className="text-xs md:text-sm">نوع المنتج</TableHead>
+                      <TableHead className="text-xs md:text-sm">المقاس</TableHead>
+                      <TableHead className="text-xs md:text-sm">تكلفة الصنف المقترحة</TableHead>
+                      <TableHead className="text-xs md:text-sm">سعر البيع المقترح</TableHead>
+                      <TableHead className="text-xs md:text-sm">إجراءات</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -225,21 +227,21 @@ const PriceManagement = () => {
                         })
                         .map(([size, data]) => (
                           <TableRow key={`${productType}-${size}`}>
-                            <TableCell>{productType}</TableCell>
-                            <TableCell>{size}</TableCell>
-                            <TableCell>{formatCurrency(data.cost)}</TableCell>
-                            <TableCell>{formatCurrency(data.price)}</TableCell>
+                            <TableCell className="text-xs md:text-sm">{productType}</TableCell>
+                            <TableCell className="text-xs md:text-sm">{size}</TableCell>
+                            <TableCell className="text-xs md:text-sm">{formatCurrency(data.cost)}</TableCell>
+                            <TableCell className="text-xs md:text-sm">{formatCurrency(data.price)}</TableCell>
                             <TableCell className="flex flex-wrap gap-1">
                               <Button 
-                                className="h-7 text-xs bg-blue-500 hover:bg-blue-600"
+                                className="h-6 md:h-7 text-xs bg-blue-500 hover:bg-blue-600 px-2"
                                 onClick={() => handleEditPrice(productType, size)}
                               >
-                                تعديل
+                                {isMobile ? "تعديل" : "تعديل"}
                               </Button>
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
-                                  <Button className="h-7 text-xs bg-gift-primary hover:bg-gift-primaryHover">
-                                    حذف
+                                  <Button className="h-6 md:h-7 text-xs bg-gift-primary hover:bg-gift-primaryHover px-2">
+                                    {isMobile ? "حذف" : "حذف"}
                                   </Button>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
@@ -291,29 +293,29 @@ const PriceManagement = () => {
               {filteredProducts.length > 0 ? (
                 filteredProducts.map(product => (
                   <div key={product.id} className="border rounded-md p-3">
-                    <h4 className="font-medium mb-2">{product.name}</h4>
+                    <h4 className="font-medium mb-2 text-sm md:text-base">{product.name}</h4>
                     <div className="overflow-x-auto">
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>المقاس</TableHead>
-                            <TableHead>التكلفة</TableHead>
-                            <TableHead>سعر البيع</TableHead>
-                            <TableHead>الربح</TableHead>
+                            <TableHead className="text-xs md:text-sm">المقاس</TableHead>
+                            <TableHead className="text-xs md:text-sm">التكلفة</TableHead>
+                            <TableHead className="text-xs md:text-sm">سعر البيع</TableHead>
+                            <TableHead className="text-xs md:text-sm">الربح</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {product.sizes.map(size => (
                             <TableRow key={`${product.id}-${size.size}`}>
-                              <TableCell>{size.size}</TableCell>
-                              <TableCell>{formatCurrency(size.cost)}</TableCell>
-                              <TableCell>{formatCurrency(size.price)}</TableCell>
-                              <TableCell>{formatCurrency(size.price - size.cost)}</TableCell>
+                              <TableCell className="text-xs md:text-sm">{size.size}</TableCell>
+                              <TableCell className="text-xs md:text-sm">{formatCurrency(size.cost)}</TableCell>
+                              <TableCell className="text-xs md:text-sm">{formatCurrency(size.price)}</TableCell>
+                              <TableCell className="text-xs md:text-sm">{formatCurrency(size.price - size.cost)}</TableCell>
                             </TableRow>
                           ))}
                           {product.sizes.length === 0 && (
                             <TableRow>
-                              <TableCell colSpan={4} className="text-center py-2">
+                              <TableCell colSpan={4} className="text-center py-2 text-xs md:text-sm">
                                 لا توجد مقاسات لهذا المنتج
                               </TableCell>
                             </TableRow>
@@ -325,7 +327,7 @@ const PriceManagement = () => {
                 ))
               ) : (
                 <div className="text-center py-6 border rounded-md">
-                  <p className="text-gray-500">لا توجد منتجات مسجلة</p>
+                  <p className="text-gray-500 text-sm md:text-base">لا توجد منتجات مسجلة</p>
                 </div>
               )}
             </div>

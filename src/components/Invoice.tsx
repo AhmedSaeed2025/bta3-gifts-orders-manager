@@ -115,44 +115,46 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
           className="h-8 md:h-10 text-xs md:text-sm bg-gift-secondary hover:bg-gift-secondaryHover flex items-center gap-1"
         >
           <FileText className="h-3.5 w-3.5 md:h-4 md:w-4" />
-          طباعة الفاتورة
+          <span className="hidden sm:inline">طباعة الفاتورة</span>
+          <span className="sm:hidden">طباعة</span>
         </Button>
         <Button 
           onClick={handleExportPDF}
           className="h-8 md:h-10 text-xs md:text-sm bg-blue-600 hover:bg-blue-700 flex items-center gap-1"
         >
           <Download className="h-3.5 w-3.5 md:h-4 md:w-4" />
-          تصدير PDF
+          <span className="hidden sm:inline">تصدير PDF</span>
+          <span className="sm:hidden">PDF</span>
         </Button>
       </div>
       
       <Card ref={printRef} className="professional-invoice print:shadow-none print:border-none bg-white">
-        <CardContent className="p-6 print:p-4">
+        <CardContent className="p-3 md:p-6 print:p-4">
           {/* Header Section */}
-          <div className="text-center mb-6 pb-4 border-b-2 border-gift-primary">
-            <div className="flex justify-between items-center mb-2">
-              <div className="text-right">
-                <p className="text-sm text-gray-600">فاتورة رقم</p>
-                <p className="text-xl font-bold text-gift-primary">GFT{order.serial}</p>
+          <div className="text-center mb-4 md:mb-6 pb-2 md:pb-4 border-b-2 border-gift-primary">
+            <div className="flex flex-col md:flex-row justify-between items-center mb-2 gap-2">
+              <div className="text-center md:text-right order-2 md:order-1">
+                <p className="text-xs md:text-sm text-gray-600">فاتورة رقم</p>
+                <p className="text-lg md:text-xl font-bold text-gift-primary">{order.serial}</p>
               </div>
-              <div className="text-center">
-                <h1 className="text-2xl md:text-3xl font-bold text-gift-primary">#بتاع_هدايا_الأصلى</h1>
-                <p className="text-sm text-gray-600">متجر الهدايا المميزة</p>
+              <div className="text-center order-1 md:order-2">
+                <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-gift-primary">#بتاع_هدايا_الأصلى</h1>
+                <p className="text-xs md:text-sm text-gray-600">متجر الهدايا المميزة</p>
               </div>
-              <div className="text-left">
-                <p className="text-sm text-gray-600">التاريخ</p>
-                <p className="text-lg font-medium">{new Date(order.dateCreated).toLocaleDateString('ar-EG')}</p>
+              <div className="text-center md:text-left order-3">
+                <p className="text-xs md:text-sm text-gray-600">التاريخ</p>
+                <p className="text-sm md:text-lg font-medium">{new Date(order.dateCreated).toLocaleDateString('ar-EG')}</p>
               </div>
             </div>
           </div>
           
           {/* Customer and Order Info */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div className="bg-gray-50 p-4 rounded-lg border-r-4 border-gift-primary">
-              <h3 className="font-bold mb-3 text-lg flex items-center gap-2 text-gift-primary">
-                <Phone size={18} /> بيانات العميل
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6 mb-4 md:mb-6">
+            <div className="bg-gray-50 p-3 md:p-4 rounded-lg border-r-4 border-gift-primary">
+              <h3 className="font-bold mb-2 md:mb-3 text-sm md:text-lg flex items-center gap-2 text-gift-primary">
+                <Phone size={16} className="md:w-5 md:h-5" /> بيانات العميل
               </h3>
-              <div className="space-y-2 text-sm">
+              <div className="space-y-1 md:space-y-2 text-xs md:text-sm">
                 <div className="flex justify-between">
                   <span className="font-medium text-gray-700">اسم العميل:</span>
                   <span className="font-semibold">{order.clientName}</span>
@@ -168,11 +170,11 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
               </div>
             </div>
             
-            <div className="bg-blue-50 p-4 rounded-lg border-r-4 border-blue-500">
-              <h3 className="font-bold mb-3 text-lg flex items-center gap-2 text-blue-600">
-                <Home size={18} /> معلومات التوصيل
+            <div className="bg-blue-50 p-3 md:p-4 rounded-lg border-r-4 border-blue-500">
+              <h3 className="font-bold mb-2 md:mb-3 text-sm md:text-lg flex items-center gap-2 text-blue-600">
+                <Home size={16} className="md:w-5 md:h-5" /> معلومات التوصيل
               </h3>
-              <div className="space-y-2 text-sm">
+              <div className="space-y-1 md:space-y-2 text-xs md:text-sm">
                 <div className="flex justify-between">
                   <span className="font-medium text-gray-700">طريقة الاستلام:</span>
                   <span className="font-semibold">{order.deliveryMethod}</span>
@@ -187,7 +189,7 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
                   <>
                     <div className="flex justify-between">
                       <span className="font-medium text-gray-700">العنوان:</span>
-                      <span className="font-semibold">{order.address}</span>
+                      <span className="font-semibold break-words text-right max-w-[150px]">{order.address}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="font-medium text-gray-700">المحافظة:</span>
@@ -200,29 +202,29 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
           </div>
           
           {/* Items Table */}
-          <div className="mb-6">
-            <h3 className="font-bold mb-3 text-lg flex items-center gap-2 text-gift-primary">
-              <FileText size={18} /> تفاصيل الطلب
+          <div className="mb-4 md:mb-6">
+            <h3 className="font-bold mb-2 md:mb-3 text-sm md:text-lg flex items-center gap-2 text-gift-primary">
+              <FileText size={16} className="md:w-5 md:h-5" /> تفاصيل الطلب
             </h3>
             <div className="overflow-x-auto border rounded-lg">
-              <Table className="text-sm">
+              <Table className="text-xs md:text-sm">
                 <TableHeader>
                   <TableRow className="bg-gift-primary text-white">
-                    <TableHead className="py-3 px-4 text-white font-bold text-right">المنتج</TableHead>
-                    <TableHead className="py-3 px-4 text-white font-bold text-right">المقاس</TableHead>
-                    <TableHead className="py-3 px-4 text-white font-bold text-right">العدد</TableHead>
-                    <TableHead className="py-3 px-4 text-white font-bold text-right">السعر</TableHead>
-                    <TableHead className="py-3 px-4 text-white font-bold text-right">الإجمالي</TableHead>
+                    <TableHead className="py-2 md:py-3 px-2 md:px-4 text-white font-bold text-right text-xs md:text-sm">المنتج</TableHead>
+                    <TableHead className="py-2 md:py-3 px-2 md:px-4 text-white font-bold text-right text-xs md:text-sm">المقاس</TableHead>
+                    <TableHead className="py-2 md:py-3 px-2 md:px-4 text-white font-bold text-right text-xs md:text-sm">العدد</TableHead>
+                    <TableHead className="py-2 md:py-3 px-2 md:px-4 text-white font-bold text-right text-xs md:text-sm">السعر</TableHead>
+                    <TableHead className="py-2 md:py-3 px-2 md:px-4 text-white font-bold text-right text-xs md:text-sm">الإجمالي</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {items.map((item, index) => (
                     <TableRow key={index} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
-                      <TableCell className="py-3 px-4 font-medium">{item.productType}</TableCell>
-                      <TableCell className="py-3 px-4">{item.size}</TableCell>
-                      <TableCell className="py-3 px-4 text-center font-bold">{item.quantity}</TableCell>
-                      <TableCell className="py-3 px-4">{formatCurrency(item.price)}</TableCell>
-                      <TableCell className="py-3 px-4 font-bold text-gift-primary">
+                      <TableCell className="py-2 md:py-3 px-2 md:px-4 font-medium text-xs md:text-sm">{item.productType}</TableCell>
+                      <TableCell className="py-2 md:py-3 px-2 md:px-4 text-xs md:text-sm">{item.size}</TableCell>
+                      <TableCell className="py-2 md:py-3 px-2 md:px-4 text-center font-bold text-xs md:text-sm">{item.quantity}</TableCell>
+                      <TableCell className="py-2 md:py-3 px-2 md:px-4 text-xs md:text-sm">{formatCurrency(item.price)}</TableCell>
+                      <TableCell className="py-2 md:py-3 px-2 md:px-4 font-bold text-gift-primary text-xs md:text-sm">
                         {formatCurrency(item.price * item.quantity)}
                       </TableCell>
                     </TableRow>
@@ -233,33 +235,33 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
           </div>
           
           {/* Summary Section */}
-          <div className="flex justify-end mb-6">
-            <div className="w-full md:w-80 bg-gray-50 p-4 rounded-lg border">
-              <h3 className="font-bold mb-3 text-lg text-gift-primary">ملخص الفاتورة</h3>
-              <div className="space-y-2">
-                <div className="flex justify-between py-2 border-b">
+          <div className="flex justify-end mb-4 md:mb-6">
+            <div className="w-full md:w-80 bg-gray-50 p-3 md:p-4 rounded-lg border">
+              <h3 className="font-bold mb-2 md:mb-3 text-sm md:text-lg text-gift-primary">ملخص الفاتورة</h3>
+              <div className="space-y-1 md:space-y-2">
+                <div className="flex justify-between py-1 md:py-2 border-b text-xs md:text-sm">
                   <span className="font-medium">إجمالي المنتجات:</span>
                   <span className="font-bold">{formatCurrency(items.reduce((sum, item) => sum + item.price * item.quantity, 0))}</span>
                 </div>
                 {order.shippingCost > 0 && (
-                  <div className="flex justify-between py-2 border-b">
+                  <div className="flex justify-between py-1 md:py-2 border-b text-xs md:text-sm">
                     <span className="font-medium">مصاريف الشحن:</span>
                     <span className="font-bold">{formatCurrency(order.shippingCost)}</span>
                   </div>
                 )}
                 {order.discount > 0 && (
-                  <div className="flex justify-between py-2 border-b">
+                  <div className="flex justify-between py-1 md:py-2 border-b text-xs md:text-sm">
                     <span className="font-medium">الخصم:</span>
                     <span className="font-bold text-red-600">- {formatCurrency(order.discount)}</span>
                   </div>
                 )}
                 {order.deposit > 0 && (
-                  <div className="flex justify-between py-2 border-b">
+                  <div className="flex justify-between py-1 md:py-2 border-b text-xs md:text-sm">
                     <span className="font-medium">العربون المدفوع:</span>
                     <span className="font-bold text-red-600">- {formatCurrency(order.deposit)}</span>
                   </div>
                 )}
-                <div className="flex justify-between py-3 text-lg border-t-2 border-gift-primary bg-gift-primary text-white px-2 rounded">
+                <div className="flex justify-between py-2 md:py-3 text-sm md:text-lg border-t-2 border-gift-primary bg-gift-primary text-white px-2 rounded">
                   <span className="font-bold">المجموع الكلي:</span>
                   <span className="font-bold">{formatCurrency(order.total)}</span>
                 </div>
@@ -268,36 +270,36 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
           </div>
           
           {/* Footer */}
-          <div className="mt-8 pt-4 border-t-2 border-gray-200 text-center">
-            <div className="bg-gift-accent p-4 rounded-lg mb-4">
-              <p className="text-lg font-bold text-gift-primary mb-2">شكراً لثقتكم في #بتاع_هدايا_الأصلى</p>
-              <div className="flex justify-center items-center gap-2 text-sm mb-3">
-                <Phone size={16} className="text-gift-primary" />
+          <div className="mt-6 md:mt-8 pt-3 md:pt-4 border-t-2 border-gray-200 text-center">
+            <div className="bg-gift-accent p-3 md:p-4 rounded-lg mb-3 md:mb-4">
+              <p className="text-sm md:text-lg font-bold text-gift-primary mb-2">شكراً لثقتكم في #بتاع_هدايا_الأصلى</p>
+              <div className="flex justify-center items-center gap-2 text-xs md:text-sm mb-2 md:mb-3">
+                <Phone size={14} className="md:w-4 md:h-4 text-gift-primary" />
                 <span className="font-medium">للتواصل: 01113977005</span>
               </div>
             </div>
             
-            <div className="flex flex-wrap justify-center items-center gap-4 mb-4 social-links">
-              <a href="https://www.facebook.com/D4Uofficial" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-blue-600 hover:underline text-xs font-medium">
-                <Facebook size={16} />
-                <span>D4Uofficial</span>
+            <div className="flex flex-wrap justify-center items-center gap-2 md:gap-4 mb-3 md:mb-4 social-links">
+              <a href="https://www.facebook.com/D4Uofficial" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 md:gap-1.5 text-blue-600 hover:underline text-xs font-medium">
+                <Facebook size={14} className="md:w-4 md:h-4" />
+                <span className="hidden sm:inline">D4Uofficial</span>
               </a>
               
-              <a href="https://www.instagram.com/design4you_gift_store" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-pink-600 hover:underline text-xs font-medium">
-                <Instagram size={16} />
-                <span>design4you_gift_store</span>
+              <a href="https://www.instagram.com/design4you_gift_store" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 md:gap-1.5 text-pink-600 hover:underline text-xs font-medium">
+                <Instagram size={14} className="md:w-4 md:h-4" />
+                <span className="hidden sm:inline">design4you_gift_store</span>
               </a>
               
-              <a href="https://www.tiktok.com/@giftstore2022" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-black dark:text-white hover:underline text-xs font-medium">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+              <a href="https://www.tiktok.com/@giftstore2022" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 md:gap-1.5 text-black dark:text-white hover:underline text-xs font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="md:w-4 md:h-4">
                   <path d="M12.53.02C13.84 0 15.14.01 16.44 0c.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>
                 </svg>
-                <span>giftstore2022</span>
+                <span className="hidden sm:inline">giftstore2022</span>
               </a>
               
-              <a href="https://t.me/GiftsEg" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-blue-500 hover:underline text-xs font-medium">
-                <Send size={16} />
-                <span>GiftsEg</span>
+              <a href="https://t.me/GiftsEg" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 md:gap-1.5 text-blue-500 hover:underline text-xs font-medium">
+                <Send size={14} className="md:w-4 md:h-4" />
+                <span className="hidden sm:inline">GiftsEg</span>
               </a>
             </div>
             

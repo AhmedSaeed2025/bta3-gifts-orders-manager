@@ -12,17 +12,28 @@ export function formatCurrency(amount: number): string {
 }
 
 export function generateSerialNumber(existingOrders: Order[] = []): string {
-  // Get the highest existing serial number
-  let maxSerial = 1000;
+  const now = new Date();
+  const year = now.getFullYear().toString().slice(-2); // آخر رقمين من السنة
+  const month = (now.getMonth() + 1).toString().padStart(2, '0'); // الشهر بتنسيق 01-12
+  
+  // البحث عن آخر رقم في نفس الشهر والسنة
+  const currentPrefix = `INV-${year}${month}`;
+  let maxSequence = 0;
   
   existingOrders.forEach(order => {
-    const serialNum = parseInt(order.serial);
-    if (!isNaN(serialNum) && serialNum > maxSerial) {
-      maxSerial = serialNum;
+    if (order.serial.startsWith(currentPrefix)) {
+      const sequencePart = order.serial.split('-')[2];
+      if (sequencePart) {
+        const sequenceNum = parseInt(sequencePart);
+        if (!isNaN(sequenceNum) && sequenceNum > maxSequence) {
+          maxSequence = sequenceNum;
+        }
+      }
     }
   });
   
-  return (maxSerial + 1).toString();
+  const nextSequence = (maxSequence + 1).toString().padStart(4, '0');
+  return `${currentPrefix}-${nextSequence}`;
 }
 
 export function generateMonthlyReport(orders: Order[]) {
