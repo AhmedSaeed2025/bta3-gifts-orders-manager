@@ -30,7 +30,7 @@ const Index = () => {
             <TabsTrigger value="invoice">{isMobile ? "الفاتورة" : "الفاتورة"}</TabsTrigger>
             <TabsTrigger value="summary">{isMobile ? "التقرير" : "تقرير الطلبات"}</TabsTrigger>
             <TabsTrigger value="profitReport">{isMobile ? "الأرباح" : "تقرير الأرباح"}</TabsTrigger>
-            <TabsTrigger value="accountStatement">{isMobile ? "كشف الحساب" : "كشف حساب"}</TabsTrigger>
+            <TabsTrigger value="accountStatement">{isMobile ? "كشف" : "كشف حساب"}</TabsTrigger>
             <TabsTrigger value="products">{isMobile ? "المنتجات" : "إدارة المنتجات"}</TabsTrigger>
           </TabsList>
           

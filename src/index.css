@@ -129,6 +129,91 @@
     padding: 0.25rem 0.5rem !important;
     height: 2rem !important;
   }
+
+  /* تحسينات الجداول للموبايل */
+  .gift-table {
+    font-size: 0.7rem !important;
+    min-width: 100%;
+  }
+
+  .gift-table th,
+  .gift-table td {
+    padding: 0.25rem !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100px;
+  }
+
+  .gift-table thead {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 10;
+  }
+
+  /* تحسينات الكروت للموبايل */
+  .mobile-card {
+    padding: 0.5rem !important;
+    margin: 0.25rem 0 !important;
+  }
+
+  .mobile-card .card-header {
+    padding: 0.5rem !important;
+  }
+
+  .mobile-card .card-content {
+    padding: 0.5rem !important;
+  }
+
+  /* تحسينات الأزرار للموبايل */
+  .mobile-btn {
+    font-size: 0.7rem !important;
+    padding: 0.25rem 0.5rem !important;
+    height: auto !important;
+    min-height: 2rem;
+  }
+
+  /* تحسينات النماذج للموبايل */
+  .mobile-form-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.5rem !important;
+  }
+
+  .mobile-select,
+  .mobile-input {
+    font-size: 0.8rem !important;
+    padding: 0.5rem !important;
+    height: auto !important;
+  }
+
+  /* تحسينات الجداول المتجاوبة */
+  .responsive-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100vw;
+  }
+
+  .responsive-table {
+    min-width: 100%;
+    width: max-content;
+    font-size: 0.7rem;
+  }
+
+  .responsive-table th,
+  .responsive-table td {
+    padding: 0.25rem 0.5rem;
+    white-space: nowrap;
+    border: 1px solid #e5e7eb;
+  }
+
+  .responsive-table th {
+    background-color: #f9fafb;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
 }
 
 /* تحسينات الطباعة للفاتورة */
@@ -137,7 +222,7 @@
     direction: rtl !important;
     font-family: 'Tajawal', Arial, sans-serif !important;
     background: white !important;
-    font-size: 11px !important;
+    font-size: 10px !important;
     line-height: 1.2 !important;
   }
   
@@ -147,30 +232,37 @@
     max-width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
+    font-size: 10px !important;
   }
   
   .invoice-header {
-    font-size: 12px !important;
+    font-size: 11px !important;
   }
   
   .invoice-title {
-    font-size: 14px !important;
+    font-size: 13px !important;
   }
   
   .invoice-content {
-    font-size: 10px !important;
-  }
-  
-  .invoice-table {
     font-size: 9px !important;
   }
   
+  .invoice-table {
+    font-size: 8px !important;
+  }
+  
+  .invoice-table th,
+  .invoice-table td {
+    padding: 2px 4px !important;
+    font-size: 8px !important;
+  }
+  
   .invoice-summary {
-    font-size: 10px !important;
+    font-size: 9px !important;
   }
   
   .social-links a {
-    font-size: 8px !important;
+    font-size: 7px !important;
   }
   
   .print\\:hidden {
@@ -188,32 +280,104 @@
   .print\\:p-2 {
     padding: 0.5rem !important;
   }
+
+  /* تحسينات الموبايل للطباعة */
+  @media (max-width: 768px) {
+    .professional-invoice {
+      font-size: 8px !important;
+    }
+    
+    .invoice-header {
+      font-size: 9px !important;
+    }
+    
+    .invoice-title {
+      font-size: 11px !important;
+    }
+    
+    .invoice-content {
+      font-size: 7px !important;
+    }
+    
+    .invoice-table {
+      font-size: 6px !important;
+    }
+    
+    .invoice-table th,
+    .invoice-table td {
+      padding: 1px 2px !important;
+      font-size: 6px !important;
+    }
+    
+    .invoice-summary {
+      font-size: 7px !important;
+    }
+  }
 }
 
 /* تحسينات PDF */
 .pdf-export {
-  font-size: 11px !important;
+  font-size: 10px !important;
   line-height: 1.2 !important;
   max-width: 794px !important;
   margin: 0 auto !important;
 }
 
 .pdf-export .invoice-header {
-  font-size: 12px !important;
+  font-size: 11px !important;
 }
 
 .pdf-export .invoice-title {
-  font-size: 14px !important;
+  font-size: 13px !important;
 }
 
 .pdf-export .invoice-content {
-  font-size: 10px !important;
-}
-
-.pdf-export .invoice-table {
   font-size: 9px !important;
 }
 
+.pdf-export .invoice-table {
+  font-size: 8px !important;
+}
+
+.pdf-export .invoice-table th,
+.pdf-export .invoice-table td {
+  padding: 2px 4px !important;
+  font-size: 8px !important;
+}
+
 .pdf-export .invoice-summary {
-  font-size: 10px !important;
+  font-size: 9px !important;
+}
+
+/* تحسينات PDF للموبايل */
+@media (max-width: 768px) {
+  .pdf-export {
+    font-size: 8px !important;
+  }
+  
+  .pdf-export .invoice-header {
+    font-size: 9px !important;
+  }
+  
+  .pdf-export .invoice-title {
+    font-size: 11px !important;
+  }
+  
+  .pdf-export .invoice-content {
+    font-size: 7px !important;
+  }
+  
+  .pdf-export .invoice-table {
+    font-size: 6px !important;
+  }
+  
+  .pdf-export .invoice-table th,
+  .pdf-export .invoice-table td {
+    padding: 1px 2px !important;
+    font-size: 6px !important;
+  }
+  
+  .pdf-export .invoice-summary {
+    font-size: 7px !important;
+  }
 }

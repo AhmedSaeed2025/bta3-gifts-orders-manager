@@ -1,4 +1,3 @@
-
 import React, { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,10 +7,20 @@ import { DownloadCloud, FileText, Download } from "lucide-react";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 import { toast } from "sonner";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { 
+  ResponsiveTable, 
+  ResponsiveTableHead, 
+  ResponsiveTableBody, 
+  ResponsiveTableRow, 
+  ResponsiveTableHeader, 
+  ResponsiveTableCell 
+} from "@/components/ui/responsive-table";
 
 const SummaryReport = () => {
   const { orders, loading } = useSupabaseOrders();
   const reportRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
 
   const handleExcelExport = () => {
     exportToExcel("summaryTable", "Orders_Report");
@@ -72,7 +81,7 @@ const SummaryReport = () => {
 
   if (loading) {
     return (
-      <Card>
+      <Card className={isMobile ? "mobile-card" : ""}>
         <CardContent className="flex items-center justify-center py-8">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gift-primary mx-auto"></div>
@@ -85,89 +94,89 @@ const SummaryReport = () => {
 
   return (
     <div className="rtl" style={{ direction: 'rtl' }}>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-xl flex items-center gap-2">
+      <Card className={isMobile ? "mobile-card" : ""}>
+        <CardHeader className={`flex flex-row items-center justify-between space-y-0 pb-2 ${isMobile ? "card-header" : ""}`}>
+          <CardTitle className={`${isMobile ? "text-lg" : "text-xl"} flex items-center gap-2`}>
             <FileText className="h-5 w-5" />
             تقرير الطلبات
           </CardTitle>
-          <div className="flex gap-2">
+          <div className={`flex gap-2 ${isMobile ? "flex-col" : ""}`}>
             <Button 
               onClick={handlePDFExport}
-              className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
+              className={`bg-blue-600 hover:bg-blue-700 flex items-center gap-2 ${isMobile ? "mobile-btn" : ""}`}
             >
               <Download className="h-4 w-4" />
-              تصدير PDF
+              {isMobile ? "PDF" : "تصدير PDF"}
             </Button>
             <Button 
               onClick={handleExcelExport}
-              className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
+              className={`bg-green-600 hover:bg-green-700 flex items-center gap-2 ${isMobile ? "mobile-btn" : ""}`}
             >
               <DownloadCloud className="h-4 w-4" />
-              تصدير Excel
+              {isMobile ? "Excel" : "تصدير Excel"}
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className={isMobile ? "card-content" : ""}>
           <div ref={reportRef} className="overflow-x-auto">
-            <table id="summaryTable" className="gift-table">
-              <thead>
-                <tr>
-                  <th>Order_Number</th>
-                  <th>Date</th>
-                  <th>Client_Name</th>
-                  <th>Phone</th>
-                  <th>Payment_Method</th>
-                  <th>Delivery_Method</th>
-                  <th>Address</th>
-                  <th>Governorate</th>
-                  <th>Product_Type</th>
-                  <th>Size</th>
-                  <th>Quantity</th>
-                  <th>Sale_Price</th>
-                  <th>Cost_Price</th>
-                  <th>Discount</th>
-                  <th>Shipping_Cost</th>
-                  <th>Total</th>
-                  <th>Profit</th>
-                  <th>Order_Status</th>
-                </tr>
-              </thead>
-              <tbody>
+            <ResponsiveTable id="summaryTable">
+              <ResponsiveTableHead>
+                <ResponsiveTableRow>
+                  <ResponsiveTableHeader>رقم الطلب</ResponsiveTableHeader>
+                  <ResponsiveTableHeader>التاريخ</ResponsiveTableHeader>
+                  <ResponsiveTableHeader>اسم العميل</ResponsiveTableHeader>
+                  <ResponsiveTableHeader>التليفون</ResponsiveTableHeader>
+                  <ResponsiveTableHeader>طريقة السداد</ResponsiveTableHeader>
+                  <ResponsiveTableHeader>طريقة التوصيل</ResponsiveTableHeader>
+                  <ResponsiveTableHeader>العنوان</ResponsiveTableHeader>
+                  <ResponsiveTableHeader>المحافظة</ResponsiveTableHeader>
+                  <ResponsiveTableHeader>نوع المنتج</ResponsiveTableHeader>
+                  <ResponsiveTableHeader>المقاس</ResponsiveTableHeader>
+                  <ResponsiveTableHeader>الكمية</ResponsiveTableHeader>
+                  <ResponsiveTableHeader>سعر البيع</ResponsiveTableHeader>
+                  <ResponsiveTableHeader>التكلفة</ResponsiveTableHeader>
+                  <ResponsiveTableHeader>الخصم</ResponsiveTableHeader>
+                  <ResponsiveTableHeader>مصاريف الشحن</ResponsiveTableHeader>
+                  <ResponsiveTableHeader>الإجمالي</ResponsiveTableHeader>
+                  <ResponsiveTableHeader>الربح</ResponsiveTableHeader>
+                  <ResponsiveTableHeader>الحالة</ResponsiveTableHeader>
+                </ResponsiveTableRow>
+              </ResponsiveTableHead>
+              <ResponsiveTableBody>
                 {orders.length > 0 ? (
                   orders.flatMap((order, orderIndex) => {
                     const items = order.items || [];
                     
                     return items.map((item, itemIndex) => (
-                      <tr key={`${order.serial}-${itemIndex}`}>
-                        <td>GFT{order.serial}</td>
-                        <td>{new Date(order.dateCreated).toLocaleDateString('en-US')}</td>
-                        <td>{order.clientName}</td>
-                        <td>{order.phone}</td>
-                        <td>{order.paymentMethod}</td>
-                        <td>{order.deliveryMethod}</td>
-                        <td>{order.address}</td>
-                        <td>{order.governorate}</td>
-                        <td>{item.productType}</td>
-                        <td>{item.size}</td>
-                        <td>{item.quantity}</td>
-                        <td>{item.price.toFixed(2)}</td>
-                        <td>{item.cost.toFixed(2)}</td>
-                        <td>{itemIndex === 0 ? order.discount.toFixed(2) : "0.00"}</td>
-                        <td>{itemIndex === 0 ? order.shippingCost.toFixed(2) : "0.00"}</td>
-                        <td>{itemIndex === 0 ? order.total.toFixed(2) : "-"}</td>
-                        <td>{item.profit.toFixed(2)}</td>
-                        <td>{order.status}</td>
-                      </tr>
+                      <ResponsiveTableRow key={`${order.serial}-${itemIndex}`}>
+                        <ResponsiveTableCell>INV-{order.serial}</ResponsiveTableCell>
+                        <ResponsiveTableCell>{new Date(order.dateCreated).toLocaleDateString('ar-EG')}</ResponsiveTableCell>
+                        <ResponsiveTableCell>{order.clientName}</ResponsiveTableCell>
+                        <ResponsiveTableCell>{order.phone}</ResponsiveTableCell>
+                        <ResponsiveTableCell>{order.paymentMethod}</ResponsiveTableCell>
+                        <ResponsiveTableCell>{order.deliveryMethod}</ResponsiveTableCell>
+                        <ResponsiveTableCell>{order.address}</ResponsiveTableCell>
+                        <ResponsiveTableCell>{order.governorate}</ResponsiveTableCell>
+                        <ResponsiveTableCell>{item.productType}</ResponsiveTableCell>
+                        <ResponsiveTableCell>{item.size}</ResponsiveTableCell>
+                        <ResponsiveTableCell>{item.quantity}</ResponsiveTableCell>
+                        <ResponsiveTableCell>{item.price.toFixed(2)}</ResponsiveTableCell>
+                        <ResponsiveTableCell>{item.cost.toFixed(2)}</ResponsiveTableCell>
+                        <ResponsiveTableCell>{itemIndex === 0 ? order.discount.toFixed(2) : "0.00"}</ResponsiveTableCell>
+                        <ResponsiveTableCell>{itemIndex === 0 ? order.shippingCost.toFixed(2) : "0.00"}</ResponsiveTableCell>
+                        <ResponsiveTableCell>{itemIndex === 0 ? order.total.toFixed(2) : "-"}</ResponsiveTableCell>
+                        <ResponsiveTableCell>{item.profit.toFixed(2)}</ResponsiveTableCell>
+                        <ResponsiveTableCell>{order.status}</ResponsiveTableCell>
+                      </ResponsiveTableRow>
                     ));
                   })
                 ) : (
-                  <tr>
-                    <td colSpan={18} className="text-center py-4">No data available</td>
-                  </tr>
+                  <ResponsiveTableRow>
+                    <ResponsiveTableCell colSpan={18} className="text-center py-4">لا توجد بيانات</ResponsiveTableCell>
+                  </ResponsiveTableRow>
                 )}
-              </tbody>
-            </table>
+              </ResponsiveTableBody>
+            </ResponsiveTable>
           </div>
         </CardContent>
       </Card>
