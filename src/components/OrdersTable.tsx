@@ -7,7 +7,7 @@ import { useSupabaseOrders } from "@/context/SupabaseOrderContext";
 import { ORDER_STATUS_LABELS, OrderStatus } from "@/types";
 import { formatCurrency } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
-import { Printer, Edit, DollarSign, Truck, CreditCard, CheckCircle, Ban, Undo2 } from "lucide-react";
+import { Settings, Edit, DollarSign, Truck, CreditCard, CheckCircle, XCircle, Undo2, TrendingUp, Package, Users } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -51,6 +51,54 @@ const OrdersTable: React.FC = () => {
   const [transactionDescription, setTransactionDescription] = useState<string>('');
 
   const safeOrders = Array.isArray(orders) ? orders : [];
+
+  // Calculate summary statistics
+  const summaryStats = React.useMemo(() => {
+    if (!safeOrders || safeOrders.length === 0) {
+      return {
+        totalOrders: 0,
+        totalRevenue: 0,
+        totalShipping: 0,
+        totalCost: 0,
+        netProfit: 0,
+        pendingOrders: 0,
+        shippedOrders: 0
+      };
+    }
+
+    let totalRevenue = 0;
+    let totalShipping = 0;
+    let totalCost = 0;
+    let pendingOrders = 0;
+    let shippedOrders = 0;
+
+    safeOrders.forEach(order => {
+      totalRevenue += order.total;
+      totalShipping += order.shippingCost || 0;
+      
+      // Calculate total cost for items
+      if (order.items) {
+        order.items.forEach(item => {
+          totalCost += item.cost * item.quantity;
+        });
+      }
+      
+      if (order.status === 'pending') pendingOrders++;
+      if (order.status === 'shipped') shippedOrders++;
+    });
+
+    const netProfit = totalRevenue - totalCost - totalShipping;
+
+    return {
+      totalOrders: safeOrders.length,
+      totalRevenue,
+      totalShipping,
+      totalCost,
+      netProfit,
+      pendingOrders,
+      shippedOrders
+    };
+  }, [safeOrders]);
 
   // Load transactions
   const loadTransactions = async () => {
@@ -207,11 +255,86 @@ const OrdersTable: React.FC = () => {
 
   return (
     <div className="rtl space-y-6" style={{ direction: 'rtl' }}>
+      {/* Summary Statistics */}
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-100 text-xs font-medium">إجمالي الطلبات</p>
+                <p className={`${isMobile ? "text-lg" : "text-2xl"} font-bold`}>{summaryStats.totalOrders}</p>
+              </div>
+              <Package className="h-6 w-6 text-blue-200" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-100 text-xs font-medium">إجمالي المبيعات</p>
+                <p className={`${isMobile ? "text-sm" : "text-lg"} font-bold`}>{formatCurrency(summaryStats.totalRevenue)}</p>
+              </div>
+              <TrendingUp className="h-6 w-6 text-green-200" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-orange-100 text-xs font-medium">إجمالي الشحن</p>
+                <p className={`${isMobile ? "text-sm" : "text-lg"} font-bold`}>{formatCurrency(summaryStats.totalShipping)}</p>
+              </div>
+              <Truck className="h-6 w-6 text-orange-200" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-red-100 text-xs font-medium">إجمالي التكلفة</p>
+                <p className={`${isMobile ? "text-sm" : "text-lg"} font-bold`}>{formatCurrency(summaryStats.totalCost)}</p>
+              </div>
+              <CreditCard className="h-6 w-6 text-red-200" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-purple-100 text-xs font-medium">صافي الربح</p>
+                <p className={`${isMobile ? "text-sm" : "text-lg"} font-bold`}>{formatCurrency(summaryStats.netProfit)}</p>
+              </div>
+              <TrendingUp className="h-6 w-6 text-purple-200" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-indigo-100 text-xs font-medium">طلبات منتظرة</p>
+                <p className={`${isMobile ? "text-lg" : "text-2xl"} font-bold`}>{summaryStats.pendingOrders}</p>
+              </div>
+              <Users className="h-6 w-6 text-indigo-200" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       <Card className={`${isMobile ? "mobile-card" : ""} bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 border-l-4 border-l-indigo-500`}>
         <CardHeader className={`flex flex-row items-center justify-between space-y-0 pb-4 ${isMobile ? "card-header" : ""}`}>
           <div className="flex items-center gap-3">
             <div className="p-2 bg-indigo-500 rounded-lg">
-              <Printer className="h-6 w-6 text-white" />
+              <Settings className="h-6 w-6 text-white" />
             </div>
             <div>
               <CardTitle className={`${isMobile ? "text-xl" : "text-2xl"} font-bold text-gray-800 dark:text-white`}>
@@ -250,7 +373,7 @@ const OrdersTable: React.FC = () => {
                   <ResponsiveTableHeader className="font-semibold">اسم العميل</ResponsiveTableHeader>
                   {!isMobile && <ResponsiveTableHeader className="font-semibold">التليفون</ResponsiveTableHeader>}
                   <ResponsiveTableHeader className="font-semibold">الحالة</ResponsiveTableHeader>
-                  {!isMobile && <ResponsiveTableHeader className="font-semibold">تعديل الحالة</ResponsiveTableHeader>}
+                  <ResponsiveTableHeader className="font-semibold">تعديل الحالة</ResponsiveTableHeader>
                   <ResponsiveTableHeader className="font-semibold">عدد المنتجات</ResponsiveTableHeader>
                   <ResponsiveTableHeader className="font-semibold">المجموع</ResponsiveTableHeader>
                   <ResponsiveTableHeader className="font-semibold">حالة التحصيل</ResponsiveTableHeader>
@@ -283,25 +406,23 @@ const OrdersTable: React.FC = () => {
                             {ORDER_STATUS_LABELS[order.status]}
                           </Badge>
                         </ResponsiveTableCell>
-                        {!isMobile && (
-                          <ResponsiveTableCell>
-                            <Select 
-                              value={order.status}
-                              onValueChange={(value) => handleStatusChange(index, value as OrderStatus)}
-                            >
-                              <SelectTrigger className="h-8 text-xs">
-                                <SelectValue placeholder="اختر الحالة" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="pending">في انتظار التأكيد</SelectItem>
-                                <SelectItem value="confirmed">تم التأكيد</SelectItem>
-                                <SelectItem value="sentToPrinter">تم الأرسال للمطبعة</SelectItem>
-                                <SelectItem value="readyForDelivery">تحت التسليم</SelectItem>
-                                <SelectItem value="shipped">تم الشحن</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </ResponsiveTableCell>
-                        )}
+                        <ResponsiveTableCell>
+                          <Select 
+                            value={order.status}
+                            onValueChange={(value) => handleStatusChange(index, value as OrderStatus)}
+                          >
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue placeholder="اختر الحالة" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="pending">في انتظار التأكيد</SelectItem>
+                              <SelectItem value="confirmed">تم التأكيد</SelectItem>
+                              <SelectItem value="sentToPrinter">تم الأرسال للمطبعة</SelectItem>
+                              <SelectItem value="readyForDelivery">تحت التسليم</SelectItem>
+                              <SelectItem value="shipped">تم الشحن</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </ResponsiveTableCell>
                         <ResponsiveTableCell className="text-center">{order.items && order.items.length ? order.items.length : 0}</ResponsiveTableCell>
                         <ResponsiveTableCell className="font-semibold">{formatCurrency(order.total)}</ResponsiveTableCell>
                         <ResponsiveTableCell>
@@ -332,7 +453,7 @@ const OrdersTable: React.FC = () => {
                               className={`${isMobile ? "h-8 text-xs" : "h-8 text-xs"} bg-blue-500 hover:bg-blue-600 shadow-sm`}
                               onClick={() => viewOrderDetails(order.serial)}
                             >
-                              {isMobile ? <Printer size={12} /> : "عرض"}
+                              {isMobile ? <Edit size={12} /> : "عرض"}
                             </Button>
                             
                             {!isCollected ? (
@@ -353,7 +474,7 @@ const OrdersTable: React.FC = () => {
                                 }}
                                 title="إلغاء التحصيل"
                               >
-                                <Undo2 size={12} />
+                                <XCircle size={12} />
                               </Button>
                             )}
                             
@@ -375,7 +496,7 @@ const OrdersTable: React.FC = () => {
                                 }}
                                 title="إلغاء دفع الشحن"
                               >
-                                <Ban size={12} />
+                                <XCircle size={12} />
                               </Button>
                             )}
                             
@@ -397,7 +518,7 @@ const OrdersTable: React.FC = () => {
                                 }}
                                 title="إلغاء دفع التكلفة"
                               >
-                                <Ban size={12} />
+                                <XCircle size={12} />
                               </Button>
                             )}
                             
@@ -434,7 +555,7 @@ const OrdersTable: React.FC = () => {
                   <ResponsiveTableRow>
                     <ResponsiveTableCell colSpan={isMobile ? 8 : 9} className="text-center py-8">
                       <div className="flex flex-col items-center gap-2">
-                        <Printer className="h-12 w-12 text-gray-400" />
+                        <Package className="h-12 w-12 text-gray-400" />
                         <p className="text-gray-500 text-lg">لا توجد طلبات متاحة</p>
                       </div>
                     </ResponsiveTableCell>

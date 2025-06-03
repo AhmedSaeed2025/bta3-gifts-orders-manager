@@ -26,7 +26,7 @@ const Index = () => {
         <Tabs defaultValue="addOrder" className="mt-2 md:mt-4">
           <TabsList className="grid w-full grid-cols-7 gap-1">
             <TabsTrigger value="addOrder">{isMobile ? "إضافة" : "إضافة طلب"}</TabsTrigger>
-            <TabsTrigger value="orders">{isMobile ? "الطلبات" : "جميع الطلبات"}</TabsTrigger>
+            <TabsTrigger value="orders">{isMobile ? "إدارة" : "إدارة الطلبات"}</TabsTrigger>
             <TabsTrigger value="invoice">{isMobile ? "الفاتورة" : "الفاتورة"}</TabsTrigger>
             <TabsTrigger value="summary">{isMobile ? "التقرير" : "تقرير الطلبات"}</TabsTrigger>
             <TabsTrigger value="profitReport">{isMobile ? "الأرباح" : "تقرير الأرباح"}</TabsTrigger>
