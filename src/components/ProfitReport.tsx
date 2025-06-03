@@ -7,14 +7,16 @@ import { Label } from "@/components/ui/label";
 import { useSupabaseOrders } from "@/context/SupabaseOrderContext";
 import { formatCurrency, generateMonthlyReport, calculateTotals, exportToExcel } from "@/lib/utils";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { DownloadCloud, TrendingUp, TrendingDown, FileText, Download, Filter } from "lucide-react";
+import { DownloadCloud, TrendingUp, TrendingDown, FileText, Download, Filter, RefreshCw } from "lucide-react";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 import { toast } from "sonner";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const ProfitReport = () => {
   const { orders, loading } = useSupabaseOrders();
   const reportRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
   const [filterMonth, setFilterMonth] = useState<string>("all");
   const [filterYear, setFilterYear] = useState<string>("all");
   const [filterProduct, setFilterProduct] = useState<string>("all");
@@ -82,7 +84,7 @@ const ProfitReport = () => {
   }, [monthlyReport]);
 
   const handleExcelExport = () => {
-    exportToExcel("profitReportTable", "Profit_Report");
+    exportToExcel("profitReportTable", "تقرير_الأرباح");
   };
 
   const handlePDFExport = async () => {
@@ -153,11 +155,11 @@ const ProfitReport = () => {
 
   if (loading) {
     return (
-      <Card>
-        <CardContent className="flex items-center justify-center py-8">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gift-primary mx-auto"></div>
-            <p className="mt-2 text-gray-600 dark:text-gray-400">جاري تحميل تقرير الأرباح...</p>
+      <Card className="animate-pulse">
+        <CardContent className="flex items-center justify-center py-12">
+          <div className="text-center space-y-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-gift-primary border-t-transparent mx-auto"></div>
+            <p className="text-lg text-gray-600 dark:text-gray-400">جاري تحميل تقرير الأرباح...</p>
           </div>
         </CardContent>
       </Card>
@@ -165,200 +167,237 @@ const ProfitReport = () => {
   }
 
   return (
-    <div className="rtl" style={{ direction: 'rtl' }}>
-      <Card className="overflow-hidden">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-xl flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            تقرير الأرباح والتكاليف
-          </CardTitle>
-          <div className="flex gap-2">
+    <div className="rtl space-y-6" style={{ direction: 'rtl' }}>
+      {/* Header Section */}
+      <Card className={`${isMobile ? "mobile-card" : ""} bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-l-4 border-l-green-500`}>
+        <CardHeader className={`flex flex-row items-center justify-between space-y-0 pb-4 ${isMobile ? "card-header" : ""}`}>
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-green-500 rounded-lg">
+              <FileText className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <CardTitle className={`${isMobile ? "text-xl" : "text-2xl"} font-bold text-gray-800 dark:text-white`}>
+                تقرير الأرباح والتكاليف
+              </CardTitle>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                تحليل شامل للأرباح والمبيعات والتكاليف
+              </p>
+            </div>
+          </div>
+          <div className={`flex gap-3 ${isMobile ? "flex-col" : ""}`}>
             <Button 
               onClick={handlePDFExport}
-              className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
+              className={`${isMobile ? "mobile-btn w-full" : ""} bg-blue-600 hover:bg-blue-700 flex items-center gap-2 shadow-lg`}
             >
               <Download className="h-4 w-4" />
               تصدير PDF
             </Button>
             <Button 
               onClick={handleExcelExport}
-              className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
+              className={`${isMobile ? "mobile-btn w-full" : ""} bg-green-600 hover:bg-green-700 flex items-center gap-2 shadow-lg`}
             >
               <DownloadCloud className="h-4 w-4" />
               تصدير Excel
             </Button>
           </div>
         </CardHeader>
+      </Card>
+
+      {/* Filters Section */}
+      <Card className="bg-gray-50 dark:bg-gray-800">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Filter className="h-5 w-5" />
+            فلاتر التقرير
+          </CardTitle>
+        </CardHeader>
         <CardContent>
-          {/* Filters Section */}
-          <Card className="mb-6 bg-gray-50 dark:bg-gray-800">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Filter className="h-5 w-5" />
-                فلاتر التقرير
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="filterYear">السنة</Label>
-                  <Select value={filterYear} onValueChange={setFilterYear}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="اختر السنة" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">جميع السنوات</SelectItem>
-                      {availableYears.map(year => (
-                        <SelectItem key={year} value={year}>{year}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+          <div className={`grid gap-4 ${isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-4"}`}>
+            <div className="space-y-2">
+              <Label htmlFor="filterYear">السنة</Label>
+              <Select value={filterYear} onValueChange={setFilterYear}>
+                <SelectTrigger>
+                  <SelectValue placeholder="اختر السنة" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">جميع السنوات</SelectItem>
+                  {availableYears.map(year => (
+                    <SelectItem key={year} value={year}>{year}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="filterMonth">الشهر</Label>
+              <Select value={filterMonth} onValueChange={setFilterMonth}>
+                <SelectTrigger>
+                  <SelectValue placeholder="اختر الشهر" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">جميع الشهور</SelectItem>
+                  <SelectItem value="01">يناير</SelectItem>
+                  <SelectItem value="02">فبراير</SelectItem>
+                  <SelectItem value="03">مارس</SelectItem>
+                  <SelectItem value="04">أبريل</SelectItem>
+                  <SelectItem value="05">مايو</SelectItem>
+                  <SelectItem value="06">يونيو</SelectItem>
+                  <SelectItem value="07">يوليو</SelectItem>
+                  <SelectItem value="08">أغسطس</SelectItem>
+                  <SelectItem value="09">سبتمبر</SelectItem>
+                  <SelectItem value="10">أكتوبر</SelectItem>
+                  <SelectItem value="11">نوفمبر</SelectItem>
+                  <SelectItem value="12">ديسمبر</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="filterProduct">نوع المنتج</Label>
+              <Select value={filterProduct} onValueChange={setFilterProduct}>
+                <SelectTrigger>
+                  <SelectValue placeholder="اختر المنتج" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">جميع المنتجات</SelectItem>
+                  {availableProducts.map(product => (
+                    <SelectItem key={product} value={product}>{product}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="flex items-end">
+              <Button 
+                onClick={clearFilters}
+                variant="outline"
+                className="w-full flex items-center gap-2"
+              >
+                <RefreshCw className="h-4 w-4" />
+                مسح الفلاتر
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div ref={reportRef} className="space-y-6">
+        {/* Summary Cards */}
+        <div className={`grid gap-4 ${isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-3"}`}>
+          <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white">
+            <CardContent className="p-6">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-red-100 text-sm font-medium">إجمالي التكاليف</p>
+                  <p className="text-3xl font-bold">{formatCurrency(totalCost)}</p>
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="filterMonth">الشهر</Label>
-                  <Select value={filterMonth} onValueChange={setFilterMonth}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="اختر الشهر" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">جميع الشهور</SelectItem>
-                      <SelectItem value="01">يناير</SelectItem>
-                      <SelectItem value="02">فبراير</SelectItem>
-                      <SelectItem value="03">مارس</SelectItem>
-                      <SelectItem value="04">أبريل</SelectItem>
-                      <SelectItem value="05">مايو</SelectItem>
-                      <SelectItem value="06">يونيو</SelectItem>
-                      <SelectItem value="07">يوليو</SelectItem>
-                      <SelectItem value="08">أغسطس</SelectItem>
-                      <SelectItem value="09">سبتمبر</SelectItem>
-                      <SelectItem value="10">أكتوبر</SelectItem>
-                      <SelectItem value="11">نوفمبر</SelectItem>
-                      <SelectItem value="12">ديسمبر</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="filterProduct">نوع المنتج</Label>
-                  <Select value={filterProduct} onValueChange={setFilterProduct}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="اختر المنتج" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">جميع المنتجات</SelectItem>
-                      {availableProducts.map(product => (
-                        <SelectItem key={product} value={product}>{product}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="flex items-end">
-                  <Button 
-                    onClick={clearFilters}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    مسح الفلاتر
-                  </Button>
-                </div>
+                <TrendingDown className="h-8 w-8 text-red-200" />
               </div>
             </CardContent>
           </Card>
-
-          <div ref={reportRef}>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <Card className="bg-red-50 dark:bg-red-900/30">
-                <CardContent className="pt-6">
-                  <div className="flex justify-between items-center">
-                    <p className="text-lg font-medium">إجمالي التكاليف</p>
-                    <TrendingDown className="h-5 w-5 text-red-600 dark:text-red-400" />
-                  </div>
-                  <p className="text-2xl font-bold text-red-600 dark:text-red-400">{formatCurrency(totalCost)}</p>
-                </CardContent>
-              </Card>
-              
-              <Card className="bg-blue-50 dark:bg-blue-900/30">
-                <CardContent className="pt-6">
-                  <div className="flex justify-between items-center">
-                    <p className="text-lg font-medium">إجمالي المبيعات</p>
-                    <TrendingUp className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{formatCurrency(totalSales)}</p>
-                </CardContent>
-              </Card>
-              
-              <Card className="bg-green-50 dark:bg-green-900/30">
-                <CardContent className="pt-6">
-                  <div className="flex justify-between items-center">
-                    <p className="text-lg font-medium">صافي الربح</p>
-                    <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />
-                  </div>
-                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">{formatCurrency(netProfit)}</p>
-                </CardContent>
-              </Card>
-            </div>
-
-            {chartData.length > 0 && (
-              <div className="mb-6">
-                <h3 className="text-lg font-medium mb-2">رسم بياني للأرباح والتكاليف</h3>
-                <div className="h-72 w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={chartData}
-                      margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip formatter={tooltipFormatter} />
-                      <Legend />
-                      <Bar dataKey="تكاليف" fill="#ef4444" />
-                      <Bar dataKey="مبيعات" fill="#3b82f6" />
-                      <Bar dataKey="أرباح" fill="#22c55e" />
-                    </BarChart>
-                  </ResponsiveContainer>
+          
+          <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+            <CardContent className="p-6">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-blue-100 text-sm font-medium">إجمالي المبيعات</p>
+                  <p className="text-3xl font-bold">{formatCurrency(totalSales)}</p>
                 </div>
+                <TrendingUp className="h-8 w-8 text-blue-200" />
               </div>
-            )}
-            
-            <h3 className="text-lg font-medium mb-2">تفاصيل الأرباح والتكاليف حسب المنتج والشهر</h3>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
+            <CardContent className="p-6">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-green-100 text-sm font-medium">صافي الربح</p>
+                  <p className="text-3xl font-bold">{formatCurrency(netProfit)}</p>
+                </div>
+                <TrendingUp className="h-8 w-8 text-green-200" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Chart Section */}
+        {chartData.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg font-medium flex items-center gap-2">
+                <BarChart className="h-5 w-5" />
+                رسم بياني للأرباح والتكاليف
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className={`${isMobile ? "h-64" : "h-80"} w-full`}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={chartData}
+                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip formatter={tooltipFormatter} />
+                    <Legend />
+                    <Bar dataKey="تكاليف" fill="#ef4444" />
+                    <Bar dataKey="مبيعات" fill="#3b82f6" />
+                    <Bar dataKey="أرباح" fill="#22c55e" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        
+        {/* Detailed Table */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg font-medium">تفاصيل الأرباح والتكاليف حسب المنتج والشهر</CardTitle>
+          </CardHeader>
+          <CardContent>
             <div className="overflow-x-auto">
-              <table id="profitReportTable" className="gift-table">
+              <table id="profitReportTable" className="gift-table w-full">
                 <thead>
-                  <tr>
-                    <th>Month</th>
-                    <th>Product_Type</th>
-                    <th>Total_Costs</th>
-                    <th>Total_Sales</th>
-                    <th>Net_Profit</th>
+                  <tr className="bg-gray-50 dark:bg-gray-800">
+                    <th className="text-right p-3 font-semibold">الشهر</th>
+                    <th className="text-right p-3 font-semibold">نوع المنتج</th>
+                    <th className="text-right p-3 font-semibold">إجمالي التكاليف</th>
+                    <th className="text-right p-3 font-semibold">إجمالي المبيعات</th>
+                    <th className="text-right p-3 font-semibold">صافي الربح</th>
                   </tr>
                 </thead>
                 <tbody>
                   {Object.keys(monthlyReport).length > 0 ? (
                     Object.entries(monthlyReport).flatMap(([month, products]) =>
-                      Object.entries(products).map(([productType, data], index) => (
-                        <tr key={`${month}-${productType}`}>
-                          <td>{month}</td>
-                          <td>{productType}</td>
-                          <td>{data.totalCost.toFixed(2)}</td>
-                          <td>{data.totalSales.toFixed(2)}</td>
-                          <td>{(data.totalSales - data.totalCost).toFixed(2)}</td>
+                      Object.entries(products).map(([productType, data]) => (
+                        <tr key={`${month}-${productType}`} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                          <td className="p-3 border-b">{month}</td>
+                          <td className="p-3 border-b">{productType}</td>
+                          <td className="p-3 border-b text-red-600 font-semibold">{formatCurrency(data.totalCost)}</td>
+                          <td className="p-3 border-b text-blue-600 font-semibold">{formatCurrency(data.totalSales)}</td>
+                          <td className="p-3 border-b text-green-600 font-semibold">{formatCurrency(data.totalSales - data.totalCost)}</td>
                         </tr>
                       ))
                     )
                   ) : (
                     <tr>
-                      <td colSpan={5} className="text-center py-4">No data available</td>
+                      <td colSpan={5} className="text-center py-8">
+                        <div className="flex flex-col items-center gap-2">
+                          <FileText className="h-12 w-12 text-gray-400" />
+                          <p className="text-gray-500 text-lg">لا توجد بيانات متاحة</p>
+                        </div>
+                      </td>
                     </tr>
                   )}
                 </tbody>
               </table>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Order, OrderStatus, OrderItem } from "@/types";
 import { toast } from "sonner";
@@ -30,42 +31,54 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
     }
 
     try {
+      console.log('Loading orders from Supabase...');
       const { data: ordersData, error } = await supabase
         .from('orders')
         .select(`
           *,
           order_items (*)
         `)
+        .eq('user_id', user.id)
         .order('date_created', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error loading orders:', error);
+        throw error;
+      }
 
-      const formattedOrders = ordersData?.map(order => ({
-        serial: order.serial,
-        paymentMethod: order.payment_method,
-        clientName: order.client_name,
-        phone: order.phone,
-        deliveryMethod: order.delivery_method,
-        address: order.address || "",
-        governorate: order.governorate || "",
-        items: order.order_items.map((item: any) => ({
-          productType: item.product_type,
-          size: item.size,
-          quantity: item.quantity,
-          cost: Number(item.cost),
-          price: Number(item.price),
-          profit: Number(item.profit),
-          itemDiscount: Number(item.item_discount || 0)
-        })),
-        shippingCost: Number(order.shipping_cost),
-        discount: Number(order.discount || 0),
-        deposit: Number(order.deposit),
-        total: Number(order.total),
-        profit: Number(order.profit),
-        status: order.status as OrderStatus,
-        dateCreated: order.date_created
-      })) || [];
+      console.log('Orders data from Supabase:', ordersData);
 
+      const formattedOrders = ordersData?.map(order => {
+        const formattedOrder = {
+          serial: order.serial,
+          paymentMethod: order.payment_method,
+          clientName: order.client_name,
+          phone: order.phone,
+          deliveryMethod: order.delivery_method,
+          address: order.address || "",
+          governorate: order.governorate || "",
+          items: order.order_items?.map((item: any) => ({
+            productType: item.product_type,
+            size: item.size,
+            quantity: item.quantity,
+            cost: Number(item.cost),
+            price: Number(item.price),
+            profit: Number(item.profit),
+            itemDiscount: Number(item.item_discount || 0)
+          })) || [],
+          shippingCost: Number(order.shipping_cost),
+          discount: Number(order.discount || 0),
+          deposit: Number(order.deposit),
+          total: Number(order.total),
+          profit: Number(order.profit),
+          status: order.status as OrderStatus,
+          dateCreated: order.date_created
+        };
+        console.log('Formatted order:', formattedOrder);
+        return formattedOrder;
+      }) || [];
+
+      console.log('Final formatted orders:', formattedOrders);
       setOrders(formattedOrders);
     } catch (error) {
       console.error('Error loading orders:', error);
@@ -83,6 +96,7 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
     try {
       const { data, error } = await supabase.rpc('generate_serial_number');
       if (error) throw error;
+      console.log('Generated serial number:', data);
       return data;
     } catch (error) {
       console.error('Error generating serial number:', error);
@@ -117,7 +131,9 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
     }
 
     try {
+      console.log('Adding new order:', newOrder);
       const serial = await generateSerialNumber();
+      console.log('Generated serial for new order:', serial);
       
       // Insert order
       const { data: orderData, error: orderError } = await supabase
@@ -141,7 +157,12 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
         .select()
         .single();
 
-      if (orderError) throw orderError;
+      if (orderError) {
+        console.error('Error inserting order:', orderError);
+        throw orderError;
+      }
+
+      console.log('Order inserted successfully:', orderData);
 
       // Insert order items
       const orderItems = newOrder.items.map(item => ({
@@ -155,12 +176,18 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
         item_discount: item.itemDiscount || 0
       }));
 
+      console.log('Inserting order items:', orderItems);
+
       const { error: itemsError } = await supabase
         .from('order_items')
         .insert(orderItems);
 
-      if (itemsError) throw itemsError;
+      if (itemsError) {
+        console.error('Error inserting order items:', itemsError);
+        throw itemsError;
+      }
 
+      console.log('Order items inserted successfully');
       toast.success("تم إضافة الطلب بنجاح");
       await loadOrders();
     } catch (error) {
@@ -192,7 +219,8 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
           profit: updatedOrder.profit,
           status: updatedOrder.status
         })
-        .eq('serial', updatedOrder.serial);
+        .eq('serial', updatedOrder.serial)
+        .eq('user_id', user.id);
 
       if (orderError) throw orderError;
 
@@ -212,13 +240,28 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
 
     try {
       const orderToDelete = orders[index];
+      console.log('Deleting order:', orderToDelete.serial);
+      
+      // Delete related transactions first
+      const { error: transactionError } = await supabase
+        .from('transactions')
+        .delete()
+        .eq('order_serial', orderToDelete.serial)
+        .eq('user_id', user.id);
+
+      if (transactionError) {
+        console.error('Error deleting transactions:', transactionError);
+      }
+
       const { error } = await supabase
         .from('orders')
         .delete()
-        .eq('serial', orderToDelete.serial);
+        .eq('serial', orderToDelete.serial)
+        .eq('user_id', user.id);
 
       if (error) throw error;
 
+      console.log('Order deleted successfully');
       toast.success("تم حذف الطلب بنجاح");
       await loadOrders();
     } catch (error) {
@@ -238,7 +281,8 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
       const { error } = await supabase
         .from('orders')
         .update({ status })
-        .eq('serial', orderToUpdate.serial);
+        .eq('serial', orderToUpdate.serial)
+        .eq('user_id', user.id);
 
       if (error) throw error;
 

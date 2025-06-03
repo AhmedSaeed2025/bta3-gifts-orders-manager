@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +7,7 @@ import { useSupabaseOrders } from "@/context/SupabaseOrderContext";
 import { ORDER_STATUS_LABELS, OrderStatus } from "@/types";
 import { formatCurrency } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
-import { Printer, Edit, DollarSign, Truck, CreditCard } from "lucide-react";
+import { Printer, Edit, DollarSign, Truck, CreditCard, CheckCircle, XCircle } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 import { 
   ResponsiveTable, 
   ResponsiveTableHead, 
@@ -25,9 +26,19 @@ import {
   ResponsiveTableCell 
 } from "@/components/ui/responsive-table";
 
+interface TransactionRecord {
+  id: string;
+  order_serial: string;
+  transaction_type: string;
+  amount: number;
+  description: string;
+  created_at: string;
+}
+
 const OrdersTable: React.FC = () => {
   const { orders, updateOrderStatus, deleteOrder, loading } = useSupabaseOrders();
   const [filter, setFilter] = useState<"all" | OrderStatus>("all");
+  const [transactions, setTransactions] = useState<TransactionRecord[]>([]);
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { user } = useAuth();
@@ -40,6 +51,27 @@ const OrdersTable: React.FC = () => {
   const [transactionDescription, setTransactionDescription] = useState<string>('');
 
   const safeOrders = Array.isArray(orders) ? orders : [];
+
+  // Load transactions
+  const loadTransactions = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      setTransactions(data || []);
+    } catch (error) {
+      console.error('Error loading transactions:', error);
+    }
+  };
+
+  useEffect(() => {
+    loadTransactions();
+  }, [user]);
 
   const filteredOrders = filter === "all" 
     ? safeOrders
@@ -107,6 +139,9 @@ const OrdersTable: React.FC = () => {
       setTransactionAmount(0);
       setTransactionDescription('');
       setSelectedOrderSerial('');
+      
+      // Reload transactions
+      await loadTransactions();
     } catch (error) {
       console.error('Error adding transaction:', error);
       toast.error("حدث خطأ في تسجيل المعاملة");
@@ -126,13 +161,44 @@ const OrdersTable: React.FC = () => {
     }
   };
 
+  const getOrderTransactions = (orderSerial: string) => {
+    return transactions.filter(t => t.order_serial === orderSerial);
+  };
+
+  const hasOrderTransaction = (orderSerial: string, transactionType: string) => {
+    return transactions.some(t => t.order_serial === orderSerial && t.transaction_type === transactionType);
+  };
+
+  const deleteTransaction = async (transactionId: string) => {
+    if (!user) {
+      toast.error("يجب تسجيل الدخول أولاً");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('transactions')
+        .delete()
+        .eq('id', transactionId)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      toast.success("تم حذف المعاملة بنجاح");
+      await loadTransactions();
+    } catch (error) {
+      console.error('Error deleting transaction:', error);
+      toast.error("حدث خطأ في حذف المعاملة");
+    }
+  };
+
   if (loading) {
     return (
-      <Card>
-        <CardContent className="flex items-center justify-center py-8">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gift-primary mx-auto"></div>
-            <p className="mt-2 text-gray-600 dark:text-gray-400">جاري تحميل الطلبات...</p>
+      <Card className="animate-pulse">
+        <CardContent className="flex items-center justify-center py-12">
+          <div className="text-center space-y-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-gift-primary border-t-transparent mx-auto"></div>
+            <p className="text-lg text-gray-600 dark:text-gray-400">جاري تحميل الطلبات...</p>
           </div>
         </CardContent>
       </Card>
@@ -140,16 +206,28 @@ const OrdersTable: React.FC = () => {
   }
 
   return (
-    <div className="rtl" style={{ direction: 'rtl' }}>
-      <Card className={isMobile ? "mobile-card" : ""}>
-        <CardHeader className={`flex flex-row items-center justify-between space-y-0 pb-2 ${isMobile ? "card-header" : ""}`}>
-          <CardTitle className={`${isMobile ? "text-lg" : "text-xl"}`}>جميع الطلبات</CardTitle>
+    <div className="rtl space-y-6" style={{ direction: 'rtl' }}>
+      <Card className={`${isMobile ? "mobile-card" : ""} bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 border-l-4 border-l-indigo-500`}>
+        <CardHeader className={`flex flex-row items-center justify-between space-y-0 pb-4 ${isMobile ? "card-header" : ""}`}>
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-indigo-500 rounded-lg">
+              <Printer className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <CardTitle className={`${isMobile ? "text-xl" : "text-2xl"} font-bold text-gray-800 dark:text-white`}>
+                إدارة الطلبات
+              </CardTitle>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                عرض وإدارة جميع الطلبات والمعاملات المالية
+              </p>
+            </div>
+          </div>
           <div className={`${isMobile ? "w-32" : "w-64"}`}>
             <Select 
               value={filter}
               onValueChange={(value) => setFilter(value as "all" | OrderStatus)}
             >
-              <SelectTrigger className={isMobile ? "text-xs" : ""}>
+              <SelectTrigger className={`${isMobile ? "text-xs" : ""} shadow-lg`}>
                 <SelectValue placeholder="تصفية حسب الحالة" />
               </SelectTrigger>
               <SelectContent>
@@ -163,111 +241,202 @@ const OrdersTable: React.FC = () => {
             </Select>
           </div>
         </CardHeader>
-        <CardContent className={isMobile ? "card-content" : ""}>
+        <CardContent className={isMobile ? "card-content p-2" : "p-6"}>
           <div className="overflow-x-auto">
-            <ResponsiveTable>
+            <ResponsiveTable className="w-full">
               <ResponsiveTableHead>
-                <ResponsiveTableRow>
-                  <ResponsiveTableHeader>سريال</ResponsiveTableHeader>
-                  <ResponsiveTableHeader>اسم العميل</ResponsiveTableHeader>
-                  {!isMobile && <ResponsiveTableHeader>التليفون</ResponsiveTableHeader>}
-                  <ResponsiveTableHeader>الحالة</ResponsiveTableHeader>
-                  {!isMobile && <ResponsiveTableHeader>تعديل الحالة</ResponsiveTableHeader>}
-                  <ResponsiveTableHeader>عدد المنتجات</ResponsiveTableHeader>
-                  <ResponsiveTableHeader>المجموع</ResponsiveTableHeader>
-                  <ResponsiveTableHeader>إجراءات</ResponsiveTableHeader>
+                <ResponsiveTableRow className="bg-gray-50 dark:bg-gray-800">
+                  <ResponsiveTableHeader className="font-semibold">رقم الطلب</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className="font-semibold">اسم العميل</ResponsiveTableHeader>
+                  {!isMobile && <ResponsiveTableHeader className="font-semibold">التليفون</ResponsiveTableHeader>}
+                  <ResponsiveTableHeader className="font-semibold">الحالة</ResponsiveTableHeader>
+                  {!isMobile && <ResponsiveTableHeader className="font-semibold">تعديل الحالة</ResponsiveTableHeader>}
+                  <ResponsiveTableHeader className="font-semibold">عدد المنتجات</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className="font-semibold">المجموع</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className="font-semibold">حالة التحصيل</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className="font-semibold">إجراءات</ResponsiveTableHeader>
                 </ResponsiveTableRow>
               </ResponsiveTableHead>
               <ResponsiveTableBody>
                 {filteredOrders.length > 0 ? (
-                  filteredOrders.map((order, index) => (
-                    <ResponsiveTableRow key={order.serial}>
-                      <ResponsiveTableCell className={isMobile ? "text-xs" : ""}>{order.serial}</ResponsiveTableCell>
-                      <ResponsiveTableCell className={isMobile ? "text-xs" : ""}>{order.clientName}</ResponsiveTableCell>
-                      {!isMobile && <ResponsiveTableCell>{order.phone}</ResponsiveTableCell>}
-                      <ResponsiveTableCell className={isMobile ? "text-xs" : ""}>{ORDER_STATUS_LABELS[order.status]}</ResponsiveTableCell>
-                      {!isMobile && (
+                  filteredOrders.map((order, index) => {
+                    const orderTransactions = getOrderTransactions(order.serial);
+                    const isCollected = hasOrderTransaction(order.serial, 'order_collection');
+                    const hasShippingPayment = hasOrderTransaction(order.serial, 'shipping_payment');
+                    const hasCostPayment = hasOrderTransaction(order.serial, 'cost_payment');
+
+                    return (
+                      <ResponsiveTableRow key={order.serial} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                        <ResponsiveTableCell className="font-medium">{order.serial}</ResponsiveTableCell>
+                        <ResponsiveTableCell>{order.clientName}</ResponsiveTableCell>
+                        {!isMobile && <ResponsiveTableCell>{order.phone}</ResponsiveTableCell>}
                         <ResponsiveTableCell>
-                          <Select 
-                            value={order.status}
-                            onValueChange={(value) => handleStatusChange(index, value as OrderStatus)}
+                          <Badge 
+                            variant="outline"
+                            className={`${
+                              order.status === 'shipped' ? 'bg-green-100 text-green-800 border-green-300' :
+                              order.status === 'confirmed' ? 'bg-blue-100 text-blue-800 border-blue-300' :
+                              order.status === 'pending' ? 'bg-yellow-100 text-yellow-800 border-yellow-300' :
+                              'bg-gray-100 text-gray-800 border-gray-300'
+                            }`}
                           >
-                            <SelectTrigger className="h-8 text-xs">
-                              <SelectValue placeholder="اختر الحالة" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="pending">في انتظار التأكيد</SelectItem>
-                              <SelectItem value="confirmed">تم التأكيد</SelectItem>
-                              <SelectItem value="sentToPrinter">تم الأرسال للمطبعة</SelectItem>
-                              <SelectItem value="readyForDelivery">تحت التسليم</SelectItem>
-                              <SelectItem value="shipped">تم الشحن</SelectItem>
-                            </SelectContent>
-                          </Select>
+                            {ORDER_STATUS_LABELS[order.status]}
+                          </Badge>
                         </ResponsiveTableCell>
-                      )}
-                      <ResponsiveTableCell className={isMobile ? "text-xs" : ""}>{order.items && order.items.length ? order.items.length : 0}</ResponsiveTableCell>
-                      <ResponsiveTableCell className={isMobile ? "text-xs" : ""}>{formatCurrency(order.total)}</ResponsiveTableCell>
-                      <ResponsiveTableCell>
-                        <div className={`flex gap-1 ${isMobile ? "flex-col" : "flex-wrap"}`}>
-                          <Button 
-                            className={`${isMobile ? "h-6 text-xs" : "h-7 text-xs"} bg-blue-500 hover:bg-blue-600`}
-                            onClick={() => viewOrderDetails(order.serial)}
-                          >
-                            {isMobile ? <Printer size={12} /> : "عرض"}
-                          </Button>
-                          
-                          <Button
-                            className={`${isMobile ? "h-6 text-xs" : "h-7 text-xs"} bg-green-600 hover:bg-green-700`}
-                            onClick={() => openTransactionDialog(order.serial, 'order_collection')}
-                          >
-                            {isMobile ? <DollarSign size={12} /> : "تحصيل"}
-                          </Button>
-                          
-                          <Button
-                            className={`${isMobile ? "h-6 text-xs" : "h-7 text-xs"} bg-orange-500 hover:bg-orange-600`}
-                            onClick={() => openTransactionDialog(order.serial, 'shipping_payment')}
-                          >
-                            {isMobile ? <Truck size={12} /> : "شحن"}
-                          </Button>
-                          
-                          <Button
-                            className={`${isMobile ? "h-6 text-xs" : "h-7 text-xs"} bg-purple-500 hover:bg-purple-600`}
-                            onClick={() => openTransactionDialog(order.serial, 'cost_payment')}
-                          >
-                            {isMobile ? <CreditCard size={12} /> : "تكلفة"}
-                          </Button>
-                          
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button className={`${isMobile ? "h-6 text-xs" : "h-7 text-xs"} bg-gift-primary hover:bg-gift-primaryHover`}>
-                                حذف
+                        {!isMobile && (
+                          <ResponsiveTableCell>
+                            <Select 
+                              value={order.status}
+                              onValueChange={(value) => handleStatusChange(index, value as OrderStatus)}
+                            >
+                              <SelectTrigger className="h-8 text-xs">
+                                <SelectValue placeholder="اختر الحالة" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="pending">في انتظار التأكيد</SelectItem>
+                                <SelectItem value="confirmed">تم التأكيد</SelectItem>
+                                <SelectItem value="sentToPrinter">تم الأرسال للمطبعة</SelectItem>
+                                <SelectItem value="readyForDelivery">تحت التسليم</SelectItem>
+                                <SelectItem value="shipped">تم الشحن</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </ResponsiveTableCell>
+                        )}
+                        <ResponsiveTableCell className="text-center">{order.items && order.items.length ? order.items.length : 0}</ResponsiveTableCell>
+                        <ResponsiveTableCell className="font-semibold">{formatCurrency(order.total)}</ResponsiveTableCell>
+                        <ResponsiveTableCell>
+                          <div className="flex flex-wrap gap-1">
+                            {isCollected && (
+                              <Badge className="bg-green-100 text-green-800 text-xs">
+                                <CheckCircle className="w-3 h-3 mr-1" />
+                                تم التحصيل
+                              </Badge>
+                            )}
+                            {hasShippingPayment && (
+                              <Badge className="bg-blue-100 text-blue-800 text-xs">
+                                <Truck className="w-3 h-3 mr-1" />
+                                شحن مدفوع
+                              </Badge>
+                            )}
+                            {hasCostPayment && (
+                              <Badge className="bg-purple-100 text-purple-800 text-xs">
+                                <CreditCard className="w-3 h-3 mr-1" />
+                                تكلفة مدفوعة
+                              </Badge>
+                            )}
+                          </div>
+                        </ResponsiveTableCell>
+                        <ResponsiveTableCell>
+                          <div className={`flex gap-1 ${isMobile ? "flex-col" : "flex-wrap"}`}>
+                            <Button 
+                              className={`${isMobile ? "h-8 text-xs" : "h-8 text-xs"} bg-blue-500 hover:bg-blue-600 shadow-sm`}
+                              onClick={() => viewOrderDetails(order.serial)}
+                            >
+                              {isMobile ? <Printer size={12} /> : "عرض"}
+                            </Button>
+                            
+                            {!isCollected ? (
+                              <Button
+                                className={`${isMobile ? "h-8 text-xs" : "h-8 text-xs"} bg-green-600 hover:bg-green-700 shadow-sm`}
+                                onClick={() => openTransactionDialog(order.serial, 'order_collection')}
+                              >
+                                {isMobile ? <DollarSign size={12} /> : "تحصيل"}
                               </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>تأكيد حذف الطلب</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  هل أنت متأكد من حذف هذا الطلب؟ لا يمكن التراجع عن هذا الإجراء.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                                <AlertDialogAction 
-                                  className="bg-gift-primary hover:bg-gift-primaryHover"
-                                  onClick={() => handleOrderDelete(index)}
+                            ) : (
+                              <div className="flex gap-1">
+                                <Button
+                                  className={`${isMobile ? "h-8 text-xs" : "h-8 text-xs"} bg-red-500 hover:bg-red-600 shadow-sm`}
+                                  onClick={() => {
+                                    const collectionTransaction = orderTransactions.find(t => t.transaction_type === 'order_collection');
+                                    if (collectionTransaction) {
+                                      deleteTransaction(collectionTransaction.id);
+                                    }
+                                  }}
                                 >
+                                  <XCircle size={12} />
+                                </Button>
+                              </div>
+                            )}
+                            
+                            {!hasShippingPayment ? (
+                              <Button
+                                className={`${isMobile ? "h-8 text-xs" : "h-8 text-xs"} bg-orange-500 hover:bg-orange-600 shadow-sm`}
+                                onClick={() => openTransactionDialog(order.serial, 'shipping_payment')}
+                              >
+                                {isMobile ? <Truck size={12} /> : "شحن"}
+                              </Button>
+                            ) : (
+                              <Button
+                                className={`${isMobile ? "h-8 text-xs" : "h-8 text-xs"} bg-red-500 hover:bg-red-600 shadow-sm`}
+                                onClick={() => {
+                                  const shippingTransaction = orderTransactions.find(t => t.transaction_type === 'shipping_payment');
+                                  if (shippingTransaction) {
+                                    deleteTransaction(shippingTransaction.id);
+                                  }
+                                }}
+                              >
+                                <XCircle size={12} />
+                              </Button>
+                            )}
+                            
+                            {!hasCostPayment ? (
+                              <Button
+                                className={`${isMobile ? "h-8 text-xs" : "h-8 text-xs"} bg-purple-500 hover:bg-purple-600 shadow-sm`}
+                                onClick={() => openTransactionDialog(order.serial, 'cost_payment')}
+                              >
+                                {isMobile ? <CreditCard size={12} /> : "تكلفة"}
+                              </Button>
+                            ) : (
+                              <Button
+                                className={`${isMobile ? "h-8 text-xs" : "h-8 text-xs"} bg-red-500 hover:bg-red-600 shadow-sm`}
+                                onClick={() => {
+                                  const costTransaction = orderTransactions.find(t => t.transaction_type === 'cost_payment');
+                                  if (costTransaction) {
+                                    deleteTransaction(costTransaction.id);
+                                  }
+                                }}
+                              >
+                                <XCircle size={12} />
+                              </Button>
+                            )}
+                            
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button className={`${isMobile ? "h-8 text-xs" : "h-8 text-xs"} bg-red-600 hover:bg-red-700 shadow-sm`}>
                                   حذف
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </ResponsiveTableCell>
-                    </ResponsiveTableRow>
-                  ))
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>تأكيد حذف الطلب</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    هل أنت متأكد من حذف هذا الطلب؟ لا يمكن التراجع عن هذا الإجراء.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                                  <AlertDialogAction 
+                                    className="bg-red-600 hover:bg-red-700"
+                                    onClick={() => handleOrderDelete(index)}
+                                  >
+                                    حذف
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </ResponsiveTableCell>
+                      </ResponsiveTableRow>
+                    );
+                  })
                 ) : (
                   <ResponsiveTableRow>
-                    <ResponsiveTableCell colSpan={isMobile ? 6 : 8} className="text-center py-4">لا توجد طلبات متاحة</ResponsiveTableCell>
+                    <ResponsiveTableCell colSpan={isMobile ? 8 : 9} className="text-center py-8">
+                      <div className="flex flex-col items-center gap-2">
+                        <Printer className="h-12 w-12 text-gray-400" />
+                        <p className="text-gray-500 text-lg">لا توجد طلبات متاحة</p>
+                      </div>
+                    </ResponsiveTableCell>
                   </ResponsiveTableRow>
                 )}
               </ResponsiveTableBody>
