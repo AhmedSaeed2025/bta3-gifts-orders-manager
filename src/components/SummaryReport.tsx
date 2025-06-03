@@ -1,14 +1,17 @@
 
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { useSupabaseOrders } from "@/context/SupabaseOrderContext";
 import { formatCurrency, exportToExcel } from "@/lib/utils";
-import { DownloadCloud, FileText, Download, TrendingUp, Calendar } from "lucide-react";
+import { DownloadCloud, FileText, Download, TrendingUp, Calendar, Edit, Filter, RefreshCw, XCircle } from "lucide-react";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useNavigate } from "react-router-dom";
 import { 
   ResponsiveTable, 
   ResponsiveTableHead, 
@@ -22,6 +25,39 @@ const SummaryReport = () => {
   const { orders, loading } = useSupabaseOrders();
   const reportRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
+  
+  // Filter states
+  const [filterMonth, setFilterMonth] = useState<string>("all");
+  const [filterYear, setFilterYear] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+
+  const safeOrders = Array.isArray(orders) ? orders : [];
+
+  // Get available years for filter
+  const availableYears = React.useMemo(() => {
+    const years = new Set<string>();
+    safeOrders.forEach(order => {
+      const year = new Date(order.dateCreated).getFullYear().toString();
+      years.add(year);
+    });
+    return Array.from(years).sort().reverse();
+  }, [safeOrders]);
+
+  // Filter orders based on selected filters
+  const filteredOrders = React.useMemo(() => {
+    return safeOrders.filter(order => {
+      const orderDate = new Date(order.dateCreated);
+      const orderYear = orderDate.getFullYear().toString();
+      const orderMonth = (orderDate.getMonth() + 1).toString().padStart(2, '0');
+      
+      if (filterYear !== "all" && orderYear !== filterYear) return false;
+      if (filterMonth !== "all" && orderMonth !== filterMonth) return false;
+      if (filterStatus !== "all" && order.status !== filterStatus) return false;
+      
+      return true;
+    });
+  }, [safeOrders, filterMonth, filterYear, filterStatus]);
 
   const handleExcelExport = () => {
     exportToExcel("summaryTable", "تقرير_جميع_الطلبات");
@@ -80,42 +116,56 @@ const SummaryReport = () => {
     }
   };
 
-  // Calculate summary statistics
+  const editOrder = (serial: string) => {
+    navigate(`/orders/${serial}`);
+  };
+
+  const clearFilters = () => {
+    setFilterMonth("all");
+    setFilterYear("all");
+    setFilterStatus("all");
+  };
+
+  const truncateText = (text: string, maxLength: number = 30) => {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + "...";
+  };
+
+  // Calculate summary statistics for filtered orders
   const summaryStats = React.useMemo(() => {
-    if (!orders || orders.length === 0) {
+    if (!filteredOrders || filteredOrders.length === 0) {
       return {
         totalOrders: 0,
         totalRevenue: 0,
-        totalCost: 0,
+        totalDeposits: 0,
+        netRevenue: 0,
         totalProfit: 0,
         avgOrderValue: 0
       };
     }
 
-    const totalOrders = orders.length;
+    const totalOrders = filteredOrders.length;
     let totalRevenue = 0;
-    let totalCost = 0;
+    let totalDeposits = 0;
     let totalProfit = 0;
 
-    orders.forEach(order => {
+    filteredOrders.forEach(order => {
       totalRevenue += order.total;
+      totalDeposits += order.deposit || 0;
       totalProfit += order.profit;
-      
-      if (order.items) {
-        order.items.forEach(item => {
-          totalCost += item.cost * item.quantity;
-        });
-      }
     });
+
+    const netRevenue = totalRevenue - totalDeposits;
 
     return {
       totalOrders,
       totalRevenue,
-      totalCost,
+      totalDeposits,
+      netRevenue,
       totalProfit,
       avgOrderValue: totalOrders > 0 ? totalRevenue / totalOrders : 0
     };
-  }, [orders]);
+  }, [filteredOrders]);
 
   if (loading) {
     return (
@@ -145,7 +195,7 @@ const SummaryReport = () => {
                   تقرير جميع الطلبات
                 </CardTitle>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  تقرير شامل لجميع الطلبات والمبيعات
+                  تقرير شامل لجميع الطلبات والمبيعات مع إمكانية الفلترة
                 </p>
               </div>
             </div>
@@ -169,8 +219,88 @@ const SummaryReport = () => {
         </CardHeader>
       </Card>
 
+      {/* Filters Section */}
+      <Card className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 border-l-4 border-l-indigo-500">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Filter className="h-5 w-5" />
+            فلاتر التقرير
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className={`grid gap-4 ${isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-4"}`}>
+            <div className="space-y-2">
+              <Label htmlFor="filterYear">السنة</Label>
+              <Select value={filterYear} onValueChange={setFilterYear}>
+                <SelectTrigger>
+                  <SelectValue placeholder="اختر السنة" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">جميع السنوات</SelectItem>
+                  {availableYears.map(year => (
+                    <SelectItem key={year} value={year}>{year}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="filterMonth">الشهر</Label>
+              <Select value={filterMonth} onValueChange={setFilterMonth}>
+                <SelectTrigger>
+                  <SelectValue placeholder="اختر الشهر" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">جميع الشهور</SelectItem>
+                  <SelectItem value="01">يناير</SelectItem>
+                  <SelectItem value="02">فبراير</SelectItem>
+                  <SelectItem value="03">مارس</SelectItem>
+                  <SelectItem value="04">أبريل</SelectItem>
+                  <SelectItem value="05">مايو</SelectItem>
+                  <SelectItem value="06">يونيو</SelectItem>
+                  <SelectItem value="07">يوليو</SelectItem>
+                  <SelectItem value="08">أغسطس</SelectItem>
+                  <SelectItem value="09">سبتمبر</SelectItem>
+                  <SelectItem value="10">أكتوبر</SelectItem>
+                  <SelectItem value="11">نوفمبر</SelectItem>
+                  <SelectItem value="12">ديسمبر</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="filterStatus">الحالة</Label>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger>
+                  <SelectValue placeholder="اختر الحالة" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">جميع الحالات</SelectItem>
+                  <SelectItem value="pending">في انتظار التأكيد</SelectItem>
+                  <SelectItem value="confirmed">تم التأكيد</SelectItem>
+                  <SelectItem value="sentToPrinter">تم الأرسال للمطبعة</SelectItem>
+                  <SelectItem value="readyForDelivery">تحت التسليم</SelectItem>
+                  <SelectItem value="shipped">تم الشحن</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="flex items-end">
+              <Button 
+                onClick={clearFilters}
+                variant="outline"
+                className="w-full flex items-center gap-2"
+              >
+                <RefreshCw className="h-4 w-4" />
+                مسح الفلاتر
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Summary Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -195,14 +325,26 @@ const SummaryReport = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white">
+        <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-red-100 text-sm font-medium">إجمالي التكلفة</p>
-                <p className="text-2xl font-bold">{formatCurrency(summaryStats.totalCost)}</p>
+                <p className="text-orange-100 text-sm font-medium">إجمالي العربون</p>
+                <p className="text-2xl font-bold">{formatCurrency(summaryStats.totalDeposits)}</p>
               </div>
-              <TrendingUp className="h-8 w-8 text-red-200" />
+              <TrendingUp className="h-8 w-8 text-orange-200" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-indigo-100 text-sm font-medium">صافي المبيعات</p>
+                <p className="text-2xl font-bold">{formatCurrency(summaryStats.netRevenue)}</p>
+              </div>
+              <TrendingUp className="h-8 w-8 text-indigo-200" />
             </div>
           </CardContent>
         </Card>
@@ -226,57 +368,61 @@ const SummaryReport = () => {
           <div ref={reportRef} className="overflow-x-auto">
             <ResponsiveTable id="summaryTable" className="w-full">
               <ResponsiveTableHead>
-                <ResponsiveTableRow className="bg-gray-50 dark:bg-gray-800">
-                  <ResponsiveTableHeader className="font-semibold">رقم الطلب</ResponsiveTableHeader>
-                  <ResponsiveTableHeader className="font-semibold">التاريخ</ResponsiveTableHeader>
-                  <ResponsiveTableHeader className="font-semibold">اسم العميل</ResponsiveTableHeader>
-                  {!isMobile && <ResponsiveTableHeader className="font-semibold">التليفون</ResponsiveTableHeader>}
-                  <ResponsiveTableHeader className="font-semibold">طريقة السداد</ResponsiveTableHeader>
-                  <ResponsiveTableHeader className="font-semibold">طريقة التوصيل</ResponsiveTableHeader>
-                  {!isMobile && <ResponsiveTableHeader className="font-semibold">العنوان</ResponsiveTableHeader>}
-                  {!isMobile && <ResponsiveTableHeader className="font-semibold">المحافظة</ResponsiveTableHeader>}
-                  <ResponsiveTableHeader className="font-semibold">نوع المنتج</ResponsiveTableHeader>
-                  <ResponsiveTableHeader className="font-semibold">المقاس</ResponsiveTableHeader>
-                  <ResponsiveTableHeader className="font-semibold">الكمية</ResponsiveTableHeader>
-                  <ResponsiveTableHeader className="font-semibold">سعر البيع</ResponsiveTableHeader>
-                  <ResponsiveTableHeader className="font-semibold">التكلفة</ResponsiveTableHeader>
-                  <ResponsiveTableHeader className="font-semibold">خصم الصنف</ResponsiveTableHeader>
-                  {!isMobile && <ResponsiveTableHeader className="font-semibold">مصاريف الشحن</ResponsiveTableHeader>}
-                  <ResponsiveTableHeader className="font-semibold">الإجمالي</ResponsiveTableHeader>
-                  <ResponsiveTableHeader className="font-semibold">الربح</ResponsiveTableHeader>
-                  <ResponsiveTableHeader className="font-semibold">الحالة</ResponsiveTableHeader>
+                <ResponsiveTableRow className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
+                  <ResponsiveTableHeader className="font-semibold text-gray-800 dark:text-white">رقم الطلب</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className="font-semibold text-gray-800 dark:text-white">التاريخ</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className="font-semibold text-gray-800 dark:text-white">اسم العميل</ResponsiveTableHeader>
+                  {!isMobile && <ResponsiveTableHeader className="font-semibold text-gray-800 dark:text-white">التليفون</ResponsiveTableHeader>}
+                  <ResponsiveTableHeader className="font-semibold text-gray-800 dark:text-white">طريقة السداد</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className="font-semibold text-gray-800 dark:text-white">طريقة التوصيل</ResponsiveTableHeader>
+                  {!isMobile && <ResponsiveTableHeader className="font-semibold text-gray-800 dark:text-white">العنوان</ResponsiveTableHeader>}
+                  {!isMobile && <ResponsiveTableHeader className="font-semibold text-gray-800 dark:text-white">المحافظة</ResponsiveTableHeader>}
+                  <ResponsiveTableHeader className="font-semibold text-gray-800 dark:text-white">نوع المنتج</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className="font-semibold text-gray-800 dark:text-white">المقاس</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className="font-semibold text-gray-800 dark:text-white">الكمية</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className="font-semibold text-gray-800 dark:text-white">سعر البيع</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className="font-semibold text-gray-800 dark:text-white">خصم الصنف</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className="font-semibold text-gray-800 dark:text-white">قيمة الطلب</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className="font-semibold text-gray-800 dark:text-white">العربون</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className="font-semibold text-gray-800 dark:text-white">صافي الطلب</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className="font-semibold text-gray-800 dark:text-white">الحالة</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className="font-semibold text-gray-800 dark:text-white">إجراءات</ResponsiveTableHeader>
                 </ResponsiveTableRow>
               </ResponsiveTableHead>
               <ResponsiveTableBody>
-                {orders.length > 0 ? (
-                  orders.flatMap((order, orderIndex) => {
+                {filteredOrders.length > 0 ? (
+                  filteredOrders.flatMap((order, orderIndex) => {
                     const items = order.items || [];
                     
                     return items.map((item, itemIndex) => (
-                      <ResponsiveTableRow key={`${order.serial}-${itemIndex}`} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                        <ResponsiveTableCell className="font-medium">{order.serial}</ResponsiveTableCell>
-                        <ResponsiveTableCell>{new Date(order.dateCreated).toLocaleDateString('ar-EG')}</ResponsiveTableCell>
-                        <ResponsiveTableCell>{order.clientName}</ResponsiveTableCell>
-                        {!isMobile && <ResponsiveTableCell>{order.phone}</ResponsiveTableCell>}
-                        <ResponsiveTableCell>{order.paymentMethod}</ResponsiveTableCell>
-                        <ResponsiveTableCell>{order.deliveryMethod}</ResponsiveTableCell>
-                        {!isMobile && <ResponsiveTableCell>{order.address}</ResponsiveTableCell>}
-                        {!isMobile && <ResponsiveTableCell>{order.governorate}</ResponsiveTableCell>}
-                        <ResponsiveTableCell>{item.productType}</ResponsiveTableCell>
-                        <ResponsiveTableCell>{item.size}</ResponsiveTableCell>
-                        <ResponsiveTableCell className="text-center">{item.quantity}</ResponsiveTableCell>
-                        <ResponsiveTableCell className="text-right">{formatCurrency(item.price)}</ResponsiveTableCell>
-                        <ResponsiveTableCell className="text-right">{formatCurrency(item.cost)}</ResponsiveTableCell>
-                        <ResponsiveTableCell className="text-right">{formatCurrency(item.itemDiscount || 0)}</ResponsiveTableCell>
-                        {!isMobile && <ResponsiveTableCell className="text-right">{itemIndex === 0 ? formatCurrency(order.shippingCost) : "-"}</ResponsiveTableCell>}
-                        <ResponsiveTableCell className="text-right font-semibold">{itemIndex === 0 ? formatCurrency(order.total) : "-"}</ResponsiveTableCell>
-                        <ResponsiveTableCell className="text-right">{formatCurrency(item.profit)}</ResponsiveTableCell>
+                      <ResponsiveTableRow 
+                        key={`${order.serial}-${itemIndex}`} 
+                        className={`hover:bg-blue-50 dark:hover:bg-blue-900/20 ${
+                          orderIndex % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900'
+                        } border-b border-gray-200 dark:border-gray-700`}
+                      >
+                        <ResponsiveTableCell className="font-medium text-blue-600 dark:text-blue-400">{order.serial}</ResponsiveTableCell>
+                        <ResponsiveTableCell className="text-gray-600 dark:text-gray-300">{new Date(order.dateCreated).toLocaleDateString('ar-EG')}</ResponsiveTableCell>
+                        <ResponsiveTableCell className="font-medium text-gray-800 dark:text-white">{order.clientName}</ResponsiveTableCell>
+                        {!isMobile && <ResponsiveTableCell className="text-gray-600 dark:text-gray-300">{order.phone}</ResponsiveTableCell>}
+                        <ResponsiveTableCell className="text-gray-600 dark:text-gray-300">{order.paymentMethod}</ResponsiveTableCell>
+                        <ResponsiveTableCell className="text-gray-600 dark:text-gray-300">{order.deliveryMethod}</ResponsiveTableCell>
+                        {!isMobile && <ResponsiveTableCell className="text-gray-600 dark:text-gray-300">{truncateText(order.address || "")}</ResponsiveTableCell>}
+                        {!isMobile && <ResponsiveTableCell className="text-gray-600 dark:text-gray-300">{order.governorate}</ResponsiveTableCell>}
+                        <ResponsiveTableCell className="font-medium text-purple-600 dark:text-purple-400">{item.productType}</ResponsiveTableCell>
+                        <ResponsiveTableCell className="text-gray-600 dark:text-gray-300">{item.size}</ResponsiveTableCell>
+                        <ResponsiveTableCell className="text-center font-medium">{item.quantity}</ResponsiveTableCell>
+                        <ResponsiveTableCell className="text-right font-semibold text-green-600 dark:text-green-400">{formatCurrency(item.price)}</ResponsiveTableCell>
+                        <ResponsiveTableCell className="text-right text-red-600 dark:text-red-400">{formatCurrency(item.itemDiscount || 0)}</ResponsiveTableCell>
+                        <ResponsiveTableCell className="text-right font-semibold text-blue-600 dark:text-blue-400">{itemIndex === 0 ? formatCurrency(order.total) : "-"}</ResponsiveTableCell>
+                        <ResponsiveTableCell className="text-right text-orange-600 dark:text-orange-400">{itemIndex === 0 ? formatCurrency(order.deposit || 0) : "-"}</ResponsiveTableCell>
+                        <ResponsiveTableCell className="text-right font-bold text-green-600 dark:text-green-400">{itemIndex === 0 ? formatCurrency(order.total - (order.deposit || 0)) : "-"}</ResponsiveTableCell>
                         <ResponsiveTableCell>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            order.status === 'shipped' ? 'bg-green-100 text-green-800' :
-                            order.status === 'confirmed' ? 'bg-blue-100 text-blue-800' :
-                            order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-gray-100 text-gray-800'
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            order.status === 'shipped' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
+                            order.status === 'confirmed' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' :
+                            order.status === 'pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' :
+                            'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
                           }`}>
                             {order.status === 'pending' ? 'في انتظار التأكيد' :
                              order.status === 'confirmed' ? 'تم التأكيد' :
@@ -284,6 +430,17 @@ const SummaryReport = () => {
                              order.status === 'readyForDelivery' ? 'تحت التسليم' :
                              order.status === 'shipped' ? 'تم الشحن' : order.status}
                           </span>
+                        </ResponsiveTableCell>
+                        <ResponsiveTableCell>
+                          {itemIndex === 0 && (
+                            <Button
+                              onClick={() => editOrder(order.serial)}
+                              className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 text-xs rounded shadow-sm"
+                            >
+                              <Edit className="h-3 w-3 mr-1" />
+                              تعديل
+                            </Button>
+                          )}
                         </ResponsiveTableCell>
                       </ResponsiveTableRow>
                     ));

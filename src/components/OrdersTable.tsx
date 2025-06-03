@@ -7,7 +7,7 @@ import { useSupabaseOrders } from "@/context/SupabaseOrderContext";
 import { ORDER_STATUS_LABELS, OrderStatus } from "@/types";
 import { formatCurrency } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
-import { Printer, Edit, DollarSign, Truck, CreditCard, CheckCircle, XCircle } from "lucide-react";
+import { Printer, Edit, DollarSign, Truck, CreditCard, CheckCircle, Ban, Undo2 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -343,19 +343,18 @@ const OrdersTable: React.FC = () => {
                                 {isMobile ? <DollarSign size={12} /> : "تحصيل"}
                               </Button>
                             ) : (
-                              <div className="flex gap-1">
-                                <Button
-                                  className={`${isMobile ? "h-8 text-xs" : "h-8 text-xs"} bg-red-500 hover:bg-red-600 shadow-sm`}
-                                  onClick={() => {
-                                    const collectionTransaction = orderTransactions.find(t => t.transaction_type === 'order_collection');
-                                    if (collectionTransaction) {
-                                      deleteTransaction(collectionTransaction.id);
-                                    }
-                                  }}
-                                >
-                                  <XCircle size={12} />
-                                </Button>
-                              </div>
+                              <Button
+                                className={`${isMobile ? "h-8 text-xs" : "h-8 text-xs"} bg-red-500 hover:bg-red-600 shadow-sm`}
+                                onClick={() => {
+                                  const collectionTransaction = orderTransactions.find(t => t.transaction_type === 'order_collection');
+                                  if (collectionTransaction) {
+                                    deleteTransaction(collectionTransaction.id);
+                                  }
+                                }}
+                                title="إلغاء التحصيل"
+                              >
+                                <Undo2 size={12} />
+                              </Button>
                             )}
                             
                             {!hasShippingPayment ? (
@@ -374,8 +373,9 @@ const OrdersTable: React.FC = () => {
                                     deleteTransaction(shippingTransaction.id);
                                   }
                                 }}
+                                title="إلغاء دفع الشحن"
                               >
-                                <XCircle size={12} />
+                                <Ban size={12} />
                               </Button>
                             )}
                             
@@ -395,8 +395,9 @@ const OrdersTable: React.FC = () => {
                                     deleteTransaction(costTransaction.id);
                                   }
                                 }}
+                                title="إلغاء دفع التكلفة"
                               >
-                                <XCircle size={12} />
+                                <Ban size={12} />
                               </Button>
                             )}
                             

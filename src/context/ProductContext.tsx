@@ -1,218 +1,261 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { Product, ProductSize } from "@/types";
+import { Product } from "@/types";
 import { toast } from "sonner";
-import { v4 as uuidv4 } from "uuid";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ProductContextType {
   products: Product[];
-  addProduct: (name: string) => void;
-  updateProduct: (id: string, name: string) => void;
-  deleteProduct: (id: string) => void;
-  addProductSize: (productId: string, size: ProductSize) => void;
-  updateProductSize: (productId: string, size: string, updatedSize: ProductSize) => void;
-  deleteProductSize: (productId: string, size: string) => void;
-  clearAllProducts: () => void;
+  addProduct: (product: Omit<Product, "id">) => Promise<void>;
+  updateProduct: (id: string, product: Product) => Promise<void>;
+  deleteProduct: (id: string) => Promise<void>;
+  loading: boolean;
 }
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
 
-// Default product sizes
-const DEFAULT_PRODUCT_SIZES: ProductSize[] = [
-  { size: "مقاس افتراضي", cost: 100, price: 150 },
-  { size: "15*20 سم", cost: 120, price: 180 },
-  { size: "20*30 سم", cost: 140, price: 200 },
-  { size: "30*40 سم", cost: 180, price: 250 },
-  { size: "40*50 سم", cost: 220, price: 300 },
-  { size: "50*60 سم", cost: 280, price: 380 },
-  { size: "50*70 سم", cost: 300, price: 400 },
-  { size: "100*60 سم", cost: 350, price: 500 },
-  { size: "160*60 سم", cost: 400, price: 600 },
-  { size: "1 قطعة", cost: 60, price: 90 },
-  { size: "2 قطعة", cost: 100, price: 150 },
-  { size: "3 قطعة", cost: 140, price: 200 },
-];
-
-// Default products
-const DEFAULT_PRODUCTS: Product[] = [
-  {
-    id: uuidv4(),
-    name: "تابلوه",
-    sizes: DEFAULT_PRODUCT_SIZES.filter(size => size.size.includes("سم"))
-  },
-  {
-    id: uuidv4(),
-    name: "ماكيت مجسم",
-    sizes: DEFAULT_PRODUCT_SIZES.filter(size => size.size.includes("سم"))
-  },
-  {
-    id: uuidv4(),
-    name: "ماكيت كاركتيري",
-    sizes: DEFAULT_PRODUCT_SIZES.filter(size => size.size.includes("سم"))
-  },
-  {
-    id: uuidv4(),
-    name: "ميدالية مستطيله",
-    sizes: DEFAULT_PRODUCT_SIZES.filter(size => size.size.includes("سم") || size.size.includes("قطعة"))
-  },
-  {
-    id: uuidv4(),
-    name: "ميدالية مجسمة",
-    sizes: DEFAULT_PRODUCT_SIZES.filter(size => size.size.includes("سم") || size.size.includes("قطعة"))
-  },
-  {
-    id: uuidv4(),
-    name: "دلاية عربيه 1 قطعة",
-    sizes: [DEFAULT_PRODUCT_SIZES.find(size => size.size === "1 قطعة")!]
-  },
-  {
-    id: uuidv4(),
-    name: "دلاية عربيه 2 قطعة",
-    sizes: [DEFAULT_PRODUCT_SIZES.find(size => size.size === "2 قطعة")!]
-  },
-  {
-    id: uuidv4(),
-    name: "دلاية عربيه 3 قطعة",
-    sizes: [DEFAULT_PRODUCT_SIZES.find(size => size.size === "3 قطعة")!]
-  },
-  {
-    id: uuidv4(),
-    name: "مج عادى",
-    sizes: [DEFAULT_PRODUCT_SIZES.find(size => size.size === "مقاس افتراضي")!]
-  },
-  {
-    id: uuidv4(),
-    name: "مج سحري",
-    sizes: [DEFAULT_PRODUCT_SIZES.find(size => size.size === "مقاس افتراضي")!]
-  },
-  {
-    id: uuidv4(),
-    name: "تغليف هدايا",
-    sizes: [DEFAULT_PRODUCT_SIZES.find(size => size.size === "مقاس افتراضي")!]
-  },
-];
-
 export const ProductProvider = ({ children }: { children: React.ReactNode }) => {
   const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
-  // Load products from local storage or use defaults
-  useEffect(() => {
-    const savedProducts = localStorage.getItem("products");
-    
-    if (savedProducts) {
-      setProducts(JSON.parse(savedProducts));
-    } else {
-      setProducts(DEFAULT_PRODUCTS);
-      localStorage.setItem("products", JSON.stringify(DEFAULT_PRODUCTS));
-    }
-  }, []);
-
-  // Save products to local storage whenever they change
-  useEffect(() => {
-    localStorage.setItem("products", JSON.stringify(products));
-  }, [products]);
-
-  const addProduct = (name: string) => {
-    const newProduct: Product = {
-      id: uuidv4(),
-      name,
-      sizes: [DEFAULT_PRODUCT_SIZES[0]] // Add default size to new products
-    };
-    
-    setProducts(prevProducts => [...prevProducts, newProduct]);
-    toast.success("تم إضافة المنتج بنجاح");
-  };
-
-  const updateProduct = (id: string, name: string) => {
-    setProducts(prevProducts => 
-      prevProducts.map(product => 
-        product.id === id ? { ...product, name } : product
-      )
-    );
-    toast.success("تم تحديث المنتج بنجاح");
-  };
-
-  const deleteProduct = (id: string) => {
-    setProducts(prevProducts => prevProducts.filter(product => product.id !== id));
-    toast.success("تم حذف المنتج بنجاح");
-  };
-
-  const addProductSize = (productId: string, size: ProductSize) => {
-    // Check if size with same name already exists
-    const productToUpdate = products.find(p => p.id === productId);
-    if (productToUpdate && productToUpdate.sizes.some(s => s.size === size.size)) {
-      toast.error("هذا المقاس موجود بالفعل");
+  // Load products from Supabase
+  const loadProducts = async () => {
+    if (!user) {
+      setProducts([]);
+      setLoading(false);
       return;
     }
-    
-    setProducts(prevProducts => 
-      prevProducts.map(product => 
-        product.id === productId 
-          ? { ...product, sizes: [...product.sizes, size] } 
-          : product
-      )
-    );
-    toast.success("تم إضافة المقاس بنجاح");
-  };
 
-  const updateProductSize = (productId: string, sizeToUpdate: string, updatedSize: ProductSize) => {
-    // Check if we're trying to rename to an existing size name
-    if (sizeToUpdate !== updatedSize.size) {
-      const productToUpdate = products.find(p => p.id === productId);
-      if (productToUpdate && productToUpdate.sizes.some(s => s.size === updatedSize.size)) {
-        toast.error("هذا المقاس موجود بالفعل");
-        return;
+    try {
+      console.log('Loading products from Supabase...');
+      const { data: productsData, error } = await supabase
+        .from('products')
+        .select(`
+          *,
+          product_sizes (*)
+        `)
+        .eq('user_id', user.id)
+        .order('name');
+
+      if (error) {
+        console.error('Error loading products:', error);
+        throw error;
       }
+
+      console.log('Products data from Supabase:', productsData);
+
+      const formattedProducts = productsData?.map(product => ({
+        id: product.id,
+        name: product.name,
+        sizes: product.product_sizes?.map((size: any) => ({
+          size: size.size,
+          cost: Number(size.cost),
+          price: Number(size.price)
+        })) || []
+      })) || [];
+
+      console.log('Formatted products:', formattedProducts);
+      setProducts(formattedProducts);
+    } catch (error) {
+      console.error('Error loading products:', error);
+      toast.error("حدث خطأ في تحميل المنتجات");
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    loadProducts();
     
-    setProducts(prevProducts => 
-      prevProducts.map(product => 
-        product.id === productId 
-          ? {
-              ...product, 
-              sizes: product.sizes.map(size => 
-                size.size === sizeToUpdate ? updatedSize : size
-              )
-            } 
-          : product
-      )
-    );
-    toast.success("تم تحديث المقاس بنجاح");
+    // Set up real-time subscription
+    if (user) {
+      const productsSubscription = supabase
+        .channel('products-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'products',
+            filter: `user_id=eq.${user.id}`
+          },
+          (payload) => {
+            console.log('Products table change detected:', payload);
+            loadProducts();
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'product_sizes'
+          },
+          (payload) => {
+            console.log('Product sizes table change detected:', payload);
+            loadProducts();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(productsSubscription);
+      };
+    }
+  }, [user]);
+
+  const addProduct = async (newProduct: Omit<Product, "id">) => {
+    if (!user) {
+      toast.error("يجب تسجيل الدخول أولاً");
+      return;
+    }
+
+    try {
+      console.log('Adding new product:', newProduct);
+      
+      // Insert product
+      const { data: productData, error: productError } = await supabase
+        .from('products')
+        .insert({
+          user_id: user.id,
+          name: newProduct.name
+        })
+        .select()
+        .single();
+
+      if (productError) {
+        console.error('Error inserting product:', productError);
+        throw productError;
+      }
+
+      console.log('Product inserted successfully:', productData);
+
+      // Insert product sizes
+      const productSizes = newProduct.sizes.map(size => ({
+        product_id: productData.id,
+        size: size.size,
+        cost: size.cost,
+        price: size.price
+      }));
+
+      console.log('Inserting product sizes:', productSizes);
+
+      const { error: sizesError } = await supabase
+        .from('product_sizes')
+        .insert(productSizes);
+
+      if (sizesError) {
+        console.error('Error inserting product sizes:', sizesError);
+        throw sizesError;
+      }
+
+      console.log('Product sizes inserted successfully');
+      toast.success("تم إضافة المنتج بنجاح");
+      await loadProducts();
+    } catch (error) {
+      console.error('Error adding product:', error);
+      toast.error("حدث خطأ في إضافة المنتج");
+    }
   };
 
-  const deleteProductSize = (productId: string, sizeToDelete: string) => {
-    setProducts(prevProducts => 
-      prevProducts.map(product => 
-        product.id === productId 
-          ? {
-              ...product, 
-              sizes: product.sizes.filter(size => size.size !== sizeToDelete)
-            } 
-          : product
-      )
-    );
-    toast.success("تم حذف المقاس بنجاح");
+  const updateProduct = async (id: string, updatedProduct: Product) => {
+    if (!user) {
+      toast.error("يجب تسجيل الدخول أولاً");
+      return;
+    }
+
+    try {
+      console.log('Updating product:', id, updatedProduct);
+      
+      // Update product name
+      const { error: productError } = await supabase
+        .from('products')
+        .update({ name: updatedProduct.name })
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (productError) {
+        console.error('Error updating product:', productError);
+        throw productError;
+      }
+
+      // Delete existing sizes
+      const { error: deleteError } = await supabase
+        .from('product_sizes')
+        .delete()
+        .eq('product_id', id);
+
+      if (deleteError) {
+        console.error('Error deleting product sizes:', deleteError);
+        throw deleteError;
+      }
+
+      // Insert new sizes
+      const productSizes = updatedProduct.sizes.map(size => ({
+        product_id: id,
+        size: size.size,
+        cost: size.cost,
+        price: size.price
+      }));
+
+      const { error: sizesError } = await supabase
+        .from('product_sizes')
+        .insert(productSizes);
+
+      if (sizesError) {
+        console.error('Error inserting new product sizes:', sizesError);
+        throw sizesError;
+      }
+
+      console.log('Product updated successfully');
+      toast.success("تم تحديث المنتج بنجاح");
+      await loadProducts();
+    } catch (error) {
+      console.error('Error updating product:', error);
+      toast.error("حدث خطأ في تحديث المنتج");
+    }
   };
 
-  const clearAllProducts = () => {
-    setProducts(DEFAULT_PRODUCTS);
-    localStorage.setItem("products", JSON.stringify(DEFAULT_PRODUCTS));
-    toast.success("تم إعادة تعيين المنتجات");
+  const deleteProduct = async (id: string) => {
+    if (!user) {
+      toast.error("يجب تسجيل الدخول أولاً");
+      return;
+    }
+
+    try {
+      console.log('Deleting product:', id);
+      
+      // Delete product (sizes will be deleted automatically due to foreign key)
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error deleting product:', error);
+        throw error;
+      }
+
+      console.log('Product deleted successfully');
+      toast.success("تم حذف المنتج بنجاح");
+      await loadProducts();
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      toast.error("حدث خطأ في حذف المنتج");
+    }
   };
 
   return (
-    <ProductContext.Provider 
-      value={{ 
-        products, 
-        addProduct, 
-        updateProduct, 
-        deleteProduct, 
-        addProductSize, 
-        updateProductSize, 
-        deleteProductSize,
-        clearAllProducts
-      }}
-    >
+    <ProductContext.Provider value={{
+      products,
+      addProduct,
+      updateProduct,
+      deleteProduct,
+      loading
+    }}>
       {children}
     </ProductContext.Provider>
   );
