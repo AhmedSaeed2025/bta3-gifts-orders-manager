@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +14,7 @@ import { useProductSync } from "@/hooks/useProductSync";
 import { useAuth } from "@/hooks/useAuth";
 
 const ProductsManagement = () => {
-  const { products, addProduct, updateProduct, deleteProduct, addProductSize, updateProductSize, deleteProductSize, clearAllProducts } = useProducts();
+  const { products, addProduct, updateProduct, deleteProduct, loading } = useProducts();
   const { syncStatus, syncToSupabase, syncFromSupabase } = useProductSync();
   const { user } = useAuth();
   
@@ -36,15 +37,18 @@ const ProductsManagement = () => {
   });
   
   // Product form handling
-  const handleSubmitProduct = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmitProduct = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
     if (editMode === "product" && editId) {
-      updateProduct(editId, productName);
-      setEditMode(null);
-      setEditId(null);
+      const product = products.find(p => p.id === editId);
+      if (product) {
+        await updateProduct(editId, { ...product, name: productName });
+        setEditMode(null);
+        setEditId(null);
+      }
     } else {
-      addProduct(productName);
+      await addProduct({ name: productName, sizes: [] });
     }
     
     setProductName("");
@@ -57,33 +61,34 @@ const ProductsManagement = () => {
   };
   
   // Size form handling
-  const handleSubmitSize = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmitSize = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
     if (!sizeForm.productId) return;
     
+    const product = products.find(p => p.id === sizeForm.productId);
+    if (!product) return;
+
     if (editMode === "size" && editSizeProduct && editSizeValue) {
-      updateProductSize(
-        editSizeProduct,
-        editSizeValue,
-        {
-          size: sizeForm.size,
-          cost: sizeForm.cost,
-          price: sizeForm.price
-        }
+      // Update existing size
+      const updatedSizes = product.sizes.map(size => 
+        size.size === editSizeValue 
+          ? { size: sizeForm.size, cost: sizeForm.cost, price: sizeForm.price }
+          : size
       );
+      await updateProduct(editSizeProduct, { ...product, sizes: updatedSizes });
       setEditMode(null);
       setEditSizeProduct(null);
       setEditSizeValue(null);
     } else {
-      addProductSize(
-        sizeForm.productId,
-        {
-          size: sizeForm.size,
-          cost: sizeForm.cost,
-          price: sizeForm.price
-        }
-      );
+      // Add new size
+      const newSize = {
+        size: sizeForm.size,
+        cost: sizeForm.cost,
+        price: sizeForm.price
+      };
+      const updatedSizes = [...product.sizes, newSize];
+      await updateProduct(sizeForm.productId, { ...product, sizes: updatedSizes });
     }
     
     setSizeForm({
@@ -106,6 +111,14 @@ const ProductsManagement = () => {
     setEditSizeValue(size.size);
   };
   
+  const handleDeleteSize = async (productId: string, sizeToDelete: string) => {
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+    
+    const updatedSizes = product.sizes.filter(size => size.size !== sizeToDelete);
+    await updateProduct(productId, { ...product, sizes: updatedSizes });
+  };
+  
   const handleAddSizeToProduct = (productId: string) => {
     setSizeForm({
       ...sizeForm,
@@ -114,6 +127,13 @@ const ProductsManagement = () => {
     setEditMode(null);
     setEditSizeProduct(null);
     setEditSizeValue(null);
+  };
+  
+  const handleClearAllProducts = async () => {
+    // Delete all products
+    for (const product of products) {
+      await deleteProduct(product.id);
+    }
   };
   
   const cancelEdit = () => {
@@ -129,6 +149,16 @@ const ProductsManagement = () => {
       price: 0
     });
   };
+
+  if (loading) {
+    return (
+      <Card className="mx-2 md:mx-0">
+        <CardContent className="flex items-center justify-center py-8">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="mx-2 md:mx-0">
@@ -386,7 +416,7 @@ const ProductsManagement = () => {
                                     <AlertDialogCancel>إلغاء</AlertDialogCancel>
                                     <AlertDialogAction 
                                       className="bg-red-500 hover:bg-red-600"
-                                      onClick={() => deleteProductSize(product.id, size.size)}
+                                      onClick={() => handleDeleteSize(product.id, size.size)}
                                     >
                                       حذف
                                     </AlertDialogAction>
@@ -447,7 +477,7 @@ const ProductsManagement = () => {
                 <AlertDialogCancel>إلغاء</AlertDialogCancel>
                 <AlertDialogAction 
                   className="bg-red-500 hover:bg-red-600"
-                  onClick={clearAllProducts}
+                  onClick={handleClearAllProducts}
                 >
                   إعادة تعيين
                 </AlertDialogAction>

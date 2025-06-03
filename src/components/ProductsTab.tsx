@@ -168,10 +168,7 @@ const ProductsTab = () => {
     addProduct, 
     updateProduct, 
     deleteProduct,
-    addProductSize,
-    updateProductSize,
-    deleteProductSize,
-    clearAllProducts
+    loading
   } = useProducts();
   
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
@@ -215,9 +212,32 @@ const ProductsTab = () => {
     setEditingSizeIndex(size);
   };
 
-  const handleDeleteSize = (size: string) => {
-    if (selectedProduct) {
-      deleteProductSize(selectedProduct, size);
+  const handleDeleteSize = async (size: string) => {
+    if (selectedProduct && product) {
+      const updatedSizes = product.sizes.filter(s => s.size !== size);
+      await updateProduct(selectedProduct, { ...product, sizes: updatedSizes });
+    }
+  };
+
+  const handleAddProductSize = async (productId: string, size: ProductSize) => {
+    const targetProduct = products.find(p => p.id === productId);
+    if (targetProduct) {
+      const updatedSizes = [...targetProduct.sizes, size];
+      await updateProduct(productId, { ...targetProduct, sizes: updatedSizes });
+    }
+  };
+
+  const handleUpdateProductSize = async (productId: string, oldSize: string, newSize: ProductSize) => {
+    const targetProduct = products.find(p => p.id === productId);
+    if (targetProduct) {
+      const updatedSizes = targetProduct.sizes.map(s => s.size === oldSize ? newSize : s);
+      await updateProduct(productId, { ...targetProduct, sizes: updatedSizes });
+    }
+  };
+
+  const handleClearAllProducts = async () => {
+    for (const product of products) {
+      await deleteProduct(product.id);
     }
   };
 
@@ -238,6 +258,14 @@ const ProductsTab = () => {
     setSearchQuery("");
   };
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-8">
+        <div className="text-center">جاري التحميل...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
       {/* Products List */}
@@ -257,8 +285,8 @@ const ProductsTab = () => {
                   <DialogHeader>
                     <DialogTitle>إضافة منتج جديد</DialogTitle>
                   </DialogHeader>
-                  <ProductForm onSubmit={(name) => {
-                    addProduct(name);
+                  <ProductForm onSubmit={async (name) => {
+                    await addProduct({ name, sizes: [] });
                     toast.success("تم إضافة المنتج بنجاح");
                   }} />
                 </DialogContent>
@@ -348,8 +376,8 @@ const ProductsTab = () => {
                       </DialogHeader>
                       <ProductForm 
                         initialName={product.name} 
-                        onSubmit={(name) => {
-                          updateProduct(product.id, name);
+                        onSubmit={async (name) => {
+                          await updateProduct(product.id, { ...product, name });
                           toast.success("تم تعديل المنتج بنجاح");
                         }} 
                       />
@@ -468,7 +496,7 @@ const ProductsTab = () => {
                   <DialogHeader>
                     <DialogTitle>إضافة منتج جديد</DialogTitle>
                   </DialogHeader>
-                  <ProductForm onSubmit={(name) => addProduct(name)} />
+                  <ProductForm onSubmit={async (name) => await addProduct({ name, sizes: [] })} />
                 </DialogContent>
               </Dialog>
             </div>
@@ -518,7 +546,7 @@ const ProductsTab = () => {
             <Button 
               variant="destructive" 
               onClick={() => {
-                clearAllProducts();
+                handleClearAllProducts();
                 setIsClearAllDialogOpen(false);
                 setSearchQuery("");
                 toast.success("تم إعادة تعيين المنتجات بنجاح");
@@ -538,9 +566,9 @@ const ProductsTab = () => {
           </SheetHeader>
           <div className="mt-4">
             <SizeForm
-              onSubmit={(size) => {
+              onSubmit={async (size) => {
                 if (selectedProduct) {
-                  addProductSize(selectedProduct, size);
+                  await handleAddProductSize(selectedProduct, size);
                   setIsAddSizeOpen(false);
                   toast.success("تم إضافة المقاس بنجاح");
                 }
@@ -568,9 +596,9 @@ const ProductsTab = () => {
                   product?.sizes.find(s => s.size === editingSizeIndex) || 
                   { size: editingSizeIndex, cost: 0, price: 0 }
                 }
-                onSubmit={(updatedSize) => {
+                onSubmit={async (updatedSize) => {
                   if (selectedProduct) {
-                    updateProductSize(selectedProduct, editingSizeIndex, updatedSize);
+                    await handleUpdateProductSize(selectedProduct, editingSizeIndex, updatedSize);
                     setEditingSizeIndex(null);
                     toast.success("تم تحديث المقاس بنجاح");
                   }
