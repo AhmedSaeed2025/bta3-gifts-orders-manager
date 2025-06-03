@@ -23,7 +23,6 @@ const OrderForm = () => {
     address: "",
     governorate: "",
     shippingCost: 0,
-    discount: 0,
     deposit: 0,
   });
   
@@ -51,7 +50,9 @@ const OrderForm = () => {
     const discountedPrice = item.price - (item.itemDiscount || 0);
     return sum + discountedPrice * item.quantity;
   }, 0);
-  const totalAmount = subtotal + customerData.shippingCost - customerData.discount - customerData.deposit;
+  
+  const totalAmount = subtotal + customerData.shippingCost - customerData.deposit;
+  
   const totalProfit = items.reduce((sum, item) => {
     const discountedPrice = item.price - (item.itemDiscount || 0);
     return sum + (discountedPrice - item.cost) * item.quantity;
@@ -158,7 +159,8 @@ const OrderForm = () => {
         items,
         total: totalAmount,
         profit: totalProfit,
-        status: "pending"
+        status: "pending",
+        discount: 0 // Always 0 since we removed global discount
       });
       
       // Reset form
@@ -170,7 +172,6 @@ const OrderForm = () => {
         address: "",
         governorate: "",
         shippingCost: 0,
-        discount: 0,
         deposit: 0,
       });
       setItems([]);
@@ -208,7 +209,7 @@ const OrderForm = () => {
             onRemoveItem={removeItem}
             subtotal={subtotal}
             shippingCost={customerData.shippingCost}
-            discount={customerData.discount}
+            discount={0}
             deposit={customerData.deposit}
             totalAmount={totalAmount}
           />

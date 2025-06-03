@@ -13,6 +13,7 @@ export type Database = {
         Row: {
           cost: number
           id: string
+          item_discount: number | null
           order_id: string
           price: number
           product_type: string
@@ -23,6 +24,7 @@ export type Database = {
         Insert: {
           cost: number
           id?: string
+          item_discount?: number | null
           order_id: string
           price: number
           product_type: string
@@ -33,6 +35,7 @@ export type Database = {
         Update: {
           cost?: number
           id?: string
+          item_discount?: number | null
           order_id?: string
           price?: number
           product_type?: string
@@ -220,12 +223,45 @@ export type Database = {
         }
         Relationships: []
       }
+      transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          id: string
+          order_serial: string
+          transaction_type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_serial: string
+          transaction_type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_serial?: string
+          transaction_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_serial_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

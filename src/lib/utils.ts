@@ -1,3 +1,4 @@
+
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { Order } from "@/types";
@@ -13,10 +14,9 @@ export function formatCurrency(amount: number): string {
 
 export function generateSerialNumber(existingOrders: Order[] = []): string {
   const now = new Date();
-  const year = now.getFullYear().toString().slice(-2); // آخر رقمين من السنة
-  const month = (now.getMonth() + 1).toString().padStart(2, '0'); // الشهر بتنسيق 01-12
+  const year = now.getFullYear().toString().slice(-2);
+  const month = (now.getMonth() + 1).toString().padStart(2, '0');
   
-  // البحث عن آخر رقم في نفس الشهر والسنة
   const currentPrefix = `INV-${year}${month}`;
   let maxSequence = 0;
   
@@ -52,8 +52,9 @@ export function generateMonthlyReport(orders: Order[]) {
         report[monthKey][item.productType] = { totalCost: 0, totalSales: 0 };
       }
       
+      const discountedPrice = item.price - (item.itemDiscount || 0);
       report[monthKey][item.productType].totalCost += item.cost * item.quantity;
-      report[monthKey][item.productType].totalSales += item.price * item.quantity;
+      report[monthKey][item.productType].totalSales += discountedPrice * item.quantity;
     });
   });
 
@@ -66,8 +67,9 @@ export function calculateTotals(orders: Order[]) {
 
   orders.forEach(order => {
     order.items?.forEach(item => {
+      const discountedPrice = item.price - (item.itemDiscount || 0);
       totalCost += item.cost * item.quantity;
-      totalSales += item.price * item.quantity;
+      totalSales += discountedPrice * item.quantity;
     });
   });
 
@@ -86,16 +88,9 @@ export function exportToExcel(tableId: string, filename: string) {
       return;
     }
 
-    // Create a new workbook
     const wb = XLSX.utils.book_new();
-    
-    // Convert table to worksheet
     const ws = XLSX.utils.table_to_sheet(table);
-    
-    // Add worksheet to workbook
     XLSX.utils.book_append_sheet(wb, ws, 'Report');
-    
-    // Write file
     XLSX.writeFile(wb, `${filename}.xlsx`);
     
     console.log('Excel file exported successfully');

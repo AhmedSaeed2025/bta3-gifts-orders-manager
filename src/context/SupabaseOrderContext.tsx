@@ -3,7 +3,6 @@ import { Order, OrderStatus, OrderItem } from "@/types";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { generateSerialNumber } from "@/lib/utils";
 
 interface OrderContextType {
   orders: Order[];
@@ -55,10 +54,11 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
           quantity: item.quantity,
           cost: Number(item.cost),
           price: Number(item.price),
-          profit: Number(item.profit)
+          profit: Number(item.profit),
+          itemDiscount: Number(item.item_discount || 0)
         })),
         shippingCost: Number(order.shipping_cost),
-        discount: Number(order.discount),
+        discount: Number(order.discount || 0),
         deposit: Number(order.deposit),
         total: Number(order.total),
         profit: Number(order.profit),
@@ -79,6 +79,37 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
     loadOrders();
   }, [user]);
 
+  const generateSerialNumber = async (): Promise<string> => {
+    try {
+      const { data, error } = await supabase.rpc('generate_serial_number');
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error generating serial number:', error);
+      // Fallback to client-side generation
+      const now = new Date();
+      const year = now.getFullYear().toString().slice(-2);
+      const month = (now.getMonth() + 1).toString().padStart(2, '0');
+      const currentPrefix = `INV-${year}${month}`;
+      let maxSequence = 0;
+      
+      orders.forEach(order => {
+        if (order.serial.startsWith(currentPrefix)) {
+          const sequencePart = order.serial.split('-')[2];
+          if (sequencePart) {
+            const sequenceNum = parseInt(sequencePart);
+            if (!isNaN(sequenceNum) && sequenceNum > maxSequence) {
+              maxSequence = sequenceNum;
+            }
+          }
+        }
+      });
+      
+      const nextSequence = (maxSequence + 1).toString().padStart(4, '0');
+      return `${currentPrefix}-${nextSequence}`;
+    }
+  };
+
   const addOrder = async (newOrder: Omit<Order, "serial" | "dateCreated">) => {
     if (!user) {
       toast.error("يجب تسجيل الدخول أولاً");
@@ -86,7 +117,7 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
     }
 
     try {
-      const serial = generateSerialNumber(orders);
+      const serial = await generateSerialNumber();
       
       // Insert order
       const { data: orderData, error: orderError } = await supabase
@@ -101,7 +132,7 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
           address: newOrder.address,
           governorate: newOrder.governorate,
           shipping_cost: newOrder.shippingCost,
-          discount: newOrder.discount,
+          discount: newOrder.discount || 0,
           deposit: newOrder.deposit,
           total: newOrder.total,
           profit: newOrder.profit,
@@ -120,7 +151,8 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
         quantity: item.quantity,
         cost: item.cost,
         price: item.price,
-        profit: item.profit
+        profit: item.profit,
+        item_discount: item.itemDiscount || 0
       }));
 
       const { error: itemsError } = await supabase
