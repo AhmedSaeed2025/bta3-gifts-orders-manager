@@ -8,6 +8,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster"
 import { SupabaseOrderProvider } from "@/context/SupabaseOrderContext";
 import { TransactionProvider } from "@/context/TransactionContext";
+import { PriceProvider } from "@/context/PriceContext";
+import { ProductProvider } from "@/context/ProductContext";
 import EditOrder from "@/pages/EditOrder";
 import Auth from "@/components/Auth";
 import { useAuth } from "@/hooks/useAuth";
@@ -33,15 +35,19 @@ function AppContent() {
   return (
     <SupabaseOrderProvider>
       <TransactionProvider>
-        <div className="min-h-screen bg-gift-accent dark:bg-gray-900 transition-colors duration-300">
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/orders/:serial" element={<OrderDetails />} />
-            <Route path="/edit-order/:serial" element={<EditOrder />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          <Toaster />
-        </div>
+        <PriceProvider>
+          <ProductProvider>
+            <div className="min-h-screen bg-gift-accent dark:bg-gray-900 transition-colors duration-300">
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/orders/:serial" element={<OrderDetails />} />
+                <Route path="/edit-order/:serial" element={<EditOrder />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+              <Toaster />
+            </div>
+          </ProductProvider>
+        </PriceProvider>
       </TransactionProvider>
     </SupabaseOrderProvider>
   );
