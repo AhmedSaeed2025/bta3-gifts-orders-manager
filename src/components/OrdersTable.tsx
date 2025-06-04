@@ -9,6 +9,9 @@ import { useSupabaseOrders } from "@/context/SupabaseOrderContext";
 import { formatCurrency } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { 
   Edit, 
   Eye, 
@@ -18,7 +21,9 @@ import {
   RefreshCw,
   TrendingUp,
   Calendar,
-  DollarSign
+  DollarSign,
+  CreditCard,
+  Truck
 } from "lucide-react";
 import { 
   ResponsiveTable, 
@@ -33,6 +38,7 @@ const OrdersTable = () => {
   const { orders, loading, deleteOrder, updateOrderStatus } = useSupabaseOrders();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   // Filter states
   const [filterMonth, setFilterMonth] = useState<string>("all");
@@ -93,6 +99,7 @@ const OrdersTable = () => {
       totalCost += orderCost;
     });
 
+    // Corrected net profit calculation: Revenue - Cost - Shipping
     const netProfit = totalRevenue - totalCost - totalShipping;
 
     return {
@@ -105,7 +112,7 @@ const OrdersTable = () => {
   }, [filteredOrders]);
 
   const handleEditOrder = (serial: string) => {
-    navigate(`/orders/${serial}`);
+    navigate(`/edit-order/${serial}`);
   };
 
   const handleViewOrder = (serial: string) => {
@@ -120,6 +127,84 @@ const OrdersTable = () => {
 
   const handleStatusChange = async (index: number, newStatus: string) => {
     await updateOrderStatus(index, newStatus as any);
+  };
+
+  // Add transaction functions
+  const handleCollectOrder = async (order: any) => {
+    if (!user) {
+      toast.error("يجب تسجيل الدخول أولاً");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('transactions')
+        .insert({
+          user_id: user.id,
+          transaction_type: 'order_collection',
+          amount: order.total - (order.deposit || 0),
+          description: `تحصيل طلب رقم ${order.serial}`,
+          order_serial: order.serial
+        });
+
+      if (error) throw error;
+      toast.success("تم تسجيل تحصيل الطلب بنجاح");
+    } catch (error) {
+      console.error('Error recording order collection:', error);
+      toast.error("حدث خطأ في تسجيل تحصيل الطلب");
+    }
+  };
+
+  const handlePayShipping = async (order: any) => {
+    if (!user) {
+      toast.error("يجب تسجيل الدخول أولاً");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('transactions')
+        .insert({
+          user_id: user.id,
+          transaction_type: 'shipping_payment',
+          amount: order.shippingCost || 0,
+          description: `دفع شحن طلب رقم ${order.serial}`,
+          order_serial: order.serial
+        });
+
+      if (error) throw error;
+      toast.success("تم تسجيل دفع الشحن بنجاح");
+    } catch (error) {
+      console.error('Error recording shipping payment:', error);
+      toast.error("حدث خطأ في تسجيل دفع الشحن");
+    }
+  };
+
+  const handlePayCost = async (order: any) => {
+    if (!user) {
+      toast.error("يجب تسجيل الدخول أولاً");
+      return;
+    }
+
+    const orderCost = order.items?.reduce((sum: number, item: any) => sum + (item.cost * item.quantity), 0) || 0;
+
+    try {
+      const { error } = await supabase
+        .from('transactions')
+        .insert({
+          user_id: user.id,
+          transaction_type: 'cost_payment',
+          amount: orderCost,
+          description: `دفع تكلفة طلب رقم ${order.serial}`,
+          order_serial: order.serial
+        });
+
+      if (error) throw error;
+      toast.success("تم تسجيل دفع التكلفة بنجاح");
+    } catch (error) {
+      console.error('Error recording cost payment:', error);
+      toast.error("حدث خطأ في تسجيل دفع التكلفة");
+    }
   };
 
   const clearFilters = () => {
@@ -153,6 +238,7 @@ const OrdersTable = () => {
 
   const calculateOrderNetProfit = (order: any) => {
     const orderCost = order.items?.reduce((sum: number, item: any) => sum + (item.cost * item.quantity), 0) || 0;
+    // Corrected calculation: Revenue - Cost - Shipping
     return order.total - orderCost - (order.shippingCost || 0);
   };
 
@@ -235,7 +321,7 @@ const OrdersTable = () => {
                 <p className="text-orange-100 text-xs font-medium">إجمالي الشحن</p>
                 <p className={`${isMobile ? "text-sm" : "text-lg"} font-bold`}>{formatCurrency(summaryStats.totalShipping)}</p>
               </div>
-              <Package className="h-6 w-6 text-orange-200" />
+              <Truck className="h-6 w-6 text-orange-200" />
             </div>
           </CardContent>
         </Card>
@@ -364,6 +450,7 @@ const OrdersTable = () => {
                   <ResponsiveTableHeader className="font-semibold">إجمالي الطلب</ResponsiveTableHeader>
                   <ResponsiveTableHeader className="font-semibold">صافي الربح</ResponsiveTableHeader>
                   <ResponsiveTableHeader className="font-semibold">الحالة</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className="font-semibold">إجراءات مالية</ResponsiveTableHeader>
                   <ResponsiveTableHeader className="font-semibold">إجراءات</ResponsiveTableHeader>
                 </ResponsiveTableRow>
               </ResponsiveTableHead>
@@ -414,6 +501,37 @@ const OrdersTable = () => {
                         </Select>
                       </ResponsiveTableCell>
                       <ResponsiveTableCell>
+                        <div className="flex gap-1 flex-wrap">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleCollectOrder(order)}
+                            className="flex items-center gap-1 text-xs"
+                          >
+                            <DollarSign className="h-3 w-3" />
+                            تحصيل
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handlePayShipping(order)}
+                            className="flex items-center gap-1 text-xs"
+                          >
+                            <Truck className="h-3 w-3" />
+                            شحن
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handlePayCost(order)}
+                            className="flex items-center gap-1 text-xs"
+                          >
+                            <CreditCard className="h-3 w-3" />
+                            تكلفة
+                          </Button>
+                        </div>
+                      </ResponsiveTableCell>
+                      <ResponsiveTableCell>
                         <div className="flex gap-2">
                           <Button
                             size="sm"
@@ -448,7 +566,7 @@ const OrdersTable = () => {
                   ))
                 ) : (
                   <ResponsiveTableRow>
-                    <ResponsiveTableCell colSpan={isMobile ? 7 : 9} className="text-center py-8">
+                    <ResponsiveTableCell colSpan={isMobile ? 8 : 10} className="text-center py-8">
                       <div className="flex flex-col items-center gap-2">
                         <Package className="h-12 w-12 text-gray-400" />
                         <p className="text-gray-500 text-lg">لا توجد طلبات متاحة</p>

@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useSupabaseOrders } from "@/context/SupabaseOrderContext";
-import { formatCurrency, generateMonthlyReport, calculateTotals, exportToExcel } from "@/lib/utils";
+import { formatCurrency, generateMonthlyReport, exportToExcel } from "@/lib/utils";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { DownloadCloud, TrendingUp, TrendingDown, FileText, Download, Filter, RefreshCw } from "lucide-react";
 import { jsPDF } from "jspdf";
@@ -42,7 +42,31 @@ const ProfitReport = () => {
   }, [safeOrders, filterMonth, filterYear, filterProduct]);
   
   const monthlyReport = useMemo(() => generateMonthlyReport(filteredOrders), [filteredOrders]);
-  const { totalCost, totalSales, netProfit } = useMemo(() => calculateTotals(filteredOrders), [filteredOrders]);
+  
+  // Corrected totals calculation: Sales - Cost - Shipping
+  const calculateTotals = useMemo(() => {
+    if (!filteredOrders || filteredOrders.length === 0) {
+      return { totalCost: 0, totalSales: 0, totalShipping: 0, netProfit: 0 };
+    }
+
+    let totalCost = 0;
+    let totalSales = 0;
+    let totalShipping = 0;
+
+    filteredOrders.forEach(order => {
+      totalSales += order.total;
+      totalShipping += order.shippingCost || 0;
+      
+      // Calculate total cost for this order
+      const orderCost = order.items?.reduce((sum, item) => sum + (item.cost * item.quantity), 0) || 0;
+      totalCost += orderCost;
+    });
+
+    // Corrected net profit: Sales - Cost - Shipping
+    const netProfit = totalSales - totalCost - totalShipping;
+
+    return { totalCost, totalSales, totalShipping, netProfit };
+  }, [filteredOrders]);
 
   // Get available years, months, and products for filters
   const availableYears = useMemo(() => {
@@ -68,17 +92,20 @@ const ProfitReport = () => {
     return Object.entries(monthlyReport).map(([month, products]) => {
       let monthlyCost = 0;
       let monthlySales = 0;
+      let monthlyShipping = 0;
       
       Object.values(products).forEach(data => {
         monthlyCost += data.totalCost;
         monthlySales += data.totalSales;
+        monthlyShipping += data.totalShipping || 0;
       });
       
       return {
         name: month,
         تكاليف: monthlyCost,
         مبيعات: monthlySales,
-        أرباح: monthlySales - monthlyCost
+        شحن: monthlyShipping,
+        أرباح: monthlySales - monthlyCost - monthlyShipping
       };
     });
   }, [monthlyReport]);
@@ -283,13 +310,13 @@ const ProfitReport = () => {
 
       <div ref={reportRef} className="space-y-6">
         {/* Summary Cards */}
-        <div className={`grid gap-4 ${isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-3"}`}>
+        <div className={`grid gap-4 ${isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-4"}`}>
           <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white">
             <CardContent className="p-6">
               <div className="flex justify-between items-center">
                 <div>
                   <p className="text-red-100 text-sm font-medium">إجمالي التكاليف</p>
-                  <p className="text-3xl font-bold">{formatCurrency(totalCost)}</p>
+                  <p className="text-3xl font-bold">{formatCurrency(calculateTotals.totalCost)}</p>
                 </div>
                 <TrendingDown className="h-8 w-8 text-red-200" />
               </div>
@@ -301,9 +328,21 @@ const ProfitReport = () => {
               <div className="flex justify-between items-center">
                 <div>
                   <p className="text-blue-100 text-sm font-medium">إجمالي المبيعات</p>
-                  <p className="text-3xl font-bold">{formatCurrency(totalSales)}</p>
+                  <p className="text-3xl font-bold">{formatCurrency(calculateTotals.totalSales)}</p>
                 </div>
                 <TrendingUp className="h-8 w-8 text-blue-200" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white">
+            <CardContent className="p-6">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-orange-100 text-sm font-medium">إجمالي الشحن</p>
+                  <p className="text-3xl font-bold">{formatCurrency(calculateTotals.totalShipping)}</p>
+                </div>
+                <TrendingUp className="h-8 w-8 text-orange-200" />
               </div>
             </CardContent>
           </Card>
@@ -313,7 +352,7 @@ const ProfitReport = () => {
               <div className="flex justify-between items-center">
                 <div>
                   <p className="text-green-100 text-sm font-medium">صافي الربح</p>
-                  <p className="text-3xl font-bold">{formatCurrency(netProfit)}</p>
+                  <p className="text-3xl font-bold">{formatCurrency(calculateTotals.netProfit)}</p>
                 </div>
                 <TrendingUp className="h-8 w-8 text-green-200" />
               </div>
@@ -344,6 +383,7 @@ const ProfitReport = () => {
                     <Legend />
                     <Bar dataKey="تكاليف" fill="#ef4444" />
                     <Bar dataKey="مبيعات" fill="#3b82f6" />
+                    <Bar dataKey="شحن" fill="#f97316" />
                     <Bar dataKey="أرباح" fill="#22c55e" />
                   </BarChart>
                 </ResponsiveContainer>
@@ -366,6 +406,7 @@ const ProfitReport = () => {
                     <th className="text-right p-3 font-semibold">نوع المنتج</th>
                     <th className="text-right p-3 font-semibold">إجمالي التكاليف</th>
                     <th className="text-right p-3 font-semibold">إجمالي المبيعات</th>
+                    <th className="text-right p-3 font-semibold">إجمالي الشحن</th>
                     <th className="text-right p-3 font-semibold">صافي الربح</th>
                   </tr>
                 </thead>
@@ -378,13 +419,14 @@ const ProfitReport = () => {
                           <td className="p-3 border-b">{productType}</td>
                           <td className="p-3 border-b text-red-600 font-semibold">{formatCurrency(data.totalCost)}</td>
                           <td className="p-3 border-b text-blue-600 font-semibold">{formatCurrency(data.totalSales)}</td>
-                          <td className="p-3 border-b text-green-600 font-semibold">{formatCurrency(data.totalSales - data.totalCost)}</td>
+                          <td className="p-3 border-b text-orange-600 font-semibold">{formatCurrency(data.totalShipping || 0)}</td>
+                          <td className="p-3 border-b text-green-600 font-semibold">{formatCurrency(data.totalSales - data.totalCost - (data.totalShipping || 0))}</td>
                         </tr>
                       ))
                     )
                   ) : (
                     <tr>
-                      <td colSpan={5} className="text-center py-8">
+                      <td colSpan={6} className="text-center py-8">
                         <div className="flex flex-col items-center gap-2">
                           <FileText className="h-12 w-12 text-gray-400" />
                           <p className="text-gray-500 text-lg">لا توجد بيانات متاحة</p>

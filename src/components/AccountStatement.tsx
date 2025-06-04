@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -462,10 +461,15 @@ const AccountStatement = () => {
                         {transaction.description || "-"}
                       </ResponsiveTableCell>
                       <ResponsiveTableCell className={`font-semibold ${
-                        transaction.transaction_type === 'expense' ? 'text-red-600 dark:text-red-400' : 
-                        'text-green-600 dark:text-green-400'
+                        transaction.transaction_type === 'expense' || 
+                        transaction.transaction_type === 'shipping_payment' || 
+                        transaction.transaction_type === 'cost_payment' 
+                          ? 'text-red-600 dark:text-red-400' : 
+                          'text-green-600 dark:text-green-400'
                       }`}>
-                        {transaction.transaction_type === 'expense' ? '-' : ''}{formatCurrency(transaction.amount)}
+                        {(transaction.transaction_type === 'expense' || 
+                          transaction.transaction_type === 'shipping_payment' || 
+                          transaction.transaction_type === 'cost_payment') ? '-' : ''}{formatCurrency(transaction.amount)}
                       </ResponsiveTableCell>
                     </ResponsiveTableRow>
                   ))
