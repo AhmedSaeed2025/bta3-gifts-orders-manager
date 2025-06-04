@@ -1,7 +1,7 @@
 
 import React from "react";
 import Logo from "@/components/Logo";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/Tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import OrderForm from "@/components/OrderForm";
 import OrdersTable from "@/components/OrdersTable";
 import SummaryReport from "@/components/SummaryReport";

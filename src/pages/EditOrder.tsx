@@ -73,7 +73,16 @@ const EditOrder = () => {
             <CardTitle className="text-lg md:text-xl">تعديل الطلب - {order.serial}</CardTitle>
           </CardHeader>
           <CardContent>
-            <OrderForm editingOrder={order} />
+            <div className="mb-4 p-4 bg-blue-50 rounded-lg">
+              <h3 className="font-semibold mb-2">بيانات الطلب الحالي:</h3>
+              <p><strong>العميل:</strong> {order.customerData.name}</p>
+              <p><strong>رقم التليفون:</strong> {order.customerData.phone}</p>
+              <p><strong>العنوان:</strong> {order.customerData.address}</p>
+              <p><strong>إجمالي الطلب:</strong> {order.orderTotal} جنيه</p>
+            </div>
+            <div className="text-center text-gray-600">
+              <p>لتعديل الطلب، يرجى إنشاء طلب جديد وحذف الطلب الحالي من إدارة الطلبات</p>
+            </div>
           </CardContent>
         </Card>
       </div>
