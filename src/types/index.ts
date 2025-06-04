@@ -1,3 +1,4 @@
+
 export interface OrderItem {
   productType: string;
   size: string;
@@ -52,6 +53,7 @@ export interface MonthlyReport {
     [productType: string]: {
       totalCost: number;
       totalSales: number;
+      totalShipping: number;
     };
   };
 }
