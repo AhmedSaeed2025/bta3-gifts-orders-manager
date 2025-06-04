@@ -75,10 +75,10 @@ const EditOrder = () => {
           <CardContent>
             <div className="mb-4 p-4 bg-blue-50 rounded-lg">
               <h3 className="font-semibold mb-2">بيانات الطلب الحالي:</h3>
-              <p><strong>العميل:</strong> {order.customerData.name}</p>
-              <p><strong>رقم التليفون:</strong> {order.customerData.phone}</p>
-              <p><strong>العنوان:</strong> {order.customerData.address}</p>
-              <p><strong>إجمالي الطلب:</strong> {order.orderTotal} جنيه</p>
+              <p><strong>العميل:</strong> {order.clientName}</p>
+              <p><strong>رقم التليفون:</strong> {order.phone}</p>
+              <p><strong>العنوان:</strong> {order.address}</p>
+              <p><strong>إجمالي الطلب:</strong> {order.total} جنيه</p>
             </div>
             <div className="text-center text-gray-600">
               <p>لتعديل الطلب، يرجى إنشاء طلب جديد وحذف الطلب الحالي من إدارة الطلبات</p>
