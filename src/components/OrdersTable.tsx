@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,9 +32,11 @@ import {
   ResponsiveTableHeader, 
   ResponsiveTableCell 
 } from "@/components/ui/responsive-table";
+import { useTransactions } from "@/context/TransactionContext";
 
 const OrdersTable = () => {
   const { orders, loading, deleteOrder, updateOrderStatus } = useSupabaseOrders();
+  const { addTransaction, getTransactionsByOrderSerial } = useTransactions();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -131,80 +132,50 @@ const OrdersTable = () => {
 
   // Add transaction functions
   const handleCollectOrder = async (order: any) => {
-    if (!user) {
-      toast.error("يجب تسجيل الدخول أولاً");
-      return;
-    }
-
     try {
-      const { error } = await supabase
-        .from('transactions')
-        .insert({
-          user_id: user.id,
-          transaction_type: 'order_collection',
-          amount: order.total - (order.deposit || 0),
-          description: `تحصيل طلب رقم ${order.serial}`,
-          order_serial: order.serial
-        });
-
-      if (error) throw error;
-      toast.success("تم تسجيل تحصيل الطلب بنجاح");
+      const remainingAmount = order.total - (order.deposit || 0);
+      await addTransaction({
+        transaction_type: 'order_collection',
+        amount: remainingAmount,
+        description: `تحصيل طلب رقم ${order.serial} - العميل: ${order.clientName}`,
+        order_serial: order.serial
+      });
     } catch (error) {
       console.error('Error recording order collection:', error);
-      toast.error("حدث خطأ في تسجيل تحصيل الطلب");
     }
   };
 
   const handlePayShipping = async (order: any) => {
-    if (!user) {
-      toast.error("يجب تسجيل الدخول أولاً");
-      return;
-    }
-
     try {
-      const { error } = await supabase
-        .from('transactions')
-        .insert({
-          user_id: user.id,
-          transaction_type: 'shipping_payment',
-          amount: order.shippingCost || 0,
-          description: `دفع شحن طلب رقم ${order.serial}`,
-          order_serial: order.serial
-        });
-
-      if (error) throw error;
-      toast.success("تم تسجيل دفع الشحن بنجاح");
+      await addTransaction({
+        transaction_type: 'shipping_payment',
+        amount: order.shippingCost || 0,
+        description: `دفع شحن طلب رقم ${order.serial} - ${order.deliveryMethod}`,
+        order_serial: order.serial
+      });
     } catch (error) {
       console.error('Error recording shipping payment:', error);
-      toast.error("حدث خطأ في تسجيل دفع الشحن");
     }
   };
 
   const handlePayCost = async (order: any) => {
-    if (!user) {
-      toast.error("يجب تسجيل الدخول أولاً");
-      return;
-    }
-
-    const orderCost = order.items?.reduce((sum: number, item: any) => sum + (item.cost * item.quantity), 0) || 0;
-
     try {
-      const { error } = await supabase
-        .from('transactions')
-        .insert({
-          user_id: user.id,
-          transaction_type: 'cost_payment',
-          amount: orderCost,
-          description: `دفع تكلفة طلب رقم ${order.serial}`,
-          order_serial: order.serial
-        });
-
-      if (error) throw error;
-      toast.success("تم تسجيل دفع التكلفة بنجاح");
+      const orderCost = order.items?.reduce((sum: number, item: any) => sum + (item.cost * item.quantity), 0) || 0;
+      await addTransaction({
+        transaction_type: 'cost_payment',
+        amount: orderCost,
+        description: `دفع تكلفة طلب رقم ${order.serial} - تكلفة الإنتاج`,
+        order_serial: order.serial
+      });
     } catch (error) {
       console.error('Error recording cost payment:', error);
-      toast.error("حدث خطأ في تسجيل دفع التكلفة");
     }
+  };
+
+  // Check if transaction exists for an order
+  const hasTransaction = (orderSerial: string, transactionType: string) => {
+    const orderTransactions = getTransactionsByOrderSerial(orderSerial);
+    return orderTransactions.some(t => t.transaction_type === transactionType);
   };
 
   const clearFilters = () => {
@@ -504,30 +475,33 @@ const OrdersTable = () => {
                         <div className="flex gap-1 flex-wrap">
                           <Button
                             size="sm"
-                            variant="outline"
+                            variant={hasTransaction(order.serial, 'order_collection') ? "default" : "outline"}
                             onClick={() => handleCollectOrder(order)}
+                            disabled={hasTransaction(order.serial, 'order_collection')}
                             className="flex items-center gap-1 text-xs"
                           >
                             <DollarSign className="h-3 w-3" />
-                            تحصيل
+                            {hasTransaction(order.serial, 'order_collection') ? "تم التحصيل" : "تحصيل"}
                           </Button>
                           <Button
                             size="sm"
-                            variant="outline"
+                            variant={hasTransaction(order.serial, 'shipping_payment') ? "default" : "outline"}
                             onClick={() => handlePayShipping(order)}
+                            disabled={hasTransaction(order.serial, 'shipping_payment')}
                             className="flex items-center gap-1 text-xs"
                           >
                             <Truck className="h-3 w-3" />
-                            شحن
+                            {hasTransaction(order.serial, 'shipping_payment') ? "تم الدفع" : "شحن"}
                           </Button>
                           <Button
                             size="sm"
-                            variant="outline"
+                            variant={hasTransaction(order.serial, 'cost_payment') ? "default" : "outline"}
                             onClick={() => handlePayCost(order)}
+                            disabled={hasTransaction(order.serial, 'cost_payment')}
                             className="flex items-center gap-1 text-xs"
                           >
                             <CreditCard className="h-3 w-3" />
-                            تكلفة
+                            {hasTransaction(order.serial, 'cost_payment') ? "تم الدفع" : "تكلفة"}
                           </Button>
                         </div>
                       </ResponsiveTableCell>
