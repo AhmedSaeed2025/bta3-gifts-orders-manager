@@ -22,7 +22,8 @@ import {
   Calendar,
   DollarSign,
   CreditCard,
-  Truck
+  Truck,
+  X
 } from "lucide-react";
 import { 
   ResponsiveTable, 
@@ -36,7 +37,7 @@ import { useTransactions } from "@/context/TransactionContext";
 
 const OrdersTable = () => {
   const { orders, loading, deleteOrder, updateOrderStatus } = useSupabaseOrders();
-  const { addTransaction, getTransactionsByOrderSerial } = useTransactions();
+  const { addTransaction, deleteTransaction, getTransactionsByOrderSerial } = useTransactions();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -169,6 +170,22 @@ const OrdersTable = () => {
       });
     } catch (error) {
       console.error('Error recording cost payment:', error);
+    }
+  };
+
+  // Cancel transaction functions
+  const handleCancelTransaction = async (orderSerial: string, transactionType: string) => {
+    try {
+      const orderTransactions = getTransactionsByOrderSerial(orderSerial);
+      const transactionToCancel = orderTransactions.find(t => t.transaction_type === transactionType);
+      
+      if (transactionToCancel) {
+        await deleteTransaction(transactionToCancel.id);
+        toast.success("تم إلغاء المعاملة بنجاح");
+      }
+    } catch (error) {
+      console.error('Error canceling transaction:', error);
+      toast.error("حدث خطأ في إلغاء المعاملة");
     }
   };
 
@@ -473,36 +490,74 @@ const OrdersTable = () => {
                       </ResponsiveTableCell>
                       <ResponsiveTableCell>
                         <div className="flex gap-1 flex-wrap">
-                          <Button
-                            size="sm"
-                            variant={hasTransaction(order.serial, 'order_collection') ? "default" : "outline"}
-                            onClick={() => handleCollectOrder(order)}
-                            disabled={hasTransaction(order.serial, 'order_collection')}
-                            className="flex items-center gap-1 text-xs"
-                          >
-                            <DollarSign className="h-3 w-3" />
-                            {hasTransaction(order.serial, 'order_collection') ? "تم التحصيل" : "تحصيل"}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant={hasTransaction(order.serial, 'shipping_payment') ? "default" : "outline"}
-                            onClick={() => handlePayShipping(order)}
-                            disabled={hasTransaction(order.serial, 'shipping_payment')}
-                            className="flex items-center gap-1 text-xs"
-                          >
-                            <Truck className="h-3 w-3" />
-                            {hasTransaction(order.serial, 'shipping_payment') ? "تم الدفع" : "شحن"}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant={hasTransaction(order.serial, 'cost_payment') ? "default" : "outline"}
-                            onClick={() => handlePayCost(order)}
-                            disabled={hasTransaction(order.serial, 'cost_payment')}
-                            className="flex items-center gap-1 text-xs"
-                          >
-                            <CreditCard className="h-3 w-3" />
-                            {hasTransaction(order.serial, 'cost_payment') ? "تم الدفع" : "تكلفة"}
-                          </Button>
+                          {/* Order Collection Button */}
+                          {hasTransaction(order.serial, 'order_collection') ? (
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleCancelTransaction(order.serial, 'order_collection')}
+                              className="flex items-center gap-1 text-xs"
+                            >
+                              <X className="h-3 w-3" />
+                              إلغاء التحصيل
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleCollectOrder(order)}
+                              className="flex items-center gap-1 text-xs"
+                            >
+                              <DollarSign className="h-3 w-3" />
+                              تحصيل
+                            </Button>
+                          )}
+                          
+                          {/* Shipping Payment Button */}
+                          {hasTransaction(order.serial, 'shipping_payment') ? (
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleCancelTransaction(order.serial, 'shipping_payment')}
+                              className="flex items-center gap-1 text-xs"
+                            >
+                              <X className="h-3 w-3" />
+                              إلغاء الشحن
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handlePayShipping(order)}
+                              className="flex items-center gap-1 text-xs"
+                            >
+                              <Truck className="h-3 w-3" />
+                              شحن
+                            </Button>
+                          )}
+                          
+                          {/* Cost Payment Button */}
+                          {hasTransaction(order.serial, 'cost_payment') ? (
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleCancelTransaction(order.serial, 'cost_payment')}
+                              className="flex items-center gap-1 text-xs"
+                            >
+                              <X className="h-3 w-3" />
+                              إلغاء التكلفة
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handlePayCost(order)}
+                              className="flex items-center gap-1 text-xs"
+                            >
+                              <CreditCard className="h-3 w-3" />
+                              تكلفة
+                            </Button>
+                          )}
                         </div>
                       </ResponsiveTableCell>
                       <ResponsiveTableCell>
