@@ -1,22 +1,25 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useSupabaseOrders } from "@/context/SupabaseOrderContext";
-import { ORDER_STATUS_LABELS, OrderStatus } from "@/types";
-import { formatCurrency } from "@/lib/utils";
-import { useNavigate } from "react-router-dom";
-import { Settings, Edit, DollarSign, Truck, CreditCard, CheckCircle, XCircle, Undo2, TrendingUp, Package, Users } from "lucide-react";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
-import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { useSupabaseOrders } from "@/context/SupabaseOrderContext";
+import { formatCurrency } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useNavigate } from "react-router-dom";
+import { 
+  Edit, 
+  Eye, 
+  Trash2, 
+  Package, 
+  Filter, 
+  RefreshCw,
+  TrendingUp,
+  Calendar,
+  DollarSign
+} from "lucide-react";
 import { 
   ResponsiveTable, 
   ResponsiveTableHead, 
@@ -26,218 +29,131 @@ import {
   ResponsiveTableCell 
 } from "@/components/ui/responsive-table";
 
-interface TransactionRecord {
-  id: string;
-  order_serial: string;
-  transaction_type: string;
-  amount: number;
-  description: string;
-  created_at: string;
-}
-
-const OrdersTable: React.FC = () => {
-  const { orders, updateOrderStatus, deleteOrder, loading } = useSupabaseOrders();
-  const [filter, setFilter] = useState<"all" | OrderStatus>("all");
-  const [transactions, setTransactions] = useState<TransactionRecord[]>([]);
-  const navigate = useNavigate();
+const OrdersTable = () => {
+  const { orders, loading, deleteOrder, updateOrderStatus } = useSupabaseOrders();
   const isMobile = useIsMobile();
-  const { user } = useAuth();
-  
-  // Transaction dialogs state
-  const [transactionDialog, setTransactionDialog] = useState(false);
-  const [transactionType, setTransactionType] = useState<'order_collection' | 'shipping_payment' | 'cost_payment'>('order_collection');
-  const [selectedOrderSerial, setSelectedOrderSerial] = useState<string>('');
-  const [transactionAmount, setTransactionAmount] = useState<number>(0);
-  const [transactionDescription, setTransactionDescription] = useState<string>('');
+  const navigate = useNavigate();
+
+  // Filter states
+  const [filterMonth, setFilterMonth] = useState<string>("all");
+  const [filterYear, setFilterYear] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterPaymentMethod, setFilterPaymentMethod] = useState<string>("all");
 
   const safeOrders = Array.isArray(orders) ? orders : [];
 
+  // Get available years for filter
+  const availableYears = React.useMemo(() => {
+    const years = new Set<string>();
+    safeOrders.forEach(order => {
+      const year = new Date(order.dateCreated).getFullYear().toString();
+      years.add(year);
+    });
+    return Array.from(years).sort().reverse();
+  }, [safeOrders]);
+
+  // Filter orders based on selected filters
+  const filteredOrders = React.useMemo(() => {
+    return safeOrders.filter(order => {
+      const orderDate = new Date(order.dateCreated);
+      const orderYear = orderDate.getFullYear().toString();
+      const orderMonth = (orderDate.getMonth() + 1).toString().padStart(2, '0');
+      
+      if (filterYear !== "all" && orderYear !== filterYear) return false;
+      if (filterMonth !== "all" && orderMonth !== filterMonth) return false;
+      if (filterStatus !== "all" && order.status !== filterStatus) return false;
+      if (filterPaymentMethod !== "all" && order.paymentMethod !== filterPaymentMethod) return false;
+      
+      return true;
+    });
+  }, [safeOrders, filterMonth, filterYear, filterStatus, filterPaymentMethod]);
+
   // Calculate summary statistics
   const summaryStats = React.useMemo(() => {
-    if (!safeOrders || safeOrders.length === 0) {
+    if (!filteredOrders || filteredOrders.length === 0) {
       return {
         totalOrders: 0,
         totalRevenue: 0,
-        totalShipping: 0,
         totalCost: 0,
-        netProfit: 0,
-        pendingOrders: 0,
-        shippedOrders: 0
+        totalShipping: 0,
+        netProfit: 0
       };
     }
 
     let totalRevenue = 0;
-    let totalShipping = 0;
     let totalCost = 0;
-    let pendingOrders = 0;
-    let shippedOrders = 0;
+    let totalShipping = 0;
 
-    safeOrders.forEach(order => {
+    filteredOrders.forEach(order => {
       totalRevenue += order.total;
       totalShipping += order.shippingCost || 0;
       
-      // Calculate total cost for items
-      if (order.items) {
-        order.items.forEach(item => {
-          totalCost += item.cost * item.quantity;
-        });
-      }
-      
-      if (order.status === 'pending') pendingOrders++;
-      if (order.status === 'shipped') shippedOrders++;
+      // Calculate total cost for this order
+      const orderCost = order.items?.reduce((sum, item) => sum + (item.cost * item.quantity), 0) || 0;
+      totalCost += orderCost;
     });
 
     const netProfit = totalRevenue - totalCost - totalShipping;
 
     return {
-      totalOrders: safeOrders.length,
+      totalOrders: filteredOrders.length,
       totalRevenue,
-      totalShipping,
       totalCost,
-      netProfit,
-      pendingOrders,
-      shippedOrders
+      totalShipping,
+      netProfit
     };
-  }, [safeOrders]);
+  }, [filteredOrders]);
 
-  // Load transactions
-  const loadTransactions = async () => {
-    if (!user) return;
-    
-    try {
-      const { data, error } = await supabase
-        .from('transactions')
-        .select('*')
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-      setTransactions(data || []);
-    } catch (error) {
-      console.error('Error loading transactions:', error);
-    }
-  };
-
-  useEffect(() => {
-    loadTransactions();
-  }, [user]);
-
-  const filteredOrders = filter === "all" 
-    ? safeOrders
-    : safeOrders.filter(order => order.status === filter);
-
-  const handleStatusChange = (index: number, status: OrderStatus) => {
-    updateOrderStatus(index, status);
-  };
-
-  const handleOrderDelete = (index: number) => {
-    deleteOrder(index);
-  };
-
-  const viewOrderDetails = (serial: string) => {
+  const handleEditOrder = (serial: string) => {
     navigate(`/orders/${serial}`);
   };
 
-  const openTransactionDialog = (orderSerial: string, type: 'order_collection' | 'shipping_payment' | 'cost_payment') => {
-    setSelectedOrderSerial(orderSerial);
-    setTransactionType(type);
-    setTransactionDialog(true);
-    
-    // Set default amounts based on transaction type
-    const order = orders.find(o => o.serial === orderSerial);
-    if (order) {
-      switch (type) {
-        case 'order_collection':
-          setTransactionAmount(order.total);
-          setTransactionDescription(`تحصيل قيمة الطلب ${orderSerial}`);
-          break;
-        case 'shipping_payment':
-          setTransactionAmount(order.shippingCost || 0);
-          setTransactionDescription(`دفع مصاريف شحن الطلب ${orderSerial}`);
-          break;
-        case 'cost_payment':
-          const totalCost = order.items?.reduce((sum, item) => sum + (item.cost * item.quantity), 0) || 0;
-          setTransactionAmount(totalCost);
-          setTransactionDescription(`دفع تكلفة الطلب ${orderSerial}`);
-          break;
-      }
+  const handleViewOrder = (serial: string) => {
+    navigate(`/orders/${serial}`);
+  };
+
+  const handleDeleteOrder = async (index: number) => {
+    if (window.confirm("هل أنت متأكد من حذف هذا الطلب؟")) {
+      await deleteOrder(index);
     }
   };
 
-  const handleTransactionSubmit = async () => {
-    if (!user || !selectedOrderSerial || transactionAmount <= 0) {
-      toast.error("يرجى ملء جميع البيانات المطلوبة");
-      return;
-    }
+  const handleStatusChange = async (index: number, newStatus: string) => {
+    await updateOrderStatus(index, newStatus as any);
+  };
 
-    try {
-      const { error } = await supabase
-        .from('transactions')
-        .insert({
-          user_id: user.id,
-          order_serial: selectedOrderSerial,
-          transaction_type: transactionType,
-          amount: transactionAmount,
-          description: transactionDescription
-        });
+  const clearFilters = () => {
+    setFilterMonth("all");
+    setFilterYear("all");
+    setFilterStatus("all");
+    setFilterPaymentMethod("all");
+  };
 
-      if (error) throw error;
-
-      toast.success("تم تسجيل المعاملة بنجاح");
-      setTransactionDialog(false);
-      setTransactionAmount(0);
-      setTransactionDescription('');
-      setSelectedOrderSerial('');
-      
-      // Reload transactions
-      await loadTransactions();
-    } catch (error) {
-      console.error('Error adding transaction:', error);
-      toast.error("حدث خطأ في تسجيل المعاملة");
+  const getStatusBadgeColor = (status: string) => {
+    switch (status) {
+      case 'shipped': return 'bg-green-100 text-green-800 border-green-300';
+      case 'confirmed': return 'bg-blue-100 text-blue-800 border-blue-300';
+      case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+      case 'sentToPrinter': return 'bg-purple-100 text-purple-800 border-purple-300';
+      case 'readyForDelivery': return 'bg-orange-100 text-orange-800 border-orange-300';
+      default: return 'bg-gray-100 text-gray-800 border-gray-300';
     }
   };
 
-  const getTransactionTypeLabel = (type: string) => {
-    switch (type) {
-      case 'order_collection':
-        return 'تحصيل الطلب';
-      case 'shipping_payment':
-        return 'دفع شحن';
-      case 'cost_payment':
-        return 'دفع تكلفة';
-      default:
-        return type;
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'pending': return 'في انتظار التأكيد';
+      case 'confirmed': return 'تم التأكيد';
+      case 'sentToPrinter': return 'تم الإرسال للمطبعة';
+      case 'readyForDelivery': return 'تحت التسليم';
+      case 'shipped': return 'تم الشحن';
+      default: return status;
     }
   };
 
-  const getOrderTransactions = (orderSerial: string) => {
-    return transactions.filter(t => t.order_serial === orderSerial);
-  };
-
-  const hasOrderTransaction = (orderSerial: string, transactionType: string) => {
-    return transactions.some(t => t.order_serial === orderSerial && t.transaction_type === transactionType);
-  };
-
-  const deleteTransaction = async (transactionId: string) => {
-    if (!user) {
-      toast.error("يجب تسجيل الدخول أولاً");
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('transactions')
-        .delete()
-        .eq('id', transactionId)
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-
-      toast.success("تم حذف المعاملة بنجاح");
-      await loadTransactions();
-    } catch (error) {
-      console.error('Error deleting transaction:', error);
-      toast.error("حدث خطأ في حذف المعاملة");
-    }
+  const calculateOrderNetProfit = (order: any) => {
+    const orderCost = order.items?.reduce((sum: number, item: any) => sum + (item.cost * item.quantity), 0) || 0;
+    return order.total - orderCost - (order.shippingCost || 0);
   };
 
   if (loading) {
@@ -255,8 +171,27 @@ const OrdersTable: React.FC = () => {
 
   return (
     <div className="rtl space-y-6" style={{ direction: 'rtl' }}>
+      {/* Header */}
+      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-l-4 border-l-blue-500">
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-500 rounded-lg">
+              <Package className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <CardTitle className={`${isMobile ? "text-xl" : "text-2xl"} font-bold text-gray-800 dark:text-white`}>
+                إدارة الطلبات
+              </CardTitle>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                إدارة وتتبع جميع الطلبات مع إمكانية التعديل والحذف
+              </p>
+            </div>
+          </div>
+        </CardHeader>
+      </Card>
+
       {/* Summary Statistics */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -264,7 +199,7 @@ const OrdersTable: React.FC = () => {
                 <p className="text-blue-100 text-xs font-medium">إجمالي الطلبات</p>
                 <p className={`${isMobile ? "text-lg" : "text-2xl"} font-bold`}>{summaryStats.totalOrders}</p>
               </div>
-              <Package className="h-6 w-6 text-blue-200" />
+              <Calendar className="h-6 w-6 text-blue-200" />
             </div>
           </CardContent>
         </Card>
@@ -276,19 +211,7 @@ const OrdersTable: React.FC = () => {
                 <p className="text-green-100 text-xs font-medium">إجمالي المبيعات</p>
                 <p className={`${isMobile ? "text-sm" : "text-lg"} font-bold`}>{formatCurrency(summaryStats.totalRevenue)}</p>
               </div>
-              <TrendingUp className="h-6 w-6 text-green-200" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-orange-100 text-xs font-medium">إجمالي الشحن</p>
-                <p className={`${isMobile ? "text-sm" : "text-lg"} font-bold`}>{formatCurrency(summaryStats.totalShipping)}</p>
-              </div>
-              <Truck className="h-6 w-6 text-orange-200" />
+              <DollarSign className="h-6 w-6 text-green-200" />
             </div>
           </CardContent>
         </Card>
@@ -300,7 +223,19 @@ const OrdersTable: React.FC = () => {
                 <p className="text-red-100 text-xs font-medium">إجمالي التكلفة</p>
                 <p className={`${isMobile ? "text-sm" : "text-lg"} font-bold`}>{formatCurrency(summaryStats.totalCost)}</p>
               </div>
-              <CreditCard className="h-6 w-6 text-red-200" />
+              <Package className="h-6 w-6 text-red-200" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-orange-100 text-xs font-medium">إجمالي الشحن</p>
+                <p className={`${isMobile ? "text-sm" : "text-lg"} font-bold`}>{formatCurrency(summaryStats.totalShipping)}</p>
+              </div>
+              <Package className="h-6 w-6 text-orange-200" />
             </div>
           </CardContent>
         </Card>
@@ -316,244 +251,204 @@ const OrdersTable: React.FC = () => {
             </div>
           </CardContent>
         </Card>
-
-        <Card className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-indigo-100 text-xs font-medium">طلبات منتظرة</p>
-                <p className={`${isMobile ? "text-lg" : "text-2xl"} font-bold`}>{summaryStats.pendingOrders}</p>
-              </div>
-              <Users className="h-6 w-6 text-indigo-200" />
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
-      <Card className={`${isMobile ? "mobile-card" : ""} bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 border-l-4 border-l-indigo-500`}>
-        <CardHeader className={`flex flex-row items-center justify-between space-y-0 pb-4 ${isMobile ? "card-header" : ""}`}>
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-indigo-500 rounded-lg">
-              <Settings className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <CardTitle className={`${isMobile ? "text-xl" : "text-2xl"} font-bold text-gray-800 dark:text-white`}>
-                إدارة الطلبات
-              </CardTitle>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                عرض وإدارة جميع الطلبات والمعاملات المالية
-              </p>
-            </div>
-          </div>
-          <div className={`${isMobile ? "w-32" : "w-64"}`}>
-            <Select 
-              value={filter}
-              onValueChange={(value) => setFilter(value as "all" | OrderStatus)}
-            >
-              <SelectTrigger className={`${isMobile ? "text-xs" : ""} shadow-lg`}>
-                <SelectValue placeholder="تصفية حسب الحالة" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">الكل</SelectItem>
-                <SelectItem value="pending">في انتظار التأكيد</SelectItem>
-                <SelectItem value="confirmed">تم التأكيد</SelectItem>
-                <SelectItem value="sentToPrinter">تم الأرسال للمطبعة</SelectItem>
-                <SelectItem value="readyForDelivery">تحت التسليم</SelectItem>
-                <SelectItem value="shipped">تم الشحن</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+      {/* Filters */}
+      <Card className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 border-l-4 border-l-indigo-500">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Filter className="h-5 w-5" />
+            فلاتر الطلبات
+          </CardTitle>
         </CardHeader>
-        <CardContent className={isMobile ? "card-content p-2" : "p-6"}>
+        <CardContent>
+          <div className={`grid gap-4 ${isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-5"}`}>
+            <div className="space-y-2">
+              <Label htmlFor="filterYear">السنة</Label>
+              <Select value={filterYear} onValueChange={setFilterYear}>
+                <SelectTrigger>
+                  <SelectValue placeholder="اختر السنة" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">جميع السنوات</SelectItem>
+                  {availableYears.map(year => (
+                    <SelectItem key={year} value={year}>{year}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="filterMonth">الشهر</Label>
+              <Select value={filterMonth} onValueChange={setFilterMonth}>
+                <SelectTrigger>
+                  <SelectValue placeholder="اختر الشهر" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">جميع الشهور</SelectItem>
+                  <SelectItem value="01">يناير</SelectItem>
+                  <SelectItem value="02">فبراير</SelectItem>
+                  <SelectItem value="03">مارس</SelectItem>
+                  <SelectItem value="04">أبريل</SelectItem>
+                  <SelectItem value="05">مايو</SelectItem>
+                  <SelectItem value="06">يونيو</SelectItem>
+                  <SelectItem value="07">يوليو</SelectItem>
+                  <SelectItem value="08">أغسطس</SelectItem>
+                  <SelectItem value="09">سبتمبر</SelectItem>
+                  <SelectItem value="10">أكتوبر</SelectItem>
+                  <SelectItem value="11">نوفمبر</SelectItem>
+                  <SelectItem value="12">ديسمبر</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="filterStatus">الحالة</Label>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger>
+                  <SelectValue placeholder="اختر الحالة" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">جميع الحالات</SelectItem>
+                  <SelectItem value="pending">في انتظار التأكيد</SelectItem>
+                  <SelectItem value="confirmed">تم التأكيد</SelectItem>
+                  <SelectItem value="sentToPrinter">تم الإرسال للمطبعة</SelectItem>
+                  <SelectItem value="readyForDelivery">تحت التسليم</SelectItem>
+                  <SelectItem value="shipped">تم الشحن</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="filterPaymentMethod">طريقة السداد</Label>
+              <Select value={filterPaymentMethod} onValueChange={setFilterPaymentMethod}>
+                <SelectTrigger>
+                  <SelectValue placeholder="اختر طريقة السداد" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">جميع الطرق</SelectItem>
+                  <SelectItem value="كاش">كاش</SelectItem>
+                  <SelectItem value="فيزا">فيزا</SelectItem>
+                  <SelectItem value="تحويل">تحويل</SelectItem>
+                  <SelectItem value="آجل">آجل</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="flex items-end">
+              <Button 
+                onClick={clearFilters}
+                variant="outline"
+                className="w-full flex items-center gap-2"
+              >
+                <RefreshCw className="h-4 w-4" />
+                مسح الفلاتر
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Orders Table */}
+      <Card>
+        <CardContent className={`${isMobile ? "p-2" : "p-6"}`}>
           <div className="overflow-x-auto">
             <ResponsiveTable className="w-full">
               <ResponsiveTableHead>
                 <ResponsiveTableRow className="bg-gray-50 dark:bg-gray-800">
                   <ResponsiveTableHeader className="font-semibold">رقم الطلب</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className="font-semibold">التاريخ</ResponsiveTableHeader>
                   <ResponsiveTableHeader className="font-semibold">اسم العميل</ResponsiveTableHeader>
                   {!isMobile && <ResponsiveTableHeader className="font-semibold">التليفون</ResponsiveTableHeader>}
+                  <ResponsiveTableHeader className="font-semibold">طريقة السداد</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className="font-semibold">إجمالي الطلب</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className="font-semibold">صافي الربح</ResponsiveTableHeader>
                   <ResponsiveTableHeader className="font-semibold">الحالة</ResponsiveTableHeader>
-                  <ResponsiveTableHeader className="font-semibold">تعديل الحالة</ResponsiveTableHeader>
-                  <ResponsiveTableHeader className="font-semibold">عدد المنتجات</ResponsiveTableHeader>
-                  <ResponsiveTableHeader className="font-semibold">المجموع</ResponsiveTableHeader>
-                  <ResponsiveTableHeader className="font-semibold">حالة التحصيل</ResponsiveTableHeader>
                   <ResponsiveTableHeader className="font-semibold">إجراءات</ResponsiveTableHeader>
                 </ResponsiveTableRow>
               </ResponsiveTableHead>
               <ResponsiveTableBody>
                 {filteredOrders.length > 0 ? (
-                  filteredOrders.map((order, index) => {
-                    const orderTransactions = getOrderTransactions(order.serial);
-                    const isCollected = hasOrderTransaction(order.serial, 'order_collection');
-                    const hasShippingPayment = hasOrderTransaction(order.serial, 'shipping_payment');
-                    const hasCostPayment = hasOrderTransaction(order.serial, 'cost_payment');
-
-                    return (
-                      <ResponsiveTableRow key={order.serial} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                        <ResponsiveTableCell className="font-medium">{order.serial}</ResponsiveTableCell>
-                        <ResponsiveTableCell>{order.clientName}</ResponsiveTableCell>
-                        {!isMobile && <ResponsiveTableCell>{order.phone}</ResponsiveTableCell>}
-                        <ResponsiveTableCell>
-                          <Badge 
+                  filteredOrders.map((order, index) => (
+                    <ResponsiveTableRow key={order.serial} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                      <ResponsiveTableCell className="font-medium text-blue-600 dark:text-blue-400">
+                        {order.serial}
+                      </ResponsiveTableCell>
+                      <ResponsiveTableCell className="text-gray-600 dark:text-gray-300">
+                        {new Date(order.dateCreated).toLocaleDateString('ar-EG')}
+                      </ResponsiveTableCell>
+                      <ResponsiveTableCell className="font-medium text-gray-800 dark:text-white">
+                        {order.clientName}
+                      </ResponsiveTableCell>
+                      {!isMobile && (
+                        <ResponsiveTableCell className="text-gray-600 dark:text-gray-300">
+                          {order.phone}
+                        </ResponsiveTableCell>
+                      )}
+                      <ResponsiveTableCell className="text-gray-600 dark:text-gray-300">
+                        {order.paymentMethod}
+                      </ResponsiveTableCell>
+                      <ResponsiveTableCell className="font-semibold text-green-600 dark:text-green-400">
+                        {formatCurrency(order.total)}
+                      </ResponsiveTableCell>
+                      <ResponsiveTableCell className="font-semibold text-purple-600 dark:text-purple-400">
+                        {formatCurrency(calculateOrderNetProfit(order))}
+                      </ResponsiveTableCell>
+                      <ResponsiveTableCell>
+                        <Select
+                          value={order.status}
+                          onValueChange={(value) => handleStatusChange(index, value)}
+                        >
+                          <SelectTrigger className="w-auto min-w-[150px]">
+                            <Badge variant="outline" className={getStatusBadgeColor(order.status)}>
+                              {getStatusLabel(order.status)}
+                            </Badge>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending">في انتظار التأكيد</SelectItem>
+                            <SelectItem value="confirmed">تم التأكيد</SelectItem>
+                            <SelectItem value="sentToPrinter">تم الإرسال للمطبعة</SelectItem>
+                            <SelectItem value="readyForDelivery">تحت التسليم</SelectItem>
+                            <SelectItem value="shipped">تم الشحن</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </ResponsiveTableCell>
+                      <ResponsiveTableCell>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
                             variant="outline"
-                            className={`${
-                              order.status === 'shipped' ? 'bg-green-100 text-green-800 border-green-300' :
-                              order.status === 'confirmed' ? 'bg-blue-100 text-blue-800 border-blue-300' :
-                              order.status === 'pending' ? 'bg-yellow-100 text-yellow-800 border-yellow-300' :
-                              'bg-gray-100 text-gray-800 border-gray-300'
-                            }`}
+                            onClick={() => handleEditOrder(order.serial)}
+                            className="flex items-center gap-1"
                           >
-                            {ORDER_STATUS_LABELS[order.status]}
-                          </Badge>
-                        </ResponsiveTableCell>
-                        <ResponsiveTableCell>
-                          <Select 
-                            value={order.status}
-                            onValueChange={(value) => handleStatusChange(index, value as OrderStatus)}
+                            <Edit className="h-3 w-3" />
+                            {!isMobile && "تعديل"}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleViewOrder(order.serial)}
+                            className="flex items-center gap-1"
                           >
-                            <SelectTrigger className="h-8 text-xs">
-                              <SelectValue placeholder="اختر الحالة" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="pending">في انتظار التأكيد</SelectItem>
-                              <SelectItem value="confirmed">تم التأكيد</SelectItem>
-                              <SelectItem value="sentToPrinter">تم الأرسال للمطبعة</SelectItem>
-                              <SelectItem value="readyForDelivery">تحت التسليم</SelectItem>
-                              <SelectItem value="shipped">تم الشحن</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </ResponsiveTableCell>
-                        <ResponsiveTableCell className="text-center">{order.items && order.items.length ? order.items.length : 0}</ResponsiveTableCell>
-                        <ResponsiveTableCell className="font-semibold">{formatCurrency(order.total)}</ResponsiveTableCell>
-                        <ResponsiveTableCell>
-                          <div className="flex flex-wrap gap-1">
-                            {isCollected && (
-                              <Badge className="bg-green-100 text-green-800 text-xs">
-                                <CheckCircle className="w-3 h-3 mr-1" />
-                                تم التحصيل
-                              </Badge>
-                            )}
-                            {hasShippingPayment && (
-                              <Badge className="bg-blue-100 text-blue-800 text-xs">
-                                <Truck className="w-3 h-3 mr-1" />
-                                شحن مدفوع
-                              </Badge>
-                            )}
-                            {hasCostPayment && (
-                              <Badge className="bg-purple-100 text-purple-800 text-xs">
-                                <CreditCard className="w-3 h-3 mr-1" />
-                                تكلفة مدفوعة
-                              </Badge>
-                            )}
-                          </div>
-                        </ResponsiveTableCell>
-                        <ResponsiveTableCell>
-                          <div className={`flex gap-1 ${isMobile ? "flex-col" : "flex-wrap"}`}>
-                            <Button 
-                              className={`${isMobile ? "h-8 text-xs" : "h-8 text-xs"} bg-blue-500 hover:bg-blue-600 shadow-sm`}
-                              onClick={() => viewOrderDetails(order.serial)}
-                            >
-                              {isMobile ? <Edit size={12} /> : "عرض"}
-                            </Button>
-                            
-                            {!isCollected ? (
-                              <Button
-                                className={`${isMobile ? "h-8 text-xs" : "h-8 text-xs"} bg-green-600 hover:bg-green-700 shadow-sm`}
-                                onClick={() => openTransactionDialog(order.serial, 'order_collection')}
-                              >
-                                {isMobile ? <DollarSign size={12} /> : "تحصيل"}
-                              </Button>
-                            ) : (
-                              <Button
-                                className={`${isMobile ? "h-8 text-xs" : "h-8 text-xs"} bg-red-500 hover:bg-red-600 shadow-sm`}
-                                onClick={() => {
-                                  const collectionTransaction = orderTransactions.find(t => t.transaction_type === 'order_collection');
-                                  if (collectionTransaction) {
-                                    deleteTransaction(collectionTransaction.id);
-                                  }
-                                }}
-                                title="إلغاء التحصيل"
-                              >
-                                <XCircle size={12} />
-                              </Button>
-                            )}
-                            
-                            {!hasShippingPayment ? (
-                              <Button
-                                className={`${isMobile ? "h-8 text-xs" : "h-8 text-xs"} bg-orange-500 hover:bg-orange-600 shadow-sm`}
-                                onClick={() => openTransactionDialog(order.serial, 'shipping_payment')}
-                              >
-                                {isMobile ? <Truck size={12} /> : "شحن"}
-                              </Button>
-                            ) : (
-                              <Button
-                                className={`${isMobile ? "h-8 text-xs" : "h-8 text-xs"} bg-red-500 hover:bg-red-600 shadow-sm`}
-                                onClick={() => {
-                                  const shippingTransaction = orderTransactions.find(t => t.transaction_type === 'shipping_payment');
-                                  if (shippingTransaction) {
-                                    deleteTransaction(shippingTransaction.id);
-                                  }
-                                }}
-                                title="إلغاء دفع الشحن"
-                              >
-                                <XCircle size={12} />
-                              </Button>
-                            )}
-                            
-                            {!hasCostPayment ? (
-                              <Button
-                                className={`${isMobile ? "h-8 text-xs" : "h-8 text-xs"} bg-purple-500 hover:bg-purple-600 shadow-sm`}
-                                onClick={() => openTransactionDialog(order.serial, 'cost_payment')}
-                              >
-                                {isMobile ? <CreditCard size={12} /> : "تكلفة"}
-                              </Button>
-                            ) : (
-                              <Button
-                                className={`${isMobile ? "h-8 text-xs" : "h-8 text-xs"} bg-red-500 hover:bg-red-600 shadow-sm`}
-                                onClick={() => {
-                                  const costTransaction = orderTransactions.find(t => t.transaction_type === 'cost_payment');
-                                  if (costTransaction) {
-                                    deleteTransaction(costTransaction.id);
-                                  }
-                                }}
-                                title="إلغاء دفع التكلفة"
-                              >
-                                <XCircle size={12} />
-                              </Button>
-                            )}
-                            
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button className={`${isMobile ? "h-8 text-xs" : "h-8 text-xs"} bg-red-600 hover:bg-red-700 shadow-sm`}>
-                                  حذف
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>تأكيد حذف الطلب</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    هل أنت متأكد من حذف هذا الطلب؟ لا يمكن التراجع عن هذا الإجراء.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                                  <AlertDialogAction 
-                                    className="bg-red-600 hover:bg-red-700"
-                                    onClick={() => handleOrderDelete(index)}
-                                  >
-                                    حذف
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
-                        </ResponsiveTableCell>
-                      </ResponsiveTableRow>
-                    );
-                  })
+                            <Eye className="h-3 w-3" />
+                            {!isMobile && "عرض"}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleDeleteOrder(index)}
+                            className="flex items-center gap-1"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                            {!isMobile && "حذف"}
+                          </Button>
+                        </div>
+                      </ResponsiveTableCell>
+                    </ResponsiveTableRow>
+                  ))
                 ) : (
                   <ResponsiveTableRow>
-                    <ResponsiveTableCell colSpan={isMobile ? 8 : 9} className="text-center py-8">
+                    <ResponsiveTableCell colSpan={isMobile ? 7 : 9} className="text-center py-8">
                       <div className="flex flex-col items-center gap-2">
                         <Package className="h-12 w-12 text-gray-400" />
                         <p className="text-gray-500 text-lg">لا توجد طلبات متاحة</p>
@@ -564,53 +459,6 @@ const OrdersTable: React.FC = () => {
               </ResponsiveTableBody>
             </ResponsiveTable>
           </div>
-
-          {/* Transaction Dialog */}
-          <Dialog open={transactionDialog} onOpenChange={setTransactionDialog}>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle className="text-lg">{getTransactionTypeLabel(transactionType)}</DialogTitle>
-              </DialogHeader>
-              
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="transactionAmount">المبلغ</Label>
-                  <Input 
-                    id="transactionAmount"
-                    type="number"
-                    value={transactionAmount}
-                    onChange={(e) => setTransactionAmount(Number(e.target.value))}
-                    step={0.01}
-                    min={0}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="transactionDescription">الوصف</Label>
-                  <Input 
-                    id="transactionDescription"
-                    value={transactionDescription}
-                    onChange={(e) => setTransactionDescription(e.target.value)}
-                  />
-                </div>
-                
-                <div className="flex justify-end gap-2">
-                  <Button 
-                    variant="outline"
-                    onClick={() => setTransactionDialog(false)}
-                  >
-                    إلغاء
-                  </Button>
-                  <Button 
-                    onClick={handleTransactionSubmit}
-                    className="bg-gift-primary hover:bg-gift-primaryHover"
-                  >
-                    تسجيل المعاملة
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
         </CardContent>
       </Card>
     </div>

@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { useSupabaseOrders } from "@/context/SupabaseOrderContext";
 import { formatCurrency, exportToExcel } from "@/lib/utils";
-import { DownloadCloud, FileText, Download, TrendingUp, Calendar, Edit, Filter, RefreshCw, XCircle } from "lucide-react";
+import { DownloadCloud, FileText, Download, TrendingUp, Calendar, Edit, Filter, RefreshCw } from "lucide-react";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 import { toast } from "sonner";
@@ -131,7 +131,7 @@ const SummaryReport = () => {
     return text.substring(0, maxLength) + "...";
   };
 
-  // Calculate summary statistics for filtered orders
+  // Calculate summary statistics for filtered orders with corrected profit calculation
   const summaryStats = React.useMemo(() => {
     if (!filteredOrders || filteredOrders.length === 0) {
       return {
@@ -140,6 +140,8 @@ const SummaryReport = () => {
         totalDeposits: 0,
         netRevenue: 0,
         totalProfit: 0,
+        totalCost: 0,
+        totalShipping: 0,
         avgOrderValue: 0
       };
     }
@@ -147,15 +149,22 @@ const SummaryReport = () => {
     const totalOrders = filteredOrders.length;
     let totalRevenue = 0;
     let totalDeposits = 0;
-    let totalProfit = 0;
+    let totalCost = 0;
+    let totalShipping = 0;
 
     filteredOrders.forEach(order => {
       totalRevenue += order.total;
       totalDeposits += order.deposit || 0;
-      totalProfit += order.profit;
+      totalShipping += order.shippingCost || 0;
+      
+      // Calculate total cost for this order
+      const orderCost = order.items?.reduce((sum, item) => sum + (item.cost * item.quantity), 0) || 0;
+      totalCost += orderCost;
     });
 
     const netRevenue = totalRevenue - totalDeposits;
+    // Corrected profit calculation: Revenue - Cost - Shipping
+    const totalProfit = totalRevenue - totalCost - totalShipping;
 
     return {
       totalOrders,
@@ -163,6 +172,8 @@ const SummaryReport = () => {
       totalDeposits,
       netRevenue,
       totalProfit,
+      totalCost,
+      totalShipping,
       avgOrderValue: totalOrders > 0 ? totalRevenue / totalOrders : 0
     };
   }, [filteredOrders]);
@@ -300,7 +311,7 @@ const SummaryReport = () => {
       </Card>
 
       {/* Summary Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
         <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -325,12 +336,24 @@ const SummaryReport = () => {
           </CardContent>
         </Card>
 
+        <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-red-100 text-sm font-medium">إجمالي التكلفة</p>
+                <p className="text-2xl font-bold">{formatCurrency(summaryStats.totalCost)}</p>
+              </div>
+              <TrendingUp className="h-8 w-8 text-red-200" />
+            </div>
+          </CardContent>
+        </Card>
+
         <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-orange-100 text-sm font-medium">إجمالي العربون</p>
-                <p className="text-2xl font-bold">{formatCurrency(summaryStats.totalDeposits)}</p>
+                <p className="text-orange-100 text-sm font-medium">إجمالي الشحن</p>
+                <p className="text-2xl font-bold">{formatCurrency(summaryStats.totalShipping)}</p>
               </div>
               <TrendingUp className="h-8 w-8 text-orange-200" />
             </div>

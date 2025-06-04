@@ -8,6 +8,7 @@ import { formatCurrency } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
+import AddTransactionDialog from "./AddTransactionDialog";
 import { 
   Banknote, 
   TrendingUp, 
@@ -18,7 +19,9 @@ import {
   Package,
   Calculator,
   FileText,
-  Activity
+  Activity,
+  Minus,
+  Plus
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -101,7 +104,7 @@ const AccountStatement = () => {
     });
   }, [transactions, filterMonth, filterYear, filterType]);
 
-  // Calculate comprehensive statistics
+  // Calculate comprehensive statistics with corrected profit calculation
   const accountSummary = React.useMemo(() => {
     const totalRevenue = filteredTransactions
       .filter(t => t.transaction_type === 'order_collection')
@@ -115,7 +118,15 @@ const AccountStatement = () => {
       .filter(t => t.transaction_type === 'cost_payment')
       .reduce((sum, t) => sum + t.amount, 0);
 
-    // Calculate unpaid costs from all orders
+    const totalExpenses = filteredTransactions
+      .filter(t => t.transaction_type === 'expense')
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    const totalOtherIncome = filteredTransactions
+      .filter(t => t.transaction_type === 'other_income')
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    // Calculate unpaid costs and totals from all orders
     let totalUnpaidCosts = 0;
     let totalOrderCosts = 0;
     let totalOrderRevenue = 0;
@@ -137,22 +148,28 @@ const AccountStatement = () => {
       }
     });
 
-    const netProfit = totalRevenue - totalCostPaid - totalShippingPaid;
+    // Corrected net profit calculation: Revenue - Costs - Shipping - Expenses + Other Income
+    const netProfit = totalRevenue - totalCostPaid - totalShippingPaid - totalExpenses + totalOtherIncome;
     const totalOrders = safeOrders.length;
     const avgOrderValue = totalOrders > 0 ? totalOrderRevenue / totalOrders : 0;
+
+    // Cash flow calculation
+    const cashFlow = totalRevenue + totalOtherIncome - totalCostPaid - totalShippingPaid - totalExpenses;
 
     return {
       totalRevenue,
       totalShippingPaid,
       totalCostPaid,
       totalUnpaidCosts,
+      totalExpenses,
+      totalOtherIncome,
       netProfit,
       totalOrders,
       totalOrderRevenue,
       totalShippingCosts,
       totalOrderCosts,
       avgOrderValue,
-      cashFlow: totalRevenue - totalCostPaid - totalShippingPaid
+      cashFlow
     };
   }, [filteredTransactions, safeOrders, transactions]);
 
@@ -164,6 +181,10 @@ const AccountStatement = () => {
         return <Truck className="h-4 w-4" />;
       case 'cost_payment':
         return <CreditCard className="h-4 w-4" />;
+      case 'expense':
+        return <Minus className="h-4 w-4" />;
+      case 'other_income':
+        return <Plus className="h-4 w-4" />;
       default:
         return <Activity className="h-4 w-4" />;
     }
@@ -177,6 +198,10 @@ const AccountStatement = () => {
         return 'دفع شحن';
       case 'cost_payment':
         return 'دفع تكلفة';
+      case 'expense':
+        return 'مصروف';
+      case 'other_income':
+        return 'إيراد إضافي';
       default:
         return type;
     }
@@ -190,6 +215,10 @@ const AccountStatement = () => {
         return 'bg-blue-100 text-blue-800 border-blue-300';
       case 'cost_payment':
         return 'bg-orange-100 text-orange-800 border-orange-300';
+      case 'expense':
+        return 'bg-red-100 text-red-800 border-red-300';
+      case 'other_income':
+        return 'bg-purple-100 text-purple-800 border-purple-300';
       default:
         return 'bg-gray-100 text-gray-800 border-gray-300';
     }
@@ -213,18 +242,21 @@ const AccountStatement = () => {
       {/* Header */}
       <Card className="bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 border-l-4 border-l-emerald-500">
         <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-emerald-500 rounded-lg">
-              <Banknote className="h-6 w-6 text-white" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-emerald-500 rounded-lg">
+                <Banknote className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <CardTitle className={`${isMobile ? "text-xl" : "text-2xl"} font-bold text-gray-800 dark:text-white`}>
+                  كشف الحساب التفصيلي
+                </CardTitle>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  تقرير شامل للمعاملات المالية والإحصائيات
+                </p>
+              </div>
             </div>
-            <div>
-              <CardTitle className={`${isMobile ? "text-xl" : "text-2xl"} font-bold text-gray-800 dark:text-white`}>
-                كشف الحساب التفصيلي
-              </CardTitle>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                تقرير شامل للمعاملات المالية والإحصائيات
-              </p>
-            </div>
+            <AddTransactionDialog onTransactionAdded={loadTransactions} />
           </div>
         </CardHeader>
       </Card>
@@ -303,14 +335,14 @@ const AccountStatement = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-teal-500 to-teal-600 text-white">
+        <Card className="bg-gradient-to-br from-pink-500 to-pink-600 text-white">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-teal-100 text-xs font-medium">متوسط قيمة الطلب</p>
-                <p className={`${isMobile ? "text-sm" : "text-lg"} font-bold`}>{formatCurrency(accountSummary.avgOrderValue)}</p>
+                <p className="text-pink-100 text-xs font-medium">إجمالي المصاريف</p>
+                <p className={`${isMobile ? "text-sm" : "text-lg"} font-bold`}>{formatCurrency(accountSummary.totalExpenses)}</p>
               </div>
-              <Activity className="h-6 w-6 text-teal-200" />
+              <Minus className="h-6 w-6 text-pink-200" />
             </div>
           </CardContent>
         </Card>
@@ -319,10 +351,10 @@ const AccountStatement = () => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-emerald-100 text-xs font-medium">التدفق النقدي</p>
-                <p className={`${isMobile ? "text-sm" : "text-lg"} font-bold`}>{formatCurrency(accountSummary.cashFlow)}</p>
+                <p className="text-emerald-100 text-xs font-medium">الإيرادات الإضافية</p>
+                <p className={`${isMobile ? "text-sm" : "text-lg"} font-bold`}>{formatCurrency(accountSummary.totalOtherIncome)}</p>
               </div>
-              <Banknote className="h-6 w-6 text-emerald-200" />
+              <Plus className="h-6 w-6 text-emerald-200" />
             </div>
           </CardContent>
         </Card>
@@ -385,6 +417,8 @@ const AccountStatement = () => {
                   <SelectItem value="order_collection">تحصيل طلب</SelectItem>
                   <SelectItem value="shipping_payment">دفع شحن</SelectItem>
                   <SelectItem value="cost_payment">دفع تكلفة</SelectItem>
+                  <SelectItem value="expense">مصروف</SelectItem>
+                  <SelectItem value="other_income">إيراد إضافي</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -400,7 +434,7 @@ const AccountStatement = () => {
               <ResponsiveTableHead>
                 <ResponsiveTableRow className="bg-gray-50 dark:bg-gray-800">
                   <ResponsiveTableHeader className="font-semibold">التاريخ</ResponsiveTableHeader>
-                  <ResponsiveTableHeader className="font-semibold">رقم الطلب</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className="font-semibold">رقم المرجع</ResponsiveTableHeader>
                   <ResponsiveTableHeader className="font-semibold">نوع المعاملة</ResponsiveTableHeader>
                   <ResponsiveTableHeader className="font-semibold">الوصف</ResponsiveTableHeader>
                   <ResponsiveTableHeader className="font-semibold">المبلغ</ResponsiveTableHeader>
@@ -425,10 +459,13 @@ const AccountStatement = () => {
                         </Badge>
                       </ResponsiveTableCell>
                       <ResponsiveTableCell className="text-gray-600 dark:text-gray-300">
-                        {transaction.description}
+                        {transaction.description || "-"}
                       </ResponsiveTableCell>
-                      <ResponsiveTableCell className="font-semibold text-green-600 dark:text-green-400">
-                        {formatCurrency(transaction.amount)}
+                      <ResponsiveTableCell className={`font-semibold ${
+                        transaction.transaction_type === 'expense' ? 'text-red-600 dark:text-red-400' : 
+                        'text-green-600 dark:text-green-400'
+                      }`}>
+                        {transaction.transaction_type === 'expense' ? '-' : ''}{formatCurrency(transaction.amount)}
                       </ResponsiveTableCell>
                     </ResponsiveTableRow>
                   ))
