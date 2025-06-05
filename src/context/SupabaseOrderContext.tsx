@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Order, OrderStatus, OrderItem } from "@/types";
 import { toast } from "sonner";
@@ -8,7 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 interface OrderContextType {
   orders: Order[];
   addOrder: (order: Omit<Order, "serial" | "dateCreated">) => Promise<void>;
-  updateOrder: (index: number, order: Order) => Promise<void>;
+  updateOrder: (serial: string, order: Omit<Order, "serial" | "dateCreated">) => Promise<void>;
   deleteOrder: (index: number) => Promise<void>;
   updateOrderStatus: (index: number, status: OrderStatus) => Promise<void>;
   getOrderBySerial: (serial: string) => Order | undefined;
@@ -196,13 +195,24 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
     }
   };
 
-  const updateOrder = async (index: number, updatedOrder: Order) => {
+  const updateOrder = async (serial: string, updatedOrder: Omit<Order, "serial" | "dateCreated">) => {
     if (!user) {
       toast.error("يجب تسجيل الدخول أولاً");
       return;
     }
 
     try {
+      // First get the order ID from the serial
+      const { data: orderData, error: fetchError } = await supabase
+        .from('orders')
+        .select('id')
+        .eq('serial', serial)
+        .eq('user_id', user.id)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // Update the order
       const { error: orderError } = await supabase
         .from('orders')
         .update({
@@ -219,10 +229,36 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
           profit: updatedOrder.profit,
           status: updatedOrder.status
         })
-        .eq('serial', updatedOrder.serial)
+        .eq('serial', serial)
         .eq('user_id', user.id);
 
       if (orderError) throw orderError;
+
+      // Delete existing order items
+      const { error: deleteItemsError } = await supabase
+        .from('order_items')
+        .delete()
+        .eq('order_id', orderData.id);
+
+      if (deleteItemsError) throw deleteItemsError;
+
+      // Insert new order items
+      const orderItems = updatedOrder.items.map(item => ({
+        order_id: orderData.id,
+        product_type: item.productType,
+        size: item.size,
+        quantity: item.quantity,
+        cost: item.cost,
+        price: item.price,
+        profit: item.profit,
+        item_discount: item.itemDiscount || 0
+      }));
+
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItems);
+
+      if (itemsError) throw itemsError;
 
       toast.success("تم تحديث الطلب بنجاح");
       await loadOrders();
