@@ -87,6 +87,12 @@
   text-align: right;
 }
 
+.ltr-numbers {
+  direction: ltr;
+  unicode-bidi: plaintext;
+  font-variant-numeric: tabular-nums;
+}
+
 .gift-primary {
   background-color: hsl(var(--gift-primary));
 }

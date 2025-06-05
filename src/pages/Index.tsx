@@ -17,14 +17,14 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gift-accent dark:bg-gray-900 transition-colors duration-300" dir="rtl">
-      <div className="container mx-auto px-2 md:px-4 py-3 md:py-6">
-        <div className="flex items-center justify-between mb-4">
+      <div className="container mx-auto px-2 md:px-4 py-3 md:py-6" dir="rtl">
+        <div className="flex items-center justify-between mb-4" dir="rtl">
           <Logo />
           <UserProfile />
         </div>
         
-        <Tabs defaultValue="addOrder" className="mt-2 md:mt-4">
-          <TabsList className="grid w-full grid-cols-7 gap-1">
+        <Tabs defaultValue="addOrder" className="mt-2 md:mt-4" dir="rtl">
+          <TabsList className="grid w-full grid-cols-7 gap-1" dir="rtl">
             <TabsTrigger value="addOrder">{isMobile ? "إضافة" : "إضافة طلب"}</TabsTrigger>
             <TabsTrigger value="orders">{isMobile ? "إدارة" : "إدارة الطلبات"}</TabsTrigger>
             <TabsTrigger value="summary">{isMobile ? "التقرير" : "تقرير الطلبات"}</TabsTrigger>
