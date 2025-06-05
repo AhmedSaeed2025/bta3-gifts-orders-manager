@@ -58,10 +58,11 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
   
   const totalAmount = subtotal + customerData.shippingCost - customerData.deposit;
   
+  // Fixed profit calculation: Revenue - Cost - Shipping (العربون لا يؤثر على الربح)
   const totalProfit = items.reduce((sum, item) => {
     const discountedPrice = item.price - (item.itemDiscount || 0);
     return sum + (discountedPrice - item.cost) * item.quantity;
-  }, 0);
+  }, 0) - customerData.shippingCost;
 
   useEffect(() => {
     if (currentItem.productType && currentItem.size) {
@@ -163,7 +164,7 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
         governorate: customerData.governorate || "-",
         items,
         total: totalAmount,
-        profit: totalProfit,
+        profit: totalProfit, // Fixed profit calculation
         status: editingOrder?.status || "pending",
         discount: 0 // Always 0 since we removed global discount
       };

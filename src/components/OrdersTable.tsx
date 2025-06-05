@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -116,7 +115,7 @@ const OrdersTable = () => {
       totalCost += orderCost;
     });
 
-    // Corrected net profit calculation: Revenue - Cost - Shipping
+    // Fixed net profit calculation: Revenue - Cost - Shipping (العربون لا يؤثر على الربح)
     const netProfit = totalRevenue - totalCost - totalShipping;
 
     return {
@@ -252,7 +251,7 @@ const OrdersTable = () => {
 
   const calculateOrderNetProfit = (order: any) => {
     const orderCost = order.items?.reduce((sum: number, item: any) => sum + (item.cost * item.quantity), 0) || 0;
-    // Corrected calculation: Revenue - Cost - Shipping
+    // Fixed calculation: Revenue - Cost - Shipping (العربون لا يؤثر على الربح)
     return order.total - orderCost - (order.shippingCost || 0);
   };
 
@@ -467,12 +466,16 @@ const OrdersTable = () => {
                 <ResponsiveTableRow className="bg-gray-50 dark:bg-gray-800">
                   <ResponsiveTableHeader className="font-semibold">رقم الطلب</ResponsiveTableHeader>
                   <ResponsiveTableHeader className="font-semibold">التاريخ</ResponsiveTableHeader>
-                  <ResponsiveTableHeader className="font-semibold">العميل</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className="font-semibold">اسم العميل</ResponsiveTableHeader>
                   {!isMobile && <ResponsiveTableHeader className="font-semibold">التليفون</ResponsiveTableHeader>}
                   <ResponsiveTableHeader className="font-semibold">طريقة السداد</ResponsiveTableHeader>
-                  <ResponsiveTableHeader className="font-semibold">قيمة الطلب</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className="font-semibold">طريقة التوصيل</ResponsiveTableHeader>
+                  {!isMobile && <ResponsiveTableHeader className="font-semibold">العنوان</ResponsiveTableHeader>}
+                  {!isMobile && <ResponsiveTableHeader className="font-semibold">المحافظة</ResponsiveTableHeader>}
+                  <ResponsiveTableHeader className="font-semibold">إجمالي الطلب</ResponsiveTableHeader>
                   <ResponsiveTableHeader className="font-semibold">صافي الربح</ResponsiveTableHeader>
                   <ResponsiveTableHeader className="font-semibold">الحالة</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className="font-semibold">إجراءات مالية</ResponsiveTableHeader>
                   <ResponsiveTableHeader className="font-semibold">إجراءات</ResponsiveTableHeader>
                 </ResponsiveTableRow>
               </ResponsiveTableHead>
@@ -480,155 +483,133 @@ const OrdersTable = () => {
                 {filteredOrders.length > 0 ? (
                   filteredOrders.map((order, index) => (
                     <ResponsiveTableRow key={order.serial} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                      <ResponsiveTableCell className="font-medium text-blue-600 dark:text-blue-400">
-                        <div className="ltr-numbers">{order.serial}</div>
-                      </ResponsiveTableCell>
-                      <ResponsiveTableCell className="text-gray-600 dark:text-gray-300">
-                        <div className="ltr-numbers">{new Date(order.dateCreated).toLocaleDateString('en-US')}</div>
-                      </ResponsiveTableCell>
-                      <ResponsiveTableCell className="font-medium">{order.clientName}</ResponsiveTableCell>
-                      {!isMobile && (
-                        <ResponsiveTableCell className="text-gray-600 dark:text-gray-300">
-                          <div className="ltr-numbers">{order.phone}</div>
-                        </ResponsiveTableCell>
-                      )}
+                      <ResponsiveTableCell className="font-medium text-blue-600 dark:text-blue-400">{order.serial}</ResponsiveTableCell>
+                      <ResponsiveTableCell className="text-gray-600 dark:text-gray-300">{new Date(order.dateCreated).toLocaleDateString('ar-EG')}</ResponsiveTableCell>
+                      <ResponsiveTableCell className="font-medium text-gray-800 dark:text-white">{order.clientName}</ResponsiveTableCell>
+                      {!isMobile && <ResponsiveTableCell className="text-gray-600 dark:text-gray-300">{order.phone}</ResponsiveTableCell>}
+                      <ResponsiveTableCell className="text-gray-600 dark:text-gray-300">{order.paymentMethod}</ResponsiveTableCell>
+                      <ResponsiveTableCell className="text-gray-600 dark:text-gray-300">{order.deliveryMethod}</ResponsiveTableCell>
+                      {!isMobile && <ResponsiveTableCell className="text-gray-600 dark:text-gray-300">{order.address || "غير محدد"}</ResponsiveTableCell>}
+                      {!isMobile && <ResponsiveTableCell className="text-gray-600 dark:text-gray-300">{order.governorate || "غير محدد"}</ResponsiveTableCell>}
+                      <ResponsiveTableCell className="text-right font-semibold text-green-600 dark:text-green-400 ltr-numbers">{formatCurrency(order.total)}</ResponsiveTableCell>
+                      <ResponsiveTableCell className="text-right font-semibold text-purple-600 dark:text-purple-400 ltr-numbers">{formatCurrency(calculateOrderNetProfit(order))}</ResponsiveTableCell>
                       <ResponsiveTableCell>
-                        <Badge variant="outline" className="text-xs">
-                          {order.paymentMethod}
-                        </Badge>
-                      </ResponsiveTableCell>
-                      <ResponsiveTableCell className="text-right font-semibold text-green-600 dark:text-green-400">
-                        <div className="ltr-numbers">{formatCurrency(order.total)}</div>
-                      </ResponsiveTableCell>
-                      <ResponsiveTableCell className="text-right font-semibold text-purple-600 dark:text-purple-400">
-                        <div className="ltr-numbers">{formatCurrency(calculateOrderNetProfit(order))}</div>
+                        <Select value={order.status} onValueChange={(value) => handleStatusChange(index, value)}>
+                          <SelectTrigger className="w-40">
+                            <SelectValue>
+                              <Badge variant="outline" className={getStatusBadgeColor(order.status)}>
+                                {getStatusLabel(order.status)}
+                              </Badge>
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending">في انتظار التأكيد</SelectItem>
+                            <SelectItem value="confirmed">تم التأكيد</SelectItem>
+                            <SelectItem value="sentToPrinter">تم الإرسال للمطبعة</SelectItem>
+                            <SelectItem value="readyForDelivery">تحت التسليم</SelectItem>
+                            <SelectItem value="shipped">تم الشحن</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </ResponsiveTableCell>
                       <ResponsiveTableCell>
                         <div className="flex flex-col gap-2">
-                          <Select
-                            value={order.status}
-                            onValueChange={(value) => handleStatusChange(index, value)}
-                          >
-                            <SelectTrigger className="w-auto min-w-32">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="pending">في انتظار التأكيد</SelectItem>
-                              <SelectItem value="confirmed">تم التأكيد</SelectItem>
-                              <SelectItem value="sentToPrinter">تم الإرسال للمطبعة</SelectItem>
-                              <SelectItem value="readyForDelivery">تحت التسليم</SelectItem>
-                              <SelectItem value="shipped">تم الشحن</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <Badge className={`text-xs ${getStatusBadgeColor(order.status)}`}>
-                            {getStatusLabel(order.status)}
-                          </Badge>
+                          {!hasTransaction(order.serial, 'order_collection') ? (
+                            <Button
+                              size="sm"
+                              onClick={() => openCustomAmountDialog('collection', order)}
+                              className="bg-green-600 hover:bg-green-700 text-white"
+                            >
+                              <DollarSign className="h-3 w-3 mr-1" />
+                              تحصيل
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleCancelTransaction(order.serial, 'order_collection')}
+                              className="bg-red-600 hover:bg-red-700"
+                            >
+                              <X className="h-3 w-3 mr-1" />
+                              إلغاء التحصيل
+                            </Button>
+                          )}
+                          
+                          {!hasTransaction(order.serial, 'shipping_payment') ? (
+                            <Button
+                              size="sm"
+                              onClick={() => openCustomAmountDialog('shipping', order)}
+                              className="bg-blue-600 hover:bg-blue-700 text-white"
+                            >
+                              <Truck className="h-3 w-3 mr-1" />
+                              دفع شحن
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleCancelTransaction(order.serial, 'shipping_payment')}
+                              className="bg-red-600 hover:bg-red-700"
+                            >
+                              <X className="h-3 w-3 mr-1" />
+                              إلغاء الشحن
+                            </Button>
+                          )}
+                          
+                          {!hasTransaction(order.serial, 'cost_payment') ? (
+                            <Button
+                              size="sm"
+                              onClick={() => openCustomAmountDialog('cost', order)}
+                              className="bg-orange-600 hover:bg-orange-700 text-white"
+                            >
+                              <CreditCard className="h-3 w-3 mr-1" />
+                              دفع تكلفة
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleCancelTransaction(order.serial, 'cost_payment')}
+                              className="bg-red-600 hover:bg-red-700"
+                            >
+                              <X className="h-3 w-3 mr-1" />
+                              إلغاء التكلفة
+                            </Button>
+                          )}
                         </div>
                       </ResponsiveTableCell>
                       <ResponsiveTableCell>
-                        <div className="flex flex-col gap-2 min-w-max">
-                          {/* Action Buttons */}
-                          <div className="flex gap-1">
-                            <Button
-                              onClick={() => handleEditOrder(order.serial)}
-                              size="sm"
-                              className="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 text-xs"
-                            >
-                              <Edit className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              onClick={() => handleViewOrder(order.serial)}
-                              size="sm"
-                              variant="outline"
-                              className="px-2 py-1 text-xs"
-                            >
-                              <Eye className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              onClick={() => handleDeleteOrder(index)}
-                              size="sm"
-                              variant="destructive"
-                              className="px-2 py-1 text-xs"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                          
-                          {/* Financial Actions */}
-                          <div className="flex flex-col gap-1">
-                            {/* Collection Action */}
-                            {!hasTransaction(order.serial, 'order_collection') ? (
-                              <Button
-                                onClick={() => openCustomAmountDialog('collection', order)}
-                                size="sm"
-                                className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 text-xs flex items-center gap-1"
-                              >
-                                <CreditCard className="h-3 w-3" />
-                                تحصيل
-                              </Button>
-                            ) : (
-                              <Button
-                                onClick={() => handleCancelTransaction(order.serial, 'order_collection')}
-                                size="sm"
-                                variant="outline"
-                                className="border-green-500 text-green-500 hover:bg-green-50 px-2 py-1 text-xs flex items-center gap-1"
-                              >
-                                <X className="h-3 w-3" />
-                                إلغاء تحصيل
-                              </Button>
-                            )}
-                            
-                            {/* Shipping Payment Action */}
-                            {!hasTransaction(order.serial, 'shipping_payment') ? (
-                              <Button
-                                onClick={() => openCustomAmountDialog('shipping', order)}
-                                size="sm"
-                                className="bg-orange-500 hover:bg-orange-600 text-white px-2 py-1 text-xs flex items-center gap-1"
-                              >
-                                <Truck className="h-3 w-3" />
-                                شحن
-                              </Button>
-                            ) : (
-                              <Button
-                                onClick={() => handleCancelTransaction(order.serial, 'shipping_payment')}
-                                size="sm"
-                                variant="outline"
-                                className="border-orange-500 text-orange-500 hover:bg-orange-50 px-2 py-1 text-xs flex items-center gap-1"
-                              >
-                                <X className="h-3 w-3" />
-                                إلغاء شحن
-                              </Button>
-                            )}
-                            
-                            {/* Cost Payment Action */}
-                            {!hasTransaction(order.serial, 'cost_payment') ? (
-                              <Button
-                                onClick={() => openCustomAmountDialog('cost', order)}
-                                size="sm"
-                                className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 text-xs flex items-center gap-1"
-                              >
-                                <Package className="h-3 w-3" />
-                                تكلفة
-                              </Button>
-                            ) : (
-                              <Button
-                                onClick={() => handleCancelTransaction(order.serial, 'cost_payment')}
-                                size="sm"
-                                variant="outline"
-                                className="border-red-500 text-red-500 hover:bg-red-50 px-2 py-1 text-xs flex items-center gap-1"
-                              >
-                                <X className="h-3 w-3" />
-                                إلغاء تكلفة
-                              </Button>
-                            )}
-                          </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() => handleViewOrder(order.serial)}
+                            className="bg-blue-500 hover:bg-blue-600 text-white"
+                          >
+                            <Eye className="h-3 w-3 mr-1" />
+                            عرض
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => handleEditOrder(order.serial)}
+                            className="bg-green-500 hover:bg-green-600 text-white"
+                          >
+                            <Edit className="h-3 w-3 mr-1" />
+                            تعديل
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleDeleteOrder(index)}
+                          >
+                            <Trash2 className="h-3 w-3 mr-1" />
+                            حذف
+                          </Button>
                         </div>
                       </ResponsiveTableCell>
                     </ResponsiveTableRow>
                   ))
                 ) : (
                   <ResponsiveTableRow>
-                    <ResponsiveTableCell colSpan={isMobile ? 7 : 9} className="text-center py-8">
+                    <ResponsiveTableCell colSpan={isMobile ? 10 : 13} className="text-center py-8">
                       <div className="flex flex-col items-center gap-2">
                         <Package className="h-12 w-12 text-gray-400" />
                         <p className="text-gray-500 text-lg">لا توجد طلبات متاحة</p>

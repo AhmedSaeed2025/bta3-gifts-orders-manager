@@ -163,7 +163,7 @@ const SummaryReport = () => {
     });
 
     const netRevenue = totalRevenue - totalDeposits;
-    // Corrected profit calculation: Revenue - Cost - Shipping
+    // Fixed profit calculation: Revenue - Cost - Shipping (العربون لا يؤثر على الربح)
     const totalProfit = totalRevenue - totalCost - totalShipping;
 
     return {

@@ -61,7 +61,7 @@ const ImprovedAccountStatement = () => {
       }
     });
 
-    // Corrected profit calculation: Revenue - Costs - Shipping
+    // Fixed profit calculation: Revenue - Costs - Shipping (العربون لا يؤثر على الربح)
     const netProfit = totalRevenue - totalCosts - totalShipping;
     const cashFlow = totalCollections + totalDeposits - totalShippingPayments - totalCostPayments;
 

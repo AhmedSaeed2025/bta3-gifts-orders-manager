@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -147,7 +148,7 @@ const AccountStatement = () => {
       }
     });
 
-    // Corrected net profit calculation: Revenue - Costs - Shipping - Expenses + Other Income
+    // Fixed net profit calculation: Revenue - Costs - Shipping - Expenses + Other Income (العربون لا يؤثر على الربح)
     const netProfit = totalRevenue - totalCostPaid - totalShippingPaid - totalExpenses + totalOtherIncome;
     const totalOrders = safeOrders.length;
     const avgOrderValue = totalOrders > 0 ? totalOrderRevenue / totalOrders : 0;
