@@ -1,29 +1,34 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSupabaseOrders } from "@/context/SupabaseOrderContext";
 import { usePrices } from "@/context/PriceContext";
 import { useProducts } from "@/context/ProductContext";
-import { OrderItem } from "@/types";
+import { OrderItem, Order } from "@/types";
 import CustomerDataForm from "./order/CustomerDataForm";
 import ItemAddForm from "./order/ItemAddForm";
 import ItemsTable from "./order/ItemsTable";
+import { useNavigate } from "react-router-dom";
 
-const OrderForm = () => {
-  const { addOrder } = useSupabaseOrders();
+interface OrderFormProps {
+  editingOrder?: Order;
+}
+
+const OrderForm = ({ editingOrder }: OrderFormProps) => {
+  const { addOrder, updateOrder } = useSupabaseOrders();
   const { getProposedPrice } = usePrices();
   const { products } = useProducts();
+  const navigate = useNavigate();
   
   const [customerData, setCustomerData] = useState({
-    paymentMethod: "",
-    clientName: "",
-    phone: "",
-    deliveryMethod: "",
-    address: "",
-    governorate: "",
-    shippingCost: 0,
-    deposit: 0,
+    paymentMethod: editingOrder?.paymentMethod || "",
+    clientName: editingOrder?.clientName || "",
+    phone: editingOrder?.phone || "",
+    deliveryMethod: editingOrder?.deliveryMethod || "",
+    address: editingOrder?.address || "",
+    governorate: editingOrder?.governorate || "",
+    shippingCost: editingOrder?.shippingCost || 0,
+    deposit: editingOrder?.deposit || 0,
   });
   
   const [currentItem, setCurrentItem] = useState({
@@ -35,7 +40,7 @@ const OrderForm = () => {
     itemDiscount: 0,
   });
   
-  const [items, setItems] = useState<OrderItem[]>([]);
+  const [items, setItems] = useState<OrderItem[]>(editingOrder?.items || []);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const availableProductTypes = [...new Set(products.map(p => p.name))];
@@ -152,29 +157,36 @@ const OrderForm = () => {
     setIsSubmitting(true);
     
     try {
-      await addOrder({
+      const orderData = {
         ...customerData,
         address: customerData.address || "-",
         governorate: customerData.governorate || "-",
         items,
         total: totalAmount,
         profit: totalProfit,
-        status: "pending",
+        status: editingOrder?.status || "pending",
         discount: 0 // Always 0 since we removed global discount
-      });
-      
-      // Reset form
-      setCustomerData({
-        paymentMethod: "",
-        clientName: "",
-        phone: "",
-        deliveryMethod: "",
-        address: "",
-        governorate: "",
-        shippingCost: 0,
-        deposit: 0,
-      });
-      setItems([]);
+      };
+
+      if (editingOrder) {
+        await updateOrder(editingOrder.serial, orderData);
+        navigate("/");
+      } else {
+        await addOrder(orderData);
+        
+        // Reset form
+        setCustomerData({
+          paymentMethod: "",
+          clientName: "",
+          phone: "",
+          deliveryMethod: "",
+          address: "",
+          governorate: "",
+          shippingCost: 0,
+          deposit: 0,
+        });
+        setItems([]);
+      }
     } catch (error) {
       console.error('Error submitting order:', error);
     } finally {
@@ -185,7 +197,9 @@ const OrderForm = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-xl">إضافة طلب جديد</CardTitle>
+        <CardTitle className="text-xl">
+          {editingOrder ? `تعديل الطلب - ${editingOrder.serial}` : "إضافة طلب جديد"}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -219,7 +233,10 @@ const OrderForm = () => {
             className="bg-gift-primary hover:bg-gift-primaryHover" 
             disabled={items.length === 0 || isSubmitting}
           >
-            {isSubmitting ? "جاري الإضافة..." : "إضافة الطلب"}
+            {isSubmitting ? 
+              (editingOrder ? "جاري التحديث..." : "جاري الإضافة...") : 
+              (editingOrder ? "تحديث الطلب" : "إضافة الطلب")
+            }
           </Button>
         </form>
       </CardContent>
