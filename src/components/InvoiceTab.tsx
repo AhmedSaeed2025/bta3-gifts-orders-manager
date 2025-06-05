@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -89,13 +88,11 @@ const InvoiceTab = () => {
         total: Math.max(0, total)
       };
       
-      const orderIndex = orders.findIndex(o => o.serial === updatedOrder.serial);
-      if (orderIndex !== -1) {
-        updateOrder(orderIndex, updatedOrder);
-        setSelectedOrder(updatedOrder);
-        setEditDialogOpen(false);
-        toast.success("تم تحديث الطلب بنجاح");
-      }
+      // Use the order serial instead of index
+      updateOrder(editingOrder.serial, updatedOrder);
+      setSelectedOrder(updatedOrder);
+      setEditDialogOpen(false);
+      toast.success("تم تحديث الطلب بنجاح");
     }
   };
 
