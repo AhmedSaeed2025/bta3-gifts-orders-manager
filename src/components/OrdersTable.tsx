@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -304,7 +305,7 @@ const OrdersTable = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-blue-100 text-xs font-medium">إجمالي الطلبات</p>
-                <p className={`${isMobile ? "text-lg" : "text-2xl"} font-bold` style={{ direction: 'ltr' }}>{summaryStats.totalOrders}</p>
+                <p className={`${isMobile ? "text-lg" : "text-2xl"} font-bold`} style={{ direction: 'ltr' }}>{summaryStats.totalOrders}</p>
               </div>
               <Calendar className="h-6 w-6 text-blue-200" />
             </div>
@@ -316,7 +317,7 @@ const OrdersTable = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-green-100 text-xs font-medium">إجمالي المبيعات</p>
-                <p className={`${isMobile ? "text-sm" : "text-lg"} font-bold` style={{ direction: 'ltr' }}>{formatCurrency(summaryStats.totalRevenue)}</p>
+                <p className={`${isMobile ? "text-sm" : "text-lg"} font-bold`} style={{ direction: 'ltr' }}>{formatCurrency(summaryStats.totalRevenue)}</p>
               </div>
               <DollarSign className="h-6 w-6 text-green-200" />
             </div>
@@ -328,7 +329,7 @@ const OrdersTable = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-red-100 text-xs font-medium">إجمالي التكلفة</p>
-                <p className={`${isMobile ? "text-sm" : "text-lg"} font-bold` style={{ direction: 'ltr' }}>{formatCurrency(summaryStats.totalCost)}</p>
+                <p className={`${isMobile ? "text-sm" : "text-lg"} font-bold`} style={{ direction: 'ltr' }}>{formatCurrency(summaryStats.totalCost)}</p>
               </div>
               <Package className="h-6 w-6 text-red-200" />
             </div>
@@ -340,7 +341,7 @@ const OrdersTable = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-orange-100 text-xs font-medium">إجمالي الشحن</p>
-                <p className={`${isMobile ? "text-sm" : "text-lg"} font-bold` style={{ direction: 'ltr' }}>{formatCurrency(summaryStats.totalShipping)}</p>
+                <p className={`${isMobile ? "text-sm" : "text-lg"} font-bold`} style={{ direction: 'ltr' }}>{formatCurrency(summaryStats.totalShipping)}</p>
               </div>
               <Truck className="h-6 w-6 text-orange-200" />
             </div>
@@ -352,7 +353,7 @@ const OrdersTable = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-purple-100 text-xs font-medium">صافي الربح</p>
-                <p className={`${isMobile ? "text-sm" : "text-lg"} font-bold` style={{ direction: 'ltr' }}>{formatCurrency(summaryStats.netProfit)}</p>
+                <p className={`${isMobile ? "text-sm" : "text-lg"} font-bold`} style={{ direction: 'ltr' }}>{formatCurrency(summaryStats.netProfit)}</p>
               </div>
               <TrendingUp className="h-6 w-6 text-purple-200" />
             </div>
