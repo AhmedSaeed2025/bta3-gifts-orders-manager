@@ -8,7 +8,7 @@ import SummaryReport from "@/components/SummaryReport";
 import ProfitReport from "@/components/ProfitReport";
 import InvoiceTab from "@/components/InvoiceTab";
 import ProductsTab from "@/components/ProductsTab";
-import AccountStatement from "@/components/AccountStatement";
+import ImprovedAccountStatement from "@/components/ImprovedAccountStatement";
 import UserProfile from "@/components/UserProfile";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -25,13 +25,13 @@ const Index = () => {
         
         <Tabs defaultValue="addOrder" className="mt-2 md:mt-4" dir="rtl">
           <TabsList className="grid w-full grid-cols-7 gap-1" dir="rtl">
-            <TabsTrigger value="addOrder">{isMobile ? "إضافة" : "إضافة طلب"}</TabsTrigger>
-            <TabsTrigger value="orders">{isMobile ? "إدارة" : "إدارة الطلبات"}</TabsTrigger>
-            <TabsTrigger value="summary">{isMobile ? "التقرير" : "تقرير الطلبات"}</TabsTrigger>
-            <TabsTrigger value="profitReport">{isMobile ? "الأرباح" : "تقرير الأرباح"}</TabsTrigger>
-            <TabsTrigger value="accountStatement">{isMobile ? "كشف" : "كشف حساب"}</TabsTrigger>
+            <TabsTrigger value="addOrder">{isMobile ? "إضافة طلب" : "إضافة طلب"}</TabsTrigger>
+            <TabsTrigger value="orders">{isMobile ? "إدارة الطلبات" : "إدارة الطلبات"}</TabsTrigger>
+            <TabsTrigger value="summary">{isMobile ? "تقرير الطلبات" : "تقرير الطلبات"}</TabsTrigger>
+            <TabsTrigger value="profitReport">{isMobile ? "تقرير الأرباح" : "تقرير الأرباح"}</TabsTrigger>
+            <TabsTrigger value="accountStatement">{isMobile ? "كشف حساب" : "كشف حساب"}</TabsTrigger>
             <TabsTrigger value="invoice">{isMobile ? "الفاتورة" : "الفاتورة"}</TabsTrigger>
-            <TabsTrigger value="products">{isMobile ? "المنتجات" : "إدارة المنتجات"}</TabsTrigger>
+            <TabsTrigger value="products">{isMobile ? "إدارة المنتجات" : "إدارة المنتجات"}</TabsTrigger>
           </TabsList>
           
           <TabsContent value="addOrder">
@@ -51,7 +51,7 @@ const Index = () => {
           </TabsContent>
           
           <TabsContent value="accountStatement">
-            <AccountStatement />
+            <ImprovedAccountStatement />
           </TabsContent>
           
           <TabsContent value="invoice">

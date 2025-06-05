@@ -24,7 +24,8 @@ import {
   DollarSign,
   CreditCard,
   Truck,
-  X
+  X,
+  Clock
 } from "lucide-react";
 import { 
   ResponsiveTable, 
@@ -95,6 +96,7 @@ const OrdersTable = () => {
     if (!filteredOrders || filteredOrders.length === 0) {
       return {
         totalOrders: 0,
+        pendingOrders: 0,
         totalRevenue: 0,
         totalCost: 0,
         totalShipping: 0,
@@ -105,12 +107,17 @@ const OrdersTable = () => {
     let totalRevenue = 0;
     let totalCost = 0;
     let totalShipping = 0;
+    let pendingOrders = 0;
 
     filteredOrders.forEach(order => {
+      if (order.status === 'pending') {
+        pendingOrders++;
+      }
+      
       totalRevenue += order.total;
       totalShipping += order.shippingCost || 0;
       
-      // Calculate total cost for this order
+      // Calculate total cost for this order from items
       const orderCost = order.items?.reduce((sum, item) => sum + (item.cost * item.quantity), 0) || 0;
       totalCost += orderCost;
     });
@@ -120,6 +127,7 @@ const OrdersTable = () => {
 
     return {
       totalOrders: filteredOrders.length,
+      pendingOrders,
       totalRevenue,
       totalCost,
       totalShipping,
@@ -278,19 +286,19 @@ const OrdersTable = () => {
   }
 
   return (
-    <div className="rtl space-y-6" dir="rtl">
+    <div className="rtl space-y-4" dir="rtl">
       {/* Header */}
       <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-l-4 border-l-blue-500">
-        <CardHeader>
+        <CardHeader className="pb-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-500 rounded-lg">
-              <Package className="h-6 w-6 text-white" />
+              <Package className="h-5 w-5 text-white" />
             </div>
             <div>
-              <CardTitle className={`${isMobile ? "text-xl" : "text-2xl"} font-bold text-gray-800 dark:text-white`}>
+              <CardTitle className={`${isMobile ? "text-lg" : "text-xl"} font-bold text-gray-800 dark:text-white`}>
                 إدارة الطلبات
               </CardTitle>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                 إدارة وتتبع جميع الطلبات مع إمكانية التعديل والحذف
               </p>
             </div>
@@ -299,63 +307,75 @@ const OrdersTable = () => {
       </Card>
 
       {/* Summary Statistics */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
         <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-          <CardContent className="p-4">
+          <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-blue-100 text-xs font-medium">إجمالي الطلبات</p>
-                <p className={`${isMobile ? "text-lg" : "text-2xl"} font-bold ltr-numbers`}>{summaryStats.totalOrders}</p>
+                <p className={`${isMobile ? "text-base" : "text-lg"} font-bold ltr-numbers`}>{summaryStats.totalOrders}</p>
               </div>
-              <Calendar className="h-6 w-6 text-blue-200" />
+              <Calendar className="h-5 w-5 text-blue-200" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white">
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-yellow-100 text-xs font-medium">طلبات منتظرة</p>
+                <p className={`${isMobile ? "text-base" : "text-lg"} font-bold ltr-numbers`}>{summaryStats.pendingOrders}</p>
+              </div>
+              <Clock className="h-5 w-5 text-yellow-200" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
-          <CardContent className="p-4">
+          <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-green-100 text-xs font-medium">إجمالي المبيعات</p>
-                <p className={`${isMobile ? "text-sm" : "text-lg"} font-bold ltr-numbers`}>{formatCurrency(summaryStats.totalRevenue)}</p>
+                <p className={`${isMobile ? "text-xs" : "text-sm"} font-bold ltr-numbers`}>{formatCurrency(summaryStats.totalRevenue)}</p>
               </div>
-              <DollarSign className="h-6 w-6 text-green-200" />
+              <DollarSign className="h-5 w-5 text-green-200" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white">
-          <CardContent className="p-4">
+          <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-red-100 text-xs font-medium">إجمالي التكلفة</p>
-                <p className={`${isMobile ? "text-sm" : "text-lg"} font-bold ltr-numbers`}>{formatCurrency(summaryStats.totalCost)}</p>
+                <p className={`${isMobile ? "text-xs" : "text-sm"} font-bold ltr-numbers`}>{formatCurrency(summaryStats.totalCost)}</p>
               </div>
-              <Package className="h-6 w-6 text-red-200" />
+              <Package className="h-5 w-5 text-red-200" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white">
-          <CardContent className="p-4">
+          <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-orange-100 text-xs font-medium">إجمالي الشحن</p>
-                <p className={`${isMobile ? "text-sm" : "text-lg"} font-bold ltr-numbers`}>{formatCurrency(summaryStats.totalShipping)}</p>
+                <p className={`${isMobile ? "text-xs" : "text-sm"} font-bold ltr-numbers`}>{formatCurrency(summaryStats.totalShipping)}</p>
               </div>
-              <Truck className="h-6 w-6 text-orange-200" />
+              <Truck className="h-5 w-5 text-orange-200" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
-          <CardContent className="p-4">
+          <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-purple-100 text-xs font-medium">صافي الربح</p>
-                <p className={`${isMobile ? "text-sm" : "text-lg"} font-bold ltr-numbers`}>{formatCurrency(summaryStats.netProfit)}</p>
+                <p className={`${isMobile ? "text-xs" : "text-sm"} font-bold ltr-numbers`}>{formatCurrency(summaryStats.netProfit)}</p>
               </div>
-              <TrendingUp className="h-6 w-6 text-purple-200" />
+              <TrendingUp className="h-5 w-5 text-purple-200" />
             </div>
           </CardContent>
         </Card>
@@ -363,18 +383,18 @@ const OrdersTable = () => {
 
       {/* Filters */}
       <Card className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 border-l-4 border-l-indigo-500">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Filter className="h-5 w-5" />
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Filter className="h-4 w-4" />
             فلاتر الطلبات
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className={`grid gap-4 ${isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-5"}`}>
-            <div className="space-y-2">
-              <Label htmlFor="filterYear">السنة</Label>
+        <CardContent className="pt-0">
+          <div className={`grid gap-3 ${isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-5"}`}>
+            <div className="space-y-1">
+              <Label htmlFor="filterYear" className="text-xs">السنة</Label>
               <Select value={filterYear} onValueChange={setFilterYear}>
-                <SelectTrigger>
+                <SelectTrigger className="h-8 text-xs">
                   <SelectValue placeholder="اختر السنة" />
                 </SelectTrigger>
                 <SelectContent>
@@ -386,10 +406,10 @@ const OrdersTable = () => {
               </Select>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="filterMonth">الشهر</Label>
+            <div className="space-y-1">
+              <Label htmlFor="filterMonth" className="text-xs">الشهر</Label>
               <Select value={filterMonth} onValueChange={setFilterMonth}>
-                <SelectTrigger>
+                <SelectTrigger className="h-8 text-xs">
                   <SelectValue placeholder="اختر الشهر" />
                 </SelectTrigger>
                 <SelectContent>
@@ -410,10 +430,10 @@ const OrdersTable = () => {
               </Select>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="filterStatus">الحالة</Label>
+            <div className="space-y-1">
+              <Label htmlFor="filterStatus" className="text-xs">الحالة</Label>
               <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger>
+                <SelectTrigger className="h-8 text-xs">
                   <SelectValue placeholder="اختر الحالة" />
                 </SelectTrigger>
                 <SelectContent>
@@ -427,10 +447,10 @@ const OrdersTable = () => {
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="filterPaymentMethod">طريقة السداد</Label>
+            <div className="space-y-1">
+              <Label htmlFor="filterPaymentMethod" className="text-xs">طريقة السداد</Label>
               <Select value={filterPaymentMethod} onValueChange={setFilterPaymentMethod}>
-                <SelectTrigger>
+                <SelectTrigger className="h-8 text-xs">
                   <SelectValue placeholder="اختر طريقة السداد" />
                 </SelectTrigger>
                 <SelectContent>
@@ -447,9 +467,10 @@ const OrdersTable = () => {
               <Button 
                 onClick={clearFilters}
                 variant="outline"
-                className="w-full flex items-center gap-2"
+                size="sm"
+                className="w-full flex items-center gap-1 h-8 text-xs"
               >
-                <RefreshCw className="h-4 w-4" />
+                <RefreshCw className="h-3 w-3" />
                 مسح الفلاتر
               </Button>
             </div>
@@ -459,45 +480,45 @@ const OrdersTable = () => {
 
       {/* Orders Table */}
       <Card>
-        <CardContent className={`${isMobile ? "p-2" : "p-6"}`}>
+        <CardContent className={`${isMobile ? "p-2" : "p-4"}`}>
           <div className="overflow-x-auto">
             <ResponsiveTable className="w-full">
               <ResponsiveTableHead>
                 <ResponsiveTableRow className="bg-gray-50 dark:bg-gray-800">
-                  <ResponsiveTableHeader className="font-semibold">رقم الطلب</ResponsiveTableHeader>
-                  <ResponsiveTableHeader className="font-semibold">التاريخ</ResponsiveTableHeader>
-                  <ResponsiveTableHeader className="font-semibold">اسم العميل</ResponsiveTableHeader>
-                  {!isMobile && <ResponsiveTableHeader className="font-semibold">التليفون</ResponsiveTableHeader>}
-                  <ResponsiveTableHeader className="font-semibold">طريقة السداد</ResponsiveTableHeader>
-                  <ResponsiveTableHeader className="font-semibold">طريقة التوصيل</ResponsiveTableHeader>
-                  {!isMobile && <ResponsiveTableHeader className="font-semibold">العنوان</ResponsiveTableHeader>}
-                  {!isMobile && <ResponsiveTableHeader className="font-semibold">المحافظة</ResponsiveTableHeader>}
-                  <ResponsiveTableHeader className="font-semibold">إجمالي الطلب</ResponsiveTableHeader>
-                  <ResponsiveTableHeader className="font-semibold">صافي الربح</ResponsiveTableHeader>
-                  <ResponsiveTableHeader className="font-semibold">الحالة</ResponsiveTableHeader>
-                  <ResponsiveTableHeader className="font-semibold">إجراءات مالية</ResponsiveTableHeader>
-                  <ResponsiveTableHeader className="font-semibold">إجراءات</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className="font-semibold text-xs">رقم الطلب</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className="font-semibold text-xs">التاريخ</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className="font-semibold text-xs">اسم العميل</ResponsiveTableHeader>
+                  {!isMobile && <ResponsiveTableHeader className="font-semibold text-xs">التليفون</ResponsiveTableHeader>}
+                  <ResponsiveTableHeader className="font-semibold text-xs">طريقة السداد</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className="font-semibold text-xs">طريقة التوصيل</ResponsiveTableHeader>
+                  {!isMobile && <ResponsiveTableHeader className="font-semibold text-xs">العنوان</ResponsiveTableHeader>}
+                  {!isMobile && <ResponsiveTableHeader className="font-semibold text-xs">المحافظة</ResponsiveTableHeader>}
+                  <ResponsiveTableHeader className="font-semibold text-xs">إجمالي الطلب</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className="font-semibold text-xs">صافي الربح</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className="font-semibold text-xs">الحالة</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className="font-semibold text-xs">إجراءات مالية</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className="font-semibold text-xs">إجراءات</ResponsiveTableHeader>
                 </ResponsiveTableRow>
               </ResponsiveTableHead>
               <ResponsiveTableBody>
                 {filteredOrders.length > 0 ? (
                   filteredOrders.map((order, index) => (
                     <ResponsiveTableRow key={order.serial} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                      <ResponsiveTableCell className="font-medium text-blue-600 dark:text-blue-400">{order.serial}</ResponsiveTableCell>
-                      <ResponsiveTableCell className="text-gray-600 dark:text-gray-300">{new Date(order.dateCreated).toLocaleDateString('ar-EG')}</ResponsiveTableCell>
-                      <ResponsiveTableCell className="font-medium text-gray-800 dark:text-white">{order.clientName}</ResponsiveTableCell>
-                      {!isMobile && <ResponsiveTableCell className="text-gray-600 dark:text-gray-300">{order.phone}</ResponsiveTableCell>}
-                      <ResponsiveTableCell className="text-gray-600 dark:text-gray-300">{order.paymentMethod}</ResponsiveTableCell>
-                      <ResponsiveTableCell className="text-gray-600 dark:text-gray-300">{order.deliveryMethod}</ResponsiveTableCell>
-                      {!isMobile && <ResponsiveTableCell className="text-gray-600 dark:text-gray-300">{order.address || "غير محدد"}</ResponsiveTableCell>}
-                      {!isMobile && <ResponsiveTableCell className="text-gray-600 dark:text-gray-300">{order.governorate || "غير محدد"}</ResponsiveTableCell>}
-                      <ResponsiveTableCell className="text-right font-semibold text-green-600 dark:text-green-400 ltr-numbers">{formatCurrency(order.total)}</ResponsiveTableCell>
-                      <ResponsiveTableCell className="text-right font-semibold text-purple-600 dark:text-purple-400 ltr-numbers">{formatCurrency(calculateOrderNetProfit(order))}</ResponsiveTableCell>
+                      <ResponsiveTableCell className="font-medium text-blue-600 dark:text-blue-400 text-xs">{order.serial}</ResponsiveTableCell>
+                      <ResponsiveTableCell className="text-gray-600 dark:text-gray-300 text-xs">{new Date(order.dateCreated).toLocaleDateString('ar-EG')}</ResponsiveTableCell>
+                      <ResponsiveTableCell className="font-medium text-gray-800 dark:text-white text-xs">{order.clientName}</ResponsiveTableCell>
+                      {!isMobile && <ResponsiveTableCell className="text-gray-600 dark:text-gray-300 text-xs">{order.phone}</ResponsiveTableCell>}
+                      <ResponsiveTableCell className="text-gray-600 dark:text-gray-300 text-xs">{order.paymentMethod}</ResponsiveTableCell>
+                      <ResponsiveTableCell className="text-gray-600 dark:text-gray-300 text-xs">{order.deliveryMethod}</ResponsiveTableCell>
+                      {!isMobile && <ResponsiveTableCell className="text-gray-600 dark:text-gray-300 text-xs">{order.address || "غير محدد"}</ResponsiveTableCell>}
+                      {!isMobile && <ResponsiveTableCell className="text-gray-600 dark:text-gray-300 text-xs">{order.governorate || "غير محدد"}</ResponsiveTableCell>}
+                      <ResponsiveTableCell className="text-right font-semibold text-green-600 dark:text-green-400 ltr-numbers text-xs">{formatCurrency(order.total)}</ResponsiveTableCell>
+                      <ResponsiveTableCell className="text-right font-semibold text-purple-600 dark:text-purple-400 ltr-numbers text-xs">{formatCurrency(calculateOrderNetProfit(order))}</ResponsiveTableCell>
                       <ResponsiveTableCell>
                         <Select value={order.status} onValueChange={(value) => handleStatusChange(index, value)}>
-                          <SelectTrigger className="w-40">
+                          <SelectTrigger className="w-32 h-8">
                             <SelectValue>
-                              <Badge variant="outline" className={getStatusBadgeColor(order.status)}>
+                              <Badge variant="outline" className={`${getStatusBadgeColor(order.status)} text-xs`}>
                                 {getStatusLabel(order.status)}
                               </Badge>
                             </SelectValue>
@@ -512,12 +533,12 @@ const OrdersTable = () => {
                         </Select>
                       </ResponsiveTableCell>
                       <ResponsiveTableCell>
-                        <div className="flex flex-col gap-2">
+                        <div className="flex flex-col gap-1">
                           {!hasTransaction(order.serial, 'order_collection') ? (
                             <Button
                               size="sm"
                               onClick={() => openCustomAmountDialog('collection', order)}
-                              className="bg-green-600 hover:bg-green-700 text-white"
+                              className="bg-green-600 hover:bg-green-700 text-white h-7 text-xs"
                             >
                               <DollarSign className="h-3 w-3 mr-1" />
                               تحصيل
@@ -527,7 +548,7 @@ const OrdersTable = () => {
                               size="sm"
                               variant="destructive"
                               onClick={() => handleCancelTransaction(order.serial, 'order_collection')}
-                              className="bg-red-600 hover:bg-red-700"
+                              className="bg-red-600 hover:bg-red-700 h-7 text-xs"
                             >
                               <X className="h-3 w-3 mr-1" />
                               إلغاء التحصيل
@@ -538,7 +559,7 @@ const OrdersTable = () => {
                             <Button
                               size="sm"
                               onClick={() => openCustomAmountDialog('shipping', order)}
-                              className="bg-blue-600 hover:bg-blue-700 text-white"
+                              className="bg-blue-600 hover:bg-blue-700 text-white h-7 text-xs"
                             >
                               <Truck className="h-3 w-3 mr-1" />
                               دفع شحن
@@ -548,7 +569,7 @@ const OrdersTable = () => {
                               size="sm"
                               variant="destructive"
                               onClick={() => handleCancelTransaction(order.serial, 'shipping_payment')}
-                              className="bg-red-600 hover:bg-red-700"
+                              className="bg-red-600 hover:bg-red-700 h-7 text-xs"
                             >
                               <X className="h-3 w-3 mr-1" />
                               إلغاء الشحن
@@ -559,7 +580,7 @@ const OrdersTable = () => {
                             <Button
                               size="sm"
                               onClick={() => openCustomAmountDialog('cost', order)}
-                              className="bg-orange-600 hover:bg-orange-700 text-white"
+                              className="bg-orange-600 hover:bg-orange-700 text-white h-7 text-xs"
                             >
                               <CreditCard className="h-3 w-3 mr-1" />
                               دفع تكلفة
@@ -569,7 +590,7 @@ const OrdersTable = () => {
                               size="sm"
                               variant="destructive"
                               onClick={() => handleCancelTransaction(order.serial, 'cost_payment')}
-                              className="bg-red-600 hover:bg-red-700"
+                              className="bg-red-600 hover:bg-red-700 h-7 text-xs"
                             >
                               <X className="h-3 w-3 mr-1" />
                               إلغاء التكلفة
@@ -578,11 +599,11 @@ const OrdersTable = () => {
                         </div>
                       </ResponsiveTableCell>
                       <ResponsiveTableCell>
-                        <div className="flex gap-2">
+                        <div className="flex gap-1">
                           <Button
                             size="sm"
                             onClick={() => handleViewOrder(order.serial)}
-                            className="bg-blue-500 hover:bg-blue-600 text-white"
+                            className="bg-blue-500 hover:bg-blue-600 text-white h-7 text-xs"
                           >
                             <Eye className="h-3 w-3 mr-1" />
                             عرض
@@ -590,7 +611,7 @@ const OrdersTable = () => {
                           <Button
                             size="sm"
                             onClick={() => handleEditOrder(order.serial)}
-                            className="bg-green-500 hover:bg-green-600 text-white"
+                            className="bg-green-500 hover:bg-green-600 text-white h-7 text-xs"
                           >
                             <Edit className="h-3 w-3 mr-1" />
                             تعديل
@@ -599,6 +620,7 @@ const OrdersTable = () => {
                             size="sm"
                             variant="destructive"
                             onClick={() => handleDeleteOrder(index)}
+                            className="h-7 text-xs"
                           >
                             <Trash2 className="h-3 w-3 mr-1" />
                             حذف
