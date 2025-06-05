@@ -16,7 +16,7 @@ const Index = () => {
   const isMobile = useIsMobile();
 
   return (
-    <div className="min-h-screen bg-gift-accent dark:bg-gray-900 transition-colors duration-300">
+    <div className="min-h-screen bg-gift-accent dark:bg-gray-900 transition-colors duration-300" dir="rtl">
       <div className="container mx-auto px-2 md:px-4 py-3 md:py-6">
         <div className="flex items-center justify-between mb-4">
           <Logo />
@@ -27,10 +27,10 @@ const Index = () => {
           <TabsList className="grid w-full grid-cols-7 gap-1">
             <TabsTrigger value="addOrder">{isMobile ? "إضافة" : "إضافة طلب"}</TabsTrigger>
             <TabsTrigger value="orders">{isMobile ? "إدارة" : "إدارة الطلبات"}</TabsTrigger>
-            <TabsTrigger value="invoice">{isMobile ? "الفاتورة" : "الفاتورة"}</TabsTrigger>
             <TabsTrigger value="summary">{isMobile ? "التقرير" : "تقرير الطلبات"}</TabsTrigger>
             <TabsTrigger value="profitReport">{isMobile ? "الأرباح" : "تقرير الأرباح"}</TabsTrigger>
             <TabsTrigger value="accountStatement">{isMobile ? "كشف" : "كشف حساب"}</TabsTrigger>
+            <TabsTrigger value="invoice">{isMobile ? "الفاتورة" : "الفاتورة"}</TabsTrigger>
             <TabsTrigger value="products">{isMobile ? "المنتجات" : "إدارة المنتجات"}</TabsTrigger>
           </TabsList>
           
@@ -40,10 +40,6 @@ const Index = () => {
           
           <TabsContent value="orders">
             <OrdersTable />
-          </TabsContent>
-          
-          <TabsContent value="invoice">
-            <InvoiceTab />
           </TabsContent>
           
           <TabsContent value="summary">
@@ -56,6 +52,10 @@ const Index = () => {
           
           <TabsContent value="accountStatement">
             <AccountStatement />
+          </TabsContent>
+          
+          <TabsContent value="invoice">
+            <InvoiceTab />
           </TabsContent>
           
           <TabsContent value="products">

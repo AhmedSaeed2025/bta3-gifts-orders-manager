@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import CustomAmountDialog from "./CustomAmountDialog";
 import { 
   Edit, 
   Eye, 
@@ -47,6 +48,19 @@ const OrdersTable = () => {
   const [filterYear, setFilterYear] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterPaymentMethod, setFilterPaymentMethod] = useState<string>("all");
+
+  // Custom amount dialog states
+  const [customAmountDialog, setCustomAmountDialog] = useState<{
+    isOpen: boolean;
+    type: 'collection' | 'shipping' | 'cost';
+    order: any;
+    defaultAmount: number;
+  }>({
+    isOpen: false,
+    type: 'collection',
+    order: null,
+    defaultAmount: 0
+  });
 
   const safeOrders = Array.isArray(orders) ? orders : [];
 
@@ -131,45 +145,55 @@ const OrdersTable = () => {
     await updateOrderStatus(index, newStatus as any);
   };
 
-  // Add transaction functions
-  const handleCollectOrder = async (order: any) => {
-    try {
-      const remainingAmount = order.total - (order.deposit || 0);
-      await addTransaction({
-        transaction_type: 'order_collection',
-        amount: remainingAmount,
-        description: `تحصيل طلب رقم ${order.serial} - العميل: ${order.clientName}`,
-        order_serial: order.serial
-      });
-    } catch (error) {
-      console.error('Error recording order collection:', error);
+  // Open custom amount dialog
+  const openCustomAmountDialog = (type: 'collection' | 'shipping' | 'cost', order: any) => {
+    let defaultAmount = 0;
+    if (type === 'collection') {
+      defaultAmount = order.total - (order.deposit || 0);
+    } else if (type === 'shipping') {
+      defaultAmount = order.shippingCost || 0;
+    } else if (type === 'cost') {
+      defaultAmount = order.items?.reduce((sum: number, item: any) => sum + (item.cost * item.quantity), 0) || 0;
     }
+
+    setCustomAmountDialog({
+      isOpen: true,
+      type,
+      order,
+      defaultAmount
+    });
   };
 
-  const handlePayShipping = async (order: any) => {
+  // Handle custom amount confirmation
+  const handleCustomAmountConfirm = async (amount: number) => {
+    const { type, order } = customAmountDialog;
+    
     try {
-      await addTransaction({
-        transaction_type: 'shipping_payment',
-        amount: order.shippingCost || 0,
-        description: `دفع شحن طلب رقم ${order.serial} - ${order.deliveryMethod}`,
-        order_serial: order.serial
-      });
-    } catch (error) {
-      console.error('Error recording shipping payment:', error);
-    }
-  };
+      let description = '';
+      let transactionType = '';
+      
+      if (type === 'collection') {
+        transactionType = 'order_collection';
+        description = `تحصيل طلب رقم ${order.serial} - العميل: ${order.clientName}`;
+      } else if (type === 'shipping') {
+        transactionType = 'shipping_payment';
+        description = `دفع شحن طلب رقم ${order.serial} - ${order.deliveryMethod}`;
+      } else if (type === 'cost') {
+        transactionType = 'cost_payment';
+        description = `دفع تكلفة طلب رقم ${order.serial} - تكلفة الإنتاج`;
+      }
 
-  const handlePayCost = async (order: any) => {
-    try {
-      const orderCost = order.items?.reduce((sum: number, item: any) => sum + (item.cost * item.quantity), 0) || 0;
       await addTransaction({
-        transaction_type: 'cost_payment',
-        amount: orderCost,
-        description: `دفع تكلفة طلب رقم ${order.serial} - تكلفة الإنتاج`,
+        transaction_type: transactionType,
+        amount: amount,
+        description: description,
         order_serial: order.serial
       });
+
+      toast.success("تم تسجيل المعاملة بنجاح");
     } catch (error) {
-      console.error('Error recording cost payment:', error);
+      console.error('Error recording transaction:', error);
+      toast.error("حدث خطأ في تسجيل المعاملة");
     }
   };
 
@@ -230,6 +254,15 @@ const OrdersTable = () => {
     return order.total - orderCost - (order.shippingCost || 0);
   };
 
+  const getCustomAmountDialogTitle = (type: 'collection' | 'shipping' | 'cost') => {
+    switch (type) {
+      case 'collection': return 'تحصيل مبلغ من العميل';
+      case 'shipping': return 'دفع مصاريف الشحن';
+      case 'cost': return 'دفع تكلفة الإنتاج';
+      default: return '';
+    }
+  };
+
   if (loading) {
     return (
       <Card className="animate-pulse">
@@ -271,7 +304,7 @@ const OrdersTable = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-blue-100 text-xs font-medium">إجمالي الطلبات</p>
-                <p className={`${isMobile ? "text-lg" : "text-2xl"} font-bold`}>{summaryStats.totalOrders}</p>
+                <p className={`${isMobile ? "text-lg" : "text-2xl"} font-bold` style={{ direction: 'ltr' }}>{summaryStats.totalOrders}</p>
               </div>
               <Calendar className="h-6 w-6 text-blue-200" />
             </div>
@@ -283,7 +316,7 @@ const OrdersTable = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-green-100 text-xs font-medium">إجمالي المبيعات</p>
-                <p className={`${isMobile ? "text-sm" : "text-lg"} font-bold`}>{formatCurrency(summaryStats.totalRevenue)}</p>
+                <p className={`${isMobile ? "text-sm" : "text-lg"} font-bold` style={{ direction: 'ltr' }}>{formatCurrency(summaryStats.totalRevenue)}</p>
               </div>
               <DollarSign className="h-6 w-6 text-green-200" />
             </div>
@@ -295,7 +328,7 @@ const OrdersTable = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-red-100 text-xs font-medium">إجمالي التكلفة</p>
-                <p className={`${isMobile ? "text-sm" : "text-lg"} font-bold`}>{formatCurrency(summaryStats.totalCost)}</p>
+                <p className={`${isMobile ? "text-sm" : "text-lg"} font-bold` style={{ direction: 'ltr' }}>{formatCurrency(summaryStats.totalCost)}</p>
               </div>
               <Package className="h-6 w-6 text-red-200" />
             </div>
@@ -307,7 +340,7 @@ const OrdersTable = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-orange-100 text-xs font-medium">إجمالي الشحن</p>
-                <p className={`${isMobile ? "text-sm" : "text-lg"} font-bold`}>{formatCurrency(summaryStats.totalShipping)}</p>
+                <p className={`${isMobile ? "text-sm" : "text-lg"} font-bold` style={{ direction: 'ltr' }}>{formatCurrency(summaryStats.totalShipping)}</p>
               </div>
               <Truck className="h-6 w-6 text-orange-200" />
             </div>
@@ -319,7 +352,7 @@ const OrdersTable = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-purple-100 text-xs font-medium">صافي الربح</p>
-                <p className={`${isMobile ? "text-sm" : "text-lg"} font-bold`}>{formatCurrency(summaryStats.netProfit)}</p>
+                <p className={`${isMobile ? "text-sm" : "text-lg"} font-bold` style={{ direction: 'ltr' }}>{formatCurrency(summaryStats.netProfit)}</p>
               </div>
               <TrendingUp className="h-6 w-6 text-purple-200" />
             </div>
@@ -446,27 +479,27 @@ const OrdersTable = () => {
                 {filteredOrders.length > 0 ? (
                   filteredOrders.map((order, index) => (
                     <ResponsiveTableRow key={order.serial} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                      <ResponsiveTableCell className="font-medium text-blue-600 dark:text-blue-400">
+                      <ResponsiveTableCell className="font-medium text-blue-600 dark:text-blue-400" style={{ direction: 'ltr' }}>
                         {order.serial}
                       </ResponsiveTableCell>
-                      <ResponsiveTableCell className="text-gray-600 dark:text-gray-300">
-                        {new Date(order.dateCreated).toLocaleDateString('ar-EG')}
+                      <ResponsiveTableCell className="text-gray-600 dark:text-gray-300" style={{ direction: 'ltr' }}>
+                        {new Date(order.dateCreated).toLocaleDateString('en-GB')}
                       </ResponsiveTableCell>
                       <ResponsiveTableCell className="font-medium text-gray-800 dark:text-white">
                         {order.clientName}
                       </ResponsiveTableCell>
                       {!isMobile && (
-                        <ResponsiveTableCell className="text-gray-600 dark:text-gray-300">
+                        <ResponsiveTableCell className="text-gray-600 dark:text-gray-300" style={{ direction: 'ltr' }}>
                           {order.phone}
                         </ResponsiveTableCell>
                       )}
                       <ResponsiveTableCell className="text-gray-600 dark:text-gray-300">
                         {order.paymentMethod}
                       </ResponsiveTableCell>
-                      <ResponsiveTableCell className="font-semibold text-green-600 dark:text-green-400">
+                      <ResponsiveTableCell className="font-semibold text-green-600 dark:text-green-400" style={{ direction: 'ltr' }}>
                         {formatCurrency(order.total)}
                       </ResponsiveTableCell>
-                      <ResponsiveTableCell className="font-semibold text-purple-600 dark:text-purple-400">
+                      <ResponsiveTableCell className="font-semibold text-purple-600 dark:text-purple-400" style={{ direction: 'ltr' }}>
                         {formatCurrency(calculateOrderNetProfit(order))}
                       </ResponsiveTableCell>
                       <ResponsiveTableCell>
@@ -505,7 +538,7 @@ const OrdersTable = () => {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => handleCollectOrder(order)}
+                              onClick={() => openCustomAmountDialog('collection', order)}
                               className="flex items-center gap-1 text-xs"
                             >
                               <DollarSign className="h-3 w-3" />
@@ -528,7 +561,7 @@ const OrdersTable = () => {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => handlePayShipping(order)}
+                              onClick={() => openCustomAmountDialog('shipping', order)}
                               className="flex items-center gap-1 text-xs"
                             >
                               <Truck className="h-3 w-3" />
@@ -551,7 +584,7 @@ const OrdersTable = () => {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => handlePayCost(order)}
+                              onClick={() => openCustomAmountDialog('cost', order)}
                               className="flex items-center gap-1 text-xs"
                             >
                               <CreditCard className="h-3 w-3" />
@@ -608,6 +641,16 @@ const OrdersTable = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Custom Amount Dialog */}
+      <CustomAmountDialog
+        isOpen={customAmountDialog.isOpen}
+        onClose={() => setCustomAmountDialog(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={handleCustomAmountConfirm}
+        title={getCustomAmountDialogTitle(customAmountDialog.type)}
+        defaultAmount={customAmountDialog.defaultAmount}
+        description="يمكنك تعديل المبلغ حسب الحاجة"
+      />
     </div>
   );
 };
