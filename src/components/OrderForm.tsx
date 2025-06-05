@@ -9,6 +9,7 @@ import CustomerDataForm from "./order/CustomerDataForm";
 import ItemAddForm from "./order/ItemAddForm";
 import ItemsTable from "./order/ItemsTable";
 import { useNavigate } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface OrderFormProps {
   editingOrder?: Order;
@@ -19,6 +20,7 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
   const { getProposedPrice } = usePrices();
   const { products } = useProducts();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   
   const [customerData, setCustomerData] = useState({
     paymentMethod: editingOrder?.paymentMethod || "",
@@ -118,6 +120,16 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
       [name]: value,
     }));
   };
+
+  // Function to update item in the list
+  const updateItem = (index: number, updatedItem: OrderItem) => {
+    const discountedPrice = updatedItem.price - (updatedItem.itemDiscount || 0);
+    const profit = (discountedPrice - updatedItem.cost) * updatedItem.quantity;
+    
+    setItems(prev => prev.map((item, i) => 
+      i === index ? { ...updatedItem, profit } : item
+    ));
+  };
   
   const addItem = () => {
     if (!currentItem.productType || !currentItem.size || currentItem.quantity < 1) {
@@ -196,9 +208,9 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
   };
 
   return (
-    <Card>
+    <Card className={isMobile ? "text-sm" : ""}>
       <CardHeader>
-        <CardTitle className="text-xl">
+        <CardTitle className={`${isMobile ? "text-base" : "text-xl"}`}>
           {editingOrder ? `تعديل الطلب - ${editingOrder.serial}` : "إضافة طلب جديد"}
         </CardTitle>
       </CardHeader>
@@ -217,21 +229,25 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
             onItemChange={handleItemChange}
             onSelectChange={handleItemSelectChange}
             onAddItem={addItem}
+            products={products}
           />
           
           <ItemsTable
             items={items}
             onRemoveItem={removeItem}
+            onUpdateItem={updateItem}
             subtotal={subtotal}
             shippingCost={customerData.shippingCost}
             discount={0}
             deposit={customerData.deposit}
             totalAmount={totalAmount}
+            products={products}
+            editMode={!!editingOrder}
           />
           
           <Button 
             type="submit" 
-            className="bg-gift-primary hover:bg-gift-primaryHover" 
+            className={`bg-gift-primary hover:bg-gift-primaryHover ${isMobile ? "text-sm h-8" : ""}`}
             disabled={items.length === 0 || isSubmitting}
           >
             {isSubmitting ? 

@@ -138,17 +138,18 @@
 
   /* تحسينات الجداول للموبايل */
   .gift-table {
-    font-size: 0.7rem !important;
+    font-size: 0.65rem !important;
     min-width: 100%;
   }
 
   .gift-table th,
   .gift-table td {
-    padding: 0.25rem !important;
+    padding: 0.2rem !important;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 100px;
+    max-width: 80px;
+    font-size: 0.65rem !important;
   }
 
   .gift-table thead {
@@ -160,36 +161,36 @@
 
   /* تحسينات الكروت للموبايل */
   .mobile-card {
-    padding: 0.5rem !important;
-    margin: 0.25rem 0 !important;
+    padding: 0.4rem !important;
+    margin: 0.2rem 0 !important;
   }
 
   .mobile-card .card-header {
-    padding: 0.5rem !important;
+    padding: 0.4rem !important;
   }
 
   .mobile-card .card-content {
-    padding: 0.5rem !important;
+    padding: 0.4rem !important;
   }
 
   /* تحسينات الأزرار للموبايل */
   .mobile-btn {
-    font-size: 0.7rem !important;
-    padding: 0.25rem 0.5rem !important;
+    font-size: 0.65rem !important;
+    padding: 0.2rem 0.4rem !important;
     height: auto !important;
-    min-height: 2rem;
+    min-height: 1.8rem;
   }
 
   /* تحسينات النماذج للموبايل */
   .mobile-form-grid {
     grid-template-columns: 1fr !important;
-    gap: 0.5rem !important;
+    gap: 0.4rem !important;
   }
 
   .mobile-select,
   .mobile-input {
-    font-size: 0.8rem !important;
-    padding: 0.5rem !important;
+    font-size: 0.75rem !important;
+    padding: 0.4rem !important;
     height: auto !important;
   }
 
@@ -203,14 +204,15 @@
   .responsive-table {
     min-width: 100%;
     width: max-content;
-    font-size: 0.7rem;
+    font-size: 0.65rem;
   }
 
   .responsive-table th,
   .responsive-table td {
-    padding: 0.25rem 0.5rem;
+    padding: 0.2rem 0.4rem;
     white-space: nowrap;
     border: 1px solid #e5e7eb;
+    font-size: 0.65rem;
   }
 
   .responsive-table th {
@@ -219,6 +221,41 @@
     position: sticky;
     top: 0;
     z-index: 10;
+  }
+
+  /* تحسينات خاصة للتبويبات */
+  [data-state="active"] {
+    background-color: hsl(var(--gift-primary)) !important;
+    color: white !important;
+  }
+
+  /* تحسينات النصوص للموبايل */
+  body {
+    font-size: 0.75rem !important;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-size: 0.8rem !important;
+  }
+
+  .text-xs {
+    font-size: 0.6rem !important;
+  }
+
+  .text-sm {
+    font-size: 0.65rem !important;
+  }
+
+  .text-base {
+    font-size: 0.7rem !important;
+  }
+
+  .text-lg {
+    font-size: 0.75rem !important;
+  }
+
+  .text-xl {
+    font-size: 0.8rem !important;
   }
 }
 

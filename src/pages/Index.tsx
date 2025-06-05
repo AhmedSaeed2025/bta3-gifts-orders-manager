@@ -11,6 +11,15 @@ import ProductsTab from "@/components/ProductsTab";
 import ImprovedAccountStatement from "@/components/ImprovedAccountStatement";
 import UserProfile from "@/components/UserProfile";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { 
+  Plus, 
+  List, 
+  BarChart3, 
+  TrendingUp, 
+  Receipt, 
+  FileText, 
+  Package 
+} from "lucide-react";
 
 const Index = () => {
   const isMobile = useIsMobile();
@@ -24,14 +33,98 @@ const Index = () => {
         </div>
         
         <Tabs defaultValue="addOrder" className="mt-2 md:mt-4" dir="rtl">
-          <TabsList className="grid w-full grid-cols-7 gap-1" dir="rtl">
-            <TabsTrigger value="addOrder">{isMobile ? "إضافة طلب" : "إضافة طلب"}</TabsTrigger>
-            <TabsTrigger value="orders">{isMobile ? "إدارة الطلبات" : "إدارة الطلبات"}</TabsTrigger>
-            <TabsTrigger value="summary">{isMobile ? "تقرير الطلبات" : "تقرير الطلبات"}</TabsTrigger>
-            <TabsTrigger value="profitReport">{isMobile ? "تقرير الأرباح" : "تقرير الأرباح"}</TabsTrigger>
-            <TabsTrigger value="accountStatement">{isMobile ? "كشف حساب" : "كشف حساب"}</TabsTrigger>
-            <TabsTrigger value="invoice">{isMobile ? "الفاتورة" : "الفاتورة"}</TabsTrigger>
-            <TabsTrigger value="products">{isMobile ? "إدارة المنتجات" : "إدارة المنتجات"}</TabsTrigger>
+          <TabsList className={`grid w-full grid-cols-7 gap-1 ${isMobile ? 'h-16' : 'h-10'}`} dir="rtl">
+            <TabsTrigger 
+              value="addOrder" 
+              className={`${isMobile ? 'flex-col text-xs p-1 h-14' : 'text-sm'}`}
+            >
+              {isMobile ? (
+                <>
+                  <Plus className="h-3 w-3 mb-1" />
+                  <span className="text-xs leading-none">إضافة</span>
+                </>
+              ) : (
+                "إضافة طلب"
+              )}
+            </TabsTrigger>
+            <TabsTrigger 
+              value="orders" 
+              className={`${isMobile ? 'flex-col text-xs p-1 h-14' : 'text-sm'}`}
+            >
+              {isMobile ? (
+                <>
+                  <List className="h-3 w-3 mb-1" />
+                  <span className="text-xs leading-none">الطلبات</span>
+                </>
+              ) : (
+                "إدارة الطلبات"
+              )}
+            </TabsTrigger>
+            <TabsTrigger 
+              value="summary" 
+              className={`${isMobile ? 'flex-col text-xs p-1 h-14' : 'text-sm'}`}
+            >
+              {isMobile ? (
+                <>
+                  <BarChart3 className="h-3 w-3 mb-1" />
+                  <span className="text-xs leading-none">تقرير</span>
+                </>
+              ) : (
+                "تقرير الطلبات"
+              )}
+            </TabsTrigger>
+            <TabsTrigger 
+              value="profitReport" 
+              className={`${isMobile ? 'flex-col text-xs p-1 h-14' : 'text-sm'}`}
+            >
+              {isMobile ? (
+                <>
+                  <TrendingUp className="h-3 w-3 mb-1" />
+                  <span className="text-xs leading-none">الأرباح</span>
+                </>
+              ) : (
+                "تقرير الأرباح"
+              )}
+            </TabsTrigger>
+            <TabsTrigger 
+              value="accountStatement" 
+              className={`${isMobile ? 'flex-col text-xs p-1 h-14' : 'text-sm'}`}
+            >
+              {isMobile ? (
+                <>
+                  <Receipt className="h-3 w-3 mb-1" />
+                  <span className="text-xs leading-none">الحساب</span>
+                </>
+              ) : (
+                "كشف حساب"
+              )}
+            </TabsTrigger>
+            <TabsTrigger 
+              value="invoice" 
+              className={`${isMobile ? 'flex-col text-xs p-1 h-14' : 'text-sm'}`}
+            >
+              {isMobile ? (
+                <>
+                  <FileText className="h-3 w-3 mb-1" />
+                  <span className="text-xs leading-none">الفاتورة</span>
+                </>
+              ) : (
+                "الفاتورة"
+              )}
+            </TabsTrigger>
+            <TabsTrigger 
+              value="products" 
+              className={`${isMobile ? 'flex-col text-xs p-1 h-14' : 'text-sm'}`}
+            >
+              {isMobile ? (
+                <>
+                  <Package className="h-3 w-3 mb-1" />
+                  <span className="text-xs leading-none">المنتجات</span>
+                </>
+              ) : (
+                "إدارة المنتجات"
+              )}
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="addOrder">

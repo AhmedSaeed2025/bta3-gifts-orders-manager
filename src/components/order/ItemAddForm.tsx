@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Product } from "@/types";
 
 interface ItemAddFormProps {
   currentItem: {
@@ -20,6 +22,7 @@ interface ItemAddFormProps {
   onItemChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSelectChange: (name: string, value: string) => void;
   onAddItem: () => void;
+  products: Product[];
 }
 
 const ItemAddForm: React.FC<ItemAddFormProps> = ({
@@ -29,29 +32,31 @@ const ItemAddForm: React.FC<ItemAddFormProps> = ({
   onItemChange,
   onSelectChange,
   onAddItem,
+  products,
 }) => {
+  const isMobile = useIsMobile();
   const discountedPrice = currentItem.price - (currentItem.itemDiscount || 0);
   const totalItemPrice = discountedPrice * currentItem.quantity;
 
   return (
-    <Card>
+    <Card className={isMobile ? "text-sm" : ""}>
       <CardHeader>
-        <CardTitle className="text-lg">إضافة منتج</CardTitle>
+        <CardTitle className={`${isMobile ? "text-base" : "text-lg"}`}>إضافة منتج</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className={`grid gap-4 ${isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2"}`}>
           <div className="space-y-2">
-            <Label htmlFor="productType">نوع المنتج</Label>
+            <Label htmlFor="productType" className={isMobile ? "text-xs" : ""}>نوع المنتج</Label>
             <Select
               value={currentItem.productType}
               onValueChange={(value) => onSelectChange("productType", value)}
             >
-              <SelectTrigger>
+              <SelectTrigger className={isMobile ? "text-xs h-8" : ""}>
                 <SelectValue placeholder="اختر نوع المنتج" />
               </SelectTrigger>
               <SelectContent>
                 {availableProductTypes.map((type) => (
-                  <SelectItem key={type} value={type}>
+                  <SelectItem key={type} value={type} className={isMobile ? "text-xs" : ""}>
                     {type}
                   </SelectItem>
                 ))}
@@ -60,18 +65,18 @@ const ItemAddForm: React.FC<ItemAddFormProps> = ({
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="size">المقاس</Label>
+            <Label htmlFor="size" className={isMobile ? "text-xs" : ""}>المقاس</Label>
             <Select
               value={currentItem.size}
               onValueChange={(value) => onSelectChange("size", value)}
               disabled={!currentItem.productType}
             >
-              <SelectTrigger>
+              <SelectTrigger className={isMobile ? "text-xs h-8" : ""}>
                 <SelectValue placeholder="اختر المقاس" />
               </SelectTrigger>
               <SelectContent>
                 {availableSizes.map((size) => (
-                  <SelectItem key={size} value={size}>
+                  <SelectItem key={size} value={size} className={isMobile ? "text-xs" : ""}>
                     {size}
                   </SelectItem>
                 ))}
@@ -80,9 +85,9 @@ const ItemAddForm: React.FC<ItemAddFormProps> = ({
           </div>
         </div>
         
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className={`grid gap-4 ${isMobile ? "grid-cols-2" : "grid-cols-2 md:grid-cols-4"}`}>
           <div className="space-y-2">
-            <Label htmlFor="quantity">الكمية</Label>
+            <Label htmlFor="quantity" className={isMobile ? "text-xs" : ""}>الكمية</Label>
             <Input
               type="number"
               id="quantity"
@@ -90,12 +95,12 @@ const ItemAddForm: React.FC<ItemAddFormProps> = ({
               value={currentItem.quantity}
               onChange={onItemChange}
               min={1}
-              className="text-center"
+              className={`text-center ${isMobile ? "text-xs h-8" : ""}`}
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="cost">التكلفة</Label>
+            <Label htmlFor="cost" className={isMobile ? "text-xs" : ""}>التكلفة</Label>
             <Input
               type="number"
               id="cost"
@@ -104,11 +109,12 @@ const ItemAddForm: React.FC<ItemAddFormProps> = ({
               onChange={onItemChange}
               step={0.01}
               min={0}
+              className={isMobile ? "text-xs h-8" : ""}
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="price">السعر الأساسي</Label>
+            <Label htmlFor="price" className={isMobile ? "text-xs" : ""}>السعر الأساسي</Label>
             <Input
               type="number"
               id="price"
@@ -117,11 +123,12 @@ const ItemAddForm: React.FC<ItemAddFormProps> = ({
               onChange={onItemChange}
               step={0.01}
               min={0}
+              className={isMobile ? "text-xs h-8" : ""}
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="itemDiscount">خصم القطعة</Label>
+            <Label htmlFor="itemDiscount" className={isMobile ? "text-xs" : ""}>خصم القطعة</Label>
             <Input
               type="number"
               id="itemDiscount"
@@ -131,12 +138,13 @@ const ItemAddForm: React.FC<ItemAddFormProps> = ({
               step={0.01}
               min={0}
               max={currentItem.price}
+              className={isMobile ? "text-xs h-8" : ""}
             />
           </div>
         </div>
 
         {currentItem.price > 0 && (
-          <div className="bg-gray-50 p-3 rounded-lg space-y-2">
+          <div className={`bg-gray-50 p-3 rounded-lg space-y-2 ${isMobile ? "text-xs" : ""}`}>
             <div className="flex justify-between text-sm">
               <span>السعر الأساسي للقطعة:</span>
               <span className="font-bold">{currentItem.price} جنيه</span>
@@ -151,7 +159,7 @@ const ItemAddForm: React.FC<ItemAddFormProps> = ({
               <span>السعر بعد الخصم للقطعة:</span>
               <span className="font-bold text-green-600">{discountedPrice} جنيه</span>
             </div>
-            <div className="flex justify-between text-lg border-t pt-2">
+            <div className={`flex justify-between border-t pt-2 ${isMobile ? "text-sm" : "text-lg"}`}>
               <span>إجمالي المنتج ({currentItem.quantity} قطعة):</span>
               <span className="font-bold text-blue-600">{totalItemPrice} جنيه</span>
             </div>
@@ -162,7 +170,7 @@ const ItemAddForm: React.FC<ItemAddFormProps> = ({
           type="button" 
           onClick={onAddItem}
           disabled={!currentItem.productType || !currentItem.size || currentItem.quantity < 1}
-          className="w-full"
+          className={`w-full ${isMobile ? "text-xs h-8" : ""}`}
         >
           إضافة المنتج
         </Button>
