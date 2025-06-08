@@ -15,17 +15,35 @@ const EditOrder = () => {
   const { getOrderBySerial, loading } = useSupabaseOrders();
   const navigate = useNavigate();
   const [order, setOrder] = useState<Order | undefined>();
+  const [orderNotFound, setOrderNotFound] = useState(false);
   
   useEffect(() => {
-    if (serial) {
+    if (serial && !loading) {
+      console.log("EditOrder: Looking for order with serial:", serial);
       const foundOrder = getOrderBySerial(serial);
-      setOrder(foundOrder);
+      console.log("EditOrder: Found order:", foundOrder);
       
-      if (!loading && !foundOrder) {
-        navigate("/");
+      if (foundOrder) {
+        setOrder(foundOrder);
+        setOrderNotFound(false);
+      } else {
+        console.log("EditOrder: Order not found, setting orderNotFound to true");
+        setOrderNotFound(true);
       }
     }
-  }, [serial, getOrderBySerial, navigate, loading]);
+  }, [serial, getOrderBySerial, loading]);
+  
+  // Don't redirect immediately when order is not found during loading
+  useEffect(() => {
+    if (orderNotFound && !loading && !order) {
+      console.log("EditOrder: Redirecting to home because order not found");
+      const timer = setTimeout(() => {
+        navigate("/");
+      }, 2000); // Give 2 seconds delay before redirecting
+      
+      return () => clearTimeout(timer);
+    }
+  }, [orderNotFound, loading, order, navigate]);
   
   if (loading) {
     return (
@@ -38,12 +56,26 @@ const EditOrder = () => {
     );
   }
   
-  if (!order) {
+  if (orderNotFound && !order) {
     return (
       <div className="min-h-screen bg-gift-accent dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center p-8">
           <h2 className="text-xl font-bold mb-4">الطلب غير موجود</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            سيتم إعادة توجيهك للصفحة الرئيسية خلال ثوانٍ...
+          </p>
           <Button onClick={() => navigate("/")} variant="outline">العودة للرئيسية</Button>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!order) {
+    return (
+      <div className="min-h-screen bg-gift-accent dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center p-8">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gift-primary mx-auto"></div>
+          <h2 className="text-xl font-bold mb-4 mt-4">جاري البحث عن الطلب...</h2>
         </div>
       </div>
     );

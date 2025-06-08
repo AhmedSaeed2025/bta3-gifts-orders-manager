@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -143,14 +144,14 @@ const OrdersTable = () => {
     navigate(`/orders/${serial}`);
   };
 
-  const handleDeleteOrder = async (index: number) => {
+  const handleDeleteOrder = async (orderIndex: number) => {
     if (window.confirm("هل أنت متأكد من حذف هذا الطلب؟")) {
-      await deleteOrder(index);
+      await deleteOrder(orderIndex);
     }
   };
 
-  const handleStatusChange = async (index: number, newStatus: string) => {
-    await updateOrderStatus(index, newStatus as any);
+  const handleStatusChange = async (orderIndex: number, newStatus: string) => {
+    await updateOrderStatus(orderIndex, newStatus as any);
   };
 
   // Open custom amount dialog
@@ -272,6 +273,13 @@ const OrdersTable = () => {
     }
   };
 
+  // Function to truncate text
+  const truncateText = (text: string, maxLength: number) => {
+    if (!text) return "غير محدد";
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + "...";
+  };
+
   if (loading) {
     return (
       <Card className="animate-pulse">
@@ -295,10 +303,10 @@ const OrdersTable = () => {
               <Package className="h-5 w-5 text-white" />
             </div>
             <div>
-              <CardTitle className={`${isMobile ? "text-lg" : "text-xl"} font-bold text-gray-800 dark:text-white`}>
+              <CardTitle className={`${isMobile ? "text-sm" : "text-lg"} font-bold text-gray-800 dark:text-white`}>
                 إدارة الطلبات
               </CardTitle>
-              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+              <p className={`${isMobile ? "text-xs" : "text-sm"} text-gray-600 dark:text-gray-400 mt-1`}>
                 إدارة وتتبع جميع الطلبات مع إمكانية التعديل والحذف
               </p>
             </div>
@@ -506,12 +514,22 @@ const OrdersTable = () => {
                     <ResponsiveTableRow key={order.serial} className="hover:bg-gray-50 dark:hover:bg-gray-800">
                       <ResponsiveTableCell className="font-medium text-blue-600 dark:text-blue-400 text-xs">{order.serial}</ResponsiveTableCell>
                       <ResponsiveTableCell className="text-gray-600 dark:text-gray-300 text-xs">{new Date(order.dateCreated).toLocaleDateString('ar-EG')}</ResponsiveTableCell>
-                      <ResponsiveTableCell className="font-medium text-gray-800 dark:text-white text-xs">{order.clientName}</ResponsiveTableCell>
+                      <ResponsiveTableCell className="font-medium text-gray-800 dark:text-white text-xs" title={order.clientName}>
+                        {truncateText(order.clientName, isMobile ? 10 : 15)}
+                      </ResponsiveTableCell>
                       {!isMobile && <ResponsiveTableCell className="text-gray-600 dark:text-gray-300 text-xs">{order.phone}</ResponsiveTableCell>}
-                      <ResponsiveTableCell className="text-gray-600 dark:text-gray-300 text-xs">{order.paymentMethod}</ResponsiveTableCell>
-                      <ResponsiveTableCell className="text-gray-600 dark:text-gray-300 text-xs">{order.deliveryMethod}</ResponsiveTableCell>
-                      {!isMobile && <ResponsiveTableCell className="text-gray-600 dark:text-gray-300 text-xs">{order.address || "غير محدد"}</ResponsiveTableCell>}
-                      {!isMobile && <ResponsiveTableCell className="text-gray-600 dark:text-gray-300 text-xs">{order.governorate || "غير محدد"}</ResponsiveTableCell>}
+                      <ResponsiveTableCell className="text-gray-600 dark:text-gray-300 text-xs" title={order.paymentMethod}>
+                        {truncateText(order.paymentMethod, isMobile ? 8 : 12)}
+                      </ResponsiveTableCell>
+                      <ResponsiveTableCell className="text-gray-600 dark:text-gray-300 text-xs" title={order.deliveryMethod}>
+                        {truncateText(order.deliveryMethod, isMobile ? 8 : 12)}
+                      </ResponsiveTableCell>
+                      {!isMobile && <ResponsiveTableCell className="text-gray-600 dark:text-gray-300 text-xs" title={order.address}>
+                        {truncateText(order.address, 20)}
+                      </ResponsiveTableCell>}
+                      {!isMobile && <ResponsiveTableCell className="text-gray-600 dark:text-gray-300 text-xs" title={order.governorate}>
+                        {truncateText(order.governorate, 15)}
+                      </ResponsiveTableCell>}
                       <ResponsiveTableCell className="text-right font-semibold text-green-600 dark:text-green-400 ltr-numbers text-xs">{formatCurrency(order.total)}</ResponsiveTableCell>
                       <ResponsiveTableCell className="text-right font-semibold text-purple-600 dark:text-purple-400 ltr-numbers text-xs">{formatCurrency(calculateOrderNetProfit(order))}</ResponsiveTableCell>
                       <ResponsiveTableCell>
