@@ -26,14 +26,14 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gift-accent dark:bg-gray-900 transition-colors duration-300" dir="rtl">
-      <div className="container mx-auto px-2 md:px-4 py-3 md:py-6" dir="rtl">
-        <div className="flex items-center justify-between mb-4" dir="rtl">
+      <div className="container mx-auto px-2 md:px-4 py-3 md:py-6">
+        <div className="flex items-center justify-between mb-4">
           <Logo />
           <UserProfile />
         </div>
         
-        <Tabs defaultValue="addOrder" className="mt-2 md:mt-4" dir="rtl">
-          <TabsList className={`grid w-full grid-cols-7 gap-1 ${isMobile ? 'h-16' : 'h-10'}`} dir="rtl">
+        <Tabs defaultValue="addOrder" className="mt-2 md:mt-4">
+          <TabsList className={`grid w-full grid-cols-7 gap-1 ${isMobile ? 'h-16' : 'h-10'}`}>
             <TabsTrigger 
               value="addOrder" 
               className={`${isMobile ? 'flex-col text-xs p-1 h-14' : 'text-sm'}`}

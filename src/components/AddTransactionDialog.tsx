@@ -80,7 +80,7 @@ const AddTransactionDialog = ({ onTransactionAdded }: AddTransactionDialogProps)
           إضافة معاملة
         </Button>
       </DialogTrigger>
-      <DialogContent className="rtl max-w-md" style={{ direction: 'rtl' }}>
+      <DialogContent className="max-w-md" dir="rtl">
         <DialogHeader>
           <DialogTitle>إضافة معاملة جديدة</DialogTitle>
         </DialogHeader>
@@ -100,15 +100,22 @@ const AddTransactionDialog = ({ onTransactionAdded }: AddTransactionDialogProps)
 
           <div className="space-y-2">
             <Label htmlFor="amount">المبلغ *</Label>
-            <Input
-              id="amount"
-              type="number"
-              step="0.01"
-              value={formData.amount}
-              onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
-              placeholder="أدخل المبلغ"
-              required
-            />
+            <div className="relative">
+              <Input
+                id="amount"
+                type="number"
+                step="0.01"
+                value={formData.amount}
+                onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+                placeholder="أدخل المبلغ"
+                className="text-right pr-12"
+                dir="rtl"
+                required
+              />
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
+                ج.م
+              </div>
+            </div>
           </div>
 
           <div className="space-y-2">

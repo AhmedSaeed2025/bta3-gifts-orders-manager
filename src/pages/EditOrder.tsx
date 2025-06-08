@@ -35,7 +35,7 @@ const EditOrder = () => {
   
   if (loading) {
     return (
-      <div className="min-h-screen bg-gift-accent dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gift-accent dark:bg-gray-900 flex items-center justify-center" dir="rtl">
         <div className="text-center p-8">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gift-primary mx-auto"></div>
           <h2 className="text-xl font-bold mb-4 mt-4">جاري التحميل...</h2>
@@ -78,7 +78,7 @@ const EditOrder = () => {
   
   if (!order) {
     return (
-      <div className="min-h-screen bg-gift-accent dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gift-accent dark:bg-gray-900 flex items-center justify-center" dir="rtl">
         <div className="text-center p-8">
           <h2 className="text-xl font-bold mb-4">جاري التحميل...</h2>
         </div>

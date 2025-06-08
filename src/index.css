@@ -75,6 +75,12 @@ body {
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
   font-family: 'Inter', sans-serif;
+  direction: rtl;
+}
+
+/* RTL Support */
+[dir="rtl"] {
+  text-align: right;
 }
 
 /* Mobile responsive text sizes */
@@ -145,19 +151,6 @@ body {
   .mobile-card-content {
     padding: 0.25rem 0.5rem 0.5rem 0.5rem;
   }
-}
-
-/* RTL Support */
-[dir="rtl"] {
-  text-align: right;
-}
-
-[dir="rtl"] .flex {
-  flex-direction: row-reverse;
-}
-
-[dir="rtl"] .grid {
-  direction: rtl;
 }
 
 /* Enhanced mobile responsiveness for specific components */
@@ -266,4 +259,10 @@ body {
     font-size: 0.75rem;
     padding: 0.5rem;
   }
+}
+
+/* RTL specific styles */
+.rtl {
+  direction: rtl;
+  text-align: right;
 }

@@ -51,14 +51,14 @@ const CustomAmountDialog: React.FC<CustomAmountDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md" dir="rtl">
+      <DialogContent className="sm:max-w-md rtl" dir="rtl">
         <DialogHeader>
           <DialogTitle className="text-right">{title}</DialogTitle>
           <DialogDescription className="text-right">
             أدخل المبلغ المطلوب تسجيله في المعاملة
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4" dir="rtl">
+        <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="amount" className="text-right block">
               المبلغ (بالجنيه المصري)
@@ -70,20 +70,20 @@ const CustomAmountDialog: React.FC<CustomAmountDialogProps> = ({
                 value={amount}
                 onChange={handleAmountChange}
                 placeholder="0.00"
-                className="text-left font-mono text-lg"
-                dir="ltr"
+                className="text-right font-mono text-lg pr-12"
+                dir="rtl"
               />
-              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
                 ج.م
               </div>
             </div>
             {defaultAmount > 0 && (
               <p className="text-sm text-gray-600 text-right">
-                المبلغ المسجل في الطلب: <span className="font-semibold" dir="ltr">{formatCurrency(defaultAmount)}</span>
+                المبلغ المسجل في الطلب: <span className="font-semibold">{formatCurrency(defaultAmount)}</span>
               </p>
             )}
           </div>
-          <div className="flex gap-3 justify-end" dir="rtl">
+          <div className="flex gap-3 justify-end">
             <Button variant="outline" onClick={onClose}>
               إلغاء
             </Button>

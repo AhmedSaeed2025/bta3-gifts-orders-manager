@@ -188,10 +188,7 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
         console.log('Updating order:', editingOrder.serial);
         await updateOrder(editingOrder.serial, orderData);
         toast.success("تم تحديث الطلب بنجاح");
-        // Navigate back to main page after successful update
-        setTimeout(() => {
-          navigate("/");
-        }, 1000);
+        // Stay on the current page to allow further editing
       } else {
         await addOrder(orderData);
         toast.success("تم إضافة الطلب بنجاح");
@@ -218,56 +215,58 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
   };
 
   return (
-    <Card className={isMobile ? "text-xs" : ""}>
-      <CardHeader>
-        <CardTitle className={`${isMobile ? "text-sm" : "text-lg"}`}>
-          {editingOrder ? `تعديل الطلب - ${editingOrder.serial}` : "إضافة طلب جديد"}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
-          <CustomerDataForm
-            customerData={customerData}
-            onCustomerDataChange={handleCustomerDataChange}
-            onSelectChange={handleCustomerSelectChange}
-          />
-          
-          <ItemAddForm
-            currentItem={currentItem}
-            availableProductTypes={availableProductTypes}
-            availableSizes={availableSizes}
-            onItemChange={handleItemChange}
-            onSelectChange={handleItemSelectChange}
-            onAddItem={addItem}
-            products={products}
-          />
-          
-          <ItemsTable
-            items={items}
-            onRemoveItem={removeItem}
-            onUpdateItem={updateItem}
-            subtotal={subtotal}
-            shippingCost={customerData.shippingCost}
-            discount={0}
-            deposit={customerData.deposit}
-            totalAmount={totalAmount}
-            products={products}
-            editMode={!!editingOrder}
-          />
-          
-          <Button 
-            type="submit" 
-            className={`bg-gift-primary hover:bg-gift-primaryHover w-full ${isMobile ? "text-xs h-8" : ""}`}
-            disabled={items.length === 0 || isSubmitting}
-          >
-            {isSubmitting ? 
-              (editingOrder ? "جاري التحديث..." : "جاري الإضافة...") : 
-              (editingOrder ? "تحديث الطلب" : "إضافة الطلب")
-            }
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+    <div dir="rtl">
+      <Card className={isMobile ? "text-xs" : ""}>
+        <CardHeader>
+          <CardTitle className={`${isMobile ? "text-sm" : "text-lg"}`}>
+            {editingOrder ? `تعديل الطلب - ${editingOrder.serial}` : "إضافة طلب جديد"}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
+            <CustomerDataForm
+              customerData={customerData}
+              onCustomerDataChange={handleCustomerDataChange}
+              onSelectChange={handleCustomerSelectChange}
+            />
+            
+            <ItemAddForm
+              currentItem={currentItem}
+              availableProductTypes={availableProductTypes}
+              availableSizes={availableSizes}
+              onItemChange={handleItemChange}
+              onSelectChange={handleItemSelectChange}
+              onAddItem={addItem}
+              products={products}
+            />
+            
+            <ItemsTable
+              items={items}
+              onRemoveItem={removeItem}
+              onUpdateItem={updateItem}
+              subtotal={subtotal}
+              shippingCost={customerData.shippingCost}
+              discount={0}
+              deposit={customerData.deposit}
+              totalAmount={totalAmount}
+              products={products}
+              editMode={!!editingOrder}
+            />
+            
+            <Button 
+              type="submit" 
+              className={`bg-gift-primary hover:bg-gift-primaryHover w-full ${isMobile ? "text-xs h-8" : ""}`}
+              disabled={items.length === 0 || isSubmitting}
+            >
+              {isSubmitting ? 
+                (editingOrder ? "جاري التحديث..." : "جاري الإضافة...") : 
+                (editingOrder ? "تحديث الطلب" : "إضافة الطلب")
+              }
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
