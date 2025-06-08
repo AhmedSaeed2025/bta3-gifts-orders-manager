@@ -15,17 +15,23 @@ const EditOrder = () => {
   const { getOrderBySerial, loading } = useSupabaseOrders();
   const navigate = useNavigate();
   const [order, setOrder] = useState<Order | undefined>();
+  const [orderNotFound, setOrderNotFound] = useState(false);
   
   useEffect(() => {
-    if (serial) {
+    if (serial && !loading) {
+      console.log('Looking for order with serial:', serial);
       const foundOrder = getOrderBySerial(serial);
-      setOrder(foundOrder);
+      console.log('Found order:', foundOrder);
       
-      if (!loading && !foundOrder) {
-        navigate("/");
+      if (foundOrder) {
+        setOrder(foundOrder);
+        setOrderNotFound(false);
+      } else {
+        console.log('Order not found, setting orderNotFound to true');
+        setOrderNotFound(true);
       }
     }
-  }, [serial, getOrderBySerial, navigate, loading]);
+  }, [serial, getOrderBySerial, loading]);
   
   if (loading) {
     return (
@@ -38,20 +44,51 @@ const EditOrder = () => {
     );
   }
   
+  if (orderNotFound) {
+    return (
+      <div className="min-h-screen bg-gift-accent dark:bg-gray-900 transition-colors duration-300" dir="rtl">
+        <div className="container mx-auto px-4 py-4 md:py-6">
+          <div className="flex items-center justify-between mb-4">
+            <Logo />
+            <UserProfile />
+          </div>
+          
+          <div className="mb-4">
+            <Button 
+              onClick={() => navigate("/")}
+              variant="outline"
+              className="flex items-center gap-2 text-xs md:text-sm h-8 md:h-10"
+            >
+              <ArrowRight size={16} />
+              العودة للرئيسية
+            </Button>
+          </div>
+          
+          <Card>
+            <CardContent className="text-center p-8">
+              <h2 className="text-xl font-bold mb-4">الطلب غير موجود</h2>
+              <p className="text-gray-600 mb-4">لم يتم العثور على الطلب رقم: {serial}</p>
+              <Button onClick={() => navigate("/")} variant="outline">العودة للرئيسية</Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+  
   if (!order) {
     return (
       <div className="min-h-screen bg-gift-accent dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center p-8">
-          <h2 className="text-xl font-bold mb-4">الطلب غير موجود</h2>
-          <Button onClick={() => navigate("/")} variant="outline">العودة للرئيسية</Button>
+          <h2 className="text-xl font-bold mb-4">جاري التحميل...</h2>
         </div>
       </div>
     );
   }
   
   return (
-    <div className="min-h-screen bg-gift-accent dark:bg-gray-900 transition-colors duration-300">
-      <div className="container mx-auto px-4 py-4 md:py-6">
+    <div className="min-h-screen bg-gift-accent dark:bg-gray-900 transition-colors duration-300" dir="rtl">
+      <div className="container mx-auto px-2 md:px-4 py-3 md:py-6">
         <div className="flex items-center justify-between mb-4">
           <Logo />
           <UserProfile />
@@ -68,14 +105,7 @@ const EditOrder = () => {
           </Button>
         </div>
         
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg md:text-xl">تعديل الطلب - {order.serial}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <OrderForm editingOrder={order} />
-          </CardContent>
-        </Card>
+        <OrderForm editingOrder={order} />
       </div>
     </div>
   );
