@@ -1,92 +1,284 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
 import { useSupabaseOrders } from "@/context/SupabaseOrderContext";
-import { useTransactions } from "@/context/TransactionContext";
 import { formatCurrency } from "@/lib/utils";
-import { ORDER_STATUS_LABELS, ORDER_STATUS_COLORS } from "@/types";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { 
-  MoreVertical, 
-  Eye, 
-  Edit, 
-  Trash2, 
-  FileText, 
-  DollarSign, 
-  Search,
-  Filter,
-  List
-} from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import CustomAmountDialog from "./CustomAmountDialog";
+import { 
+  Edit, 
+  Eye, 
+  Trash2, 
+  Package, 
+  Filter, 
+  RefreshCw,
+  TrendingUp,
+  Calendar,
+  DollarSign,
+  CreditCard,
+  Truck,
+  X,
+  Clock
+} from "lucide-react";
+import { 
+  ResponsiveTable, 
+  ResponsiveTableHead, 
+  ResponsiveTableBody, 
+  ResponsiveTableRow, 
+  ResponsiveTableHeader, 
+  ResponsiveTableCell 
+} from "@/components/ui/responsive-table";
+import { useTransactions } from "@/context/TransactionContext";
 
 const OrdersTable = () => {
-  const { orders, deleteOrder, loading } = useSupabaseOrders();
-  const { addTransaction } = useTransactions();
-  const navigate = useNavigate();
+  const { orders, loading, deleteOrder, updateOrderStatus } = useSupabaseOrders();
+  const { addTransaction, deleteTransaction, getTransactionsByOrderSerial } = useTransactions();
   const isMobile = useIsMobile();
-  
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [paymentFilter, setPaymentFilter] = useState("all");
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
-  const filteredOrders = useMemo(() => {
-    return orders.filter(order => {
-      const searchMatch = order.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.phone.includes(searchTerm) ||
-                         order.serial.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const statusMatch = statusFilter === "all" || order.status === statusFilter;
-      const paymentMatch = paymentFilter === "all" || order.paymentMethod === paymentFilter;
-      
-      return searchMatch && statusMatch && paymentMatch;
+  // Filter states
+  const [filterMonth, setFilterMonth] = useState<string>("all");
+  const [filterYear, setFilterYear] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterPaymentMethod, setFilterPaymentMethod] = useState<string>("all");
+
+  // Custom amount dialog states
+  const [customAmountDialog, setCustomAmountDialog] = useState<{
+    isOpen: boolean;
+    type: 'collection' | 'shipping' | 'cost';
+    order: any;
+    defaultAmount: number;
+  }>({
+    isOpen: false,
+    type: 'collection',
+    order: null,
+    defaultAmount: 0
+  });
+
+  const safeOrders = Array.isArray(orders) ? orders : [];
+
+  // Get available years for filter
+  const availableYears = React.useMemo(() => {
+    const years = new Set<string>();
+    safeOrders.forEach(order => {
+      const year = new Date(order.dateCreated).getFullYear().toString();
+      years.add(year);
     });
-  }, [orders, searchTerm, statusFilter, paymentFilter]);
+    return Array.from(years).sort().reverse();
+  }, [safeOrders]);
 
-  const handleDelete = async (orderSerial: string) => {
-    if (window.confirm("هل أنت متأكد من حذف هذا الطلب؟")) {
-      try {
-        await deleteOrder(orderSerial);
-        toast.success("تم حذف الطلب بنجاح");
-      } catch (error) {
-        toast.error("حدث خطأ أثناء حذف الطلب");
+  // Filter orders based on selected filters
+  const filteredOrders = React.useMemo(() => {
+    return safeOrders.filter(order => {
+      const orderDate = new Date(order.dateCreated);
+      const orderYear = orderDate.getFullYear().toString();
+      const orderMonth = (orderDate.getMonth() + 1).toString().padStart(2, '0');
+      
+      if (filterYear !== "all" && orderYear !== filterYear) return false;
+      if (filterMonth !== "all" && orderMonth !== filterMonth) return false;
+      if (filterStatus !== "all" && order.status !== filterStatus) return false;
+      if (filterPaymentMethod !== "all" && order.paymentMethod !== filterPaymentMethod) return false;
+      
+      return true;
+    });
+  }, [safeOrders, filterMonth, filterYear, filterStatus, filterPaymentMethod]);
+
+  // Calculate summary statistics
+  const summaryStats = React.useMemo(() => {
+    if (!filteredOrders || filteredOrders.length === 0) {
+      return {
+        totalOrders: 0,
+        pendingOrders: 0,
+        totalRevenue: 0,
+        totalCost: 0,
+        totalShipping: 0,
+        netProfit: 0
+      };
+    }
+
+    let totalRevenue = 0;
+    let totalCost = 0;
+    let totalShipping = 0;
+    let pendingOrders = 0;
+
+    filteredOrders.forEach(order => {
+      if (order.status === 'pending') {
+        pendingOrders++;
       }
+      
+      totalRevenue += order.total;
+      totalShipping += order.shippingCost || 0;
+      
+      // Calculate total cost for this order from items
+      const orderCost = order.items?.reduce((sum, item) => sum + (item.cost * item.quantity), 0) || 0;
+      totalCost += orderCost;
+    });
+
+    // Fixed net profit calculation: Revenue - Cost - Shipping (العربون لا يؤثر على الربح)
+    const netProfit = totalRevenue - totalCost - totalShipping;
+
+    return {
+      totalOrders: filteredOrders.length,
+      pendingOrders,
+      totalRevenue,
+      totalCost,
+      totalShipping,
+      netProfit
+    };
+  }, [filteredOrders]);
+
+  const handleEditOrder = (serial: string) => {
+    navigate(`/edit-order/${serial}`);
+  };
+
+  const handleViewOrder = (serial: string) => {
+    navigate(`/orders/${serial}`);
+  };
+
+  const handleDeleteOrder = async (index: number) => {
+    if (window.confirm("هل أنت متأكد من حذف هذا الطلب؟")) {
+      await deleteOrder(index);
     }
   };
 
-  const handleCollectOrder = (order: any) => {
-    const transaction = {
-      transaction_type: "revenue",
-      amount: order.total,
-      description: `تحصيل طلب ${order.serial} - ${order.clientName}`,
-      order_serial: order.serial
-    };
-    
-    addTransaction(transaction);
-    toast.success(`تم تسجيل تحصيل الطلب ${order.serial}`);
+  const handleStatusChange = async (index: number, newStatus: string) => {
+    await updateOrderStatus(index, newStatus as any);
   };
 
-  const truncateText = (text: string, maxLength: number) => {
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength) + '...';
+  // Open custom amount dialog
+  const openCustomAmountDialog = (type: 'collection' | 'shipping' | 'cost', order: any) => {
+    let defaultAmount = 0;
+    if (type === 'collection') {
+      // For collection, show the total order amount minus any deposit already paid
+      defaultAmount = order.total - (order.deposit || 0);
+    } else if (type === 'shipping') {
+      defaultAmount = order.shippingCost || 0;
+    } else if (type === 'cost') {
+      defaultAmount = order.items?.reduce((sum: number, item: any) => sum + (item.cost * item.quantity), 0) || 0;
+    }
+
+    setCustomAmountDialog({
+      isOpen: true,
+      type,
+      order,
+      defaultAmount
+    });
+  };
+
+  // Handle custom amount confirmation
+  const handleCustomAmountConfirm = async (amount: number) => {
+    const { type, order } = customAmountDialog;
+    
+    try {
+      let description = '';
+      let transactionType = '';
+      
+      if (type === 'collection') {
+        transactionType = 'order_collection';
+        description = `تحصيل طلب رقم ${order.serial} - العميل: ${order.clientName}`;
+      } else if (type === 'shipping') {
+        transactionType = 'shipping_payment';
+        description = `دفع شحن طلب رقم ${order.serial} - ${order.deliveryMethod}`;
+      } else if (type === 'cost') {
+        transactionType = 'cost_payment';
+        description = `دفع تكلفة طلب رقم ${order.serial} - تكلفة الإنتاج`;
+      }
+
+      await addTransaction({
+        transaction_type: transactionType,
+        amount: amount,
+        description: description,
+        order_serial: order.serial
+      });
+
+      toast.success("تم تسجيل المعاملة بنجاح");
+    } catch (error) {
+      console.error('Error recording transaction:', error);
+      toast.error("حدث خطأ في تسجيل المعاملة");
+    }
+  };
+
+  // Cancel transaction functions
+  const handleCancelTransaction = async (orderSerial: string, transactionType: string) => {
+    try {
+      const orderTransactions = getTransactionsByOrderSerial(orderSerial);
+      const transactionToCancel = orderTransactions.find(t => t.transaction_type === transactionType);
+      
+      if (transactionToCancel) {
+        await deleteTransaction(transactionToCancel.id);
+        toast.success("تم إلغاء المعاملة بنجاح");
+      }
+    } catch (error) {
+      console.error('Error canceling transaction:', error);
+      toast.error("حدث خطأ في إلغاء المعاملة");
+    }
+  };
+
+  // Check if transaction exists for an order
+  const hasTransaction = (orderSerial: string, transactionType: string) => {
+    const orderTransactions = getTransactionsByOrderSerial(orderSerial);
+    return orderTransactions.some(t => t.transaction_type === transactionType);
+  };
+
+  const clearFilters = () => {
+    setFilterMonth("all");
+    setFilterYear("all");
+    setFilterStatus("all");
+    setFilterPaymentMethod("all");
+  };
+
+  const getStatusBadgeColor = (status: string) => {
+    switch (status) {
+      case 'shipped': return 'bg-green-100 text-green-800 border-green-300';
+      case 'confirmed': return 'bg-blue-100 text-blue-800 border-blue-300';
+      case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+      case 'sentToPrinter': return 'bg-purple-100 text-purple-800 border-purple-300';
+      case 'readyForDelivery': return 'bg-orange-100 text-orange-800 border-orange-300';
+      default: return 'bg-gray-100 text-gray-800 border-gray-300';
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'pending': return 'في انتظار التأكيد';
+      case 'confirmed': return 'تم التأكيد';
+      case 'sentToPrinter': return 'تم الإرسال للمطبعة';
+      case 'readyForDelivery': return 'تحت التسليم';
+      case 'shipped': return 'تم الشحن';
+      default: return status;
+    }
+  };
+
+  const calculateOrderNetProfit = (order: any) => {
+    const orderCost = order.items?.reduce((sum: number, item: any) => sum + (item.cost * item.quantity), 0) || 0;
+    // Fixed calculation: Revenue - Cost - Shipping (العربون لا يؤثر على الربح)
+    return order.total - orderCost - (order.shippingCost || 0);
+  };
+
+  const getCustomAmountDialogTitle = (type: 'collection' | 'shipping' | 'cost') => {
+    switch (type) {
+      case 'collection': return 'تحصيل مبلغ من العميل';
+      case 'shipping': return 'دفع مصاريف الشحن';
+      case 'cost': return 'دفع تكلفة الإنتاج';
+      default: return '';
+    }
   };
 
   if (loading) {
     return (
-      <Card>
-        <CardContent className="flex items-center justify-center py-8">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gift-primary mx-auto"></div>
-            <p className="mt-2 text-gray-600">جاري تحميل الطلبات...</p>
+      <Card className="animate-pulse">
+        <CardContent className="flex items-center justify-center py-12">
+          <div className="text-center space-y-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-gift-primary border-t-transparent mx-auto"></div>
+            <p className="text-lg text-gray-600 dark:text-gray-400">جاري تحميل الطلبات...</p>
           </div>
         </CardContent>
       </Card>
@@ -94,259 +286,374 @@ const OrdersTable = () => {
   }
 
   return (
-    <Card className="shadow-sm">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg md:text-xl flex items-center gap-2">
-          <List className="h-5 w-5" />
-          إدارة الطلبات ({filteredOrders.length})
-        </CardTitle>
-        
-        {/* Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mt-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="البحث بالاسم أو الهاتف أو رقم الطلب"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+    <div className="rtl space-y-4" dir="rtl">
+      {/* Header */}
+      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-l-4 border-l-blue-500">
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-500 rounded-lg">
+              <Package className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <CardTitle className={`${isMobile ? "text-lg" : "text-xl"} font-bold text-gray-800 dark:text-white`}>
+                إدارة الطلبات
+              </CardTitle>
+              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                إدارة وتتبع جميع الطلبات مع إمكانية التعديل والحذف
+              </p>
+            </div>
           </div>
-          
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger>
-              <SelectValue placeholder="فلترة بالحالة" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">جميع الحالات</SelectItem>
-              <SelectItem value="pending">منتظر</SelectItem>
-              <SelectItem value="confirmed">مؤكد</SelectItem>
-              <SelectItem value="shipped">مشحون</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <Select value={paymentFilter} onValueChange={setPaymentFilter}>
-            <SelectTrigger>
-              <SelectValue placeholder="فلترة بطريقة الدفع" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">جميع طرق الدفع</SelectItem>
-              <SelectItem value="كاش">كاش</SelectItem>
-              <SelectItem value="انستا باي">انستا باي</SelectItem>
-              <SelectItem value="فودافون كاش">فودافون كاش</SelectItem>
-              <SelectItem value="تحويل بنكي">تحويل بنكي</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-gray-500" />
-            <span className="text-sm text-gray-600">
-              {filteredOrders.length} من {orders.length} طلب
-            </span>
-          </div>
-        </div>
-      </CardHeader>
-      
-      <CardContent className="p-0">
-        {filteredOrders.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-gray-500">لا توجد طلبات</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            {isMobile ? (
-              // Mobile Card View
-              <div className="space-y-3 p-4">
-                {filteredOrders.map((order) => (
-                  <Card key={order.serial} className="border-l-4 border-l-gift-primary">
-                    <CardContent className="p-4">
-                      <div className="flex justify-between items-start mb-3">
-                        <div>
-                          <h3 className="font-bold text-sm">{order.serial}</h3>
-                          <p className="text-sm text-gray-600">{truncateText(order.clientName, 20)}</p>
-                          <p className="text-xs text-gray-500">{order.phone}</p>
-                        </div>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => navigate(`/orders/${order.serial}`)}>
-                              <Eye className="h-4 w-4 mr-2" />
-                              عرض
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => navigate(`/edit-order/${order.serial}`)}>
-                              <Edit className="h-4 w-4 mr-2" />
-                              تعديل
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleCollectOrder(order)}>
-                              <DollarSign className="h-4 w-4 mr-2" />
-                              تحصيل
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => handleDelete(order.serial)}
-                              className="text-red-600"
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              حذف
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div>
-                          <span className="text-gray-500">الحالة:</span>
-                          <Badge className={`mr-1 ${ORDER_STATUS_COLORS[order.status]}`}>
-                            {ORDER_STATUS_LABELS[order.status]}
-                          </Badge>
-                        </div>
-                        <div>
-                          <span className="text-gray-500">الإجمالي:</span>
-                          <span className="font-bold text-gift-primary mr-1">
-                            {formatCurrency(order.total)}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-gray-500">الدفع:</span>
-                          <span className="mr-1">{order.paymentMethod}</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-500">التاريخ:</span>
-                          <span className="mr-1">
-                            {new Date(order.dateCreated).toLocaleDateString('ar-EG')}
-                          </span>
-                        </div>
-                      </div>
-                      
-                      {order.address && (
-                        <div className="mt-2 text-xs">
-                          <span className="text-gray-500">العنوان:</span>
-                          <span className="mr-1">{truncateText(order.address, 30)}</span>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
+        </CardHeader>
+      </Card>
+
+      {/* Summary Statistics */}
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-100 text-xs font-medium">إجمالي الطلبات</p>
+                <p className={`${isMobile ? "text-base" : "text-lg"} font-bold ltr-numbers`}>{summaryStats.totalOrders}</p>
               </div>
-            ) : (
-              // Desktop Table View
-              <table className="w-full">
-                <thead className="bg-gray-50 dark:bg-gray-800">
-                  <tr>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      رقم الطلب
-                    </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      العميل
-                    </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      الهاتف
-                    </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      الحالة
-                    </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      الإجمالي
-                    </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      طريقة الدفع
-                    </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      التاريخ
-                    </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      العنوان
-                    </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      إجراءات
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                  {filteredOrders.map((order) => (
-                    <tr key={order.serial} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                          {order.serial}
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900 dark:text-gray-100">
-                          {truncateText(order.clientName, 15)}
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900 dark:text-gray-100">
-                          {order.phone}
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        <Badge className={ORDER_STATUS_COLORS[order.status]}>
-                          {ORDER_STATUS_LABELS[order.status]}
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        <div className="text-sm font-bold text-gift-primary">
-                          {formatCurrency(order.total)}
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900 dark:text-gray-100">
-                          {order.paymentMethod}
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900 dark:text-gray-100">
-                          {new Date(order.dateCreated).toLocaleDateString('ar-EG')}
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900 dark:text-gray-100">
-                          {order.address ? truncateText(order.address, 20) : '-'}
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => navigate(`/orders/${order.serial}`)}>
-                              <Eye className="h-4 w-4 mr-2" />
-                              عرض التفاصيل
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => navigate(`/edit-order/${order.serial}`)}>
-                              <Edit className="h-4 w-4 mr-2" />
-                              تعديل الطلب
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleCollectOrder(order)}>
-                              <DollarSign className="h-4 w-4 mr-2" />
-                              تسجيل تحصيل
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => handleDelete(order.serial)}
-                              className="text-red-600"
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              حذف الطلب
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </td>
-                    </tr>
+              <Calendar className="h-5 w-5 text-blue-200" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white">
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-yellow-100 text-xs font-medium">طلبات منتظرة</p>
+                <p className={`${isMobile ? "text-base" : "text-lg"} font-bold ltr-numbers`}>{summaryStats.pendingOrders}</p>
+              </div>
+              <Clock className="h-5 w-5 text-yellow-200" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-100 text-xs font-medium">إجمالي المبيعات</p>
+                <p className={`${isMobile ? "text-xs" : "text-sm"} font-bold ltr-numbers`}>{formatCurrency(summaryStats.totalRevenue)}</p>
+              </div>
+              <DollarSign className="h-5 w-5 text-green-200" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white">
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-red-100 text-xs font-medium">إجمالي التكلفة</p>
+                <p className={`${isMobile ? "text-xs" : "text-sm"} font-bold ltr-numbers`}>{formatCurrency(summaryStats.totalCost)}</p>
+              </div>
+              <Package className="h-5 w-5 text-red-200" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white">
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-orange-100 text-xs font-medium">إجمالي الشحن</p>
+                <p className={`${isMobile ? "text-xs" : "text-sm"} font-bold ltr-numbers`}>{formatCurrency(summaryStats.totalShipping)}</p>
+              </div>
+              <Truck className="h-5 w-5 text-orange-200" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-purple-100 text-xs font-medium">صافي الربح</p>
+                <p className={`${isMobile ? "text-xs" : "text-sm"} font-bold ltr-numbers`}>{formatCurrency(summaryStats.netProfit)}</p>
+              </div>
+              <TrendingUp className="h-5 w-5 text-purple-200" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Filters */}
+      <Card className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 border-l-4 border-l-indigo-500">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Filter className="h-4 w-4" />
+            فلاتر الطلبات
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <div className={`grid gap-3 ${isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-5"}`}>
+            <div className="space-y-1">
+              <Label htmlFor="filterYear" className="text-xs">السنة</Label>
+              <Select value={filterYear} onValueChange={setFilterYear}>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="اختر السنة" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">جميع السنوات</SelectItem>
+                  {availableYears.map(year => (
+                    <SelectItem key={year} value={year}>{year}</SelectItem>
                   ))}
-                </tbody>
-              </table>
-            )}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-1">
+              <Label htmlFor="filterMonth" className="text-xs">الشهر</Label>
+              <Select value={filterMonth} onValueChange={setFilterMonth}>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="اختر الشهر" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">جميع الشهور</SelectItem>
+                  <SelectItem value="01">يناير</SelectItem>
+                  <SelectItem value="02">فبراير</SelectItem>
+                  <SelectItem value="03">مارس</SelectItem>
+                  <SelectItem value="04">أبريل</SelectItem>
+                  <SelectItem value="05">مايو</SelectItem>
+                  <SelectItem value="06">يونيو</SelectItem>
+                  <SelectItem value="07">يوليو</SelectItem>
+                  <SelectItem value="08">أغسطس</SelectItem>
+                  <SelectItem value="09">سبتمبر</SelectItem>
+                  <SelectItem value="10">أكتوبر</SelectItem>
+                  <SelectItem value="11">نوفمبر</SelectItem>
+                  <SelectItem value="12">ديسمبر</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-1">
+              <Label htmlFor="filterStatus" className="text-xs">الحالة</Label>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="اختر الحالة" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">جميع الحالات</SelectItem>
+                  <SelectItem value="pending">في انتظار التأكيد</SelectItem>
+                  <SelectItem value="confirmed">تم التأكيد</SelectItem>
+                  <SelectItem value="sentToPrinter">تم الإرسال للمطبعة</SelectItem>
+                  <SelectItem value="readyForDelivery">تحت التسليم</SelectItem>
+                  <SelectItem value="shipped">تم الشحن</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1">
+              <Label htmlFor="filterPaymentMethod" className="text-xs">طريقة السداد</Label>
+              <Select value={filterPaymentMethod} onValueChange={setFilterPaymentMethod}>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="اختر طريقة السداد" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">جميع الطرق</SelectItem>
+                  <SelectItem value="كاش">كاش</SelectItem>
+                  <SelectItem value="فيزا">فيزا</SelectItem>
+                  <SelectItem value="تحويل">تحويل</SelectItem>
+                  <SelectItem value="آجل">آجل</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="flex items-end">
+              <Button 
+                onClick={clearFilters}
+                variant="outline"
+                size="sm"
+                className="w-full flex items-center gap-1 h-8 text-xs"
+              >
+                <RefreshCw className="h-3 w-3" />
+                مسح الفلاتر
+              </Button>
+            </div>
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      {/* Orders Table */}
+      <Card>
+        <CardContent className={`${isMobile ? "p-2" : "p-4"}`}>
+          <div className="overflow-x-auto">
+            <ResponsiveTable className="w-full">
+              <ResponsiveTableHead>
+                <ResponsiveTableRow className="bg-gray-50 dark:bg-gray-800">
+                  <ResponsiveTableHeader className="font-semibold text-xs">رقم الطلب</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className="font-semibold text-xs">التاريخ</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className="font-semibold text-xs">اسم العميل</ResponsiveTableHeader>
+                  {!isMobile && <ResponsiveTableHeader className="font-semibold text-xs">التليفون</ResponsiveTableHeader>}
+                  <ResponsiveTableHeader className="font-semibold text-xs">طريقة السداد</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className="font-semibold text-xs">طريقة التوصيل</ResponsiveTableHeader>
+                  {!isMobile && <ResponsiveTableHeader className="font-semibold text-xs">العنوان</ResponsiveTableHeader>}
+                  {!isMobile && <ResponsiveTableHeader className="font-semibold text-xs">المحافظة</ResponsiveTableHeader>}
+                  <ResponsiveTableHeader className="font-semibold text-xs">إجمالي الطلب</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className="font-semibold text-xs">صافي الربح</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className="font-semibold text-xs">الحالة</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className="font-semibold text-xs">إجراءات مالية</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className="font-semibold text-xs">إجراءات</ResponsiveTableHeader>
+                </ResponsiveTableRow>
+              </ResponsiveTableHead>
+              <ResponsiveTableBody>
+                {filteredOrders.length > 0 ? (
+                  filteredOrders.map((order, index) => (
+                    <ResponsiveTableRow key={order.serial} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                      <ResponsiveTableCell className="font-medium text-blue-600 dark:text-blue-400 text-xs">{order.serial}</ResponsiveTableCell>
+                      <ResponsiveTableCell className="text-gray-600 dark:text-gray-300 text-xs">{new Date(order.dateCreated).toLocaleDateString('ar-EG')}</ResponsiveTableCell>
+                      <ResponsiveTableCell className="font-medium text-gray-800 dark:text-white text-xs">{order.clientName}</ResponsiveTableCell>
+                      {!isMobile && <ResponsiveTableCell className="text-gray-600 dark:text-gray-300 text-xs">{order.phone}</ResponsiveTableCell>}
+                      <ResponsiveTableCell className="text-gray-600 dark:text-gray-300 text-xs">{order.paymentMethod}</ResponsiveTableCell>
+                      <ResponsiveTableCell className="text-gray-600 dark:text-gray-300 text-xs">{order.deliveryMethod}</ResponsiveTableCell>
+                      {!isMobile && <ResponsiveTableCell className="text-gray-600 dark:text-gray-300 text-xs">{order.address || "غير محدد"}</ResponsiveTableCell>}
+                      {!isMobile && <ResponsiveTableCell className="text-gray-600 dark:text-gray-300 text-xs">{order.governorate || "غير محدد"}</ResponsiveTableCell>}
+                      <ResponsiveTableCell className="text-right font-semibold text-green-600 dark:text-green-400 ltr-numbers text-xs">{formatCurrency(order.total)}</ResponsiveTableCell>
+                      <ResponsiveTableCell className="text-right font-semibold text-purple-600 dark:text-purple-400 ltr-numbers text-xs">{formatCurrency(calculateOrderNetProfit(order))}</ResponsiveTableCell>
+                      <ResponsiveTableCell>
+                        <Select value={order.status} onValueChange={(value) => handleStatusChange(index, value)}>
+                          <SelectTrigger className="w-32 h-8">
+                            <SelectValue>
+                              <Badge variant="outline" className={`${getStatusBadgeColor(order.status)} text-xs`}>
+                                {getStatusLabel(order.status)}
+                              </Badge>
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending">في انتظار التأكيد</SelectItem>
+                            <SelectItem value="confirmed">تم التأكيد</SelectItem>
+                            <SelectItem value="sentToPrinter">تم الإرسال للمطبعة</SelectItem>
+                            <SelectItem value="readyForDelivery">تحت التسليم</SelectItem>
+                            <SelectItem value="shipped">تم الشحن</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </ResponsiveTableCell>
+                      <ResponsiveTableCell>
+                        <div className="flex flex-col gap-1">
+                          {!hasTransaction(order.serial, 'order_collection') ? (
+                            <Button
+                              size="sm"
+                              onClick={() => openCustomAmountDialog('collection', order)}
+                              className="bg-green-600 hover:bg-green-700 text-white h-7 text-xs"
+                            >
+                              <DollarSign className="h-3 w-3 mr-1" />
+                              تحصيل
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleCancelTransaction(order.serial, 'order_collection')}
+                              className="bg-red-600 hover:bg-red-700 h-7 text-xs"
+                            >
+                              <X className="h-3 w-3 mr-1" />
+                              إلغاء التحصيل
+                            </Button>
+                          )}
+                          
+                          {!hasTransaction(order.serial, 'shipping_payment') ? (
+                            <Button
+                              size="sm"
+                              onClick={() => openCustomAmountDialog('shipping', order)}
+                              className="bg-blue-600 hover:bg-blue-700 text-white h-7 text-xs"
+                            >
+                              <Truck className="h-3 w-3 mr-1" />
+                              دفع شحن
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleCancelTransaction(order.serial, 'shipping_payment')}
+                              className="bg-red-600 hover:bg-red-700 h-7 text-xs"
+                            >
+                              <X className="h-3 w-3 mr-1" />
+                              إلغاء الشحن
+                            </Button>
+                          )}
+                          
+                          {!hasTransaction(order.serial, 'cost_payment') ? (
+                            <Button
+                              size="sm"
+                              onClick={() => openCustomAmountDialog('cost', order)}
+                              className="bg-orange-600 hover:bg-orange-700 text-white h-7 text-xs"
+                            >
+                              <CreditCard className="h-3 w-3 mr-1" />
+                              دفع تكلفة
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleCancelTransaction(order.serial, 'cost_payment')}
+                              className="bg-red-600 hover:bg-red-700 h-7 text-xs"
+                            >
+                              <X className="h-3 w-3 mr-1" />
+                              إلغاء التكلفة
+                            </Button>
+                          )}
+                        </div>
+                      </ResponsiveTableCell>
+                      <ResponsiveTableCell>
+                        <div className="flex gap-1">
+                          <Button
+                            size="sm"
+                            onClick={() => handleViewOrder(order.serial)}
+                            className="bg-blue-500 hover:bg-blue-600 text-white h-7 text-xs"
+                          >
+                            <Eye className="h-3 w-3 mr-1" />
+                            عرض
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => handleEditOrder(order.serial)}
+                            className="bg-green-500 hover:bg-green-600 text-white h-7 text-xs"
+                          >
+                            <Edit className="h-3 w-3 mr-1" />
+                            تعديل
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleDeleteOrder(index)}
+                            className="h-7 text-xs"
+                          >
+                            <Trash2 className="h-3 w-3 mr-1" />
+                            حذف
+                          </Button>
+                        </div>
+                      </ResponsiveTableCell>
+                    </ResponsiveTableRow>
+                  ))
+                ) : (
+                  <ResponsiveTableRow>
+                    <ResponsiveTableCell colSpan={isMobile ? 10 : 13} className="text-center py-8">
+                      <div className="flex flex-col items-center gap-2">
+                        <Package className="h-12 w-12 text-gray-400" />
+                        <p className="text-gray-500 text-lg">لا توجد طلبات متاحة</p>
+                      </div>
+                    </ResponsiveTableCell>
+                  </ResponsiveTableRow>
+                )}
+              </ResponsiveTableBody>
+            </ResponsiveTable>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Custom Amount Dialog */}
+      <CustomAmountDialog
+        isOpen={customAmountDialog.isOpen}
+        onClose={() => setCustomAmountDialog(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={handleCustomAmountConfirm}
+        title={getCustomAmountDialogTitle(customAmountDialog.type)}
+        defaultAmount={customAmountDialog.defaultAmount}
+      />
+    </div>
   );
 };
 

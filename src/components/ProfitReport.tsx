@@ -1,337 +1,445 @@
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { useSupabaseOrders } from "@/context/SupabaseOrderContext";
-import { formatCurrency } from "@/lib/utils";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Area, AreaChart } from 'recharts';
+import { formatCurrency, generateMonthlyReport, exportToExcel } from "@/lib/utils";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { DownloadCloud, TrendingUp, TrendingDown, FileText, Download, Filter, RefreshCw } from "lucide-react";
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
+import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { TrendingUp, TrendingDown, DollarSign, Package, Users, Calendar } from "lucide-react";
 
 const ProfitReport = () => {
-  const { orders } = useSupabaseOrders();
+  const { orders, loading } = useSupabaseOrders();
+  const reportRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
+  const [filterMonth, setFilterMonth] = useState<string>("all");
+  const [filterYear, setFilterYear] = useState<string>("all");
+  const [filterProduct, setFilterProduct] = useState<string>("all");
   
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [paymentFilter, setPaymentFilter] = useState<string>("all");
-  const [dateFilter, setDateFilter] = useState<string>("");
-  const [periodFilter, setPeriodFilter] = useState<string>("month");
-
-  // Apply filters
-  const filteredOrders = orders.filter(order => {
-    const statusMatch = statusFilter === "all" || order.status === statusFilter;
-    const paymentMatch = paymentFilter === "all" || order.paymentMethod === paymentFilter;
-    const dateMatch = !dateFilter || order.dateCreated.includes(dateFilter);
-    
-    return statusMatch && paymentMatch && dateMatch;
-  });
-
-  const profitAnalytics = useMemo(() => {
-    const analytics = {
-      totalRevenue: 0,
-      totalCost: 0,
-      totalProfit: 0,
-      totalOrders: filteredOrders.length,
-      avgOrderValue: 0,
-      profitMargin: 0,
-      topProducts: {} as { [key: string]: { quantity: number; revenue: number; profit: number } },
-      monthlyTrend: {} as { [key: string]: { revenue: number; cost: number; profit: number; orders: number } }
-    };
-
-    filteredOrders.forEach(order => {
-      const revenue = order.items.reduce((sum, item) => {
-        const discountedPrice = item.price - (item.itemDiscount || 0);
-        return sum + discountedPrice * item.quantity;
-      }, 0);
+  const safeOrders = Array.isArray(orders) ? orders : [];
+  
+  // Filter orders based on selected filters
+  const filteredOrders = useMemo(() => {
+    return safeOrders.filter(order => {
+      const orderDate = new Date(order.dateCreated);
+      const orderYear = orderDate.getFullYear().toString();
+      const orderMonth = (orderDate.getMonth() + 1).toString().padStart(2, '0');
       
-      const cost = order.items.reduce((sum, item) => sum + (item.cost * item.quantity), 0) + order.shippingCost;
-      const profit = revenue - cost;
-      
-      analytics.totalRevenue += revenue;
-      analytics.totalCost += cost;
-      analytics.totalProfit += profit;
-      
-      // Track products
-      order.items.forEach(item => {
-        if (!analytics.topProducts[item.productType]) {
-          analytics.topProducts[item.productType] = { quantity: 0, revenue: 0, profit: 0 };
-        }
-        const discountedPrice = item.price - (item.itemDiscount || 0);
-        analytics.topProducts[item.productType].quantity += item.quantity;
-        analytics.topProducts[item.productType].revenue += discountedPrice * item.quantity;
-        analytics.topProducts[item.productType].profit += (discountedPrice - item.cost) * item.quantity;
-      });
-      
-      // Monthly trend
-      const date = new Date(order.dateCreated);
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      
-      if (!analytics.monthlyTrend[monthKey]) {
-        analytics.monthlyTrend[monthKey] = { revenue: 0, cost: 0, profit: 0, orders: 0 };
+      if (filterYear !== "all" && orderYear !== filterYear) return false;
+      if (filterMonth !== "all" && orderMonth !== filterMonth) return false;
+      if (filterProduct !== "all") {
+        const hasProduct = order.items?.some(item => item.productType === filterProduct);
+        if (!hasProduct) return false;
       }
       
-      analytics.monthlyTrend[monthKey].revenue += revenue;
-      analytics.monthlyTrend[monthKey].cost += cost;
-      analytics.monthlyTrend[monthKey].profit += profit;
-      analytics.monthlyTrend[monthKey].orders += 1;
+      return true;
+    });
+  }, [safeOrders, filterMonth, filterYear, filterProduct]);
+  
+  const monthlyReport = useMemo(() => generateMonthlyReport(filteredOrders), [filteredOrders]);
+  
+  // Corrected totals calculation: Sales - Cost - Shipping
+  const calculateTotals = useMemo(() => {
+    if (!filteredOrders || filteredOrders.length === 0) {
+      return { totalCost: 0, totalSales: 0, totalShipping: 0, netProfit: 0 };
+    }
+
+    let totalCost = 0;
+    let totalSales = 0;
+    let totalShipping = 0;
+
+    filteredOrders.forEach(order => {
+      totalSales += order.total;
+      totalShipping += order.shippingCost || 0;
+      
+      // Calculate total cost for this order
+      const orderCost = order.items?.reduce((sum, item) => sum + (item.cost * item.quantity), 0) || 0;
+      totalCost += orderCost;
     });
 
-    analytics.avgOrderValue = analytics.totalOrders > 0 ? analytics.totalRevenue / analytics.totalOrders : 0;
-    analytics.profitMargin = analytics.totalRevenue > 0 ? (analytics.totalProfit / analytics.totalRevenue) * 100 : 0;
+    // Corrected net profit: Sales - Cost - Shipping
+    const netProfit = totalSales - totalCost - totalShipping;
 
-    return analytics;
+    return { totalCost, totalSales, totalShipping, netProfit };
   }, [filteredOrders]);
 
-  const monthlyData = Object.entries(profitAnalytics.monthlyTrend)
-    .map(([month, data]) => ({
-      month,
-      ...data
-    }))
-    .sort((a, b) => a.month.localeCompare(b.month));
+  // Get available years, months, and products for filters
+  const availableYears = useMemo(() => {
+    const years = new Set<string>();
+    safeOrders.forEach(order => {
+      const year = new Date(order.dateCreated).getFullYear().toString();
+      years.add(year);
+    });
+    return Array.from(years).sort();
+  }, [safeOrders]);
 
-  const topProductsData = Object.entries(profitAnalytics.topProducts)
-    .map(([product, data]) => ({
-      name: product,
-      ...data
-    }))
-    .sort((a, b) => b.profit - a.profit)
-    .slice(0, 5);
+  const availableProducts = useMemo(() => {
+    const products = new Set<string>();
+    safeOrders.forEach(order => {
+      order.items?.forEach(item => {
+        products.add(item.productType);
+      });
+    });
+    return Array.from(products).sort();
+  }, [safeOrders]);
 
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
+  const chartData = useMemo(() => {
+    return Object.entries(monthlyReport).map(([month, products]) => {
+      let monthlyCost = 0;
+      let monthlySales = 0;
+      let monthlyShipping = 0;
+      
+      Object.values(products).forEach(data => {
+        monthlyCost += data.totalCost;
+        monthlySales += data.totalSales;
+        monthlyShipping += data.totalShipping || 0;
+      });
+      
+      return {
+        name: month,
+        تكاليف: monthlyCost,
+        مبيعات: monthlySales,
+        شحن: monthlyShipping,
+        أرباح: monthlySales - monthlyCost - monthlyShipping
+      };
+    });
+  }, [monthlyReport]);
 
-  const MetricCard = ({ title, value, icon: Icon, trend, className = "" }: any) => (
-    <Card className={`${className}`}>
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{title}</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{value}</p>
-            {trend && (
-              <div className={`flex items-center mt-1 ${trend > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {trend > 0 ? <TrendingUp className="h-4 w-4 mr-1" /> : <TrendingDown className="h-4 w-4 mr-1" />}
-                <span className="text-sm">{Math.abs(trend).toFixed(1)}%</span>
-              </div>
-            )}
+  const handleExcelExport = () => {
+    exportToExcel("profitReportTable", "تقرير_الأرباح");
+  };
+
+  const handlePDFExport = async () => {
+    if (!reportRef.current) return;
+    
+    try {
+      toast.info("جاري إنشاء ملف PDF...");
+      
+      reportRef.current.classList.add('pdf-export');
+      
+      const canvas = await html2canvas(reportRef.current, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff",
+        width: reportRef.current.scrollWidth,
+        height: reportRef.current.scrollHeight,
+        windowWidth: 794,
+        windowHeight: 1123
+      });
+      
+      reportRef.current.classList.remove('pdf-export');
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+      
+      const imgWidth = 210;
+      const pageHeight = 297;
+      const imgHeight = canvas.height * imgWidth / canvas.width;
+      
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+      
+      pdf.save(`تقرير_الأرباح_${new Date().toLocaleDateString('ar-EG')}.pdf`);
+      toast.success("تم إنشاء ملف PDF بنجاح");
+    } catch (error) {
+      console.error("PDF export error:", error);
+      toast.error("حدث خطأ أثناء إنشاء ملف PDF");
+    }
+  };
+
+  const tooltipFormatter = (value: any) => {
+    if (typeof value === 'number') {
+      return `${value.toFixed(2)} جنيه`;
+    }
+    return `${value} جنيه`;
+  };
+
+  const clearFilters = () => {
+    setFilterMonth("all");
+    setFilterYear("all");
+    setFilterProduct("all");
+  };
+
+  if (loading) {
+    return (
+      <Card className="animate-pulse">
+        <CardContent className="flex items-center justify-center py-12">
+          <div className="text-center space-y-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-gift-primary border-t-transparent mx-auto"></div>
+            <p className="text-lg text-gray-600 dark:text-gray-400">جاري تحميل تقرير الأرباح...</p>
           </div>
-          <div className="p-3 bg-gift-primary/10 rounded-full">
-            <Icon className="h-6 w-6 text-gift-primary" />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <div className="space-y-6" dir="rtl">
-      {/* Filters */}
-      <Card>
-        <CardHeader>
+    <div className="rtl space-y-6" style={{ direction: 'rtl' }}>
+      {/* Header Section */}
+      <Card className={`${isMobile ? "mobile-card" : ""} bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-l-4 border-l-green-500`}>
+        <CardHeader className={`flex flex-row items-center justify-between space-y-0 pb-4 ${isMobile ? "card-header" : ""}`}>
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-green-500 rounded-lg">
+              <FileText className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <CardTitle className={`${isMobile ? "text-xl" : "text-2xl"} font-bold text-gray-800 dark:text-white`}>
+                تقرير الأرباح والتكاليف
+              </CardTitle>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                تحليل شامل للأرباح والمبيعات والتكاليف
+              </p>
+            </div>
+          </div>
+          <div className={`flex gap-3 ${isMobile ? "flex-col" : ""}`}>
+            <Button 
+              onClick={handlePDFExport}
+              className={`${isMobile ? "mobile-btn w-full" : ""} bg-blue-600 hover:bg-blue-700 flex items-center gap-2 shadow-lg`}
+            >
+              <Download className="h-4 w-4" />
+              تصدير PDF
+            </Button>
+            <Button 
+              onClick={handleExcelExport}
+              className={`${isMobile ? "mobile-btn w-full" : ""} bg-green-600 hover:bg-green-700 flex items-center gap-2 shadow-lg`}
+            >
+              <DownloadCloud className="h-4 w-4" />
+              تصدير Excel
+            </Button>
+          </div>
+        </CardHeader>
+      </Card>
+
+      {/* Filters Section */}
+      <Card className="bg-gray-50 dark:bg-gray-800">
+        <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2">
-            <TrendingUp className="h-5 w-5" />
-            تقرير الأرباح المتقدم
+            <Filter className="h-5 w-5" />
+            فلاتر التقرير
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className={`grid gap-4 ${isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-4"}`}>
             <div className="space-y-2">
-              <Label className="text-sm">حالة الطلب</Label>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <Label htmlFor="filterYear">السنة</Label>
+              <Select value={filterYear} onValueChange={setFilterYear}>
                 <SelectTrigger>
-                  <SelectValue placeholder="اختر الحالة" />
+                  <SelectValue placeholder="اختر السنة" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">جميع الحالات</SelectItem>
-                  <SelectItem value="pending">منتظر</SelectItem>
-                  <SelectItem value="confirmed">مؤكد</SelectItem>
-                  <SelectItem value="shipped">مشحون</SelectItem>
+                  <SelectItem value="all">جميع السنوات</SelectItem>
+                  {availableYears.map(year => (
+                    <SelectItem key={year} value={year}>{year}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
-
+            
             <div className="space-y-2">
-              <Label className="text-sm">طريقة الدفع</Label>
-              <Select value={paymentFilter} onValueChange={setPaymentFilter}>
+              <Label htmlFor="filterMonth">الشهر</Label>
+              <Select value={filterMonth} onValueChange={setFilterMonth}>
                 <SelectTrigger>
-                  <SelectValue placeholder="اختر طريقة الدفع" />
+                  <SelectValue placeholder="اختر الشهر" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">جميع الطرق</SelectItem>
-                  <SelectItem value="كاش">كاش</SelectItem>
-                  <SelectItem value="انستا باي">انستا باي</SelectItem>
-                  <SelectItem value="فودافون كاش">فودافون كاش</SelectItem>
-                  <SelectItem value="تحويل بنكي">تحويل بنكي</SelectItem>
+                  <SelectItem value="all">جميع الشهور</SelectItem>
+                  <SelectItem value="01">يناير</SelectItem>
+                  <SelectItem value="02">فبراير</SelectItem>
+                  <SelectItem value="03">مارس</SelectItem>
+                  <SelectItem value="04">أبريل</SelectItem>
+                  <SelectItem value="05">مايو</SelectItem>
+                  <SelectItem value="06">يونيو</SelectItem>
+                  <SelectItem value="07">يوليو</SelectItem>
+                  <SelectItem value="08">أغسطس</SelectItem>
+                  <SelectItem value="09">سبتمبر</SelectItem>
+                  <SelectItem value="10">أكتوبر</SelectItem>
+                  <SelectItem value="11">نوفمبر</SelectItem>
+                  <SelectItem value="12">ديسمبر</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-
+            
             <div className="space-y-2">
-              <Label className="text-sm">التاريخ</Label>
-              <Input
-                type="date"
-                value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-sm">الفترة</Label>
-              <Select value={periodFilter} onValueChange={setPeriodFilter}>
+              <Label htmlFor="filterProduct">نوع المنتج</Label>
+              <Select value={filterProduct} onValueChange={setFilterProduct}>
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="اختر المنتج" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="week">أسبوعي</SelectItem>
-                  <SelectItem value="month">شهري</SelectItem>
-                  <SelectItem value="quarter">ربع سنوي</SelectItem>
-                  <SelectItem value="year">سنوي</SelectItem>
+                  <SelectItem value="all">جميع المنتجات</SelectItem>
+                  {availableProducts.map(product => (
+                    <SelectItem key={product} value={product}>{product}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
+            </div>
+            
+            <div className="flex items-end">
+              <Button 
+                onClick={clearFilters}
+                variant="outline"
+                className="w-full flex items-center gap-2"
+              >
+                <RefreshCw className="h-4 w-4" />
+                مسح الفلاتر
+              </Button>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard
-          title="إجمالي الإيرادات"
-          value={formatCurrency(profitAnalytics.totalRevenue)}
-          icon={DollarSign}
-          className="border-r-4 border-r-green-500"
-        />
-        <MetricCard
-          title="إجمالي التكاليف"
-          value={formatCurrency(profitAnalytics.totalCost)}
-          icon={Package}
-          className="border-r-4 border-r-red-500"
-        />
-        <MetricCard
-          title="صافي الربح"
-          value={formatCurrency(profitAnalytics.totalProfit)}
-          icon={TrendingUp}
-          className="border-r-4 border-r-blue-500"
-        />
-        <MetricCard
-          title="هامش الربح"
-          value={`${profitAnalytics.profitMargin.toFixed(1)}%`}
-          icon={Calendar}
-          className="border-r-4 border-r-purple-500"
-        />
-      </div>
-
-      {/* Additional Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-center">
-              <Users className="h-8 w-8 text-gift-primary mx-auto mb-2" />
-              <h3 className="font-semibold text-lg">{profitAnalytics.totalOrders}</h3>
-              <p className="text-sm text-gray-600">إجمالي الطلبات</p>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-center">
-              <DollarSign className="h-8 w-8 text-gift-primary mx-auto mb-2" />
-              <h3 className="font-semibold text-lg">{formatCurrency(profitAnalytics.avgOrderValue)}</h3>
-              <p className="text-sm text-gray-600">متوسط قيمة الطلب</p>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-center">
-              <Package className="h-8 w-8 text-gift-primary mx-auto mb-2" />
-              <h3 className="font-semibold text-lg">{Object.keys(profitAnalytics.topProducts).length}</h3>
-              <p className="text-sm text-gray-600">أنواع المنتجات</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Monthly Trend */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">الاتجاه الشهري للأرباح</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={monthlyData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" fontSize={12} />
-                  <YAxis fontSize={12} />
-                  <Tooltip 
-                    formatter={(value: number) => [formatCurrency(value), '']}
-                    labelStyle={{ fontSize: '12px' }}
-                  />
-                  <Area dataKey="profit" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.6} name="صافي الربح" />
-                  <Area dataKey="revenue" stroke="#22c55e" fill="#22c55e" fillOpacity={0.3} name="الإيرادات" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Top Products */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">أفضل المنتجات ربحاً</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {topProductsData.map((product, index) => (
-                <div key={product.name} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Badge variant="outline">{index + 1}</Badge>
-                    <div>
-                      <p className="font-medium text-sm">{product.name}</p>
-                      <p className="text-xs text-gray-500">الكمية: {product.quantity}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold text-green-600">{formatCurrency(product.profit)}</p>
-                    <p className="text-xs text-gray-500">{formatCurrency(product.revenue)} إيرادات</p>
-                  </div>
+      <div ref={reportRef} className="space-y-6">
+        {/* Summary Cards */}
+        <div className={`grid gap-4 ${isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-4"}`}>
+          <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white">
+            <CardContent className="p-6">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-red-100 text-sm font-medium">إجمالي التكاليف</p>
+                  <p className="text-3xl font-bold">{formatCurrency(calculateTotals.totalCost)}</p>
                 </div>
-              ))}
+                <TrendingDown className="h-8 w-8 text-red-200" />
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+            <CardContent className="p-6">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-blue-100 text-sm font-medium">إجمالي المبيعات</p>
+                  <p className="text-3xl font-bold">{formatCurrency(calculateTotals.totalSales)}</p>
+                </div>
+                <TrendingUp className="h-8 w-8 text-blue-200" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white">
+            <CardContent className="p-6">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-orange-100 text-sm font-medium">إجمالي الشحن</p>
+                  <p className="text-3xl font-bold">{formatCurrency(calculateTotals.totalShipping)}</p>
+                </div>
+                <TrendingUp className="h-8 w-8 text-orange-200" />
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
+            <CardContent className="p-6">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-green-100 text-sm font-medium">صافي الربح</p>
+                  <p className="text-3xl font-bold">{formatCurrency(calculateTotals.netProfit)}</p>
+                </div>
+                <TrendingUp className="h-8 w-8 text-green-200" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Chart Section */}
+        {chartData.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg font-medium flex items-center gap-2">
+                <BarChart className="h-5 w-5" />
+                رسم بياني للأرباح والتكاليف
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className={`${isMobile ? "h-64" : "h-80"} w-full`}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={chartData}
+                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip formatter={tooltipFormatter} />
+                    <Legend />
+                    <Bar dataKey="تكاليف" fill="#ef4444" />
+                    <Bar dataKey="مبيعات" fill="#3b82f6" />
+                    <Bar dataKey="شحن" fill="#f97316" />
+                    <Bar dataKey="أرباح" fill="#22c55e" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        
+        {/* Detailed Table */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg font-medium">تفاصيل الأرباح والتكاليف حسب المنتج والشهر</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table id="profitReportTable" className="gift-table w-full">
+                <thead>
+                  <tr className="bg-gray-50 dark:bg-gray-800">
+                    <th className="text-right p-3 font-semibold">الشهر</th>
+                    <th className="text-right p-3 font-semibold">نوع المنتج</th>
+                    <th className="text-right p-3 font-semibold">إجمالي التكاليف</th>
+                    <th className="text-right p-3 font-semibold">إجمالي المبيعات</th>
+                    <th className="text-right p-3 font-semibold">إجمالي الشحن</th>
+                    <th className="text-right p-3 font-semibold">صافي الربح</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.keys(monthlyReport).length > 0 ? (
+                    Object.entries(monthlyReport).flatMap(([month, products]) =>
+                      Object.entries(products).map(([productType, data]) => (
+                        <tr key={`${month}-${productType}`} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                          <td className="p-3 border-b">{month}</td>
+                          <td className="p-3 border-b">{productType}</td>
+                          <td className="p-3 border-b text-red-600 font-semibold">{formatCurrency(data.totalCost)}</td>
+                          <td className="p-3 border-b text-blue-600 font-semibold">{formatCurrency(data.totalSales)}</td>
+                          <td className="p-3 border-b text-orange-600 font-semibold">{formatCurrency(data.totalShipping || 0)}</td>
+                          <td className="p-3 border-b text-green-600 font-semibold">{formatCurrency(data.totalSales - data.totalCost - (data.totalShipping || 0))}</td>
+                        </tr>
+                      ))
+                    )
+                  ) : (
+                    <tr>
+                      <td colSpan={6} className="text-center py-8">
+                        <div className="flex flex-col items-center gap-2">
+                          <FileText className="h-12 w-12 text-gray-400" />
+                          <p className="text-gray-500 text-lg">لا توجد بيانات متاحة</p>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </CardContent>
         </Card>
       </div>
-
-      {/* Detailed Analysis */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">تحليل مفصل للأرباح الشهرية</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-96">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" fontSize={12} />
-                <YAxis fontSize={12} />
-                <Tooltip 
-                  formatter={(value: number) => [formatCurrency(value), '']}
-                  labelStyle={{ fontSize: '12px' }}
-                />
-                <Bar dataKey="revenue" fill="#22c55e" name="الإيرادات" />
-                <Bar dataKey="cost" fill="#ef4444" name="التكاليف" />
-                <Bar dataKey="profit" fill="#3b82f6" name="صافي الربح" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };

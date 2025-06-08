@@ -6,11 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, DollarSign, FileText, Tag } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { formatCurrency } from "@/lib/utils";
 
 interface AddTransactionDialogProps {
   onTransactionAdded: () => void;
@@ -69,14 +68,9 @@ const AddTransactionDialog = ({ onTransactionAdded }: AddTransactionDialogProps)
     switch (type) {
       case 'expense': return 'مصروف';
       case 'other_income': return 'إيراد إضافي';
-      case 'order_collection': return 'تحصيل طلب';
-      case 'shipping_payment': return 'دفع شحن';
-      case 'cost_payment': return 'دفع تكلفة';
       default: return type;
     }
   };
-
-  const previewAmount = parseFloat(formData.amount) || 0;
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -86,20 +80,13 @@ const AddTransactionDialog = ({ onTransactionAdded }: AddTransactionDialogProps)
           إضافة معاملة
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-lg" dir="rtl">
+      <DialogContent className="rtl max-w-md" style={{ direction: 'rtl' }}>
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <DollarSign className="h-5 w-5" />
-            إضافة معاملة مالية جديدة
-          </DialogTitle>
+          <DialogTitle>إضافة معاملة جديدة</DialogTitle>
         </DialogHeader>
-        
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-3">
-            <Label htmlFor="type" className="flex items-center gap-2">
-              <Tag className="h-4 w-4" />
-              نوع المعاملة *
-            </Label>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="type">نوع المعاملة *</Label>
             <Select value={formData.type} onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}>
               <SelectTrigger>
                 <SelectValue placeholder="اختر نوع المعاملة" />
@@ -107,54 +94,25 @@ const AddTransactionDialog = ({ onTransactionAdded }: AddTransactionDialogProps)
               <SelectContent>
                 <SelectItem value="expense">مصروف</SelectItem>
                 <SelectItem value="other_income">إيراد إضافي</SelectItem>
-                <SelectItem value="order_collection">تحصيل طلب</SelectItem>
-                <SelectItem value="shipping_payment">دفع شحن</SelectItem>
-                <SelectItem value="cost_payment">دفع تكلفة</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          <div className="space-y-3">
-            <Label htmlFor="amount" className="flex items-center gap-2">
-              <DollarSign className="h-4 w-4" />
-              المبلغ *
-            </Label>
-            <div className="relative">
-              <Input
-                id="amount"
-                type="text"
-                value={formData.amount}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (value === '' || /^\d*\.?\d*$/.test(value)) {
-                    setFormData(prev => ({ ...prev, amount: value }));
-                  }
-                }}
-                placeholder="أدخل المبلغ"
-                className="text-right pr-16 font-mono text-lg"
-                dir="rtl"
-                required
-              />
-              <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">
-                ج.م
-              </div>
-            </div>
-            
-            {/* Preview of the amount */}
-            {previewAmount > 0 && (
-              <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
-                <p className="text-right text-sm text-blue-700 dark:text-blue-300">
-                  المبلغ: <span className="font-bold text-lg">{formatCurrency(previewAmount)}</span>
-                </p>
-              </div>
-            )}
+          <div className="space-y-2">
+            <Label htmlFor="amount">المبلغ *</Label>
+            <Input
+              id="amount"
+              type="number"
+              step="0.01"
+              value={formData.amount}
+              onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+              placeholder="أدخل المبلغ"
+              required
+            />
           </div>
 
-          <div className="space-y-3">
-            <Label htmlFor="description" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              الوصف
-            </Label>
+          <div className="space-y-2">
+            <Label htmlFor="description">الوصف</Label>
             <Textarea
               id="description"
               value={formData.description}
@@ -164,7 +122,7 @@ const AddTransactionDialog = ({ onTransactionAdded }: AddTransactionDialogProps)
             />
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-2">
             <Label htmlFor="orderSerial">مرجع المعاملة</Label>
             <Input
               id="orderSerial"
@@ -174,16 +132,12 @@ const AddTransactionDialog = ({ onTransactionAdded }: AddTransactionDialogProps)
             />
           </div>
 
-          <div className="flex gap-3 pt-6 border-t">
-            <Button type="button" variant="outline" onClick={() => setIsOpen(false)} className="flex-1">
-              إلغاء
-            </Button>
-            <Button 
-              type="submit" 
-              disabled={loading || !formData.type || !formData.amount} 
-              className="flex-1"
-            >
+          <div className="flex gap-2 pt-4">
+            <Button type="submit" disabled={loading} className="flex-1">
               {loading ? "جاري الإضافة..." : "إضافة المعاملة"}
+            </Button>
+            <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+              إلغاء
             </Button>
           </div>
         </form>

@@ -1,89 +1,119 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@200;300;400;500;700;800;900&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: 0 0% 100%;
-  --foreground: 222.2 84% 4.9%;
-  --card: 0 0% 100%;
-  --card-foreground: 222.2 84% 4.9%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 222.2 84% 4.9%;
-  --primary: 221.2 83.2% 53.3%;
-  --primary-foreground: 210 40% 98%;
-  --secondary: 210 40% 96%;
-  --secondary-foreground: 222.2 84% 4.9%;
-  --muted: 210 40% 96%;
-  --muted-foreground: 215.4 16.3% 46.9%;
-  --accent: 210 40% 96%;
-  --accent-foreground: 222.2 84% 4.9%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 214.3 31.8% 91.4%;
-  --input: 214.3 31.8% 91.4%;
-  --ring: 221.2 83.2% 53.3%;
-  --radius: 0.5rem;
-  --chart-1: 12 76% 61%;
-  --chart-2: 173 58% 39%;
-  --chart-3: 197 37% 24%;
-  --chart-4: 43 74% 66%;
-  --chart-5: 27 87% 67%;
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --radius: 0.5rem;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --gift-primary: 35 91% 55%;
+    --gift-primary-hover: 35 91% 45%;
+    --gift-secondary: 142 71% 45%;
+    --gift-secondary-hover: 142 71% 35%;
+    --gift-accent: 54 91% 95%;
+  }
 
-  /* Gift Shop Theme Colors */
-  --gift-primary: 220 100% 50%;
-  --gift-primary-hover: 220 100% 45%;
-  --gift-secondary: 280 100% 70%;
-  --gift-accent: 210 40% 96%;
-  --gift-background: 0 0% 100%;
-  --gift-text: 222.2 84% 4.9%;
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+    --gift-primary: 35 91% 55%;
+    --gift-primary-hover: 35 91% 45%;
+    --gift-secondary: 142 71% 45%;
+    --gift-secondary-hover: 142 71% 35%;
+    --gift-accent: 54 20% 10%;
+  }
 }
 
-.dark {
-  --background: 222.2 84% 4.9%;
-  --foreground: 210 40% 98%;
-  --card: 222.2 84% 4.9%;
-  --card-foreground: 210 40% 98%;
-  --popover: 222.2 84% 4.9%;
-  --popover-foreground: 210 40% 98%;
-  --primary: 217.2 91.2% 59.8%;
-  --primary-foreground: 222.2 84% 4.9%;
-  --secondary: 217.2 32.6% 17.5%;
-  --secondary-foreground: 210 40% 98%;
-  --muted: 217.2 32.6% 17.5%;
-  --muted-foreground: 215 20.2% 65.1%;
-  --accent: 217.2 32.6% 17.5%;
-  --accent-foreground: 210 40% 98%;
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 217.2 32.6% 17.5%;
-  --input: 217.2 32.6% 17.5%;
-  --ring: 224.3 76.3% 94.1%;
-  --chart-1: 220 70% 50%;
-  --chart-2: 160 60% 45%;
-  --chart-3: 30 80% 55%;
-  --chart-4: 280 65% 60%;
-  --chart-5: 340 75% 55%;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Tajawal', sans-serif;
+    direction: rtl;
+  }
 }
 
-* {
-  border-color: hsl(var(--border));
-}
-
-body {
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
-  font-family: 'Inter', sans-serif;
+.rtl {
   direction: rtl;
-}
-
-/* RTL Support */
-[dir="rtl"] {
   text-align: right;
 }
 
-/* Mobile responsive text sizes */
+.ltr-numbers {
+  direction: ltr;
+  unicode-bidi: plaintext;
+  font-variant-numeric: tabular-nums;
+}
+
+.gift-primary {
+  background-color: hsl(var(--gift-primary));
+}
+
+.gift-primary-hover {
+  background-color: hsl(var(--gift-primary-hover));
+}
+
+.gift-secondary {
+  background-color: hsl(var(--gift-secondary));
+}
+
+.gift-secondary-hover {
+  background-color: hsl(var(--gift-secondary-hover));
+}
+
+.gift-accent {
+  background-color: hsl(var(--gift-accent));
+}
+
+/* تحسينات للموبايل */
 @media (max-width: 768px) {
   .mobile-text-xs {
     font-size: 0.6rem;
@@ -91,178 +121,306 @@ body {
   }
   
   .mobile-text-sm {
-    font-size: 0.75rem;
-    line-height: 1rem;
-  }
-  
-  .mobile-text-base {
-    font-size: 0.8rem;
-    line-height: 1.1rem;
-  }
-  
-  .mobile-title {
-    font-size: 0.9rem;
-    line-height: 1.2rem;
-  }
-  
-  /* Reduce padding for mobile */
-  .mobile-p-1 {
-    padding: 0.15rem;
-  }
-  
-  .mobile-p-2 {
-    padding: 0.3rem;
-  }
-  
-  .mobile-p-3 {
-    padding: 0.5rem;
-  }
-  
-  /* Smaller buttons on mobile */
-  .mobile-btn-sm {
-    height: 1.75rem;
-    padding: 0.25rem 0.5rem;
     font-size: 0.7rem;
+    line-height: 0.9rem;
   }
   
-  /* Compact tables on mobile */
-  .mobile-table th,
-  .mobile-table td {
+  .mobile-compact {
     padding: 0.25rem;
-    font-size: 0.65rem;
+    margin: 0.125rem;
   }
   
-  /* Smaller form inputs on mobile */
-  .mobile-input {
-    height: 1.75rem;
-    font-size: 0.7rem;
-    padding: 0.25rem 0.5rem;
+  .tabs-mobile {
+    font-size: 0.65rem !important;
+    padding: 0.25rem 0.5rem !important;
+    height: 2rem !important;
   }
-  
-  /* Compact cards on mobile */
+
+  /* تحسينات الجداول للموبايل */
+  .gift-table {
+    font-size: 0.65rem !important;
+    min-width: 100%;
+  }
+
+  .gift-table th,
+  .gift-table td {
+    padding: 0.2rem !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 80px;
+    font-size: 0.65rem !important;
+  }
+
+  .gift-table thead {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 10;
+  }
+
+  /* تحسينات الكروت للموبايل */
   .mobile-card {
-    padding: 0.5rem;
+    padding: 0.4rem !important;
+    margin: 0.2rem 0 !important;
   }
-  
-  .mobile-card-header {
-    padding: 0.5rem 0.5rem 0.25rem 0.5rem;
-  }
-  
-  .mobile-card-content {
-    padding: 0.25rem 0.5rem 0.5rem 0.5rem;
-  }
-}
 
-/* Enhanced mobile responsiveness for specific components */
-@media (max-width: 640px) {
-  /* Tab triggers on mobile */
-  .tabs-mobile .tab-trigger {
-    flex-direction: column;
-    height: auto;
-    min-height: 3rem;
-    padding: 0.25rem;
+  .mobile-card .card-header {
+    padding: 0.4rem !important;
+  }
+
+  .mobile-card .card-content {
+    padding: 0.4rem !important;
+  }
+
+  /* تحسينات الأزرار للموبايل */
+  .mobile-btn {
+    font-size: 0.65rem !important;
+    padding: 0.2rem 0.4rem !important;
+    height: auto !important;
+    min-height: 1.8rem;
+  }
+
+  /* تحسينات النماذج للموبايل */
+  .mobile-form-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.4rem !important;
+  }
+
+  .mobile-select,
+  .mobile-input {
+    font-size: 0.75rem !important;
+    padding: 0.4rem !important;
+    height: auto !important;
+  }
+
+  /* تحسينات الجداول المتجاوبة */
+  .responsive-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100vw;
+  }
+
+  .responsive-table {
+    min-width: 100%;
+    width: max-content;
     font-size: 0.65rem;
-    gap: 0.125rem;
   }
-  
-  .tabs-mobile .tab-trigger svg {
-    width: 0.75rem;
-    height: 0.75rem;
-  }
-  
-  /* Form elements on mobile */
-  .form-mobile input,
-  .form-mobile select,
-  .form-mobile textarea {
-    height: 1.75rem;
-    font-size: 0.7rem;
-    padding: 0.25rem 0.5rem;
-  }
-  
-  .form-mobile label {
+
+  .responsive-table th,
+  .responsive-table td {
+    padding: 0.2rem 0.4rem;
+    white-space: nowrap;
+    border: 1px solid #e5e7eb;
     font-size: 0.65rem;
-    margin-bottom: 0.125rem;
+  }
+
+  .responsive-table th {
+    background-color: #f9fafb;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  /* تحسينات خاصة للتبويبات */
+  [data-state="active"] {
+    background-color: hsl(var(--gift-primary)) !important;
+    color: white !important;
+  }
+
+  /* تحسينات النصوص للموبايل */
+  body {
+    font-size: 0.75rem !important;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-size: 0.8rem !important;
+  }
+
+  .text-xs {
+    font-size: 0.6rem !important;
+  }
+
+  .text-sm {
+    font-size: 0.65rem !important;
+  }
+
+  .text-base {
+    font-size: 0.7rem !important;
+  }
+
+  .text-lg {
+    font-size: 0.75rem !important;
+  }
+
+  .text-xl {
+    font-size: 0.8rem !important;
+  }
+}
+
+/* تحسينات الطباعة للفاتورة */
+@media print {
+  body {
+    direction: rtl !important;
+    font-family: 'Tajawal', Arial, sans-serif !important;
+    background: white !important;
+    font-size: 10px !important;
+    line-height: 1.2 !important;
   }
   
-  /* Button adjustments for mobile */
-  .btn-mobile {
-    height: 1.75rem;
-    padding: 0.25rem 0.75rem;
-    font-size: 0.7rem;
+  .professional-invoice {
+    box-shadow: none !important;
+    border: none !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 10px !important;
   }
   
-  /* Table adjustments for mobile */
-  .table-mobile {
-    font-size: 0.6rem;
+  .invoice-header {
+    font-size: 11px !important;
   }
   
-  .table-mobile th,
-  .table-mobile td {
-    padding: 0.2rem;
+  .invoice-title {
+    font-size: 13px !important;
   }
   
-  /* Card adjustments for mobile */
-  .card-mobile {
-    margin: 0.25rem;
+  .invoice-content {
+    font-size: 9px !important;
   }
   
-  .card-mobile .card-header {
-    padding: 0.5rem;
+  .invoice-table {
+    font-size: 8px !important;
   }
   
-  .card-mobile .card-content {
-    padding: 0.5rem;
+  .invoice-table th,
+  .invoice-table td {
+    padding: 2px 4px !important;
+    font-size: 8px !important;
+  }
+  
+  .invoice-summary {
+    font-size: 9px !important;
+  }
+  
+  .social-links a {
+    font-size: 7px !important;
+  }
+  
+  .print\\:hidden {
+    display: none !important;
+  }
+  
+  .print\\:shadow-none {
+    box-shadow: none !important;
+  }
+  
+  .print\\:border-none {
+    border: none !important;
+  }
+  
+  .print\\:p-2 {
+    padding: 0.5rem !important;
+  }
+
+  /* تحسينات الموبايل للطباعة */
+  @media (max-width: 768px) {
+    .professional-invoice {
+      font-size: 8px !important;
+    }
+    
+    .invoice-header {
+      font-size: 9px !important;
+    }
+    
+    .invoice-title {
+      font-size: 11px !important;
+    }
+    
+    .invoice-content {
+      font-size: 7px !important;
+    }
+    
+    .invoice-table {
+      font-size: 6px !important;
+    }
+    
+    .invoice-table th,
+    .invoice-table td {
+      padding: 1px 2px !important;
+      font-size: 6px !important;
+    }
+    
+    .invoice-summary {
+      font-size: 7px !important;
+    }
   }
 }
 
-/* Truncate text utility */
-.truncate-title {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 100%;
+/* تحسينات PDF */
+.pdf-export {
+  font-size: 10px !important;
+  line-height: 1.2 !important;
+  max-width: 794px !important;
+  margin: 0 auto !important;
 }
 
-/* Enhanced scrollbar styling */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+.pdf-export .invoice-header {
+  font-size: 11px !important;
 }
 
-::-webkit-scrollbar-track {
-  background: hsl(var(--muted));
+.pdf-export .invoice-title {
+  font-size: 13px !important;
 }
 
-::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted-foreground));
-  border-radius: 3px;
+.pdf-export .invoice-content {
+  font-size: 9px !important;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--foreground));
+.pdf-export .invoice-table {
+  font-size: 8px !important;
 }
 
-/* Loading animation */
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+.pdf-export .invoice-table th,
+.pdf-export .invoice-table td {
+  padding: 2px 4px !important;
+  font-size: 8px !important;
 }
 
-.animate-spin {
-  animation: spin 1s linear infinite;
+.pdf-export .invoice-summary {
+  font-size: 9px !important;
 }
 
-/* Toast positioning for mobile */
+/* تحسينات PDF للموبايل */
 @media (max-width: 768px) {
-  .toast-mobile {
-    font-size: 0.75rem;
-    padding: 0.5rem;
+  .pdf-export {
+    font-size: 8px !important;
   }
-}
-
-/* RTL specific styles */
-.rtl {
-  direction: rtl;
-  text-align: right;
+  
+  .pdf-export .invoice-header {
+    font-size: 9px !important;
+  }
+  
+  .pdf-export .invoice-title {
+    font-size: 11px !important;
+  }
+  
+  .pdf-export .invoice-content {
+    font-size: 7px !important;
+  }
+  
+  .pdf-export .invoice-table {
+    font-size: 6px !important;
+  }
+  
+  .pdf-export .invoice-table th,
+  .pdf-export .invoice-table td {
+    padding: 1px 2px !important;
+    font-size: 6px !important;
+  }
+  
+  .pdf-export .invoice-summary {
+    font-size: 7px !important;
+  }
 }

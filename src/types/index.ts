@@ -37,14 +37,6 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   shipped: "تم الشحن"
 };
 
-export const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
-  pending: "bg-yellow-100 text-yellow-800",
-  confirmed: "bg-blue-100 text-blue-800",
-  sentToPrinter: "bg-purple-100 text-purple-800",
-  readyForDelivery: "bg-orange-100 text-orange-800",
-  shipped: "bg-green-100 text-green-800"
-};
-
 export interface ProposedPrice {
   cost: number;
   price: number;
