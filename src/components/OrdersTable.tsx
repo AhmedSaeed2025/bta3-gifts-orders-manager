@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,7 +23,8 @@ import {
   FileText, 
   DollarSign, 
   Search,
-  Filter
+  Filter,
+  List
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -65,13 +65,10 @@ const OrdersTable = () => {
 
   const handleCollectOrder = (order: any) => {
     const transaction = {
-      id: `collect-${order.serial}-${Date.now()}`,
-      type: "revenue" as const,
+      transaction_type: "revenue",
       amount: order.total,
       description: `تحصيل طلب ${order.serial} - ${order.clientName}`,
-      category: "order_collection",
-      date: new Date().toISOString(),
-      relatedOrderSerial: order.serial
+      order_serial: order.serial
     };
     
     addTransaction(transaction);
