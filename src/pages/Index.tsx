@@ -24,6 +24,51 @@ import {
 const Index = () => {
   const isMobile = useIsMobile();
 
+  const tabs = [
+    { 
+      id: "addOrder", 
+      label: isMobile ? "إضافة" : "إضافة طلب", 
+      icon: Plus, 
+      component: <OrderForm /> 
+    },
+    { 
+      id: "orders", 
+      label: isMobile ? "الطلبات" : "إدارة الطلبات", 
+      icon: List, 
+      component: <OrdersTable /> 
+    },
+    { 
+      id: "summary", 
+      label: isMobile ? "تقرير" : "تقرير الطلبات", 
+      icon: BarChart3, 
+      component: <SummaryReport /> 
+    },
+    { 
+      id: "profitReport", 
+      label: isMobile ? "الأرباح" : "تقرير الأرباح", 
+      icon: TrendingUp, 
+      component: <ProfitReport /> 
+    },
+    { 
+      id: "accountStatement", 
+      label: isMobile ? "الحساب" : "كشف حساب", 
+      icon: Receipt, 
+      component: <ImprovedAccountStatement /> 
+    },
+    { 
+      id: "invoice", 
+      label: isMobile ? "الفاتورة" : "الفاتورة", 
+      icon: FileText, 
+      component: <InvoiceTab /> 
+    },
+    { 
+      id: "products", 
+      label: isMobile ? "المنتجات" : "إدارة المنتجات", 
+      icon: Package, 
+      component: <ProductsTab /> 
+    }
+  ];
+
   return (
     <div className="min-h-screen bg-gift-accent dark:bg-gray-900 transition-colors duration-300" dir="rtl">
       <div className="container mx-auto px-2 md:px-4 py-3 md:py-6">
@@ -33,127 +78,30 @@ const Index = () => {
         </div>
         
         <Tabs defaultValue="addOrder" className="mt-2 md:mt-4">
-          <TabsList className={`grid w-full grid-cols-7 gap-1 ${isMobile ? 'h-16' : 'h-10'}`}>
-            <TabsTrigger 
-              value="addOrder" 
-              className={`${isMobile ? 'flex-col text-xs p-1 h-14' : 'text-sm'}`}
-            >
-              {isMobile ? (
-                <>
-                  <Plus className="h-3 w-3 mb-1" />
-                  <span className="text-xs leading-none">إضافة</span>
-                </>
-              ) : (
-                "إضافة طلب"
-              )}
-            </TabsTrigger>
-            <TabsTrigger 
-              value="orders" 
-              className={`${isMobile ? 'flex-col text-xs p-1 h-14' : 'text-sm'}`}
-            >
-              {isMobile ? (
-                <>
-                  <List className="h-3 w-3 mb-1" />
-                  <span className="text-xs leading-none">الطلبات</span>
-                </>
-              ) : (
-                "إدارة الطلبات"
-              )}
-            </TabsTrigger>
-            <TabsTrigger 
-              value="summary" 
-              className={`${isMobile ? 'flex-col text-xs p-1 h-14' : 'text-sm'}`}
-            >
-              {isMobile ? (
-                <>
-                  <BarChart3 className="h-3 w-3 mb-1" />
-                  <span className="text-xs leading-none">تقرير</span>
-                </>
-              ) : (
-                "تقرير الطلبات"
-              )}
-            </TabsTrigger>
-            <TabsTrigger 
-              value="profitReport" 
-              className={`${isMobile ? 'flex-col text-xs p-1 h-14' : 'text-sm'}`}
-            >
-              {isMobile ? (
-                <>
-                  <TrendingUp className="h-3 w-3 mb-1" />
-                  <span className="text-xs leading-none">الأرباح</span>
-                </>
-              ) : (
-                "تقرير الأرباح"
-              )}
-            </TabsTrigger>
-            <TabsTrigger 
-              value="accountStatement" 
-              className={`${isMobile ? 'flex-col text-xs p-1 h-14' : 'text-sm'}`}
-            >
-              {isMobile ? (
-                <>
-                  <Receipt className="h-3 w-3 mb-1" />
-                  <span className="text-xs leading-none">الحساب</span>
-                </>
-              ) : (
-                "كشف حساب"
-              )}
-            </TabsTrigger>
-            <TabsTrigger 
-              value="invoice" 
-              className={`${isMobile ? 'flex-col text-xs p-1 h-14' : 'text-sm'}`}
-            >
-              {isMobile ? (
-                <>
-                  <FileText className="h-3 w-3 mb-1" />
-                  <span className="text-xs leading-none">الفاتورة</span>
-                </>
-              ) : (
-                "الفاتورة"
-              )}
-            </TabsTrigger>
-            <TabsTrigger 
-              value="products" 
-              className={`${isMobile ? 'flex-col text-xs p-1 h-14' : 'text-sm'}`}
-            >
-              {isMobile ? (
-                <>
-                  <Package className="h-3 w-3 mb-1" />
-                  <span className="text-xs leading-none">المنتجات</span>
-                </>
-              ) : (
-                "إدارة المنتجات"
-              )}
-            </TabsTrigger>
+          <TabsList className={`grid w-full gap-1 ${isMobile ? 'grid-cols-7 h-16' : 'grid-cols-7 h-10'}`}>
+            {tabs.map((tab) => (
+              <TabsTrigger 
+                key={tab.id}
+                value={tab.id} 
+                className={`${isMobile ? 'flex-col text-xs p-1 h-14' : 'text-sm'}`}
+              >
+                {isMobile ? (
+                  <>
+                    <tab.icon className="h-3 w-3 mb-1" />
+                    <span className="text-xs leading-none">{tab.label}</span>
+                  </>
+                ) : (
+                  tab.label
+                )}
+              </TabsTrigger>
+            ))}
           </TabsList>
           
-          <TabsContent value="addOrder">
-            <OrderForm />
-          </TabsContent>
-          
-          <TabsContent value="orders">
-            <OrdersTable />
-          </TabsContent>
-          
-          <TabsContent value="summary">
-            <SummaryReport />
-          </TabsContent>
-          
-          <TabsContent value="profitReport">
-            <ProfitReport />
-          </TabsContent>
-          
-          <TabsContent value="accountStatement">
-            <ImprovedAccountStatement />
-          </TabsContent>
-          
-          <TabsContent value="invoice">
-            <InvoiceTab />
-          </TabsContent>
-          
-          <TabsContent value="products">
-            <ProductsTab />
-          </TabsContent>
+          {tabs.map((tab) => (
+            <TabsContent key={tab.id} value={tab.id}>
+              {tab.component}
+            </TabsContent>
+          ))}
         </Tabs>
       </div>
     </div>
