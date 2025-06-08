@@ -13,8 +13,8 @@ const SummaryReport = () => {
   // Calculate totals
   const totalOrders = orders.length;
   const pendingOrders = orders.filter(order => order.status === "pending").length;
-  const completedOrders = orders.filter(order => order.status === "completed").length;
-  const cancelledOrders = orders.filter(order => order.status === "cancelled").length;
+  const shippedOrders = orders.filter(order => order.status === "shipped").length;
+  const confirmedOrders = orders.filter(order => order.status === "confirmed").length;
   
   // Calculate revenue (subtotal before shipping and deposit adjustments)
   const totalRevenue = orders.reduce((sum, order) => {
@@ -68,8 +68,8 @@ const SummaryReport = () => {
   const statsCards = [
     { title: "إجمالي الطلبات", value: totalOrders, color: "text-blue-600" },
     { title: "الطلبات المنتظرة", value: pendingOrders, color: "text-yellow-600" },
-    { title: "الطلبات المكتملة", value: completedOrders, color: "text-green-600" },
-    { title: "الطلبات الملغية", value: cancelledOrders, color: "text-red-600" },
+    { title: "الطلبات المؤكدة", value: confirmedOrders, color: "text-green-600" },
+    { title: "الطلبات المشحونة", value: shippedOrders, color: "text-purple-600" },
   ];
 
   const financialCards = [
@@ -85,7 +85,7 @@ const SummaryReport = () => {
       {/* Order Statistics */}
       <Card>
         <CardHeader>
-          <CardTitle className={`${isMobile ? "text-sm truncate" : "text-lg"}`}>
+          <CardTitle className={`${isMobile ? "text-xs truncate" : "text-sm truncate"}`}>
             إحصائيات الطلبات
           </CardTitle>
         </CardHeader>
@@ -93,12 +93,12 @@ const SummaryReport = () => {
           <div className={`grid ${isMobile ? "grid-cols-2 gap-2" : "grid-cols-2 md:grid-cols-4 gap-4"}`}>
             {statsCards.map((card, index) => (
               <Card key={index} className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
-                <CardContent className={`${isMobile ? "p-3" : "p-6"}`}>
+                <CardContent className={`${isMobile ? "p-2" : "p-4"}`}>
                   <div className="text-center">
-                    <h3 className={`font-semibold mb-2 ${isMobile ? "text-xs" : "text-sm"}`}>
+                    <h3 className={`font-semibold mb-2 ${isMobile ? "text-xs truncate" : "text-xs truncate"}`}>
                       {card.title}
                     </h3>
-                    <p className={`font-bold ${card.color} ${isMobile ? "text-lg" : "text-2xl"}`}>
+                    <p className={`font-bold ${card.color} ${isMobile ? "text-sm" : "text-lg"}`}>
                       {card.value}
                     </p>
                   </div>
@@ -112,7 +112,7 @@ const SummaryReport = () => {
       {/* Financial Statistics */}
       <Card>
         <CardHeader>
-          <CardTitle className={`${isMobile ? "text-sm truncate" : "text-lg"}`}>
+          <CardTitle className={`${isMobile ? "text-xs truncate" : "text-sm truncate"}`}>
             الإحصائيات المالية
           </CardTitle>
         </CardHeader>
@@ -120,12 +120,12 @@ const SummaryReport = () => {
           <div className={`grid ${isMobile ? "grid-cols-1 gap-2" : "grid-cols-1 md:grid-cols-3 gap-4"}`}>
             {financialCards.map((card, index) => (
               <Card key={index} className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20">
-                <CardContent className={`${isMobile ? "p-3" : "p-6"}`}>
+                <CardContent className={`${isMobile ? "p-2" : "p-4"}`}>
                   <div className="text-center">
-                    <h3 className={`font-semibold mb-2 ${isMobile ? "text-xs" : "text-sm"}`}>
+                    <h3 className={`font-semibold mb-2 ${isMobile ? "text-xs truncate" : "text-xs truncate"}`}>
                       {card.title}
                     </h3>
-                    <p className={`font-bold ${card.color} ${isMobile ? "text-sm" : "text-xl"}`}>
+                    <p className={`font-bold ${card.color} ${isMobile ? "text-xs" : "text-sm"}`}>
                       {card.value}
                     </p>
                   </div>
@@ -140,7 +140,7 @@ const SummaryReport = () => {
       {monthlyData.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className={`${isMobile ? "text-sm" : "text-lg"}`}>
+            <CardTitle className={`${isMobile ? "text-xs truncate" : "text-sm truncate"}`}>
               الطلبات والإيرادات الشهرية
             </CardTitle>
           </CardHeader>
@@ -151,9 +151,9 @@ const SummaryReport = () => {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis 
                     dataKey="month" 
-                    fontSize={isMobile ? 10 : 12}
+                    fontSize={isMobile ? 8 : 10}
                   />
-                  <YAxis fontSize={isMobile ? 10 : 12} />
+                  <YAxis fontSize={isMobile ? 8 : 10} />
                   <Tooltip 
                     formatter={(value: number, name: string) => {
                       if (name === 'revenue') {
@@ -161,8 +161,8 @@ const SummaryReport = () => {
                       }
                       return [value, 'عدد الطلبات'];
                     }}
-                    labelStyle={{ fontSize: isMobile ? '10px' : '12px' }}
-                    contentStyle={{ fontSize: isMobile ? '10px' : '12px' }}
+                    labelStyle={{ fontSize: isMobile ? '8px' : '10px' }}
+                    contentStyle={{ fontSize: isMobile ? '8px' : '10px' }}
                   />
                   <Bar dataKey="orders" fill="#3b82f6" name="orders" />
                   <Bar dataKey="revenue" fill="#22c55e" name="revenue" />
