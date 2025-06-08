@@ -52,10 +52,10 @@ const OrdersTable = () => {
     });
   }, [orders, searchTerm, statusFilter, paymentFilter]);
 
-  const handleDelete = async (serial: string) => {
+  const handleDelete = async (orderSerial: string) => {
     if (window.confirm("هل أنت متأكد من حذف هذا الطلب؟")) {
       try {
-        await deleteOrder(serial);
+        await deleteOrder(orderSerial);
         toast.success("تم حذف الطلب بنجاح");
       } catch (error) {
         toast.error("حدث خطأ أثناء حذف الطلب");
