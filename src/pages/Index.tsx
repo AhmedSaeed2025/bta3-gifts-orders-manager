@@ -51,7 +51,7 @@ const Index = () => {
     },
     { 
       id: "accountStatement", 
-      label: isMobile ? "الحساب" : "كشف حساب", 
+      label: isMobile ? "الحساب" : "كشف الحساب", 
       icon: Receipt, 
       component: <ImprovedAccountStatement /> 
     },
@@ -78,12 +78,12 @@ const Index = () => {
         </div>
         
         <Tabs defaultValue="addOrder" className="mt-2 md:mt-4">
-          <TabsList className={`grid w-full gap-1 ${isMobile ? 'grid-cols-7 h-16' : 'grid-cols-7 h-10'}`}>
+          <TabsList className={`grid w-full gap-1 ${isMobile ? 'grid-cols-7 h-16' : 'grid-cols-7 h-12'}`}>
             {tabs.map((tab) => (
               <TabsTrigger 
                 key={tab.id}
                 value={tab.id} 
-                className={`${isMobile ? 'flex-col text-xs p-1 h-14' : 'text-sm'}`}
+                className={`${isMobile ? 'flex-col text-xs p-1 h-14' : 'text-sm flex items-center gap-2'}`}
               >
                 {isMobile ? (
                   <>
@@ -91,14 +91,17 @@ const Index = () => {
                     <span className="text-xs leading-none">{tab.label}</span>
                   </>
                 ) : (
-                  tab.label
+                  <>
+                    <tab.icon className="h-4 w-4" />
+                    <span>{tab.label}</span>
+                  </>
                 )}
               </TabsTrigger>
             ))}
           </TabsList>
           
           {tabs.map((tab) => (
-            <TabsContent key={tab.id} value={tab.id}>
+            <TabsContent key={tab.id} value={tab.id} className="mt-4">
               {tab.component}
             </TabsContent>
           ))}
