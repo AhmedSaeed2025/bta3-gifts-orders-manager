@@ -53,10 +53,12 @@ export const ResponsiveTableCell: React.FC<{
   children: React.ReactNode; 
   className?: string;
   colSpan?: number;
+  title?: string;
 }> = ({ 
   children, 
   className = "",
-  colSpan
+  colSpan,
+  title
 }) => {
-  return <td className={className} colSpan={colSpan}>{children}</td>;
+  return <td className={className} colSpan={colSpan} title={title}>{children}</td>;
 };
