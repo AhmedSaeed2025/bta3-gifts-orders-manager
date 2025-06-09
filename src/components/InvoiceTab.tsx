@@ -55,7 +55,7 @@ const InvoiceTab = () => {
 
       const invoiceElement = invoiceRef.current;
       const canvas = await html2canvas(invoiceElement, {
-        scale: 2, // Higher scale for better quality
+        scale: 2,
         useCORS: true,
         logging: false,
         allowTaint: true,
@@ -69,7 +69,6 @@ const InvoiceTab = () => {
         format: 'a4'
       });
 
-      // Calculate the width and height
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
       const imgWidth = canvas.width;
@@ -77,10 +76,8 @@ const InvoiceTab = () => {
       const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
       const imgX = (pdfWidth - imgWidth * ratio) / 2;
       
-      // Add the image to the PDF
       pdf.addImage(imgData, 'PNG', imgX, 0, imgWidth * ratio, imgHeight * ratio);
       
-      // Save PDF with client name in the filename
       pdf.save(`فاتورة-${selectedOrder.clientName}-${selectedOrder.serial}.pdf`);
       toast.success("تم تصدير الفاتورة بنجاح");
     } catch (error) {
@@ -95,7 +92,7 @@ const InvoiceTab = () => {
         <CardContent className="flex items-center justify-center py-8">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gift-primary mx-auto"></div>
-            <p className="mt-2 text-gray-600 dark:text-gray-400">جاري تحميل الفواتير...</p>
+            <p className="mt-2 text-gray-600 dark:text-gray-400 text-xs">جاري تحميل الفواتير...</p>
           </div>
         </CardContent>
       </Card>
@@ -104,8 +101,8 @@ const InvoiceTab = () => {
 
   return (
     <Card className="shadow-sm">
-      <CardHeader className="py-3">
-        <CardTitle className="text-base md:text-xl flex items-center justify-between">
+      <CardHeader className="py-2">
+        <CardTitle className={`${isMobile ? "text-sm" : "text-base"} flex items-center justify-between`}>
           <span>طباعة الفاتورة</span>
           <div className="flex gap-2">
             {selectedOrder && (
@@ -113,18 +110,18 @@ const InvoiceTab = () => {
                 <Button
                   onClick={exportToPDF}
                   size={isMobile ? "sm" : "default"}
-                  className={`${isMobile ? "text-xs h-7" : ""} flex items-center gap-1 bg-blue-500 hover:bg-blue-600`}
+                  className={`${isMobile ? "text-xs h-6" : "text-xs h-7"} flex items-center gap-1 bg-blue-500 hover:bg-blue-600`}
                 >
-                  <Download size={isMobile ? 14 : 16} />
+                  <Download size={isMobile ? 12 : 14} />
                   {isMobile ? "PDF" : "تصدير PDF"}
                 </Button>
                 <Button 
                   variant="outline" 
                   size={isMobile ? "sm" : "default"}
                   onClick={handleEditClick}
-                  className={`${isMobile ? "text-xs h-7" : ""} flex items-center gap-1`}
+                  className={`${isMobile ? "text-xs h-6" : "text-xs h-7"} flex items-center gap-1`}
                 >
-                  <Pencil size={isMobile ? 14 : 16} />
+                  <Pencil size={isMobile ? 12 : 14} />
                   {isMobile ? "تعديل" : "تعديل الطلب"}
                 </Button>
               </>
@@ -132,23 +129,23 @@ const InvoiceTab = () => {
           </div>
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-2 md:p-4">
+      <CardContent className={`${isMobile ? "p-2" : "p-3"}`}>
         {!orders || orders.length === 0 ? (
-          <p className="text-center py-3 text-sm">لا توجد طلبات متاحة لعرض الفاتورة</p>
+          <p className="text-center py-3 text-xs">لا توجد طلبات متاحة لعرض الفاتورة</p>
         ) : (
           <div>
-            <div className="mb-4">
-              <Label htmlFor="orderSelect" className="text-xs md:text-sm mb-1 block">اختر الطلب:</Label>
+            <div className="mb-3">
+              <Label htmlFor="orderSelect" className={`${isMobile ? "text-xs" : "text-xs"} mb-1 block`}>اختر الطلب:</Label>
               <Select 
                 value={selectedOrderSerial}
                 onValueChange={handleOrderChange}
               >
-                <SelectTrigger className="w-full text-xs md:text-sm h-8 md:h-10">
+                <SelectTrigger className={`w-full ${isMobile ? "text-xs h-7" : "text-xs h-8"}`}>
                   <SelectValue placeholder="اختر الطلب" />
                 </SelectTrigger>
                 <SelectContent>
                   {orders.map((order) => (
-                    <SelectItem key={order.serial} value={order.serial} className="text-xs md:text-sm">
+                    <SelectItem key={order.serial} value={order.serial} className={`${isMobile ? "text-xs" : "text-xs"}`}>
                       {`${order.serial} - ${order.clientName}`}
                     </SelectItem>
                   ))}

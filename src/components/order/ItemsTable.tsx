@@ -28,6 +28,7 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
   onUpdateItem,
   subtotal,
   shippingCost,
+  discount,
   deposit,
   totalAmount,
   products = [],
@@ -53,7 +54,12 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
 
   const saveEdit = () => {
     if (editingIndex !== null && editingItem && onUpdateItem) {
-      onUpdateItem(editingIndex, editingItem);
+      // تأكد من وجود جميع الخصائص المطلوبة مع حساب الربح
+      const updatedItem = {
+        ...editingItem,
+        profit: (editingItem.price - (editingItem.itemDiscount || 0) - editingItem.cost) * editingItem.quantity
+      };
+      onUpdateItem(editingIndex, updatedItem);
       setEditingIndex(null);
       setEditingItem(null);
     }
@@ -61,23 +67,21 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
 
   const updateEditingItem = (field: string, value: any) => {
     if (editingItem) {
-      setEditingItem({ ...editingItem, [field]: value });
+      const newItem = { ...editingItem, [field]: value };
       
       // Auto-update cost and price when product/size changes
-      if (field === "productType" || field === "size") {
-        const selectedProduct = products.find(p => p.name === (field === "productType" ? value : editingItem.productType));
-        if (selectedProduct && editingItem.size) {
-          const selectedSize = selectedProduct.sizes.find(s => s.size === (field === "size" ? value : editingItem.size));
+      if ((field === "productType" || field === "size") && products.length > 0) {
+        const selectedProduct = products.find(p => p.name === (field === "productType" ? value : newItem.productType));
+        if (selectedProduct && newItem.size) {
+          const selectedSize = selectedProduct.sizes.find(s => s.size === (field === "size" ? value : newItem.size));
           if (selectedSize) {
-            setEditingItem(prev => prev ? {
-              ...prev,
-              [field]: value,
-              cost: selectedSize.cost,
-              price: selectedSize.price
-            } : null);
+            newItem.cost = selectedSize.cost;
+            newItem.price = selectedSize.price;
           }
         }
       }
+      
+      setEditingItem(newItem);
     }
   };
 
@@ -318,6 +322,15 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
                     <span className="text-gray-600 dark:text-gray-400">مصاريف الشحن:</span>
                     <span className="font-semibold">{formatCurrency(shippingCost)}</span>
                   </div>
+
+                  {discount > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">الخصم:</span>
+                      <span className="font-semibold text-red-600 dark:text-red-400">
+                        - {formatCurrency(discount)}
+                      </span>
+                    </div>
+                  )}
                   
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-400">العربون:</span>

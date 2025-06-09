@@ -25,7 +25,7 @@ const ImprovedAccountStatement = () => {
   const safeOrders = Array.isArray(orders) ? orders : [];
   const safeTransactions = Array.isArray(transactions) ? transactions : [];
 
-  // Calculate correct profits and financial summary
+  // Calculate enhanced financial summary with new required fields
   const financialSummary = useMemo(() => {
     let totalRevenue = 0;
     let totalCosts = 0;
@@ -61,9 +61,13 @@ const ImprovedAccountStatement = () => {
       }
     });
 
-    // Fixed profit calculation: Revenue - Costs - Shipping (العربون لا يؤثر على الربح)
+    // Fixed profit calculation: Revenue - Costs - Shipping
     const netProfit = totalRevenue - totalCosts - totalShipping;
     const cashFlow = totalCollections + totalDeposits - totalShippingPayments - totalCostPayments;
+
+    // Calculate remaining amounts - هذا هو المطلوب الجديد
+    const remainingCosts = totalCosts - totalCostPayments;
+    const remainingShipping = totalShipping - totalShippingPayments;
 
     return {
       totalRevenue,
@@ -74,7 +78,9 @@ const ImprovedAccountStatement = () => {
       totalCollections,
       totalShippingPayments,
       totalCostPayments,
-      cashFlow
+      cashFlow,
+      remainingCosts,
+      remainingShipping
     };
   }, [safeOrders, safeTransactions]);
 
@@ -144,90 +150,169 @@ const ImprovedAccountStatement = () => {
       {/* Header */}
       <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-l-4 border-l-blue-500">
         <CardHeader className={`${isMobile ? "pb-2" : "pb-3"}`}>
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-500 rounded-lg">
-              <Receipt className={`${isMobile ? "h-3 w-3" : "h-5 w-5"} text-white`} />
+          <div className="flex items-center gap-2">
+            <div className="p-1 bg-blue-500 rounded-lg">
+              <Receipt className={`${isMobile ? "h-3 w-3" : "h-4 w-4"} text-white`} />
             </div>
             <div>
-              <CardTitle className={`font-bold text-gray-800 dark:text-white ${isMobile ? "text-sm" : "text-xl"}`}>
+              <CardTitle className={`font-bold text-gray-800 dark:text-white ${isMobile ? "text-sm" : "text-base"}`}>
                 كشف الحساب
               </CardTitle>
-              <p className={`text-gray-600 dark:text-gray-400 mt-1 ${isMobile ? "text-xs" : "text-xs"}`}>
-                {truncateText("ملخص شامل للحالة المالية والمعاملات", isMobile ? 25 : 50)}
-              </p>
+              {!isMobile && (
+                <p className="text-gray-600 dark:text-gray-400 mt-1 text-xs">
+                  ملخص شامل للحالة المالية والمعاملات
+                </p>
+              )}
             </div>
           </div>
         </CardHeader>
       </Card>
 
-      {/* Financial Summary */}
-      <div className={`grid gap-3 ${isMobile ? "grid-cols-1" : "grid-cols-2 md:grid-cols-5"}`}>
+      {/* Enhanced Financial Summary - مع إضافة البطاقات الجديدة المطلوبة */}
+      <div className={`grid gap-2 ${isMobile ? "grid-cols-1" : "grid-cols-2 md:grid-cols-7"}`}>
         <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-          <CardContent className={isMobile ? "p-2" : "p-3"}>
+          <CardContent className={isMobile ? "p-2" : "p-2"}>
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-blue-100 font-medium ${isMobile ? "text-xs" : "text-xs"}`}>
                   {truncateText("إجمالي المبيعات", isMobile ? 8 : 15)}
                 </p>
-                <p className={`font-bold ltr-numbers ${isMobile ? "text-xs" : "text-base"}`}>{formatCurrency(financialSummary.totalRevenue)}</p>
+                <p className={`font-bold ltr-numbers ${isMobile ? "text-xs" : "text-sm"}`}>{formatCurrency(financialSummary.totalRevenue)}</p>
               </div>
-              <TrendingUp className={`${isMobile ? "h-3 w-3" : "h-5 w-5"} text-blue-200`} />
+              <TrendingUp className={`${isMobile ? "h-3 w-3" : "h-4 w-4"} text-blue-200`} />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white">
-          <CardContent className={isMobile ? "p-2" : "p-3"}>
+          <CardContent className={isMobile ? "p-2" : "p-2"}>
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-red-100 font-medium ${isMobile ? "text-xs" : "text-xs"}`}>
                   {truncateText("إجمالي التكاليف", isMobile ? 8 : 15)}
                 </p>
-                <p className={`font-bold ltr-numbers ${isMobile ? "text-xs" : "text-base"}`}>{formatCurrency(financialSummary.totalCosts)}</p>
+                <p className={`font-bold ltr-numbers ${isMobile ? "text-xs" : "text-sm"}`}>{formatCurrency(financialSummary.totalCosts)}</p>
               </div>
-              <TrendingDown className={`${isMobile ? "h-3 w-3" : "h-5 w-5"} text-red-200`} />
+              <TrendingDown className={`${isMobile ? "h-3 w-3" : "h-4 w-4"} text-red-200`} />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* بطاقة جديدة: التكاليف المدفوعة */}
+        <Card className="bg-gradient-to-br from-pink-500 to-pink-600 text-white">
+          <CardContent className={isMobile ? "p-2" : "p-2"}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className={`text-pink-100 font-medium ${isMobile ? "text-xs" : "text-xs"}`}>
+                  {truncateText("التكاليف المدفوعة", isMobile ? 8 : 15)}
+                </p>
+                <p className={`font-bold ltr-numbers ${isMobile ? "text-xs" : "text-sm"}`}>{formatCurrency(financialSummary.totalCostPayments)}</p>
+              </div>
+              <Minus className={`${isMobile ? "h-3 w-3" : "h-4 w-4"} text-pink-200`} />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* بطاقة جديدة: التكاليف المتبقية */}
+        <Card className="bg-gradient-to-br from-rose-500 to-rose-600 text-white">
+          <CardContent className={isMobile ? "p-2" : "p-2"}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className={`text-rose-100 font-medium ${isMobile ? "text-xs" : "text-xs"}`}>
+                  {truncateText("التكاليف المتبقية", isMobile ? 8 : 15)}
+                </p>
+                <p className={`font-bold ltr-numbers ${isMobile ? "text-xs" : "text-sm"}`}>{formatCurrency(financialSummary.remainingCosts)}</p>
+              </div>
+              <TrendingDown className={`${isMobile ? "h-3 w-3" : "h-4 w-4"} text-rose-200`} />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white">
-          <CardContent className={isMobile ? "p-2" : "p-3"}>
+          <CardContent className={isMobile ? "p-2" : "p-2"}>
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-orange-100 font-medium ${isMobile ? "text-xs" : "text-xs"}`}>
                   {truncateText("إجمالي الشحن", isMobile ? 8 : 15)}
                 </p>
-                <p className={`font-bold ltr-numbers ${isMobile ? "text-xs" : "text-base"}`}>{formatCurrency(financialSummary.totalShipping)}</p>
+                <p className={`font-bold ltr-numbers ${isMobile ? "text-xs" : "text-sm"}`}>{formatCurrency(financialSummary.totalShipping)}</p>
               </div>
-              <TrendingDown className={`${isMobile ? "h-3 w-3" : "h-5 w-5"} text-orange-200`} />
+              <TrendingDown className={`${isMobile ? "h-3 w-3" : "h-4 w-4"} text-orange-200`} />
             </div>
           </CardContent>
         </Card>
 
+        {/* بطاقة جديدة: الشحن المدفوع */}
+        <Card className="bg-gradient-to-br from-amber-500 to-amber-600 text-white">
+          <CardContent className={isMobile ? "p-2" : "p-2"}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className={`text-amber-100 font-medium ${isMobile ? "text-xs" : "text-xs"}`}>
+                  {truncateText("الشحن المدفوع", isMobile ? 8 : 15)}
+                </p>
+                <p className={`font-bold ltr-numbers ${isMobile ? "text-xs" : "text-sm"}`}>{formatCurrency(financialSummary.totalShippingPayments)}</p>
+              </div>
+              <Minus className={`${isMobile ? "h-3 w-3" : "h-4 w-4"} text-amber-200`} />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* بطاقة جديدة: الشحن المتبقي */}
+        <Card className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white">
+          <CardContent className={isMobile ? "p-2" : "p-2"}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className={`text-yellow-100 font-medium ${isMobile ? "text-xs" : "text-xs"}`}>
+                  {truncateText("الشحن المتبقي", isMobile ? 8 : 15)}
+                </p>
+                <p className={`font-bold ltr-numbers ${isMobile ? "text-xs" : "text-sm"}`}>{formatCurrency(financialSummary.remainingShipping)}</p>
+              </div>
+              <TrendingDown className={`${isMobile ? "h-3 w-3" : "h-4 w-4"} text-yellow-200`} />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Second Row - Main Metrics */}
+      <div className={`grid gap-2 ${isMobile ? "grid-cols-1" : "grid-cols-2 md:grid-cols-3"}`}>
         <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
-          <CardContent className={isMobile ? "p-2" : "p-3"}>
+          <CardContent className={isMobile ? "p-2" : "p-2"}>
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-green-100 font-medium ${isMobile ? "text-xs" : "text-xs"}`}>
                   {truncateText("صافي الربح", isMobile ? 8 : 15)}
                 </p>
-                <p className={`font-bold ltr-numbers ${isMobile ? "text-xs" : "text-base"}`}>{formatCurrency(financialSummary.netProfit)}</p>
+                <p className={`font-bold ltr-numbers ${isMobile ? "text-xs" : "text-sm"}`}>{formatCurrency(financialSummary.netProfit)}</p>
               </div>
-              <TrendingUp className={`${isMobile ? "h-3 w-3" : "h-5 w-5"} text-green-200`} />
+              <TrendingUp className={`${isMobile ? "h-3 w-3" : "h-4 w-4"} text-green-200`} />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
+          <CardContent className={isMobile ? "p-2" : "p-2"}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className={`text-emerald-100 font-medium ${isMobile ? "text-xs" : "text-xs"}`}>
+                  {truncateText("إجمالي المحصل", isMobile ? 8 : 15)}
+                </p>
+                <p className={`font-bold ltr-numbers ${isMobile ? "text-xs" : "text-sm"}`}>{formatCurrency(financialSummary.totalCollections)}</p>
+              </div>
+              <Plus className={`${isMobile ? "h-3 w-3" : "h-4 w-4"} text-emerald-200`} />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
-          <CardContent className={isMobile ? "p-2" : "p-3"}>
+          <CardContent className={isMobile ? "p-2" : "p-2"}>
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-purple-100 font-medium ${isMobile ? "text-xs" : "text-xs"}`}>
                   {truncateText("التدفق النقدي", isMobile ? 8 : 15)}
                 </p>
-                <p className={`font-bold ltr-numbers ${isMobile ? "text-xs" : "text-base"}`}>{formatCurrency(financialSummary.cashFlow)}</p>
+                <p className={`font-bold ltr-numbers ${isMobile ? "text-xs" : "text-sm"}`}>{formatCurrency(financialSummary.cashFlow)}</p>
               </div>
-              <DollarSign className={`${isMobile ? "h-3 w-3" : "h-5 w-5"} text-purple-200`} />
+              <DollarSign className={`${isMobile ? "h-3 w-3" : "h-4 w-4"} text-purple-200`} />
             </div>
           </CardContent>
         </Card>
@@ -275,7 +360,7 @@ const ImprovedAccountStatement = () => {
                       size="sm"
                       variant="destructive"
                       onClick={() => handleDeleteTransaction(transaction.id)}
-                      className={`flex items-center gap-1 ${isMobile ? "h-6 text-xs" : "h-7 text-xs"}`}
+                      className={`flex items-center gap-1 ${isMobile ? "h-5 text-xs" : "h-6 text-xs"}`}
                     >
                       <Trash2 className={`${isMobile ? "h-2 w-2" : "h-3 w-3"}`} />
                       {!isMobile && "حذف"}

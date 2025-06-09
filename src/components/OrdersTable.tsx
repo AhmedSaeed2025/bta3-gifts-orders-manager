@@ -10,7 +10,6 @@ import { formatCurrency } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import CustomAmountDialog from "./CustomAmountDialog";
 import { 
@@ -26,7 +25,9 @@ import {
   CreditCard,
   Truck,
   X,
-  Clock
+  Clock,
+  Settings,
+  CheckCircle
 } from "lucide-react";
 import { 
   ResponsiveTable, 
@@ -92,16 +93,19 @@ const OrdersTable = () => {
     });
   }, [safeOrders, filterMonth, filterYear, filterStatus, filterPaymentMethod]);
 
-  // Calculate summary statistics
+  // Calculate summary statistics - مع إضافة البيانات الجديدة المطلوبة
   const summaryStats = React.useMemo(() => {
     if (!filteredOrders || filteredOrders.length === 0) {
       return {
         totalOrders: 0,
         pendingOrders: 0,
+        workshopOrders: 0,
+        readyForDeliveryOrders: 0,
         totalRevenue: 0,
         totalCost: 0,
         totalShipping: 0,
-        netProfit: 0
+        netProfit: 0,
+        workshopProducts: 0
       };
     }
 
@@ -109,30 +113,44 @@ const OrdersTable = () => {
     let totalCost = 0;
     let totalShipping = 0;
     let pendingOrders = 0;
+    let workshopOrders = 0;
+    let readyForDeliveryOrders = 0;
+    let workshopProducts = 0;
 
     filteredOrders.forEach(order => {
       if (order.status === 'pending') {
         pendingOrders++;
       }
+      if (order.status === 'sentToPrinter') {
+        workshopOrders++;
+        // عدد المنتجات في الورشة = مجموع الكميات في الطلبات المرسلة للمطبعة
+        workshopProducts += order.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
+      }
+      if (order.status === 'readyForDelivery') {
+        readyForDeliveryOrders++;
+      }
       
       totalRevenue += order.total;
       totalShipping += order.shippingCost || 0;
       
-      // Calculate total cost for this order from items
-      const orderCost = order.items?.reduce((sum, item) => sum + (item.cost * item.quantity), 0) || 0;
-      totalCost += orderCost;
+      // Calculate actual costs from items
+      const orderCosts = order.items?.reduce((sum, item) => sum + (item.cost * item.quantity), 0) || 0;
+      totalCost += orderCosts;
     });
 
-    // Fixed net profit calculation: Revenue - Cost - Shipping (العربون لا يؤثر على الربح)
+    // Fixed net profit calculation: Revenue - Cost - Shipping
     const netProfit = totalRevenue - totalCost - totalShipping;
 
     return {
       totalOrders: filteredOrders.length,
       pendingOrders,
+      workshopOrders,
+      readyForDeliveryOrders,
       totalRevenue,
       totalCost,
       totalShipping,
-      netProfit
+      netProfit,
+      workshopProducts
     };
   }, [filteredOrders]);
 
@@ -158,7 +176,6 @@ const OrdersTable = () => {
   const openCustomAmountDialog = (type: 'collection' | 'shipping' | 'cost', order: any) => {
     let defaultAmount = 0;
     if (type === 'collection') {
-      // For collection, show the total order amount minus any deposit already paid
       defaultAmount = order.total - (order.deposit || 0);
     } else if (type === 'shipping') {
       defaultAmount = order.shippingCost || 0;
@@ -260,7 +277,6 @@ const OrdersTable = () => {
 
   const calculateOrderNetProfit = (order: any) => {
     const orderCost = order.items?.reduce((sum: number, item: any) => sum + (item.cost * item.quantity), 0) || 0;
-    // Fixed calculation: Revenue - Cost - Shipping (العربون لا يؤثر على الربح)
     return order.total - orderCost - (order.shippingCost || 0);
   };
 
@@ -273,7 +289,7 @@ const OrdersTable = () => {
     }
   };
 
-  // Function to truncate text
+  // Function to truncate text - تقليل النصوص الطويلة
   const truncateText = (text: string, maxLength: number) => {
     if (!text) return "غير محدد";
     if (text.length <= maxLength) return text;
@@ -286,7 +302,7 @@ const OrdersTable = () => {
         <CardContent className="flex items-center justify-center py-12">
           <div className="text-center space-y-4">
             <div className="animate-spin rounded-full h-12 w-12 border-4 border-gift-primary border-t-transparent mx-auto"></div>
-            <p className="text-lg text-gray-600 dark:text-gray-400">جاري تحميل الطلبات...</p>
+            <p className={`text-gray-600 dark:text-gray-400 ${isMobile ? "text-sm" : "text-lg"}`}>جاري تحميل الطلبات...</p>
           </div>
         </CardContent>
       </Card>
@@ -295,114 +311,158 @@ const OrdersTable = () => {
 
   return (
     <div className="rtl space-y-4" dir="rtl">
-      {/* Header */}
+      {/* Header - تم تصغير الخط */}
       <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-l-4 border-l-blue-500">
-        <CardHeader className="pb-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-500 rounded-lg">
-              <Package className="h-5 w-5 text-white" />
+        <CardHeader className={`${isMobile ? "pb-2" : "pb-3"}`}>
+          <div className="flex items-center gap-2">
+            <div className="p-1 bg-blue-500 rounded-lg">
+              <Package className={`${isMobile ? "h-3 w-3" : "h-4 w-4"} text-white`} />
             </div>
             <div>
-              <CardTitle className={`${isMobile ? "text-sm" : "text-lg"} font-bold text-gray-800 dark:text-white`}>
+              <CardTitle className={`font-bold text-gray-800 dark:text-white ${isMobile ? "text-xs" : "text-sm"}`}>
                 إدارة الطلبات
               </CardTitle>
-              <p className={`${isMobile ? "text-xs" : "text-sm"} text-gray-600 dark:text-gray-400 mt-1`}>
-                إدارة وتتبع جميع الطلبات مع إمكانية التعديل والحذف
-              </p>
+              {!isMobile && (
+                <p className="text-gray-600 dark:text-gray-400 mt-1 text-xs">
+                  إدارة وتتبع جميع الطلبات
+                </p>
+              )}
             </div>
           </div>
         </CardHeader>
       </Card>
 
-      {/* Summary Statistics */}
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+      {/* Summary Statistics - مع إضافة البطاقات الجديدة وتصغير الخط */}
+      <div className={`grid gap-2 ${isMobile ? "grid-cols-2" : "grid-cols-2 md:grid-cols-8"}`}>
         <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-          <CardContent className="p-3">
+          <CardContent className={`${isMobile ? "p-2" : "p-2"}`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-blue-100 text-xs font-medium">إجمالي الطلبات</p>
-                <p className={`${isMobile ? "text-base" : "text-lg"} font-bold ltr-numbers`}>{summaryStats.totalOrders}</p>
+                <p className={`text-blue-100 font-medium ${isMobile ? "text-xs" : "text-xs"}`}>
+                  {isMobile ? "الطلبات" : "إجمالي الطلبات"}
+                </p>
+                <p className={`font-bold ltr-numbers ${isMobile ? "text-sm" : "text-base"}`}>{summaryStats.totalOrders}</p>
               </div>
-              <Calendar className="h-5 w-5 text-blue-200" />
+              <Calendar className={`${isMobile ? "h-3 w-3" : "h-4 w-4"} text-blue-200`} />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white">
-          <CardContent className="p-3">
+          <CardContent className={`${isMobile ? "p-2" : "p-2"}`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-yellow-100 text-xs font-medium">طلبات منتظرة</p>
-                <p className={`${isMobile ? "text-base" : "text-lg"} font-bold ltr-numbers`}>{summaryStats.pendingOrders}</p>
+                <p className={`text-yellow-100 font-medium ${isMobile ? "text-xs" : "text-xs"}`}>
+                  {isMobile ? "منتظرة" : "طلبات منتظرة"}
+                </p>
+                <p className={`font-bold ltr-numbers ${isMobile ? "text-sm" : "text-base"}`}>{summaryStats.pendingOrders}</p>
               </div>
-              <Clock className="h-5 w-5 text-yellow-200" />
+              <Clock className={`${isMobile ? "h-3 w-3" : "h-4 w-4"} text-yellow-200`} />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* بطاقة جديدة: عدد المنتجات في الورشة */}
+        <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+          <CardContent className={`${isMobile ? "p-2" : "p-2"}`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className={`text-purple-100 font-medium ${isMobile ? "text-xs" : "text-xs"}`}>
+                  {isMobile ? "الورشة" : "منتجات الورشة"}
+                </p>
+                <p className={`font-bold ltr-numbers ${isMobile ? "text-sm" : "text-base"}`}>{summaryStats.workshopProducts}</p>
+              </div>
+              <Settings className={`${isMobile ? "h-3 w-3" : "h-4 w-4"} text-purple-200`} />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* بطاقة جديدة: أوردرات تحت التسليم */}
+        <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white">
+          <CardContent className={`${isMobile ? "p-2" : "p-2"}`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className={`text-orange-100 font-medium ${isMobile ? "text-xs" : "text-xs"}`}>
+                  {isMobile ? "تحت التسليم" : "تحت التسليم"}
+                </p>
+                <p className={`font-bold ltr-numbers ${isMobile ? "text-sm" : "text-base"}`}>{summaryStats.readyForDeliveryOrders}</p>
+              </div>
+              <CheckCircle className={`${isMobile ? "h-3 w-3" : "h-4 w-4"} text-orange-200`} />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
-          <CardContent className="p-3">
+          <CardContent className={`${isMobile ? "p-2" : "p-2"}`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-green-100 text-xs font-medium">إجمالي المبيعات</p>
-                <p className={`${isMobile ? "text-xs" : "text-sm"} font-bold ltr-numbers`}>{formatCurrency(summaryStats.totalRevenue)}</p>
+                <p className={`text-green-100 font-medium ${isMobile ? "text-xs" : "text-xs"}`}>
+                  {isMobile ? "المبيعات" : "إجمالي المبيعات"}
+                </p>
+                <p className={`font-bold ltr-numbers ${isMobile ? "text-xs" : "text-sm"}`}>{formatCurrency(summaryStats.totalRevenue)}</p>
               </div>
-              <DollarSign className="h-5 w-5 text-green-200" />
+              <DollarSign className={`${isMobile ? "h-3 w-3" : "h-4 w-4"} text-green-200`} />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white">
-          <CardContent className="p-3">
+          <CardContent className={`${isMobile ? "p-2" : "p-2"}`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-red-100 text-xs font-medium">إجمالي التكلفة</p>
-                <p className={`${isMobile ? "text-xs" : "text-sm"} font-bold ltr-numbers`}>{formatCurrency(summaryStats.totalCost)}</p>
+                <p className={`text-red-100 font-medium ${isMobile ? "text-xs" : "text-xs"}`}>
+                  {isMobile ? "التكلفة" : "إجمالي التكلفة"}
+                </p>
+                <p className={`font-bold ltr-numbers ${isMobile ? "text-xs" : "text-sm"}`}>{formatCurrency(summaryStats.totalCost)}</p>
               </div>
-              <Package className="h-5 w-5 text-red-200" />
+              <Package className={`${isMobile ? "h-3 w-3" : "h-4 w-4"} text-red-200`} />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white">
-          <CardContent className="p-3">
+        <Card className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white">
+          <CardContent className={`${isMobile ? "p-2" : "p-2"}`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-orange-100 text-xs font-medium">إجمالي الشحن</p>
-                <p className={`${isMobile ? "text-xs" : "text-sm"} font-bold ltr-numbers`}>{formatCurrency(summaryStats.totalShipping)}</p>
+                <p className={`text-indigo-100 font-medium ${isMobile ? "text-xs" : "text-xs"}`}>
+                  {isMobile ? "الشحن" : "إجمالي الشحن"}
+                </p>
+                <p className={`font-bold ltr-numbers ${isMobile ? "text-xs" : "text-sm"}`}>{formatCurrency(summaryStats.totalShipping)}</p>
               </div>
-              <Truck className="h-5 w-5 text-orange-200" />
+              <Truck className={`${isMobile ? "h-3 w-3" : "h-4 w-4"} text-indigo-200`} />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
-          <CardContent className="p-3">
+        <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
+          <CardContent className={`${isMobile ? "p-2" : "p-2"}`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-purple-100 text-xs font-medium">صافي الربح</p>
-                <p className={`${isMobile ? "text-xs" : "text-sm"} font-bold ltr-numbers`}>{formatCurrency(summaryStats.netProfit)}</p>
+                <p className={`text-emerald-100 font-medium ${isMobile ? "text-xs" : "text-xs"}`}>
+                  {isMobile ? "الربح" : "صافي الربح"}
+                </p>
+                <p className={`font-bold ltr-numbers ${isMobile ? "text-xs" : "text-sm"}`}>{formatCurrency(summaryStats.netProfit)}</p>
               </div>
-              <TrendingUp className="h-5 w-5 text-purple-200" />
+              <TrendingUp className={`${isMobile ? "h-3 w-3" : "h-4 w-4"} text-emerald-200`} />
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Filters */}
+      {/* Filters - تم تصغير الخط */}
       <Card className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 border-l-4 border-l-indigo-500">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <Filter className="h-4 w-4" />
+        <CardHeader className={`${isMobile ? "pb-1" : "pb-2"}`}>
+          <CardTitle className={`${isMobile ? "text-xs" : "text-sm"} flex items-center gap-2`}>
+            <Filter className={`${isMobile ? "h-2 w-2" : "h-3 w-3"}`} />
             فلاتر الطلبات
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
-          <div className={`grid gap-3 ${isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-5"}`}>
+          <div className={`grid gap-2 ${isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-5"}`}>
             <div className="space-y-1">
-              <Label htmlFor="filterYear" className="text-xs">السنة</Label>
+              <Label htmlFor="filterYear" className={`${isMobile ? "text-xs" : "text-xs"}`}>السنة</Label>
               <Select value={filterYear} onValueChange={setFilterYear}>
-                <SelectTrigger className="h-8 text-xs">
+                <SelectTrigger className={`${isMobile ? "text-xs h-6" : "h-7 text-xs"}`}>
                   <SelectValue placeholder="اختر السنة" />
                 </SelectTrigger>
                 <SelectContent>
@@ -415,9 +475,9 @@ const OrdersTable = () => {
             </div>
             
             <div className="space-y-1">
-              <Label htmlFor="filterMonth" className="text-xs">الشهر</Label>
+              <Label htmlFor="filterMonth" className={`${isMobile ? "text-xs" : "text-xs"}`}>الشهر</Label>
               <Select value={filterMonth} onValueChange={setFilterMonth}>
-                <SelectTrigger className="h-8 text-xs">
+                <SelectTrigger className={`${isMobile ? "text-xs h-6" : "h-7 text-xs"}`}>
                   <SelectValue placeholder="اختر الشهر" />
                 </SelectTrigger>
                 <SelectContent>
@@ -439,9 +499,9 @@ const OrdersTable = () => {
             </div>
             
             <div className="space-y-1">
-              <Label htmlFor="filterStatus" className="text-xs">الحالة</Label>
+              <Label htmlFor="filterStatus" className={`${isMobile ? "text-xs" : "text-xs"}`}>الحالة</Label>
               <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger className="h-8 text-xs">
+                <SelectTrigger className={`${isMobile ? "text-xs h-6" : "h-7 text-xs"}`}>
                   <SelectValue placeholder="اختر الحالة" />
                 </SelectTrigger>
                 <SelectContent>
@@ -456,9 +516,9 @@ const OrdersTable = () => {
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="filterPaymentMethod" className="text-xs">طريقة السداد</Label>
+              <Label htmlFor="filterPaymentMethod" className={`${isMobile ? "text-xs" : "text-xs"}`}>طريقة السداد</Label>
               <Select value={filterPaymentMethod} onValueChange={setFilterPaymentMethod}>
-                <SelectTrigger className="h-8 text-xs">
+                <SelectTrigger className={`${isMobile ? "text-xs h-6" : "h-7 text-xs"}`}>
                   <SelectValue placeholder="اختر طريقة السداد" />
                 </SelectTrigger>
                 <SelectContent>
@@ -476,9 +536,9 @@ const OrdersTable = () => {
                 onClick={clearFilters}
                 variant="outline"
                 size="sm"
-                className="w-full flex items-center gap-1 h-8 text-xs"
+                className={`w-full flex items-center gap-1 ${isMobile ? "h-6 text-xs" : "h-7 text-xs"}`}
               >
-                <RefreshCw className="h-3 w-3" />
+                <RefreshCw className={`${isMobile ? "h-2 w-2" : "h-3 w-3"}`} />
                 مسح الفلاتر
               </Button>
             </div>
@@ -486,58 +546,65 @@ const OrdersTable = () => {
         </CardContent>
       </Card>
 
-      {/* Orders Table */}
+      {/* Orders Table - تم تصغير الخط */}
       <Card>
-        <CardContent className={`${isMobile ? "p-2" : "p-4"}`}>
+        <CardContent className={`${isMobile ? "p-1" : "p-2"}`}>
           <div className="overflow-x-auto">
             <ResponsiveTable className="w-full">
               <ResponsiveTableHead>
                 <ResponsiveTableRow className="bg-gray-50 dark:bg-gray-800">
-                  <ResponsiveTableHeader className="font-semibold text-xs">رقم الطلب</ResponsiveTableHeader>
-                  <ResponsiveTableHeader className="font-semibold text-xs">التاريخ</ResponsiveTableHeader>
-                  <ResponsiveTableHeader className="font-semibold text-xs">اسم العميل</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className={`font-semibold ${isMobile ? "text-xs" : "text-xs"}`}>رقم الطلب</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className={`font-semibold ${isMobile ? "text-xs" : "text-xs"}`}>التاريخ</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className={`font-semibold ${isMobile ? "text-xs" : "text-xs"}`}>اسم العميل</ResponsiveTableHeader>
                   {!isMobile && <ResponsiveTableHeader className="font-semibold text-xs">التليفون</ResponsiveTableHeader>}
-                  <ResponsiveTableHeader className="font-semibold text-xs">طريقة السداد</ResponsiveTableHeader>
-                  <ResponsiveTableHeader className="font-semibold text-xs">طريقة التوصيل</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className={`font-semibold ${isMobile ? "text-xs" : "text-xs"}`}>طريقة السداد</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className={`font-semibold ${isMobile ? "text-xs" : "text-xs"}`}>طريقة التوصيل</ResponsiveTableHeader>
                   {!isMobile && <ResponsiveTableHeader className="font-semibold text-xs">العنوان</ResponsiveTableHeader>}
                   {!isMobile && <ResponsiveTableHeader className="font-semibold text-xs">المحافظة</ResponsiveTableHeader>}
-                  <ResponsiveTableHeader className="font-semibold text-xs">إجمالي الطلب</ResponsiveTableHeader>
-                  <ResponsiveTableHeader className="font-semibold text-xs">صافي الربح</ResponsiveTableHeader>
-                  <ResponsiveTableHeader className="font-semibold text-xs">الحالة</ResponsiveTableHeader>
-                  <ResponsiveTableHeader className="font-semibold text-xs">إجراءات مالية</ResponsiveTableHeader>
-                  <ResponsiveTableHeader className="font-semibold text-xs">إجراءات</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className={`font-semibold ${isMobile ? "text-xs" : "text-xs"}`}>إجمالي الطلب</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className={`font-semibold ${isMobile ? "text-xs" : "text-xs"}`}>صافي الربح</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className={`font-semibold ${isMobile ? "text-xs" : "text-xs"}`}>الحالة</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className={`font-semibold ${isMobile ? "text-xs" : "text-xs"}`}>إجراءات مالية</ResponsiveTableHeader>
+                  <ResponsiveTableHeader className={`font-semibold ${isMobile ? "text-xs" : "text-xs"}`}>إجراءات</ResponsiveTableHeader>
                 </ResponsiveTableRow>
               </ResponsiveTableHead>
               <ResponsiveTableBody>
                 {filteredOrders.length > 0 ? (
                   filteredOrders.map((order, index) => (
                     <ResponsiveTableRow key={order.serial} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                      <ResponsiveTableCell className="font-medium text-blue-600 dark:text-blue-400 text-xs">{order.serial}</ResponsiveTableCell>
-                      <ResponsiveTableCell className="text-gray-600 dark:text-gray-300 text-xs">{new Date(order.dateCreated).toLocaleDateString('ar-EG')}</ResponsiveTableCell>
-                      <ResponsiveTableCell className="font-medium text-gray-800 dark:text-white text-xs" title={order.clientName}>
-                        {truncateText(order.clientName, isMobile ? 10 : 15)}
+                      <ResponsiveTableCell className={`font-medium text-blue-600 dark:text-blue-400 ${isMobile ? "text-xs" : "text-xs"}`}>{order.serial}</ResponsiveTableCell>
+                      <ResponsiveTableCell className={`text-gray-600 dark:text-gray-300 ${isMobile ? "text-xs" : "text-xs"}`}>{new Date(order.dateCreated).toLocaleDateString('ar-EG')}</ResponsiveTableCell>
+                      <ResponsiveTableCell className={`font-medium text-gray-800 dark:text-white ${isMobile ? "text-xs" : "text-xs"}`} title={order.clientName}>
+                        {truncateText(order.clientName, isMobile ? 6 : 15)}
                       </ResponsiveTableCell>
                       {!isMobile && <ResponsiveTableCell className="text-gray-600 dark:text-gray-300 text-xs">{order.phone}</ResponsiveTableCell>}
-                      <ResponsiveTableCell className="text-gray-600 dark:text-gray-300 text-xs" title={order.paymentMethod}>
-                        {truncateText(order.paymentMethod, isMobile ? 8 : 12)}
+                      <ResponsiveTableCell className={`text-gray-600 dark:text-gray-300 ${isMobile ? "text-xs" : "text-xs"}`} title={order.paymentMethod}>
+                        {truncateText(order.paymentMethod, isMobile ? 4 : 12)}
                       </ResponsiveTableCell>
-                      <ResponsiveTableCell className="text-gray-600 dark:text-gray-300 text-xs" title={order.deliveryMethod}>
-                        {truncateText(order.deliveryMethod, isMobile ? 8 : 12)}
+                      <ResponsiveTableCell className={`text-gray-600 dark:text-gray-300 ${isMobile ? "text-xs" : "text-xs"}`} title={order.deliveryMethod}>
+                        {truncateText(order.deliveryMethod, isMobile ? 4 : 12)}
                       </ResponsiveTableCell>
                       {!isMobile && <ResponsiveTableCell className="text-gray-600 dark:text-gray-300 text-xs" title={order.address}>
-                        {truncateText(order.address, 20)}
+                        {truncateText(order.address, 15)}
                       </ResponsiveTableCell>}
                       {!isMobile && <ResponsiveTableCell className="text-gray-600 dark:text-gray-300 text-xs" title={order.governorate}>
-                        {truncateText(order.governorate, 15)}
+                        {truncateText(order.governorate, 10)}
                       </ResponsiveTableCell>}
-                      <ResponsiveTableCell className="text-right font-semibold text-green-600 dark:text-green-400 ltr-numbers text-xs">{formatCurrency(order.total)}</ResponsiveTableCell>
-                      <ResponsiveTableCell className="text-right font-semibold text-purple-600 dark:text-purple-400 ltr-numbers text-xs">{formatCurrency(calculateOrderNetProfit(order))}</ResponsiveTableCell>
+                      <ResponsiveTableCell className={`text-right font-semibold text-green-600 dark:text-green-400 ltr-numbers ${isMobile ? "text-xs" : "text-xs"}`}>{formatCurrency(order.total)}</ResponsiveTableCell>
+                      <ResponsiveTableCell className={`text-right font-semibold text-purple-600 dark:text-purple-400 ltr-numbers ${isMobile ? "text-xs" : "text-xs"}`}>{formatCurrency(calculateOrderNetProfit(order))}</ResponsiveTableCell>
                       <ResponsiveTableCell>
                         <Select value={order.status} onValueChange={(value) => handleStatusChange(index, value)}>
-                          <SelectTrigger className="w-32 h-8">
+                          <SelectTrigger className={`${isMobile ? "w-16 h-6" : "w-28 h-7"}`}>
                             <SelectValue>
-                              <Badge variant="outline" className={`${getStatusBadgeColor(order.status)} text-xs`}>
-                                {getStatusLabel(order.status)}
+                              <Badge variant="outline" className={`${getStatusBadgeColor(order.status)} ${isMobile ? "text-xs" : "text-xs"}`}>
+                                {isMobile ? 
+                                  (order.status === 'pending' ? 'منتظر' : 
+                                   order.status === 'confirmed' ? 'مؤكد' :
+                                   order.status === 'sentToPrinter' ? 'مطبعة' :
+                                   order.status === 'readyForDelivery' ? 'تسليم' :
+                                   order.status === 'shipped' ? 'شحن' : order.status)
+                                  : getStatusLabel(order.status)
+                                }
                               </Badge>
                             </SelectValue>
                           </SelectTrigger>
@@ -556,20 +623,20 @@ const OrdersTable = () => {
                             <Button
                               size="sm"
                               onClick={() => openCustomAmountDialog('collection', order)}
-                              className="bg-green-600 hover:bg-green-700 text-white h-7 text-xs"
+                              className={`bg-green-600 hover:bg-green-700 text-white ${isMobile ? "h-5 text-xs" : "h-6 text-xs"}`}
                             >
-                              <DollarSign className="h-3 w-3 mr-1" />
-                              تحصيل
+                              <DollarSign className={`${isMobile ? "h-2 w-2" : "h-3 w-3"} mr-1`} />
+                              {isMobile ? "تحصيل" : "تحصيل"}
                             </Button>
                           ) : (
                             <Button
                               size="sm"
                               variant="destructive"
                               onClick={() => handleCancelTransaction(order.serial, 'order_collection')}
-                              className="bg-red-600 hover:bg-red-700 h-7 text-xs"
+                              className={`bg-red-600 hover:bg-red-700 ${isMobile ? "h-5 text-xs" : "h-6 text-xs"}`}
                             >
-                              <X className="h-3 w-3 mr-1" />
-                              إلغاء التحصيل
+                              <X className={`${isMobile ? "h-2 w-2" : "h-3 w-3"} mr-1`} />
+                              {isMobile ? "إلغاء" : "إلغاء التحصيل"}
                             </Button>
                           )}
                           
@@ -577,20 +644,20 @@ const OrdersTable = () => {
                             <Button
                               size="sm"
                               onClick={() => openCustomAmountDialog('shipping', order)}
-                              className="bg-blue-600 hover:bg-blue-700 text-white h-7 text-xs"
+                              className={`bg-blue-600 hover:bg-blue-700 text-white ${isMobile ? "h-5 text-xs" : "h-6 text-xs"}`}
                             >
-                              <Truck className="h-3 w-3 mr-1" />
-                              دفع شحن
+                              <Truck className={`${isMobile ? "h-2 w-2" : "h-3 w-3"} mr-1`} />
+                              {isMobile ? "شحن" : "دفع شحن"}
                             </Button>
                           ) : (
                             <Button
                               size="sm"
                               variant="destructive"
                               onClick={() => handleCancelTransaction(order.serial, 'shipping_payment')}
-                              className="bg-red-600 hover:bg-red-700 h-7 text-xs"
+                              className={`bg-red-600 hover:bg-red-700 ${isMobile ? "h-5 text-xs" : "h-6 text-xs"}`}
                             >
-                              <X className="h-3 w-3 mr-1" />
-                              إلغاء الشحن
+                              <X className={`${isMobile ? "h-2 w-2" : "h-3 w-3"} mr-1`} />
+                              {isMobile ? "إلغاء" : "إلغاء الشحن"}
                             </Button>
                           )}
                           
@@ -598,20 +665,20 @@ const OrdersTable = () => {
                             <Button
                               size="sm"
                               onClick={() => openCustomAmountDialog('cost', order)}
-                              className="bg-orange-600 hover:bg-orange-700 text-white h-7 text-xs"
+                              className={`bg-orange-600 hover:bg-orange-700 text-white ${isMobile ? "h-5 text-xs" : "h-6 text-xs"}`}
                             >
-                              <CreditCard className="h-3 w-3 mr-1" />
-                              دفع تكلفة
+                              <CreditCard className={`${isMobile ? "h-2 w-2" : "h-3 w-3"} mr-1`} />
+                              {isMobile ? "تكلفة" : "دفع تكلفة"}
                             </Button>
                           ) : (
                             <Button
                               size="sm"
                               variant="destructive"
                               onClick={() => handleCancelTransaction(order.serial, 'cost_payment')}
-                              className="bg-red-600 hover:bg-red-700 h-7 text-xs"
+                              className={`bg-red-600 hover:bg-red-700 ${isMobile ? "h-5 text-xs" : "h-6 text-xs"}`}
                             >
-                              <X className="h-3 w-3 mr-1" />
-                              إلغاء التكلفة
+                              <X className={`${isMobile ? "h-2 w-2" : "h-3 w-3"} mr-1`} />
+                              {isMobile ? "إلغاء" : "إلغاء التكلفة"}
                             </Button>
                           )}
                         </div>
@@ -621,27 +688,27 @@ const OrdersTable = () => {
                           <Button
                             size="sm"
                             onClick={() => handleViewOrder(order.serial)}
-                            className="bg-blue-500 hover:bg-blue-600 text-white h-7 text-xs"
+                            className={`bg-blue-500 hover:bg-blue-600 text-white ${isMobile ? "h-5 text-xs" : "h-6 text-xs"}`}
                           >
-                            <Eye className="h-3 w-3 mr-1" />
-                            عرض
+                            <Eye className={`${isMobile ? "h-2 w-2" : "h-3 w-3"} mr-1`} />
+                            {isMobile ? "عرض" : "عرض"}
                           </Button>
                           <Button
                             size="sm"
                             onClick={() => handleEditOrder(order.serial)}
-                            className="bg-green-500 hover:bg-green-600 text-white h-7 text-xs"
+                            className={`bg-green-500 hover:bg-green-600 text-white ${isMobile ? "h-5 text-xs" : "h-6 text-xs"}`}
                           >
-                            <Edit className="h-3 w-3 mr-1" />
-                            تعديل
+                            <Edit className={`${isMobile ? "h-2 w-2" : "h-3 w-3"} mr-1`} />
+                            {isMobile ? "تعديل" : "تعديل"}
                           </Button>
                           <Button
                             size="sm"
                             variant="destructive"
                             onClick={() => handleDeleteOrder(index)}
-                            className="h-7 text-xs"
+                            className={`${isMobile ? "h-5 text-xs" : "h-6 text-xs"}`}
                           >
-                            <Trash2 className="h-3 w-3 mr-1" />
-                            حذف
+                            <Trash2 className={`${isMobile ? "h-2 w-2" : "h-3 w-3"} mr-1`} />
+                            {isMobile ? "حذف" : "حذف"}
                           </Button>
                         </div>
                       </ResponsiveTableCell>
@@ -651,8 +718,8 @@ const OrdersTable = () => {
                   <ResponsiveTableRow>
                     <ResponsiveTableCell colSpan={isMobile ? 10 : 13} className="text-center py-8">
                       <div className="flex flex-col items-center gap-2">
-                        <Package className="h-12 w-12 text-gray-400" />
-                        <p className="text-gray-500 text-lg">لا توجد طلبات متاحة</p>
+                        <Package className={`${isMobile ? "h-8 w-8" : "h-12 w-12"} text-gray-400`} />
+                        <p className={`text-gray-500 ${isMobile ? "text-sm" : "text-lg"}`}>لا توجد طلبات متاحة</p>
                       </div>
                     </ResponsiveTableCell>
                   </ResponsiveTableRow>
