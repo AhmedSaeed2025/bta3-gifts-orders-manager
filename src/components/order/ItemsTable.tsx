@@ -43,53 +43,102 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
   }
 
   const startEditing = (index: number) => {
-    setEditingIndex(index);
-    setEditingItem({ ...items[index] });
+    console.log('Starting edit for index:', index);
+    console.log('Item to edit:', items[index]);
+    
+    try {
+      setEditingIndex(index);
+      // تأكد من نسخ كامل للعنصر مع جميع الخصائص
+      const itemToEdit = {
+        productType: items[index].productType || "",
+        size: items[index].size || "",
+        quantity: items[index].quantity || 1,
+        cost: items[index].cost || 0,
+        price: items[index].price || 0,
+        profit: items[index].profit || 0,
+        itemDiscount: items[index].itemDiscount || 0
+      };
+      
+      console.log('Editing item:', itemToEdit);
+      setEditingItem(itemToEdit);
+    } catch (error) {
+      console.error('Error starting edit:', error);
+    }
   };
 
   const cancelEditing = () => {
+    console.log('Canceling edit');
     setEditingIndex(null);
     setEditingItem(null);
   };
 
   const saveEdit = () => {
-    if (editingIndex !== null && editingItem && onUpdateItem) {
-      // تأكد من وجود جميع الخصائص المطلوبة مع حساب الربح
-      const updatedItem = {
-        ...editingItem,
-        profit: (editingItem.price - (editingItem.itemDiscount || 0) - editingItem.cost) * editingItem.quantity
-      };
-      onUpdateItem(editingIndex, updatedItem);
-      setEditingIndex(null);
-      setEditingItem(null);
+    console.log('Saving edit for index:', editingIndex);
+    console.log('Editing item:', editingItem);
+    
+    try {
+      if (editingIndex !== null && editingItem && onUpdateItem) {
+        // التأكد من صحة البيانات قبل الحفظ
+        if (!editingItem.productType || !editingItem.size || editingItem.quantity < 1) {
+          console.error('Invalid item data:', editingItem);
+          return;
+        }
+
+        // حساب السعر بعد الخصم والربح
+        const discountedPrice = (editingItem.price || 0) - (editingItem.itemDiscount || 0);
+        const calculatedProfit = (discountedPrice - (editingItem.cost || 0)) * (editingItem.quantity || 1);
+        
+        const updatedItem: OrderItem = {
+          ...editingItem,
+          profit: calculatedProfit
+        };
+        
+        console.log('Final updated item:', updatedItem);
+        onUpdateItem(editingIndex, updatedItem);
+        
+        setEditingIndex(null);
+        setEditingItem(null);
+      }
+    } catch (error) {
+      console.error('Error saving edit:', error);
     }
   };
 
   const updateEditingItem = (field: string, value: any) => {
-    if (editingItem) {
+    console.log('Updating field:', field, 'with value:', value);
+    
+    try {
+      if (!editingItem) return;
+      
       const newItem = { ...editingItem, [field]: value };
       
-      // Auto-update cost and price when product/size changes
-      if ((field === "productType" || field === "size") && products.length > 0) {
+      // التحديث التلقائي للتكلفة والسعر عند تغيير المنتج أو المقاس
+      if ((field === "productType" || field === "size") && products && products.length > 0) {
         const selectedProduct = products.find(p => p.name === (field === "productType" ? value : newItem.productType));
         if (selectedProduct && newItem.size) {
-          const selectedSize = selectedProduct.sizes.find(s => s.size === (field === "size" ? value : newItem.size));
+          const selectedSize = selectedProduct.sizes?.find(s => s.size === (field === "size" ? value : newItem.size));
           if (selectedSize) {
-            newItem.cost = selectedSize.cost;
-            newItem.price = selectedSize.price;
+            newItem.cost = selectedSize.cost || 0;
+            newItem.price = selectedSize.price || 0;
           }
         }
       }
       
+      console.log('Updated editing item:', newItem);
       setEditingItem(newItem);
+    } catch (error) {
+      console.error('Error updating editing item:', error);
     }
   };
 
-  const availableProductTypes = [...new Set(products.map(p => p.name))];
+  const availableProductTypes = products && products.length > 0 
+    ? [...new Set(products.map(p => p.name))] 
+    : [];
   
   const getAvailableSizes = (productType: string) => {
+    if (!products || products.length === 0) return [];
     const product = products.find(p => p.name === productType);
-    return product ? product.sizes.map(s => s.size) : [];
+    return product && product.sizes ? product.sizes.map(s => s.size) : [];
   };
 
   return (
