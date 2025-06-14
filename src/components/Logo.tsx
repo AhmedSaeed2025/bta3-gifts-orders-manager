@@ -8,7 +8,7 @@ const Logo = () => {
         {/* Logo Image */}
         <div className="relative">
           <img 
-            src="/lovable-uploads/3ea978cd-a7b5-462f-9fbc-a16ec6287700.png" 
+            src="/lovable-uploads/027863c0-c46a-422a-84a8-7bf9c01dbfa6.png" 
             alt="#بتاع_هدايا_الأصلى Logo" 
             className="h-12 w-auto object-contain hover:scale-105 transition-transform duration-300 cursor-pointer rounded-lg shadow-sm"
           />
