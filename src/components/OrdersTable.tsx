@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -243,12 +244,12 @@ const OrdersTable = () => {
 
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
-      case 'shipped': return 'bg-green-500 text-white hover:bg-green-600 border-green-500';
-      case 'confirmed': return 'bg-blue-500 text-white hover:bg-blue-600 border-blue-500';
-      case 'pending': return 'bg-yellow-500 text-white hover:bg-yellow-600 border-yellow-500';
-      case 'sentToPrinter': return 'bg-purple-500 text-white hover:bg-purple-600 border-purple-500';
-      case 'readyForDelivery': return 'bg-orange-500 text-white hover:bg-orange-600 border-orange-500';
-      default: return 'bg-gray-500 text-white hover:bg-gray-600 border-gray-500';
+      case 'shipped': return 'bg-green-500 text-white hover:bg-green-600';
+      case 'confirmed': return 'bg-blue-500 text-white hover:bg-blue-600';
+      case 'pending': return 'bg-yellow-500 text-white hover:bg-yellow-600';
+      case 'sentToPrinter': return 'bg-purple-500 text-white hover:bg-purple-600';
+      case 'readyForDelivery': return 'bg-orange-500 text-white hover:bg-orange-600';
+      default: return 'bg-gray-500 text-white hover:bg-gray-600';
     }
   };
 
@@ -285,8 +286,8 @@ const OrdersTable = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-blue-900/20 dark:to-indigo-900/20 p-4">
-        <Card className="max-w-md mx-auto mt-20 shadow-2xl border-0 bg-white/80 backdrop-blur-sm">
+      <div className="min-h-screen bg-gift-accent dark:bg-gray-900 p-4">
+        <Card className="max-w-md mx-auto mt-20 shadow-xl">
           <CardContent className="flex items-center justify-center py-16">
             <div className="text-center space-y-4">
               <div className="relative">
@@ -294,11 +295,6 @@ const OrdersTable = () => {
                 <Package className="h-6 w-6 text-gift-primary absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
               </div>
               <p className="text-gray-600 dark:text-gray-400 text-lg font-medium">جاري تحميل الطلبات...</p>
-              <div className="flex items-center justify-center space-x-1">
-                <div className="w-2 h-2 bg-gift-primary rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                <div className="w-2 h-2 bg-gift-primary rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                <div className="w-2 h-2 bg-gift-primary rounded-full animate-bounce"></div>
-              </div>
             </div>
           </CardContent>
         </Card>
@@ -307,13 +303,12 @@ const OrdersTable = () => {
   }
 
   return (
-    <div className="space-y-6 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-blue-900/20 dark:to-indigo-900/20 min-h-screen p-4" dir="rtl">
+    <div className="space-y-6 min-h-screen p-4" dir="rtl">
       {/* Header */}
-      <Card className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 text-white shadow-2xl border-0 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/90 via-blue-700/90 to-indigo-700/90"></div>
-        <CardHeader className="relative z-10 pb-6">
+      <Card className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 text-white shadow-xl border-0">
+        <CardHeader className="pb-6">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
+            <div className="p-3 bg-white/20 rounded-2xl">
               <Package className="h-8 w-8 text-white" />
             </div>
             <div>
@@ -330,7 +325,7 @@ const OrdersTable = () => {
 
       {/* Summary Statistics */}
       <div className={`grid gap-4 ${isMobile ? "grid-cols-2" : "grid-cols-2 md:grid-cols-4 lg:grid-cols-8"}`}>
-        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-xl border-0 hover:shadow-2xl transition-all duration-300 hover:scale-105">
+        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg hover:shadow-xl transition-all duration-300">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -344,7 +339,7 @@ const OrdersTable = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white shadow-xl border-0 hover:shadow-2xl transition-all duration-300 hover:scale-105">
+        <Card className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white shadow-lg hover:shadow-xl transition-all duration-300">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -358,7 +353,7 @@ const OrdersTable = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-xl border-0 hover:shadow-2xl transition-all duration-300 hover:scale-105">
+        <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-lg hover:shadow-xl transition-all duration-300">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -372,7 +367,7 @@ const OrdersTable = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-xl border-0 hover:shadow-2xl transition-all duration-300 hover:scale-105">
+        <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-lg hover:shadow-xl transition-all duration-300">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -386,7 +381,7 @@ const OrdersTable = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white shadow-xl border-0 hover:shadow-2xl transition-all duration-300 hover:scale-105">
+        <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg hover:shadow-xl transition-all duration-300">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -400,7 +395,7 @@ const OrdersTable = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white shadow-xl border-0 hover:shadow-2xl transition-all duration-300 hover:scale-105">
+        <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white shadow-lg hover:shadow-xl transition-all duration-300">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -414,7 +409,7 @@ const OrdersTable = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white shadow-xl border-0 hover:shadow-2xl transition-all duration-300 hover:scale-105">
+        <Card className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white shadow-lg hover:shadow-xl transition-all duration-300">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -428,7 +423,7 @@ const OrdersTable = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-xl border-0 hover:shadow-2xl transition-all duration-300 hover:scale-105">
+        <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-lg hover:shadow-xl transition-all duration-300">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -444,7 +439,7 @@ const OrdersTable = () => {
       </div>
 
       {/* Filters */}
-      <Card className="bg-white/80 backdrop-blur-sm shadow-xl border-0">
+      <Card className="bg-white shadow-lg">
         <CardHeader className="pb-4">
           <CardTitle className="text-lg flex items-center gap-3 text-gray-800">
             <div className="p-2 bg-indigo-500 rounded-lg">
@@ -458,7 +453,7 @@ const OrdersTable = () => {
             <div className="space-y-2">
               <Label htmlFor="filterYear" className="text-sm font-medium text-gray-700">السنة</Label>
               <Select value={filterYear} onValueChange={setFilterYear}>
-                <SelectTrigger className="h-10 border-2 border-gray-200 focus:border-indigo-500 transition-colors">
+                <SelectTrigger className="h-10">
                   <SelectValue placeholder="اختر السنة" />
                 </SelectTrigger>
                 <SelectContent>
@@ -473,7 +468,7 @@ const OrdersTable = () => {
             <div className="space-y-2">
               <Label htmlFor="filterMonth" className="text-sm font-medium text-gray-700">الشهر</Label>
               <Select value={filterMonth} onValueChange={setFilterMonth}>
-                <SelectTrigger className="h-10 border-2 border-gray-200 focus:border-indigo-500 transition-colors">
+                <SelectTrigger className="h-10">
                   <SelectValue placeholder="اختر الشهر" />
                 </SelectTrigger>
                 <SelectContent>
@@ -497,7 +492,7 @@ const OrdersTable = () => {
             <div className="space-y-2">
               <Label htmlFor="filterStatus" className="text-sm font-medium text-gray-700">الحالة</Label>
               <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger className="h-10 border-2 border-gray-200 focus:border-indigo-500 transition-colors">
+                <SelectTrigger className="h-10">
                   <SelectValue placeholder="اختر الحالة" />
                 </SelectTrigger>
                 <SelectContent>
@@ -514,7 +509,7 @@ const OrdersTable = () => {
             <div className="space-y-2">
               <Label htmlFor="filterPaymentMethod" className="text-sm font-medium text-gray-700">طريقة السداد</Label>
               <Select value={filterPaymentMethod} onValueChange={setFilterPaymentMethod}>
-                <SelectTrigger className="h-10 border-2 border-gray-200 focus:border-indigo-500 transition-colors">
+                <SelectTrigger className="h-10">
                   <SelectValue placeholder="اختر طريقة السداد" />
                 </SelectTrigger>
                 <SelectContent>
@@ -531,7 +526,7 @@ const OrdersTable = () => {
               <Button 
                 onClick={clearFilters}
                 variant="outline"
-                className="w-full h-10 border-2 border-gray-200 hover:border-indigo-500 hover:bg-indigo-50 transition-all duration-200 flex items-center gap-2"
+                className="w-full h-10 flex items-center gap-2"
               >
                 <RefreshCw className="h-4 w-4" />
                 مسح الفلاتر
@@ -547,7 +542,7 @@ const OrdersTable = () => {
         <div className="space-y-4">
           {filteredOrders.length > 0 ? (
             filteredOrders.map((order, index) => (
-              <Card key={order.serial} className="bg-white shadow-lg border-0 hover:shadow-xl transition-all duration-300">
+              <Card key={order.serial} className="bg-white shadow-lg hover:shadow-xl transition-all duration-300">
                 <CardContent className="p-4">
                   <div className="space-y-3">
                     {/* Header */}
@@ -701,7 +696,7 @@ const OrdersTable = () => {
               </Card>
             ))
           ) : (
-            <Card className="bg-white shadow-lg border-0">
+            <Card className="bg-white shadow-lg">
               <CardContent className="text-center py-12">
                 <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-500 text-lg">لا توجد طلبات متاحة</p>
@@ -711,12 +706,12 @@ const OrdersTable = () => {
         </div>
       ) : (
         // Desktop Table Layout
-        <Card className="bg-white/80 backdrop-blur-sm shadow-xl border-0">
+        <Card className="bg-white shadow-lg">
           <CardContent className="p-6">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
+                  <tr className="bg-gray-50 border-b-2 border-gray-200">
                     <th className="text-right p-4 font-semibold text-gray-700">رقم الطلب</th>
                     <th className="text-right p-4 font-semibold text-gray-700">التاريخ</th>
                     <th className="text-right p-4 font-semibold text-gray-700">اسم العميل</th>
