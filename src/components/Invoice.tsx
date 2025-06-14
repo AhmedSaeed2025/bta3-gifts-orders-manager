@@ -152,7 +152,7 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
               {/* Logo and Brand */}
               <div className="flex items-center justify-center gap-3">
                 <img 
-                  src="/lovable-uploads/f8e0b4b6-6b5a-4b25-b3d3-8e2c1f5a9d7e.png" 
+                  src="/lovable-uploads/3ea978cd-a7b5-462f-9fbc-a16ec6287700.png" 
                   alt="#بتاع_هدايا_الأصلى Logo" 
                   className="h-12 w-auto object-contain"
                 />
@@ -314,7 +314,7 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
           <div className="mt-4 pt-2 border-t border-gray-200 text-center">
             <div className="bg-gift-accent p-2 rounded mb-2 flex items-center justify-center gap-2">
               <img 
-                src="/lovable-uploads/f8e0b4b6-6b5a-4b25-b3d3-8e2c1f5a9d7e.png" 
+                src="/lovable-uploads/3ea978cd-a7b5-462f-9fbc-a16ec6287700.png" 
                 alt="Logo" 
                 className="h-6 w-auto object-contain"
               />
