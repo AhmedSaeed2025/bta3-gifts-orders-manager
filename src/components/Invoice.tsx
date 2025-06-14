@@ -1,4 +1,3 @@
-
 import React, { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -165,7 +164,6 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
         removeContainer: true,
         width: element.offsetWidth,
         height: element.offsetHeight,
-        letterRendering: true,
         onclone: (clonedDoc) => {
           const clonedElement = clonedDoc.querySelector('.professional-invoice') as HTMLElement;
           if (clonedElement) {
