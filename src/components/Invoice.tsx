@@ -1,4 +1,3 @@
-
 import React, { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -156,21 +155,62 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
       
       const element = printRef.current;
       
-      // تحسين إعدادات html2canvas خاصة للموبايل
+      // تحسين إعدادات html2canvas مع إزالة جميع التأثيرات المرئية
       const canvas = await html2canvas(element, {
-        scale: isMobile ? 2 : 3, // تقليل المقياس للموبايل لتحسين الأداء
+        scale: isMobile ? 2.5 : 3,
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
         allowTaint: false,
         foreignObjectRendering: false,
-        imageTimeout: 3000,
+        imageTimeout: 5000,
         removeContainer: true,
         width: element.offsetWidth,
         height: element.offsetHeight,
-        windowWidth: isMobile ? 375 : 1200, // تحديد عرض النافذة للموبايل
-        windowHeight: isMobile ? 667 : 800,
+        windowWidth: element.offsetWidth,
+        windowHeight: element.offsetHeight,
         onclone: (clonedDoc) => {
+          // إزالة جميع الـ transitions والـ hover effects
+          const style = clonedDoc.createElement('style');
+          style.textContent = `
+            * {
+              transition: none !important;
+              transform: none !important;
+              animation: none !important;
+              -webkit-transition: none !important;
+              -moz-transition: none !important;
+              -o-transition: none !important;
+            }
+            *:hover {
+              transition: none !important;
+              transform: none !important;
+              background-color: inherit !important;
+              color: inherit !important;
+            }
+            .invoice-table tr:hover {
+              background-color: inherit !important;
+            }
+            .invoice-table tr:nth-child(even) {
+              background-color: #f9fafb !important;
+            }
+            .invoice-table tr:nth-child(odd) {
+              background-color: white !important;
+            }
+            .invoice-table td, .invoice-table th {
+              background-color: inherit !important;
+              color: black !important;
+              border: 1px solid #d1d5db !important;
+              padding: ${isMobile ? '4px' : '8px'} !important;
+              text-align: right !important;
+              vertical-align: middle !important;
+            }
+            .invoice-table th {
+              background-color: #2563eb !important;
+              color: white !important;
+            }
+          `;
+          clonedDoc.head.appendChild(style);
+          
           const clonedElement = clonedDoc.querySelector('.professional-invoice') as HTMLElement;
           if (clonedElement) {
             clonedElement.style.fontFamily = 'Tajawal, Cairo, Amiri, Arial, sans-serif';
@@ -179,10 +219,12 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
             clonedElement.style.lineHeight = '1.6';
             clonedElement.style.backgroundColor = 'white';
             clonedElement.style.transform = 'none';
+            clonedElement.style.transition = 'none';
             clonedElement.style.width = '100%';
             clonedElement.style.maxWidth = 'none';
           }
           
+          // تحسين عرض الصور
           const images = clonedDoc.querySelectorAll('img');
           images.forEach((img) => {
             img.style.opacity = '1';
@@ -190,39 +232,60 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
             img.style.display = 'inline-block';
             img.style.maxWidth = '100%';
             img.style.height = 'auto';
+            img.style.transition = 'none';
           });
           
+          // تحسين جميع العناصر
           const allElements = clonedDoc.querySelectorAll('*');
           allElements.forEach((el) => {
             if (el instanceof HTMLElement) {
               el.style.fontFamily = 'Tajawal, Cairo, Amiri, Arial, sans-serif';
               el.style.direction = 'rtl';
+              el.style.transition = 'none';
+              el.style.transform = 'none';
+              el.style.animation = 'none';
               (el.style as any)['-webkit-font-smoothing'] = 'antialiased';
               (el.style as any)['-moz-osx-font-smoothing'] = 'grayscale';
-              (el.style as any)['text-rendering'] = 'optimizeLegibility';
-              // إزالة hover effects التي تسبب المشاكل
               (el.style as any)['pointer-events'] = 'none';
             }
           });
           
+          // تحسين الجداول بشكل خاص
           const tables = clonedDoc.querySelectorAll('table');
           tables.forEach((table) => {
             table.style.borderCollapse = 'collapse';
             table.style.width = '100%';
             table.style.direction = 'rtl';
+            table.style.backgroundColor = 'white';
           });
           
-          const tableCells = clonedDoc.querySelectorAll('th, td');
-          tableCells.forEach((cell) => {
-            if (cell instanceof HTMLElement) {
-              cell.style.border = '1px solid #d1d5db';
-              cell.style.padding = isMobile ? '4px' : '8px';
-              cell.style.textAlign = 'right';
-              cell.style.verticalAlign = 'middle';
-              cell.style.backgroundColor = 'white';
-              cell.style.color = 'black';
-              // منع hover effects
-              (cell.style as any)['pointer-events'] = 'none';
+          // تثبيت ألوان خلايا الجدول
+          const tableRows = clonedDoc.querySelectorAll('tr');
+          tableRows.forEach((row, index) => {
+            if (row instanceof HTMLElement) {
+              row.style.transition = 'none';
+              row.style.transform = 'none';
+              // تثبيت لون الخلفية حسب الصف
+              if (row.querySelector('th')) {
+                row.style.backgroundColor = '#2563eb';
+                const cells = row.querySelectorAll('th');
+                cells.forEach(cell => {
+                  if (cell instanceof HTMLElement) {
+                    cell.style.backgroundColor = '#2563eb';
+                    cell.style.color = 'white';
+                  }
+                });
+              } else {
+                const bgColor = index % 2 === 0 ? '#f9fafb' : 'white';
+                row.style.backgroundColor = bgColor;
+                const cells = row.querySelectorAll('td');
+                cells.forEach(cell => {
+                  if (cell instanceof HTMLElement) {
+                    cell.style.backgroundColor = bgColor;
+                    cell.style.color = 'black';
+                  }
+                });
+              }
             }
           });
         }
@@ -239,36 +302,53 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
       
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
       
-      // تحسين حساب النسبة للموبايل
-      const maxWidth = pdfWidth - 20; // هامش 10mm من كل جانب
-      const maxHeight = pdfHeight - 20;
+      // تحسين حساب الأبعاد للموبايل
+      const margin = 10;
+      const maxWidth = pdfWidth - (margin * 2);
+      const maxHeight = pdfHeight - (margin * 2);
       
-      let ratio = Math.min(maxWidth / (imgWidth * 0.75), maxHeight / (imgHeight * 0.75));
+      // حساب النسبة بشكل أفضل
+      const imgAspectRatio = canvas.width / canvas.height;
+      const pdfAspectRatio = maxWidth / maxHeight;
       
-      // تحسين النسبة للموبايل
-      if (isMobile) {
-        ratio = Math.min(ratio * 1.2, maxWidth / (imgWidth * 0.6));
+      let finalWidth, finalHeight;
+      
+      if (imgAspectRatio > pdfAspectRatio) {
+        // الصورة أعرض من الصفحة
+        finalWidth = maxWidth;
+        finalHeight = maxWidth / imgAspectRatio;
+      } else {
+        // الصورة أطول من الصفحة
+        finalHeight = maxHeight;
+        finalWidth = maxHeight * imgAspectRatio;
       }
       
-      const finalWidth = (imgWidth * 0.75) * ratio;
-      const finalHeight = (imgHeight * 0.75) * ratio;
+      // تأكد من أن الأبعاد لا تتجاوز حدود الصفحة
+      if (finalWidth > maxWidth) {
+        finalWidth = maxWidth;
+        finalHeight = maxWidth / imgAspectRatio;
+      }
+      
+      if (finalHeight > maxHeight) {
+        finalHeight = maxHeight;
+        finalWidth = maxHeight * imgAspectRatio;
+      }
       
       const x = (pdfWidth - finalWidth) / 2;
-      const y = 10;
+      const y = margin;
       
       pdf.addImage(imgData, 'PNG', x, y, finalWidth, finalHeight, undefined, 'FAST');
       
+      // التعامل مع الصفحات المتعددة إذا لزم الأمر
       let heightLeft = finalHeight;
       let position = y;
       
-      while (heightLeft > (pdfHeight - 20)) {
-        position = heightLeft - finalHeight;
+      while (heightLeft > maxHeight) {
+        position = -(finalHeight - heightLeft);
         pdf.addPage();
-        pdf.addImage(imgData, 'PNG', x, position + 10, finalWidth, finalHeight, undefined, 'FAST');
-        heightLeft -= (pdfHeight - 20);
+        pdf.addImage(imgData, 'PNG', x, position + margin, finalWidth, finalHeight, undefined, 'FAST');
+        heightLeft -= maxHeight;
       }
       
       pdf.save(`فاتورة_${order.serial}.pdf`);
@@ -333,14 +413,14 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
                 />
                 <div className="text-center">
                   <h1 className={`${isMobile ? 'text-sm' : 'text-xl'} font-bold text-gift-primary invoice-title`}>#بتاع_هدايا_الأصلى</h1>
-                  <p className={`${isMobile ? 'text-[10px]' : 'text-sm'} text-gray-600`}>ملوك الهدايا في مصر</p>
+                  <p className={`${isMobile ? 'text-[8px]' : 'text-sm'} text-gray-600`}>ملوك الهدايا في مصر</p>
                 </div>
               </div>
               
-              <div className={`flex justify-between w-full ${isMobile ? 'text-[10px]' : 'text-sm'}`}>
+              <div className={`flex justify-between w-full ${isMobile ? 'text-[8px]' : 'text-sm'}`}>
                 <div className="text-right">
                   <p className="text-gray-600 font-medium">فاتورة رقم</p>
-                  <p className={`font-bold text-gift-primary ${isMobile ? 'text-xs' : 'text-base'}`}>{order.serial}</p>
+                  <p className={`font-bold text-gift-primary ${isMobile ? 'text-[10px]' : 'text-base'}`}>{order.serial}</p>
                 </div>
                 <div className="text-left">
                   <p className="text-gray-600 font-medium">التاريخ</p>
@@ -353,10 +433,10 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
           {/* Customer and Order Info */}
           <div className={`grid grid-cols-1 ${isMobile ? 'gap-2 mb-2' : 'gap-4 mb-4'} invoice-content`}>
             <div className={`bg-gray-50 ${isMobile ? 'p-2' : 'p-3'} rounded border-r-4 border-gift-primary`}>
-              <h3 className={`font-bold ${isMobile ? 'mb-2 text-[10px]' : 'mb-3 text-sm'} flex items-center gap-2 text-gift-primary`}>
-                <Phone size={isMobile ? 10 : 14} /> بيانات العميل
+              <h3 className={`font-bold ${isMobile ? 'mb-2 text-[8px]' : 'mb-3 text-sm'} flex items-center gap-2 text-gift-primary`}>
+                <Phone size={isMobile ? 8 : 14} /> بيانات العميل
               </h3>
-              <div className={`space-y-2 ${isMobile ? 'text-[10px]' : 'text-sm'}`}>
+              <div className={`space-y-2 ${isMobile ? 'text-[8px]' : 'text-sm'}`}>
                 <div className="flex justify-between items-center">
                   <span className="font-medium text-gray-700">اسم العميل:</span>
                   <span className="font-semibold">{order.clientName}</span>
@@ -373,17 +453,17 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
             </div>
             
             <div className={`bg-blue-50 ${isMobile ? 'p-2' : 'p-3'} rounded border-r-4 border-blue-500`}>
-              <h3 className={`font-bold ${isMobile ? 'mb-2 text-[10px]' : 'mb-3 text-sm'} flex items-center gap-2 text-blue-600`}>
-                <Home size={isMobile ? 10 : 14} /> معلومات التوصيل
+              <h3 className={`font-bold ${isMobile ? 'mb-2 text-[8px]' : 'mb-3 text-sm'} flex items-center gap-2 text-blue-600`}>
+                <Home size={isMobile ? 8 : 14} /> معلومات التوصيل
               </h3>
-              <div className={`space-y-2 ${isMobile ? 'text-[10px]' : 'text-sm'}`}>
+              <div className={`space-y-2 ${isMobile ? 'text-[8px]' : 'text-sm'}`}>
                 <div className="flex justify-between items-center">
                   <span className="font-medium text-gray-700">طريقة الاستلام:</span>
                   <span className="font-semibold">{order.deliveryMethod}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="font-medium text-gray-700">حالة الطلب:</span>
-                  <span className={`font-semibold ${isMobile ? 'px-1 py-0.5 text-[9px]' : 'px-2 py-1 text-sm'} rounded bg-green-100 text-green-800`}>
+                  <span className={`font-semibold ${isMobile ? 'px-1 py-0.5 text-[7px]' : 'px-2 py-1 text-sm'} rounded bg-green-100 text-green-800`}>
                     {ORDER_STATUS_LABELS[order.status]}
                   </span>
                 </div>
@@ -403,78 +483,119 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
             </div>
           </div>
           
-          {/* Items Table */}
+          {/* Items Table - إزالة جميع hover effects */}
           <div className={`${isMobile ? 'mb-2' : 'mb-4'}`}>
-            <h3 className={`font-bold ${isMobile ? 'mb-2 text-[10px]' : 'mb-3 text-sm'} flex items-center gap-2 text-gift-primary`}>
-              <FileText size={isMobile ? 10 : 14} /> تفاصيل الطلب
+            <h3 className={`font-bold ${isMobile ? 'mb-2 text-[8px]' : 'mb-3 text-sm'} flex items-center gap-2 text-gift-primary`}>
+              <FileText size={isMobile ? 8 : 14} /> تفاصيل الطلب
             </h3>
             <div className="overflow-x-auto border rounded">
-              <Table className={`${isMobile ? 'text-[9px]' : 'text-sm'} invoice-table w-full border-collapse`}>
+              <Table 
+                className={`${isMobile ? 'text-[7px]' : 'text-sm'} invoice-table w-full border-collapse`}
+                style={{ 
+                  borderCollapse: 'collapse',
+                  transition: 'none'
+                }}
+              >
                 <TableHeader>
-                  <TableRow className="bg-gift-primary text-white">
-                    <TableHead className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} text-white font-bold text-right ${isMobile ? 'text-[9px]' : 'text-sm'} border border-white`}>المنتج</TableHead>
-                    <TableHead className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} text-white font-bold text-right ${isMobile ? 'text-[9px]' : 'text-sm'} border border-white`}>المقاس</TableHead>
-                    <TableHead className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} text-white font-bold text-right ${isMobile ? 'text-[9px]' : 'text-sm'} border border-white`}>العدد</TableHead>
-                    <TableHead className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} text-white font-bold text-right ${isMobile ? 'text-[9px]' : 'text-sm'} border border-white`}>السعر</TableHead>
+                  <TableRow 
+                    className="bg-gift-primary text-white"
+                    style={{ 
+                      backgroundColor: '#2563eb',
+                      transition: 'none',
+                      transform: 'none'
+                    }}
+                  >
+                    <TableHead className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} text-white font-bold text-right ${isMobile ? 'text-[7px]' : 'text-sm'} border border-white`} style={{ backgroundColor: '#2563eb', color: 'white' }}>المنتج</TableHead>
+                    <TableHead className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} text-white font-bold text-right ${isMobile ? 'text-[7px]' : 'text-sm'} border border-white`} style={{ backgroundColor: '#2563eb', color: 'white' }}>المقاس</TableHead>
+                    <TableHead className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} text-white font-bold text-right ${isMobile ? 'text-[7px]' : 'text-sm'} border border-white`} style={{ backgroundColor: '#2563eb', color: 'white' }}>العدد</TableHead>
+                    <TableHead className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} text-white font-bold text-right ${isMobile ? 'text-[7px]' : 'text-sm'} border border-white`} style={{ backgroundColor: '#2563eb', color: 'white' }}>السعر</TableHead>
                     {items.some(item => item.itemDiscount && item.itemDiscount > 0) && (
-                      <TableHead className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} text-white font-bold text-right ${isMobile ? 'text-[9px]' : 'text-sm'} border border-white`}>خصم</TableHead>
+                      <TableHead className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} text-white font-bold text-right ${isMobile ? 'text-[7px]' : 'text-sm'} border border-white`} style={{ backgroundColor: '#2563eb', color: 'white' }}>خصم</TableHead>
                     )}
-                    <TableHead className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} text-white font-bold text-right ${isMobile ? 'text-[9px]' : 'text-sm'} border border-white`}>الإجمالي</TableHead>
+                    <TableHead className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} text-white font-bold text-right ${isMobile ? 'text-[7px]' : 'text-sm'} border border-white`} style={{ backgroundColor: '#2563eb', color: 'white' }}>الإجمالي</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {items.map((item, index) => {
                     const discountedPrice = item.price - (item.itemDiscount || 0);
+                    const rowBgColor = index % 2 === 0 ? "#f9fafb" : "white";
                     return (
                       <TableRow 
                         key={index} 
-                        className={`${index % 2 === 0 ? "bg-gray-50" : "bg-white"} invoice-row`}
+                        className="invoice-row"
                         style={{ 
-                          backgroundColor: index % 2 === 0 ? "#f9fafb" : "white",
-                          transition: "none",
-                          pointerEvents: "none"
+                          backgroundColor: rowBgColor,
+                          transition: 'none',
+                          transform: 'none',
+                          pointerEvents: 'none'
                         }}
                       >
                         <TableCell 
-                          className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} font-medium ${isMobile ? 'text-[9px]' : 'text-sm'} border border-gray-300`}
+                          className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} font-medium ${isMobile ? 'text-[7px]' : 'text-sm'} border border-gray-300`}
                           style={{ 
-                            backgroundColor: "inherit",
-                            color: "black",
-                            transition: "none",
-                            pointerEvents: "none"
+                            backgroundColor: rowBgColor,
+                            color: 'black',
+                            transition: 'none',
+                            pointerEvents: 'none'
                           }}
                         >
                           {item.productType}
                         </TableCell>
                         <TableCell 
-                          className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} ${isMobile ? 'text-[9px]' : 'text-sm'} border border-gray-300`}
+                          className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} ${isMobile ? 'text-[7px]' : 'text-sm'} border border-gray-300`}
                           style={{ 
-                            backgroundColor: "inherit",
-                            color: "black",
-                            transition: "none",
-                            pointerEvents: "none"
+                            backgroundColor: rowBgColor,
+                            color: 'black',
+                            transition: 'none',
+                            pointerEvents: 'none'
                           }}
                         >
                           {item.size}
                         </TableCell>
                         <TableCell 
-                          className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} text-center font-bold ${isMobile ? 'text-[9px]' : 'text-sm'} border border-gray-300`}
+                          className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} text-center font-bold ${isMobile ? 'text-[7px]' : 'text-sm'} border border-gray-300`}
                           style={{ 
-                            backgroundColor: "inherit",
-                            color: "black",
-                            transition: "none",
-                            pointerEvents: "none"
+                            backgroundColor: rowBgColor,
+                            color: 'black',
+                            transition: 'none',
+                            pointerEvents: 'none'
                           }}
                         >
                           {item.quantity}
                         </TableCell>
-                        <TableCell className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} ${isMobile ? 'text-[9px]' : 'text-sm'} border border-gray-300`}>{formatCurrency(item.price)}</TableCell>
+                        <TableCell 
+                          className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} ${isMobile ? 'text-[7px]' : 'text-sm'} border border-gray-300`}
+                          style={{ 
+                            backgroundColor: rowBgColor,
+                            color: 'black',
+                            transition: 'none',
+                            pointerEvents: 'none'
+                          }}
+                        >
+                          {formatCurrency(item.price)}
+                        </TableCell>
                         {items.some(item => item.itemDiscount && item.itemDiscount > 0) && (
-                          <TableCell className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} ${isMobile ? 'text-[9px]' : 'text-sm'} text-red-600 border border-gray-300`}>
+                          <TableCell 
+                            className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} ${isMobile ? 'text-[7px]' : 'text-sm'} text-red-600 border border-gray-300`}
+                            style={{ 
+                              backgroundColor: rowBgColor,
+                              color: '#dc2626',
+                              transition: 'none',
+                              pointerEvents: 'none'
+                            }}
+                          >
                             {item.itemDiscount ? formatCurrency(item.itemDiscount) : '-'}
                           </TableCell>
                         )}
-                        <TableCell className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} font-bold text-gift-primary ${isMobile ? 'text-[9px]' : 'text-sm'} border border-gray-300`}>
+                        <TableCell 
+                          className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} font-bold text-gift-primary ${isMobile ? 'text-[7px]' : 'text-sm'} border border-gray-300`}
+                          style={{ 
+                            backgroundColor: rowBgColor,
+                            color: '#2563eb',
+                            transition: 'none',
+                            pointerEvents: 'none'
+                          }}
+                        >
                           {formatCurrency(discountedPrice * item.quantity)}
                         </TableCell>
                       </TableRow>
@@ -488,9 +609,9 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
           {/* Summary Section */}
           <div className={`flex justify-end ${isMobile ? 'mb-2' : 'mb-4'}`}>
             <div className={`w-full max-w-md bg-gray-50 ${isMobile ? 'p-2' : 'p-3'} rounded border invoice-summary`}>
-              <h3 className={`font-bold ${isMobile ? 'mb-2 text-[10px]' : 'mb-3 text-sm'} text-gift-primary`}>ملخص الفاتورة</h3>
+              <h3 className={`font-bold ${isMobile ? 'mb-2 text-[8px]' : 'mb-3 text-sm'} text-gift-primary`}>ملخص الفاتورة</h3>
               <div className="space-y-2">
-                <div className={`flex justify-between py-1 border-b ${isMobile ? 'text-[10px]' : 'text-sm'}`}>
+                <div className={`flex justify-between py-1 border-b ${isMobile ? 'text-[8px]' : 'text-sm'}`}>
                   <span className="font-medium">إجمالي المنتجات:</span>
                   <span className="font-bold">{formatCurrency(items.reduce((sum, item) => {
                     const discountedPrice = item.price - (item.itemDiscount || 0);
@@ -498,24 +619,24 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
                   }, 0))}</span>
                 </div>
                 {order.shippingCost > 0 && (
-                  <div className={`flex justify-between py-1 border-b ${isMobile ? 'text-[10px]' : 'text-sm'}`}>
+                  <div className={`flex justify-between py-1 border-b ${isMobile ? 'text-[8px]' : 'text-sm'}`}>
                     <span className="font-medium">مصاريف الشحن:</span>
                     <span className="font-bold">{formatCurrency(order.shippingCost)}</span>
                   </div>
                 )}
                 {order.discount > 0 && (
-                  <div className={`flex justify-between py-1 border-b ${isMobile ? 'text-[10px]' : 'text-sm'}`}>
+                  <div className={`flex justify-between py-1 border-b ${isMobile ? 'text-[8px]' : 'text-sm'}`}>
                     <span className="font-medium">الخصم الإجمالي:</span>
                     <span className="font-bold text-red-600">- {formatCurrency(order.discount)}</span>
                   </div>
                 )}
                 {order.deposit > 0 && (
-                  <div className={`flex justify-between py-1 border-b ${isMobile ? 'text-[10px]' : 'text-sm'}`}>
+                  <div className={`flex justify-between py-1 border-b ${isMobile ? 'text-[8px]' : 'text-sm'}`}>
                     <span className="font-medium">العربون المدفوع:</span>
                     <span className="font-bold text-red-600">- {formatCurrency(order.deposit)}</span>
                   </div>
                 )}
-                <div className={`flex justify-between ${isMobile ? 'py-2 text-xs' : 'py-3 text-base'} border-t-2 border-gift-primary bg-gift-primary text-white px-3 rounded font-bold`}>
+                <div className={`flex justify-between ${isMobile ? 'py-2 text-[10px]' : 'py-3 text-base'} border-t-2 border-gift-primary bg-gift-primary text-white px-3 rounded font-bold`}>
                   <span>المجموع الكلي:</span>
                   <span>{formatCurrency(order.total)}</span>
                 </div>
@@ -542,32 +663,32 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
                 }}
               />
               <div>
-                <p className={`${isMobile ? 'text-[10px]' : 'text-sm'} font-bold text-gift-primary mb-1`}>شكراً لثقتكم في #بتاع_هدايا_الأصلى</p>
-                <div className={`flex justify-center items-center gap-2 ${isMobile ? 'text-[9px]' : 'text-sm'} mb-1`}>
-                  <Phone size={isMobile ? 8 : 12} className="text-gift-primary" />
+                <p className={`${isMobile ? 'text-[8px]' : 'text-sm'} font-bold text-gift-primary mb-1`}>شكراً لثقتكم في #بتاع_هدايا_الأصلى</p>
+                <div className={`flex justify-center items-center gap-2 ${isMobile ? 'text-[7px]' : 'text-sm'} mb-1`}>
+                  <Phone size={isMobile ? 6 : 12} className="text-gift-primary" />
                   <span className="font-medium">للتواصل: 01113977005</span>
                 </div>
               </div>
             </div>
             
             <div className={`flex flex-wrap justify-center items-center gap-3 mb-3 social-links ${isMobile ? 'gap-2' : ''}`}>
-              <a href="https://www.facebook.com/D4Uofficial" target="_blank" rel="noopener noreferrer" className={`flex items-center gap-1 text-blue-600 hover:underline ${isMobile ? 'text-[9px]' : 'text-sm'} font-medium`}>
-                <Facebook size={isMobile ? 8 : 12} />
+              <a href="https://www.facebook.com/D4Uofficial" target="_blank" rel="noopener noreferrer" className={`flex items-center gap-1 text-blue-600 hover:underline ${isMobile ? 'text-[7px]' : 'text-sm'} font-medium`}>
+                <Facebook size={isMobile ? 6 : 12} />
                 <span>D4Uofficial</span>
               </a>
               
-              <a href="https://www.instagram.com/design4you_gift_store" target="_blank" rel="noopener noreferrer" className={`flex items-center gap-1 text-pink-600 hover:underline ${isMobile ? 'text-[9px]' : 'text-sm'} font-medium`}>
-                <Instagram size={isMobile ? 8 : 12} />
+              <a href="https://www.instagram.com/design4you_gift_store" target="_blank" rel="noopener noreferrer" className={`flex items-center gap-1 text-pink-600 hover:underline ${isMobile ? 'text-[7px]' : 'text-sm'} font-medium`}>
+                <Instagram size={isMobile ? 6 : 12} />
                 <span>design4you_gift_store</span>
               </a>
               
-              <a href="https://t.me/GiftsEg" target="_blank" rel="noopener noreferrer" className={`flex items-center gap-1 text-blue-500 hover:underline ${isMobile ? 'text-[9px]' : 'text-sm'} font-medium`}>
-                <Send size={isMobile ? 8 : 12} />
+              <a href="https://t.me/GiftsEg" target="_blank" rel="noopener noreferrer" className={`flex items-center gap-1 text-blue-500 hover:underline ${isMobile ? 'text-[7px]' : 'text-sm'} font-medium`}>
+                <Send size={isMobile ? 6 : 12} />
                 <span>GiftsEg</span>
               </a>
             </div>
             
-            <p className={`${isMobile ? 'text-[9px]' : 'text-sm'} text-gray-500 border-t pt-2`}>
+            <p className={`${isMobile ? 'text-[7px]' : 'text-sm'} text-gray-500 border-t pt-2`}>
               جميع الحقوق محفوظة #بتاع_هدايا_الأصلى 2025
             </p>
           </div>
