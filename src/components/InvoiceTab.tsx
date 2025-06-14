@@ -18,11 +18,11 @@ const InvoiceTab = () => {
   const { orders, loading } = useSupabaseOrders();
   const [selectedOrderSerial, setSelectedOrderSerial] = useState<string>("");
   const [selectedOrder, setSelectedOrder] = useState<Order | undefined>(orders && orders.length > 0 ? orders[0] : undefined);
+  const [isExporting, setIsExporting] = useState(false);
   const invoiceRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
 
-  // Update order options when orders change
   useEffect(() => {
     if (orders && orders.length > 0 && !selectedOrderSerial) {
       setSelectedOrderSerial(orders[0].serial);
@@ -30,7 +30,6 @@ const InvoiceTab = () => {
     }
   }, [orders, selectedOrderSerial]);
 
-  // Handle order selection
   const handleOrderChange = (serial: string) => {
     setSelectedOrderSerial(serial);
     const order = orders.find(o => o.serial === serial);
@@ -39,34 +38,43 @@ const InvoiceTab = () => {
     }
   };
 
-  // Navigate to edit order page
   const handleEditClick = () => {
     if (selectedOrder) {
       navigate(`/edit-order/${selectedOrder.serial}`);
     }
   };
 
-  // Export invoice to PDF
   const exportToPDF = async () => {
-    if (!invoiceRef.current || !selectedOrder) return;
+    if (!invoiceRef.current || !selectedOrder || isExporting) return;
 
+    setIsExporting(true);
     try {
       toast.info("جاري إنشاء ملف PDF، يرجى الانتظار...");
 
       const invoiceElement = invoiceRef.current;
       const canvas = await html2canvas(invoiceElement, {
-        scale: 2,
+        scale: 1,
         useCORS: true,
         logging: false,
         allowTaint: true,
         backgroundColor: "#ffffff",
+        imageTimeout: 1000,
+        onclone: (clonedDoc) => {
+          const images = clonedDoc.querySelectorAll('img');
+          images.forEach((img) => {
+            img.style.opacity = '1';
+            img.style.visibility = 'visible';
+            img.style.display = 'inline-block';
+          });
+        }
       });
 
-      const imgData = canvas.toDataURL('image/png');
+      const imgData = canvas.toDataURL('image/jpeg', 0.7);
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
-        format: 'a4'
+        format: 'a4',
+        compress: true
       });
 
       const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -76,13 +84,15 @@ const InvoiceTab = () => {
       const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
       const imgX = (pdfWidth - imgWidth * ratio) / 2;
       
-      pdf.addImage(imgData, 'PNG', imgX, 0, imgWidth * ratio, imgHeight * ratio);
+      pdf.addImage(imgData, 'JPEG', imgX, 0, imgWidth * ratio, imgHeight * ratio, undefined, 'FAST');
       
       pdf.save(`فاتورة-${selectedOrder.clientName}-${selectedOrder.serial}.pdf`);
       toast.success("تم تصدير الفاتورة بنجاح");
     } catch (error) {
       console.error("Error generating PDF:", error);
-      toast.error("حدث خطأ أثناء إنشاء ملف PDF");
+      toast.error("حدث خطأ أثناء إنشاء ملف PDF. حاول مرة أخرى.");
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -109,11 +119,12 @@ const InvoiceTab = () => {
               <>
                 <Button
                   onClick={exportToPDF}
+                  disabled={isExporting}
                   size={isMobile ? "sm" : "default"}
                   className={`${isMobile ? "text-xs h-6" : "text-xs h-7"} flex items-center gap-1 bg-blue-500 hover:bg-blue-600`}
                 >
                   <Download size={isMobile ? 12 : 14} />
-                  {isMobile ? "PDF" : "تصدير PDF"}
+                  {isExporting ? "جاري التصدير..." : (isMobile ? "PDF" : "تصدير PDF")}
                 </Button>
                 <Button 
                   variant="outline" 

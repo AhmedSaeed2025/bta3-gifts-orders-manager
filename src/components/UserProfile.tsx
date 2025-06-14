@@ -24,15 +24,20 @@ const UserProfile = () => {
       await signOut();
     } catch (error) {
       console.error('Failed to sign out:', error);
+      toast.error('حدث خطأ أثناء تسجيل الخروج');
     }
   };
 
   const handleSync = async () => {
+    if (syncing) return;
+    
     setSyncing(true);
     try {
       await syncAllData();
+      toast.success('تم مزامنة البيانات بنجاح');
     } catch (error) {
       console.error('Sync failed:', error);
+      toast.error('حدث خطأ أثناء المزامنة');
     } finally {
       setSyncing(false);
     }
@@ -102,15 +107,19 @@ const UserProfile = () => {
     input.click();
   };
 
-  // التحقق من وجود بيانات محلية
   const hasLocalData = () => {
-    const localOrders = localStorage.getItem('orders');
-    const localProducts = localStorage.getItem('products');
-    const localProposedPrices = localStorage.getItem('proposedPrices');
-    
-    return (localOrders && JSON.parse(localOrders).length > 0) ||
-           (localProducts && JSON.parse(localProducts).length > 0) ||
-           (localProposedPrices && Object.keys(JSON.parse(localProposedPrices)).length > 0);
+    try {
+      const localOrders = localStorage.getItem('orders');
+      const localProducts = localStorage.getItem('products');
+      const localProposedPrices = localStorage.getItem('proposedPrices');
+      
+      return (localOrders && JSON.parse(localOrders).length > 0) ||
+             (localProducts && JSON.parse(localProducts).length > 0) ||
+             (localProposedPrices && Object.keys(JSON.parse(localProposedPrices)).length > 0);
+    } catch (error) {
+      console.error('Error checking local data:', error);
+      return false;
+    }
   };
 
   return (
@@ -118,7 +127,10 @@ const UserProfile = () => {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={user.user_metadata.avatar_url} />
+            <AvatarImage 
+              src={user.user_metadata?.avatar_url} 
+              alt="صورة المستخدم"
+            />
             <AvatarFallback>
               <User className="h-4 w-4" />
             </AvatarFallback>
@@ -127,7 +139,7 @@ const UserProfile = () => {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem className="font-medium">
-          {user.user_metadata.full_name || user.email}
+          {user.user_metadata?.full_name || user.email}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         

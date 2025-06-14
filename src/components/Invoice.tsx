@@ -67,6 +67,11 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
         .invoice-summary {
           font-size: 11px !important;
         }
+        img {
+          opacity: 1 !important;
+          visibility: visible !important;
+          display: inline-block !important;
+        }
       }
     `
   });
@@ -77,33 +82,41 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
     try {
       toast.info("جاري إنشاء ملف PDF...");
       
-      // تحسين إعدادات PDF للحجم والجودة
       const element = printRef.current;
       element.classList.add('pdf-export');
       
-      // تقليل دقة الصورة لتقليل الحجم
+      // تحسين إعدادات html2canvas للأداء
       const canvas = await html2canvas(element, {
-        scale: 1, // تقليل الدقة
+        scale: 0.8, // تقليل الدقة لتحسين الأداء
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
         allowTaint: false,
         foreignObjectRendering: false,
-        imageTimeout: 3000,
+        imageTimeout: 1000, // تقليل وقت انتظار الصور
         removeContainer: true,
         width: element.offsetWidth,
         height: element.offsetHeight,
+        onclone: (clonedDoc) => {
+          // تحسين الصور في النسخة المستنسخة
+          const images = clonedDoc.querySelectorAll('img');
+          images.forEach((img) => {
+            img.style.opacity = '1';
+            img.style.visibility = 'visible';
+            img.style.display = 'inline-block';
+          });
+        }
       });
       
       element.classList.remove('pdf-export');
       
-      // استخدام JPEG بدلاً من PNG لتقليل الحجم
-      const imgData = canvas.toDataURL('image/jpeg', 0.7); // جودة 70%
+      // استخدام JPEG بجودة منخفضة لتقليل الحجم
+      const imgData = canvas.toDataURL('image/jpeg', 0.6);
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4',
-        compress: true, // ضغط PDF
+        compress: true,
       });
       
       const imgWidth = 210;
@@ -113,7 +126,6 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
       let heightLeft = imgHeight;
       let position = 0;
 
-      // إضافة الصورة للPDF
       pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
       heightLeft -= pageHeight;
 
@@ -128,7 +140,7 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
       toast.success("تم إنشاء ملف PDF بنجاح");
     } catch (error) {
       console.error("PDF export error:", error);
-      toast.error("حدث خطأ أثناء إنشاء ملف PDF");
+      toast.error("حدث خطأ أثناء إنشاء ملف PDF. حاول مرة أخرى.");
     }
   };
 
@@ -165,18 +177,22 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
                   alt="#بتاع_هدايا_الأصلى Logo" 
                   className="h-12 w-auto object-contain"
                   loading="eager"
-                  crossOrigin="anonymous"
                   width="48"
                   height="48"
+                  style={{ opacity: 1, visibility: 'visible', display: 'inline-block' }}
                   onLoad={(e) => {
                     console.log('Invoice logo loaded successfully');
+                    const target = e.currentTarget as HTMLImageElement;
+                    target.style.opacity = '1';
+                    target.style.visibility = 'visible';
+                    target.style.display = 'inline-block';
                   }}
                   onError={(e) => {
-                    console.log('Invoice logo error, trying alternative');
-                    const target = e.currentTarget;
-                    // محاولة تحميل الصورة بدون crossOrigin
-                    target.crossOrigin = '';
-                    target.src = target.src + '?t=' + Date.now();
+                    console.log('Invoice logo error');
+                    const target = e.currentTarget as HTMLImageElement;
+                    target.style.opacity = '1';
+                    target.style.visibility = 'visible';
+                    target.style.display = 'inline-block';
                   }}
                 />
                 <div className="text-center">
@@ -341,17 +357,22 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
                 alt="Logo" 
                 className="h-6 w-auto object-contain"
                 loading="eager"
-                crossOrigin="anonymous"
                 width="24"
                 height="24"
+                style={{ opacity: 1, visibility: 'visible', display: 'inline-block' }}
                 onLoad={(e) => {
                   console.log('Footer logo loaded successfully');
+                  const target = e.currentTarget as HTMLImageElement;
+                  target.style.opacity = '1';
+                  target.style.visibility = 'visible';
+                  target.style.display = 'inline-block';
                 }}
                 onError={(e) => {
-                  console.log('Footer logo error, trying alternative');
-                  const target = e.currentTarget;
-                  target.crossOrigin = '';
-                  target.src = target.src + '?t=' + Date.now();
+                  console.log('Footer logo error');
+                  const target = e.currentTarget as HTMLImageElement;
+                  target.style.opacity = '1';
+                  target.style.visibility = 'visible';
+                  target.style.display = 'inline-block';
                 }}
               />
               <div>

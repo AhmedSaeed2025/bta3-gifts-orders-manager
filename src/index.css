@@ -81,16 +81,19 @@ img {
   backface-visibility: hidden;
   content-visibility: auto;
   contain-intrinsic-size: 48px 48px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
 }
 
 /* تحسين تحميل الصور */
 img[loading="lazy"] {
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.2s ease;
 }
 
 img[loading="lazy"].loaded,
-img[loading="eager"] {
+img[loading="eager"],
+img:not([loading]) {
   opacity: 1;
 }
 
@@ -287,4 +290,23 @@ img[loading="eager"] {
 .lazy-container {
   content-visibility: auto;
   contain-intrinsic-size: 200px;
+}
+
+/* تحسين عناصر الواجهة للأداء */
+.performance-optimized {
+  will-change: auto;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* تحسين التمرير */
+.smooth-scroll {
+  scroll-behavior: smooth;
+  overflow-anchor: none;
+}
+
+/* تحسين المكونات الثقيلة */
+.heavy-component {
+  content-visibility: auto;
+  contain-intrinsic-size: 300px;
 }

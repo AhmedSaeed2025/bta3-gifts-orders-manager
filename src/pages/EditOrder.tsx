@@ -9,6 +9,7 @@ import Logo from "@/components/Logo";
 import UserProfile from "@/components/UserProfile";
 import OrderForm from "@/components/OrderForm";
 import { ArrowRight } from "lucide-react";
+import { toast } from "sonner";
 
 const EditOrder = () => {
   const { serial } = useParams<{ serial: string }>();
@@ -16,9 +17,16 @@ const EditOrder = () => {
   const navigate = useNavigate();
   const [order, setOrder] = useState<Order | undefined>();
   const [orderNotFound, setOrderNotFound] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   
   useEffect(() => {
-    if (serial && !loading) {
+    if (!serial) {
+      console.log("EditOrder: No serial provided, redirecting to home");
+      navigate("/");
+      return;
+    }
+
+    if (!loading && !isInitialized) {
       console.log("EditOrder: Looking for order with serial:", serial);
       const foundOrder = getOrderBySerial(serial);
       console.log("EditOrder: Found order:", foundOrder);
@@ -27,25 +35,26 @@ const EditOrder = () => {
         setOrder(foundOrder);
         setOrderNotFound(false);
       } else {
-        console.log("EditOrder: Order not found, setting orderNotFound to true");
+        console.log("EditOrder: Order not found");
         setOrderNotFound(true);
+        toast.error(`الطلب رقم ${serial} غير موجود`);
       }
+      setIsInitialized(true);
     }
-  }, [serial, getOrderBySerial, loading]);
+  }, [serial, getOrderBySerial, loading, navigate, isInitialized]);
   
-  // Don't redirect immediately when order is not found during loading
   useEffect(() => {
-    if (orderNotFound && !loading && !order) {
+    if (orderNotFound && isInitialized && !order) {
       console.log("EditOrder: Redirecting to home because order not found");
       const timer = setTimeout(() => {
         navigate("/");
-      }, 2000); // Give 2 seconds delay before redirecting
+      }, 3000);
       
       return () => clearTimeout(timer);
     }
-  }, [orderNotFound, loading, order, navigate]);
+  }, [orderNotFound, isInitialized, order, navigate]);
   
-  if (loading) {
+  if (loading || !isInitialized) {
     return (
       <div className="min-h-screen bg-gift-accent dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center p-8">
@@ -62,6 +71,9 @@ const EditOrder = () => {
         <div className="text-center p-8">
           <h2 className="text-xl font-bold mb-4">الطلب غير موجود</h2>
           <p className="text-gray-600 dark:text-gray-400 mb-4">
+            الطلب رقم {serial} غير موجود أو تم حذفه
+          </p>
+          <p className="text-gray-500 text-sm mb-4">
             سيتم إعادة توجيهك للصفحة الرئيسية خلال ثوانٍ...
           </p>
           <Button onClick={() => navigate("/")} variant="outline">العودة للرئيسية</Button>

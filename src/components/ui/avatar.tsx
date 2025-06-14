@@ -27,11 +27,17 @@ const AvatarImage = React.forwardRef<
     ref={ref}
     className={cn("aspect-square h-full w-full", className)}
     loading="lazy"
-    crossOrigin="anonymous"
+    decoding="async"
     onError={(e) => {
-      console.log('Avatar image failed to load');
-      e.currentTarget.style.display = 'none';
+      console.log('Avatar image failed to load, hiding element');
+      const target = e.currentTarget as HTMLImageElement;
+      target.style.display = 'none';
     }}
+    onLoad={(e) => {
+      const target = e.currentTarget as HTMLImageElement;
+      target.style.opacity = '1';
+    }}
+    style={{ opacity: 0, transition: 'opacity 0.3s ease' }}
     {...props}
   />
 ))
