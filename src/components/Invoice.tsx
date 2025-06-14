@@ -1,3 +1,4 @@
+
 import React, { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -36,13 +37,16 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
       @media print {
         @page {
           size: A4;
-          margin: 10mm;
+          margin: 15mm;
         }
         body {
           direction: rtl !important;
-          font-family: 'Tajawal', Arial, sans-serif !important;
+          font-family: 'Tajawal', 'Cairo', 'Amiri', Arial, sans-serif !important;
           background: white !important;
-          font-size: 12px !important;
+          font-size: 14px !important;
+          line-height: 1.6 !important;
+          -webkit-font-smoothing: antialiased !important;
+          -moz-osx-font-smoothing: grayscale !important;
         }
         .professional-invoice {
           box-shadow: none !important;
@@ -50,26 +54,93 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
           max-width: 100% !important;
           margin: 0 !important;
           padding: 0 !important;
+          background: white !important;
         }
         .invoice-header {
-          font-size: 14px !important;
+          font-size: 16px !important;
+          font-weight: bold !important;
+          margin-bottom: 20px !important;
         }
         .invoice-title {
-          font-size: 16px !important;
+          font-size: 20px !important;
+          font-weight: bold !important;
+          color: #2563eb !important;
         }
         .invoice-content {
-          font-size: 11px !important;
+          font-size: 13px !important;
+          line-height: 1.5 !important;
         }
         .invoice-table {
-          font-size: 10px !important;
+          font-size: 12px !important;
+          border-collapse: collapse !important;
+          width: 100% !important;
+        }
+        .invoice-table th,
+        .invoice-table td {
+          border: 1px solid #d1d5db !important;
+          padding: 8px !important;
+          text-align: right !important;
+        }
+        .invoice-table th {
+          background-color: #2563eb !important;
+          color: white !important;
+          font-weight: bold !important;
         }
         .invoice-summary {
-          font-size: 11px !important;
+          font-size: 13px !important;
+          margin-top: 20px !important;
+        }
+        .text-right {
+          text-align: right !important;
+        }
+        .text-center {
+          text-align: center !important;
+        }
+        .flex {
+          display: flex !important;
+        }
+        .justify-between {
+          justify-content: space-between !important;
+        }
+        .items-center {
+          align-items: center !important;
+        }
+        .gap-2 {
+          gap: 8px !important;
+        }
+        .mb-2 {
+          margin-bottom: 8px !important;
+        }
+        .mb-3 {
+          margin-bottom: 12px !important;
+        }
+        .p-2 {
+          padding: 8px !important;
+        }
+        .rounded {
+          border-radius: 4px !important;
+        }
+        .border {
+          border: 1px solid #d1d5db !important;
+        }
+        .bg-gray-50 {
+          background-color: #f9fafb !important;
+        }
+        .bg-blue-50 {
+          background-color: #eff6ff !important;
+        }
+        .font-bold {
+          font-weight: bold !important;
+        }
+        .font-medium {
+          font-weight: 500 !important;
         }
         img {
           opacity: 1 !important;
           visibility: visible !important;
           display: inline-block !important;
+          max-width: 100% !important;
+          height: auto !important;
         }
       }
     `
@@ -84,17 +155,27 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
       const element = printRef.current;
       
       const canvas = await html2canvas(element, {
-        scale: 2,
+        scale: 3,
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
         allowTaint: false,
         foreignObjectRendering: false,
-        imageTimeout: 2000,
+        imageTimeout: 3000,
         removeContainer: true,
         width: element.offsetWidth,
         height: element.offsetHeight,
+        letterRendering: true,
         onclone: (clonedDoc) => {
+          const clonedElement = clonedDoc.querySelector('.professional-invoice') as HTMLElement;
+          if (clonedElement) {
+            clonedElement.style.fontFamily = 'Tajawal, Cairo, Amiri, Arial, sans-serif';
+            clonedElement.style.direction = 'rtl';
+            clonedElement.style.textAlign = 'right';
+            clonedElement.style.lineHeight = '1.6';
+            clonedElement.style.backgroundColor = 'white';
+          }
+          
           const images = clonedDoc.querySelectorAll('img');
           images.forEach((img) => {
             img.style.opacity = '1';
@@ -107,15 +188,34 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
           const allElements = clonedDoc.querySelectorAll('*');
           allElements.forEach((el) => {
             if (el instanceof HTMLElement) {
-              el.style.fontFamily = 'Tajawal, Arial, sans-serif';
+              el.style.fontFamily = 'Tajawal, Cairo, Amiri, Arial, sans-serif';
+              el.style.direction = 'rtl';
               (el.style as any)['-webkit-font-smoothing'] = 'antialiased';
               (el.style as any)['-moz-osx-font-smoothing'] = 'grayscale';
+              (el.style as any)['text-rendering'] = 'optimizeLegibility';
+            }
+          });
+          
+          const tables = clonedDoc.querySelectorAll('table');
+          tables.forEach((table) => {
+            table.style.borderCollapse = 'collapse';
+            table.style.width = '100%';
+            table.style.direction = 'rtl';
+          });
+          
+          const tableCells = clonedDoc.querySelectorAll('th, td');
+          tableCells.forEach((cell) => {
+            if (cell instanceof HTMLElement) {
+              cell.style.border = '1px solid #d1d5db';
+              cell.style.padding = '8px';
+              cell.style.textAlign = 'right';
+              cell.style.verticalAlign = 'middle';
             }
           });
         }
       });
       
-      const imgData = canvas.toDataURL('image/png');
+      const imgData = canvas.toDataURL('image/png', 1.0);
       
       const pdf = new jsPDF({
         orientation: 'portrait',
@@ -129,23 +229,23 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
       const imgWidth = canvas.width;
       const imgHeight = canvas.height;
       
-      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      const ratio = Math.min((pdfWidth - 20) / imgWidth, (pdfHeight - 20) / imgHeight);
       const finalWidth = imgWidth * ratio;
       const finalHeight = imgHeight * ratio;
       
       const x = (pdfWidth - finalWidth) / 2;
-      const y = 0;
+      const y = 10;
       
       pdf.addImage(imgData, 'PNG', x, y, finalWidth, finalHeight, undefined, 'FAST');
       
       let heightLeft = finalHeight;
-      let position = 0;
+      let position = y;
       
-      while (heightLeft > pdfHeight) {
+      while (heightLeft > (pdfHeight - 20)) {
         position = heightLeft - finalHeight;
         pdf.addPage();
-        pdf.addImage(imgData, 'PNG', x, position, finalWidth, finalHeight, undefined, 'FAST');
-        heightLeft -= pdfHeight;
+        pdf.addImage(imgData, 'PNG', x, position + 10, finalWidth, finalHeight, undefined, 'FAST');
+        heightLeft -= (pdfHeight - 20);
       }
       
       pdf.save(`فاتورة_${order.serial}.pdf`);
@@ -159,7 +259,7 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
   const items = order.items || [];
 
   return (
-    <div className="rtl w-full" style={{ direction: 'rtl' }}>
+    <div className="rtl w-full" style={{ direction: 'rtl', fontFamily: 'Tajawal, Cairo, Amiri, Arial, sans-serif' }}>
       <div className="mb-3 flex flex-wrap gap-2 justify-end print:hidden">
         <Button 
           onClick={handlePrint}
@@ -177,55 +277,50 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
         </Button>
       </div>
       
-      <Card ref={printRef} className="professional-invoice print:shadow-none print:border-none bg-white w-full max-w-full overflow-hidden">
-        <CardContent className="p-3 print:p-2">
+      <Card 
+        ref={printRef} 
+        className="professional-invoice print:shadow-none print:border-none bg-white w-full max-w-full overflow-hidden"
+        style={{ 
+          fontFamily: 'Tajawal, Cairo, Amiri, Arial, sans-serif',
+          direction: 'rtl',
+          textAlign: 'right',
+          lineHeight: '1.6'
+        }}
+      >
+        <CardContent className="p-4 print:p-3">
           {/* Header Section with Logo */}
-          <div className="text-center mb-3 pb-2 border-b-2 border-gift-primary invoice-header">
-            <div className="flex flex-col items-center gap-2 mb-2">
+          <div className="text-center mb-4 pb-3 border-b-2 border-gift-primary invoice-header">
+            <div className="flex flex-col items-center gap-3 mb-3">
               {/* Logo and Brand */}
-              <div className="flex items-center justify-center gap-3">
+              <div className="flex items-center justify-center gap-4">
                 <img 
                   src="/lovable-uploads/027863c0-c46a-422a-84a8-7bf9c01dbfa6.png" 
                   alt="#بتاع_هدايا_الأصلى Logo" 
-                  className="h-12 w-12 object-contain"
+                  className="h-14 w-14 object-contain"
                   loading="eager"
-                  width="48"
-                  height="48"
+                  width="56"
+                  height="56"
                   style={{ 
                     opacity: 1, 
                     visibility: 'visible', 
                     display: 'inline-block',
-                    maxWidth: '48px',
-                    maxHeight: '48px'
-                  }}
-                  onLoad={(e) => {
-                    console.log('Invoice logo loaded successfully');
-                    const target = e.currentTarget as HTMLImageElement;
-                    target.style.opacity = '1';
-                    target.style.visibility = 'visible';
-                    target.style.display = 'inline-block';
-                  }}
-                  onError={(e) => {
-                    console.log('Invoice logo error');
-                    const target = e.currentTarget as HTMLImageElement;
-                    target.style.opacity = '1';
-                    target.style.visibility = 'visible';
-                    target.style.display = 'inline-block';
+                    maxWidth: '56px',
+                    maxHeight: '56px'
                   }}
                 />
                 <div className="text-center">
-                  <h1 className="text-lg font-bold text-gift-primary invoice-title">#بتاع_هدايا_الأصلى</h1>
-                  <p className="text-xs text-gray-600">ملوك الهدايا في مصر</p>
+                  <h1 className="text-xl font-bold text-gift-primary invoice-title">#بتاع_هدايا_الأصلى</h1>
+                  <p className="text-sm text-gray-600">ملوك الهدايا في مصر</p>
                 </div>
               </div>
               
-              <div className="flex justify-between w-full text-xs">
+              <div className="flex justify-between w-full text-sm">
                 <div className="text-right">
-                  <p className="text-gray-600">فاتورة رقم</p>
-                  <p className="font-bold text-gift-primary">{order.serial}</p>
+                  <p className="text-gray-600 font-medium">فاتورة رقم</p>
+                  <p className="font-bold text-gift-primary text-base">{order.serial}</p>
                 </div>
                 <div className="text-left">
-                  <p className="text-gray-600">التاريخ</p>
+                  <p className="text-gray-600 font-medium">التاريخ</p>
                   <p className="font-medium">{new Date(order.dateCreated).toLocaleDateString('ar-EG')}</p>
                 </div>
               </div>
@@ -233,49 +328,49 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
           </div>
           
           {/* Customer and Order Info */}
-          <div className="grid grid-cols-1 gap-3 mb-3 invoice-content">
-            <div className="bg-gray-50 p-2 rounded border-r-2 border-gift-primary">
-              <h3 className="font-bold mb-2 text-xs flex items-center gap-1 text-gift-primary">
-                <Phone size={12} /> بيانات العميل
+          <div className="grid grid-cols-1 gap-4 mb-4 invoice-content">
+            <div className="bg-gray-50 p-3 rounded border-r-4 border-gift-primary">
+              <h3 className="font-bold mb-3 text-sm flex items-center gap-2 text-gift-primary">
+                <Phone size={14} /> بيانات العميل
               </h3>
-              <div className="space-y-1 text-xs">
-                <div className="flex justify-between">
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between items-center">
                   <span className="font-medium text-gray-700">اسم العميل:</span>
                   <span className="font-semibold">{order.clientName}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center">
                   <span className="font-medium text-gray-700">التليفون:</span>
                   <span className="font-semibold">{order.phone}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center">
                   <span className="font-medium text-gray-700">طريقة السداد:</span>
                   <span className="font-semibold">{order.paymentMethod}</span>
                 </div>
               </div>
             </div>
             
-            <div className="bg-blue-50 p-2 rounded border-r-2 border-blue-500">
-              <h3 className="font-bold mb-2 text-xs flex items-center gap-1 text-blue-600">
-                <Home size={12} /> معلومات التوصيل
+            <div className="bg-blue-50 p-3 rounded border-r-4 border-blue-500">
+              <h3 className="font-bold mb-3 text-sm flex items-center gap-2 text-blue-600">
+                <Home size={14} /> معلومات التوصيل
               </h3>
-              <div className="space-y-1 text-xs">
-                <div className="flex justify-between">
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between items-center">
                   <span className="font-medium text-gray-700">طريقة الاستلام:</span>
                   <span className="font-semibold">{order.deliveryMethod}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center">
                   <span className="font-medium text-gray-700">حالة الطلب:</span>
-                  <span className="font-semibold px-1 py-0.5 rounded text-xs bg-green-100 text-green-800">
+                  <span className="font-semibold px-2 py-1 rounded text-sm bg-green-100 text-green-800">
                     {ORDER_STATUS_LABELS[order.status]}
                   </span>
                 </div>
                 {order.deliveryMethod === "شحن للمنزل" && (
                   <>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-start">
                       <span className="font-medium text-gray-700">العنوان:</span>
-                      <span className="font-semibold break-words text-right max-w-[120px]">{order.address}</span>
+                      <span className="font-semibold text-right max-w-[200px] break-words">{order.address}</span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <span className="font-medium text-gray-700">المحافظة:</span>
                       <span className="font-semibold">{order.governorate}</span>
                     </div>
@@ -286,22 +381,22 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
           </div>
           
           {/* Items Table */}
-          <div className="mb-3">
-            <h3 className="font-bold mb-2 text-xs flex items-center gap-1 text-gift-primary">
-              <FileText size={12} /> تفاصيل الطلب
+          <div className="mb-4">
+            <h3 className="font-bold mb-3 text-sm flex items-center gap-2 text-gift-primary">
+              <FileText size={14} /> تفاصيل الطلب
             </h3>
             <div className="overflow-x-auto border rounded">
-              <Table className="text-xs invoice-table">
+              <Table className="text-sm invoice-table w-full border-collapse">
                 <TableHeader>
                   <TableRow className="bg-gift-primary text-white">
-                    <TableHead className="py-1 px-2 text-white font-bold text-right text-xs">المنتج</TableHead>
-                    <TableHead className="py-1 px-2 text-white font-bold text-right text-xs">المقاس</TableHead>
-                    <TableHead className="py-1 px-2 text-white font-bold text-right text-xs">العدد</TableHead>
-                    <TableHead className="py-1 px-2 text-white font-bold text-right text-xs">السعر</TableHead>
+                    <TableHead className="py-2 px-3 text-white font-bold text-right text-sm border border-white">المنتج</TableHead>
+                    <TableHead className="py-2 px-3 text-white font-bold text-right text-sm border border-white">المقاس</TableHead>
+                    <TableHead className="py-2 px-3 text-white font-bold text-right text-sm border border-white">العدد</TableHead>
+                    <TableHead className="py-2 px-3 text-white font-bold text-right text-sm border border-white">السعر</TableHead>
                     {items.some(item => item.itemDiscount && item.itemDiscount > 0) && (
-                      <TableHead className="py-1 px-2 text-white font-bold text-right text-xs">خصم</TableHead>
+                      <TableHead className="py-2 px-3 text-white font-bold text-right text-sm border border-white">خصم</TableHead>
                     )}
-                    <TableHead className="py-1 px-2 text-white font-bold text-right text-xs">الإجمالي</TableHead>
+                    <TableHead className="py-2 px-3 text-white font-bold text-right text-sm border border-white">الإجمالي</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -309,16 +404,16 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
                     const discountedPrice = item.price - (item.itemDiscount || 0);
                     return (
                       <TableRow key={index} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
-                        <TableCell className="py-1 px-2 font-medium text-xs">{item.productType}</TableCell>
-                        <TableCell className="py-1 px-2 text-xs">{item.size}</TableCell>
-                        <TableCell className="py-1 px-2 text-center font-bold text-xs">{item.quantity}</TableCell>
-                        <TableCell className="py-1 px-2 text-xs">{formatCurrency(item.price)}</TableCell>
+                        <TableCell className="py-2 px-3 font-medium text-sm border border-gray-300">{item.productType}</TableCell>
+                        <TableCell className="py-2 px-3 text-sm border border-gray-300">{item.size}</TableCell>
+                        <TableCell className="py-2 px-3 text-center font-bold text-sm border border-gray-300">{item.quantity}</TableCell>
+                        <TableCell className="py-2 px-3 text-sm border border-gray-300">{formatCurrency(item.price)}</TableCell>
                         {items.some(item => item.itemDiscount && item.itemDiscount > 0) && (
-                          <TableCell className="py-1 px-2 text-xs text-red-600">
+                          <TableCell className="py-2 px-3 text-sm text-red-600 border border-gray-300">
                             {item.itemDiscount ? formatCurrency(item.itemDiscount) : '-'}
                           </TableCell>
                         )}
-                        <TableCell className="py-1 px-2 font-bold text-gift-primary text-xs">
+                        <TableCell className="py-2 px-3 font-bold text-gift-primary text-sm border border-gray-300">
                           {formatCurrency(discountedPrice * item.quantity)}
                         </TableCell>
                       </TableRow>
@@ -330,11 +425,11 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
           </div>
           
           {/* Summary Section */}
-          <div className="flex justify-end mb-3">
-            <div className="w-full bg-gray-50 p-2 rounded border invoice-summary">
-              <h3 className="font-bold mb-2 text-xs text-gift-primary">ملخص الفاتورة</h3>
-              <div className="space-y-1">
-                <div className="flex justify-between py-1 border-b text-xs">
+          <div className="flex justify-end mb-4">
+            <div className="w-full max-w-md bg-gray-50 p-3 rounded border invoice-summary">
+              <h3 className="font-bold mb-3 text-sm text-gift-primary">ملخص الفاتورة</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between py-1 border-b text-sm">
                   <span className="font-medium">إجمالي المنتجات:</span>
                   <span className="font-bold">{formatCurrency(items.reduce((sum, item) => {
                     const discountedPrice = item.price - (item.itemDiscount || 0);
@@ -342,90 +437,76 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
                   }, 0))}</span>
                 </div>
                 {order.shippingCost > 0 && (
-                  <div className="flex justify-between py-1 border-b text-xs">
+                  <div className="flex justify-between py-1 border-b text-sm">
                     <span className="font-medium">مصاريف الشحن:</span>
                     <span className="font-bold">{formatCurrency(order.shippingCost)}</span>
                   </div>
                 )}
                 {order.discount > 0 && (
-                  <div className="flex justify-between py-1 border-b text-xs">
+                  <div className="flex justify-between py-1 border-b text-sm">
                     <span className="font-medium">الخصم الإجمالي:</span>
                     <span className="font-bold text-red-600">- {formatCurrency(order.discount)}</span>
                   </div>
                 )}
                 {order.deposit > 0 && (
-                  <div className="flex justify-between py-1 border-b text-xs">
+                  <div className="flex justify-between py-1 border-b text-sm">
                     <span className="font-medium">العربون المدفوع:</span>
                     <span className="font-bold text-red-600">- {formatCurrency(order.deposit)}</span>
                   </div>
                 )}
-                <div className="flex justify-between py-2 text-sm border-t-2 border-gift-primary bg-gift-primary text-white px-2 rounded">
-                  <span className="font-bold">المجموع الكلي:</span>
-                  <span className="font-bold">{formatCurrency(order.total)}</span>
+                <div className="flex justify-between py-3 text-base border-t-2 border-gift-primary bg-gift-primary text-white px-3 rounded font-bold">
+                  <span>المجموع الكلي:</span>
+                  <span>{formatCurrency(order.total)}</span>
                 </div>
               </div>
             </div>
           </div>
           
           {/* Footer */}
-          <div className="mt-4 pt-2 border-t border-gray-200 text-center">
-            <div className="bg-gift-accent p-2 rounded mb-2 flex items-center justify-center gap-2">
+          <div className="mt-4 pt-3 border-t border-gray-200 text-center">
+            <div className="bg-gift-accent p-3 rounded mb-3 flex items-center justify-center gap-3">
               <img 
                 src="/lovable-uploads/027863c0-c46a-422a-84a8-7bf9c01dbfa6.png" 
                 alt="Logo" 
-                className="h-6 w-6 object-contain"
+                className="h-8 w-8 object-contain"
                 loading="eager"
-                width="24"
-                height="24"
+                width="32"
+                height="32"
                 style={{ 
                   opacity: 1, 
                   visibility: 'visible', 
                   display: 'inline-block',
-                  maxWidth: '24px',
-                  maxHeight: '24px'
-                }}
-                onLoad={(e) => {
-                  console.log('Footer logo loaded successfully');
-                  const target = e.currentTarget as HTMLImageElement;
-                  target.style.opacity = '1';
-                  target.style.visibility = 'visible';
-                  target.style.display = 'inline-block';
-                }}
-                onError={(e) => {
-                  console.log('Footer logo error');
-                  const target = e.currentTarget as HTMLImageElement;
-                  target.style.opacity = '1';
-                  target.style.visibility = 'visible';
-                  target.style.display = 'inline-block';
+                  maxWidth: '32px',
+                  maxHeight: '32px'
                 }}
               />
               <div>
-                <p className="text-xs font-bold text-gift-primary mb-1">شكراً لثقتكم في #بتاع_هدايا_الأصلى</p>
-                <div className="flex justify-center items-center gap-1 text-xs mb-1">
-                  <Phone size={10} className="text-gift-primary" />
+                <p className="text-sm font-bold text-gift-primary mb-1">شكراً لثقتكم في #بتاع_هدايا_الأصلى</p>
+                <div className="flex justify-center items-center gap-2 text-sm mb-1">
+                  <Phone size={12} className="text-gift-primary" />
                   <span className="font-medium">للتواصل: 01113977005</span>
                 </div>
               </div>
             </div>
             
-            <div className="flex flex-wrap justify-center items-center gap-2 mb-2 social-links">
-              <a href="https://www.facebook.com/D4Uofficial" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-blue-600 hover:underline text-xs font-medium">
-                <Facebook size={10} />
+            <div className="flex flex-wrap justify-center items-center gap-3 mb-3 social-links">
+              <a href="https://www.facebook.com/D4Uofficial" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-blue-600 hover:underline text-sm font-medium">
+                <Facebook size={12} />
                 <span>D4Uofficial</span>
               </a>
               
-              <a href="https://www.instagram.com/design4you_gift_store" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-pink-600 hover:underline text-xs font-medium">
-                <Instagram size={10} />
+              <a href="https://www.instagram.com/design4you_gift_store" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-pink-600 hover:underline text-sm font-medium">
+                <Instagram size={12} />
                 <span>design4you_gift_store</span>
               </a>
               
-              <a href="https://t.me/GiftsEg" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-blue-500 hover:underline text-xs font-medium">
-                <Send size={10} />
+              <a href="https://t.me/GiftsEg" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-blue-500 hover:underline text-sm font-medium">
+                <Send size={12} />
                 <span>GiftsEg</span>
               </a>
             </div>
             
-            <p className="text-xs text-gray-500 border-t pt-1">
+            <p className="text-sm text-gray-500 border-t pt-2">
               جميع الحقوق محفوظة #بتاع_هدايا_الأصلى 2025
             </p>
           </div>
