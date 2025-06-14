@@ -1,4 +1,3 @@
-
 import React, { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -84,9 +83,8 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
       
       const element = printRef.current;
       
-      // تحسين إعدادات html2canvas للحصول على جودة عالية
       const canvas = await html2canvas(element, {
-        scale: 2, // زيادة الدقة
+        scale: 2,
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
@@ -97,7 +95,6 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
         width: element.offsetWidth,
         height: element.offsetHeight,
         onclone: (clonedDoc) => {
-          // تحسين عرض الصور في النسخة المستنسخة
           const images = clonedDoc.querySelectorAll('img');
           images.forEach((img) => {
             img.style.opacity = '1';
@@ -107,7 +104,6 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
             img.style.height = 'auto';
           });
           
-          // تحسين النصوص والخطوط
           const allElements = clonedDoc.querySelectorAll('*');
           allElements.forEach((el) => {
             if (el instanceof HTMLElement) {
@@ -119,35 +115,29 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
         }
       });
       
-      // استخدام PNG بجودة عالية بدلاً من JPEG
       const imgData = canvas.toDataURL('image/png');
       
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4',
-        compress: false, // عدم ضغط PDF للحفاظ على الجودة
+        compress: false,
       });
       
-      // حساب أبعاد الصورة بشكل صحيح لتجنب التكبير الزائد
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
       const imgWidth = canvas.width;
       const imgHeight = canvas.height;
       
-      // حساب النسبة المناسبة للاحتفاظ بالأبعاد
       const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
       const finalWidth = imgWidth * ratio;
       const finalHeight = imgHeight * ratio;
       
-      // توسيط الصورة في الصفحة
       const x = (pdfWidth - finalWidth) / 2;
       const y = 0;
       
-      // إضافة الصورة بالأبعاد المحسوبة
       pdf.addImage(imgData, 'PNG', x, y, finalWidth, finalHeight, undefined, 'FAST');
       
-      // التعامل مع الصفحات المتعددة إذا لزم الأمر
       let heightLeft = finalHeight;
       let position = 0;
       
@@ -225,7 +215,7 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
                 />
                 <div className="text-center">
                   <h1 className="text-lg font-bold text-gift-primary invoice-title">#بتاع_هدايا_الأصلى</h1>
-                  <p className="text-xs text-gray-600">متجر الهدايا المميزة</p>
+                  <p className="text-xs text-gray-600">ملوك الهدايا في مصر</p>
                 </div>
               </div>
               

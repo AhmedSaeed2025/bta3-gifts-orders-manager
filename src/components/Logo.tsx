@@ -27,7 +27,7 @@ const Logo = () => {
         {/* Text Content */}
         <div className="text-center md:text-right">
           <h1 className="text-xl md:text-2xl font-bold text-gift-primary">#بتاع_هدايا_الأصلى</h1>
-          <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">برنامج متابعة الطلبات</p>
+          <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">ملوك الهدايا في مصر</p>
         </div>
       </div>
     </div>

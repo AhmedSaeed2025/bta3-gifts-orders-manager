@@ -56,7 +56,6 @@ const Auth = () => {
     }
   };
 
-  // التحقق من وجود بيانات محلية
   const hasLocalData = () => {
     const localOrders = localStorage.getItem('orders');
     const localProducts = localStorage.getItem('products');
