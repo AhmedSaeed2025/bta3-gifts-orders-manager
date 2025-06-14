@@ -156,6 +156,7 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
                 <th className={`border p-2 text-right ${isMobile ? "text-xs" : ""}`}>نوع المنتج</th>
                 <th className={`border p-2 text-right ${isMobile ? "text-xs" : ""}`}>المقاس</th>
                 <th className={`border p-2 text-right ${isMobile ? "text-xs" : ""}`}>الكمية</th>
+                <th className={`border p-2 text-right ${isMobile ? "text-xs" : ""}`}>التكلفة</th>
                 <th className={`border p-2 text-right ${isMobile ? "text-xs" : ""}`}>سعر الوحدة</th>
                 <th className={`border p-2 text-right ${isMobile ? "text-xs" : ""}`}>خصم الصنف</th>
                 <th className={`border p-2 text-right ${isMobile ? "text-xs" : ""}`}>الإجمالي</th>
@@ -224,6 +225,20 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
                         />
                       ) : (
                         <span>{item.quantity}</span>
+                      )}
+                    </td>
+                    <td className={`border p-2 text-right font-semibold text-orange-600 ${isMobile ? "text-xs" : ""}`}>
+                      {isEditing && editMode ? (
+                        <Input
+                          type="number"
+                          value={editingItem?.cost || 0}
+                          onChange={(e) => updateEditingItem("cost", parseFloat(e.target.value) || 0)}
+                          className={`text-right ${isMobile ? "text-xs h-6" : "h-8"}`}
+                          step={0.01}
+                          min={0}
+                        />
+                      ) : (
+                        formatCurrency(item.cost)
                       )}
                     </td>
                     <td className={`border p-2 text-right font-semibold text-green-600 ${isMobile ? "text-xs" : ""}`}>
@@ -332,6 +347,13 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
                     </div>
                     
                     <div className={`space-y-1 ${isMobile ? "text-xs" : "text-sm"}`}>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">التكلفة:</span>
+                        <span className="font-semibold text-orange-600 dark:text-orange-400">
+                          {formatCurrency(item.cost)} × {item.quantity} = {formatCurrency(item.cost * item.quantity)}
+                        </span>
+                      </div>
+                      
                       <div className="flex justify-between">
                         <span className="text-gray-600 dark:text-gray-400">سعر المنتج:</span>
                         <span className="font-semibold text-green-600 dark:text-green-400">
