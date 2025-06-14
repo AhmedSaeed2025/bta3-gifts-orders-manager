@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -309,19 +308,19 @@ const OrdersTable = () => {
   }
 
   return (
-    <div className="space-y-6 min-h-screen p-4" dir="rtl">
+    <div className="space-y-4 min-h-screen p-3" dir="rtl">
       {/* Header */}
-      <Card className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 text-white shadow-xl border-0">
-        <CardHeader className="pb-6">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-white/20 rounded-2xl">
-              <Package className="h-8 w-8 text-white" />
+      <Card className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 text-white shadow-lg border-0">
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-white/20 rounded-xl">
+              <Package className="h-6 w-6 text-white" />
             </div>
             <div>
-              <CardTitle className="text-2xl font-bold text-white">
+              <CardTitle className="text-xl font-bold text-white">
                 إدارة الطلبات
               </CardTitle>
-              <p className="text-blue-100 mt-2 text-lg">
+              <p className="text-blue-100 mt-1 text-sm">
                 إدارة وتتبع جميع الطلبات بشكل احترافي
               </p>
             </div>
@@ -330,145 +329,145 @@ const OrdersTable = () => {
       </Card>
 
       {/* Summary Statistics */}
-      <div className={`grid gap-4 ${isMobile ? "grid-cols-2" : "grid-cols-2 md:grid-cols-4 lg:grid-cols-8"}`}>
-        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg hover:shadow-xl transition-all duration-300">
-          <CardContent className="p-4">
+      <div className={`grid gap-3 ${isMobile ? "grid-cols-2" : "grid-cols-4 md:grid-cols-8"}`}>
+        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-md hover:shadow-lg transition-all duration-300">
+          <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-blue-100 font-medium text-sm mb-1">
+                <p className="text-blue-100 font-medium text-xs mb-1">
                   {isMobile ? "الطلبات" : "إجمالي الطلبات"}
                 </p>
-                <p className="text-2xl font-bold">{summaryStats.totalOrders}</p>
+                <p className="text-lg font-bold">{summaryStats.totalOrders}</p>
               </div>
-              <Calendar className="h-8 w-8 text-blue-200" />
+              <Calendar className="h-6 w-6 text-blue-200" />
             </div>
           </CardContent>
         </Card>
 
         <Card 
-          className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
+          className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer"
           onClick={() => handleStatusFilter('pending')}
         >
-          <CardContent className="p-4">
+          <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-yellow-100 font-medium text-sm mb-1">
+                <p className="text-yellow-100 font-medium text-xs mb-1">
                   {isMobile ? "منتظرة" : "طلبات منتظرة"}
                 </p>
-                <p className="text-2xl font-bold">{summaryStats.pendingOrders}</p>
+                <p className="text-lg font-bold">{summaryStats.pendingOrders}</p>
               </div>
-              <Clock className="h-8 w-8 text-yellow-200" />
+              <Clock className="h-6 w-6 text-yellow-200" />
             </div>
           </CardContent>
         </Card>
 
         <Card 
-          className="bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
+          className="bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer"
           onClick={() => handleStatusFilter('sentToPrinter')}
         >
-          <CardContent className="p-4">
+          <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-purple-100 font-medium text-sm mb-1">
+                <p className="text-purple-100 font-medium text-xs mb-1">
                   {isMobile ? "الورشة" : "منتجات الورشة"}
                 </p>
-                <p className="text-2xl font-bold">{summaryStats.workshopProducts}</p>
+                <p className="text-lg font-bold">{summaryStats.workshopProducts}</p>
               </div>
-              <Settings className="h-8 w-8 text-purple-200" />
+              <Settings className="h-6 w-6 text-purple-200" />
             </div>
           </CardContent>
         </Card>
 
         <Card 
-          className="bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
+          className="bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer"
           onClick={() => handleStatusFilter('readyForDelivery')}
         >
-          <CardContent className="p-4">
+          <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-orange-100 font-medium text-sm mb-1">
+                <p className="text-orange-100 font-medium text-xs mb-1">
                   {isMobile ? "تحت التسليم" : "تحت التسليم"}
                 </p>
-                <p className="text-2xl font-bold">{summaryStats.readyForDeliveryOrders}</p>
+                <p className="text-lg font-bold">{summaryStats.readyForDeliveryOrders}</p>
               </div>
-              <CheckCircle className="h-8 w-8 text-orange-200" />
+              <CheckCircle className="h-6 w-6 text-orange-200" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg hover:shadow-xl transition-all duration-300">
-          <CardContent className="p-4">
+        <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white shadow-md hover:shadow-lg transition-all duration-300">
+          <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-green-100 font-medium text-sm mb-1">
+                <p className="text-green-100 font-medium text-xs mb-1">
                   {isMobile ? "المبيعات" : "إجمالي المبيعات"}
                 </p>
-                <p className="text-lg font-bold">{formatCurrency(summaryStats.totalRevenue)}</p>
+                <p className="text-sm font-bold">{formatCurrency(summaryStats.totalRevenue)}</p>
               </div>
-              <DollarSign className="h-8 w-8 text-green-200" />
+              <DollarSign className="h-6 w-6 text-green-200" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white shadow-lg hover:shadow-xl transition-all duration-300">
-          <CardContent className="p-4">
+        <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white shadow-md hover:shadow-lg transition-all duration-300">
+          <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-red-100 font-medium text-sm mb-1">
+                <p className="text-red-100 font-medium text-xs mb-1">
                   {isMobile ? "التكلفة" : "إجمالي التكلفة"}
                 </p>
-                <p className="text-lg font-bold">{formatCurrency(summaryStats.totalCost)}</p>
+                <p className="text-sm font-bold">{formatCurrency(summaryStats.totalCost)}</p>
               </div>
-              <Package className="h-8 w-8 text-red-200" />
+              <Package className="h-6 w-6 text-red-200" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white shadow-lg hover:shadow-xl transition-all duration-300">
-          <CardContent className="p-4">
+        <Card className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white shadow-md hover:shadow-lg transition-all duration-300">
+          <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-indigo-100 font-medium text-sm mb-1">
+                <p className="text-indigo-100 font-medium text-xs mb-1">
                   {isMobile ? "الشحن" : "إجمالي الشحن"}
                 </p>
-                <p className="text-lg font-bold">{formatCurrency(summaryStats.totalShipping)}</p>
+                <p className="text-sm font-bold">{formatCurrency(summaryStats.totalShipping)}</p>
               </div>
-              <Truck className="h-8 w-8 text-indigo-200" />
+              <Truck className="h-6 w-6 text-indigo-200" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-lg hover:shadow-xl transition-all duration-300">
-          <CardContent className="p-4">
+        <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-md hover:shadow-lg transition-all duration-300">
+          <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-emerald-100 font-medium text-sm mb-1">
+                <p className="text-emerald-100 font-medium text-xs mb-1">
                   {isMobile ? "الربح" : "صافي الربح"}
                 </p>
-                <p className="text-lg font-bold">{formatCurrency(summaryStats.netProfit)}</p>
+                <p className="text-sm font-bold">{formatCurrency(summaryStats.netProfit)}</p>
               </div>
-              <TrendingUp className="h-8 w-8 text-emerald-200" />
+              <TrendingUp className="h-6 w-6 text-emerald-200" />
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Filters */}
-      <Card className="bg-white shadow-lg">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-lg flex items-center gap-3 text-gray-800">
-            <div className="p-2 bg-indigo-500 rounded-lg">
-              <Filter className="h-5 w-5 text-white" />
+      <Card className="bg-white shadow-md">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm flex items-center gap-2 text-gray-800">
+            <div className="p-1.5 bg-indigo-500 rounded-lg">
+              <Filter className="h-4 w-4 text-white" />
             </div>
             فلاتر الطلبات
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className={`grid gap-4 ${isMobile ? "grid-cols-1" : "grid-cols-2 md:grid-cols-4"}`}>
-            <div className="space-y-2">
-              <Label htmlFor="filterYear" className="text-sm font-medium text-gray-700">السنة</Label>
+          <div className={`grid gap-3 ${isMobile ? "grid-cols-1" : "grid-cols-2 md:grid-cols-4"}`}>
+            <div className="space-y-1.5">
+              <Label htmlFor="filterYear" className="text-xs font-medium text-gray-700">السنة</Label>
               <Select value={filterYear} onValueChange={setFilterYear}>
-                <SelectTrigger className="h-10">
+                <SelectTrigger className="h-8 text-xs">
                   <SelectValue placeholder="اختر السنة" />
                 </SelectTrigger>
                 <SelectContent>
@@ -480,10 +479,10 @@ const OrdersTable = () => {
               </Select>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="filterMonth" className="text-sm font-medium text-gray-700">الشهر</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="filterMonth" className="text-xs font-medium text-gray-700">الشهر</Label>
               <Select value={filterMonth} onValueChange={setFilterMonth}>
-                <SelectTrigger className="h-10">
+                <SelectTrigger className="h-8 text-xs">
                   <SelectValue placeholder="اختر الشهر" />
                 </SelectTrigger>
                 <SelectContent>
@@ -504,10 +503,10 @@ const OrdersTable = () => {
               </Select>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="filterStatus" className="text-sm font-medium text-gray-700">الحالة</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="filterStatus" className="text-xs font-medium text-gray-700">الحالة</Label>
               <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger className="h-10">
+                <SelectTrigger className="h-8 text-xs">
                   <SelectValue placeholder="اختر الحالة" />
                 </SelectTrigger>
                 <SelectContent>
@@ -525,9 +524,9 @@ const OrdersTable = () => {
               <Button 
                 onClick={clearFilters}
                 variant="outline"
-                className="w-full h-10 flex items-center gap-2"
+                className="w-full h-8 flex items-center gap-1.5 text-xs"
               >
-                <RefreshCw className="h-4 w-4" />
+                <RefreshCw className="h-3 w-3" />
                 مسح الفلاتر
               </Button>
             </div>
@@ -538,54 +537,54 @@ const OrdersTable = () => {
       {/* Orders Display */}
       {isMobile ? (
         // Mobile Card Layout
-        <div className="space-y-4">
+        <div className="space-y-3">
           {filteredOrders.length > 0 ? (
             filteredOrders.map((order, index) => (
-              <Card key={order.serial} className="bg-white shadow-lg hover:shadow-xl transition-all duration-300">
-                <CardContent className="p-4">
-                  <div className="space-y-3">
+              <Card key={order.serial} className="bg-white shadow-md hover:shadow-lg transition-all duration-300">
+                <CardContent className="p-3">
+                  <div className="space-y-2.5">
                     {/* Header */}
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <FileText className="h-4 w-4 text-blue-500" />
-                        <span className="font-bold text-blue-600">#{order.serial}</span>
+                      <div className="flex items-center gap-1.5">
+                        <FileText className="h-3 w-3 text-blue-500" />
+                        <span className="font-bold text-blue-600 text-sm">#{order.serial}</span>
                       </div>
-                      <Badge className={`${getStatusBadgeColor(order.status)} text-xs px-2 py-1`}>
+                      <Badge className={`${getStatusBadgeColor(order.status)} text-xs px-2 py-0.5`}>
                         {getStatusLabel(order.status)}
                       </Badge>
                     </div>
 
                     {/* Customer Info */}
-                    <div className="bg-gray-50 rounded-lg p-3 space-y-2">
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-gray-600" />
-                        <span className="font-medium text-gray-800">{order.clientName}</span>
+                    <div className="bg-gray-50 rounded-lg p-2.5 space-y-1.5">
+                      <div className="flex items-center gap-1.5">
+                        <User className="h-3 w-3 text-gray-600" />
+                        <span className="font-medium text-gray-800 text-sm">{order.clientName}</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Phone className="h-4 w-4 text-gray-600" />
-                        <span className="text-gray-600">{order.phone}</span>
+                      <div className="flex items-center gap-1.5">
+                        <Phone className="h-3 w-3 text-gray-600" />
+                        <span className="text-gray-600 text-xs">{order.phone}</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-gray-600" />
-                        <span className="text-gray-600 text-sm">{truncateText(order.address, 30)}</span>
+                      <div className="flex items-center gap-1.5">
+                        <MapPin className="h-3 w-3 text-gray-600" />
+                        <span className="text-gray-600 text-xs">{truncateText(order.address, 25)}</span>
                       </div>
                     </div>
 
                     {/* Financial Info */}
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-2">
                       <div className="bg-green-50 rounded-lg p-2 text-center">
                         <p className="text-xs text-green-600 font-medium">إجمالي الطلب</p>
-                        <p className="text-sm font-bold text-green-700">{formatCurrency(order.total)}</p>
+                        <p className="text-xs font-bold text-green-700">{formatCurrency(order.total)}</p>
                       </div>
                       <div className="bg-red-50 rounded-lg p-2 text-center">
                         <p className="text-xs text-red-600 font-medium">تكلفة الطلب</p>
-                        <p className="text-sm font-bold text-red-700">{formatCurrency(calculateOrderCost(order))}</p>
+                        <p className="text-xs font-bold text-red-700">{formatCurrency(calculateOrderCost(order))}</p>
                       </div>
                     </div>
 
                     {/* Status Change */}
                     <Select value={order.status} onValueChange={(value) => handleStatusChange(index, value)}>
-                      <SelectTrigger className="w-full h-9">
+                      <SelectTrigger className="w-full h-8 text-xs">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -598,96 +597,99 @@ const OrdersTable = () => {
                     </Select>
 
                     {/* Financial Actions */}
-                    <div className="grid grid-cols-3 gap-2">
-                      {!hasTransaction(order.serial, 'order_collection') ? (
-                        <Button
-                          size="sm"
-                          onClick={() => openCustomAmountDialog('collection', order)}
-                          className="bg-green-600 hover:bg-green-700 text-white text-xs h-8"
-                        >
-                          <DollarSign className="h-3 w-3 mr-1" />
-                          تحصيل
-                        </Button>
-                      ) : (
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleCancelTransaction(order.serial, 'order_collection')}
-                          className="text-xs h-8"
-                        >
-                          <X className="h-3 w-3 mr-1" />
-                          إلغاء
-                        </Button>
-                      )}
-                      
-                      {!hasTransaction(order.serial, 'shipping_payment') ? (
-                        <Button
-                          size="sm"
-                          onClick={() => openCustomAmountDialog('shipping', order)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-8"
-                        >
-                          <Truck className="h-3 w-3 mr-1" />
-                          شحن
-                        </Button>
-                      ) : (
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleCancelTransaction(order.serial, 'shipping_payment')}
-                          className="text-xs h-8"
-                        >
-                          <X className="h-3 w-3 mr-1" />
-                          إلغاء
-                        </Button>
-                      )}
-                      
-                      {!hasTransaction(order.serial, 'cost_payment') ? (
-                        <Button
-                          size="sm"
-                          onClick={() => openCustomAmountDialog('cost', order)}
-                          className="bg-orange-600 hover:bg-orange-700 text-white text-xs h-8"
-                        >
-                          <CreditCard className="h-3 w-3 mr-1" />
-                          تكلفة
-                        </Button>
-                      ) : (
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleCancelTransaction(order.serial, 'cost_payment')}
-                          className="text-xs h-8"
-                        >
-                          <X className="h-3 w-3 mr-1" />
-                          إلغاء
-                        </Button>
-                      )}
+                    <div className="bg-gray-50 rounded-lg p-2">
+                      <p className="text-xs font-medium text-gray-700 mb-2">الإجراءات المالية</p>
+                      <div className="grid grid-cols-3 gap-1.5">
+                        {!hasTransaction(order.serial, 'order_collection') ? (
+                          <Button
+                            size="sm"
+                            onClick={() => openCustomAmountDialog('collection', order)}
+                            className="bg-green-600 hover:bg-green-700 text-white h-6 text-xs px-1"
+                            title="تحصيل من العميل"
+                          >
+                            <DollarSign className="h-3 w-3" />
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleCancelTransaction(order.serial, 'order_collection')}
+                            className="h-6 text-xs px-1"
+                            title="إلغاء التحصيل"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        )}
+                        
+                        {!hasTransaction(order.serial, 'shipping_payment') ? (
+                          <Button
+                            size="sm"
+                            onClick={() => openCustomAmountDialog('shipping', order)}
+                            className="bg-blue-600 hover:bg-blue-700 text-white h-6 text-xs px-1"
+                            title="دفع شحن"
+                          >
+                            <Truck className="h-3 w-3" />
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleCancelTransaction(order.serial, 'shipping_payment')}
+                            className="h-6 text-xs px-1"
+                            title="إلغاء الشحن"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        )}
+                        
+                        {!hasTransaction(order.serial, 'cost_payment') ? (
+                          <Button
+                            size="sm"
+                            onClick={() => openCustomAmountDialog('cost', order)}
+                            className="bg-orange-600 hover:bg-orange-700 text-white h-6 text-xs px-1"
+                            title="دفع تكلفة"
+                          >
+                            <CreditCard className="h-3 w-3" />
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleCancelTransaction(order.serial, 'cost_payment')}
+                            className="h-6 text-xs px-1"
+                            title="إلغاء التكلفة"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex gap-2 pt-2 border-t">
+                    <div className="flex gap-1.5 pt-2 border-t">
                       <Button
                         size="sm"
                         onClick={() => handleViewOrder(order.serial)}
-                        className="flex-1 bg-blue-500 hover:bg-blue-600 text-white h-9"
+                        className="flex-1 bg-blue-500 hover:bg-blue-600 text-white h-8 text-xs"
                       >
-                        <Eye className="h-4 w-4 mr-1" />
+                        <Eye className="h-3 w-3 mr-1" />
                         عرض
                       </Button>
                       <Button
                         size="sm"
                         onClick={() => handleEditOrder(order.serial)}
-                        className="flex-1 bg-green-500 hover:bg-green-600 text-white h-9"
+                        className="flex-1 bg-green-500 hover:bg-green-600 text-white h-8 text-xs"
                       >
-                        <Edit className="h-4 w-4 mr-1" />
+                        <Edit className="h-3 w-3 mr-1" />
                         تعديل
                       </Button>
                       <Button
                         size="sm"
                         variant="destructive"
                         onClick={() => handleDeleteOrder(index)}
-                        className="h-9 px-3"
+                        className="h-8 px-2"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3 w-3" />
                       </Button>
                     </div>
                   </div>
@@ -695,64 +697,64 @@ const OrdersTable = () => {
               </Card>
             ))
           ) : (
-            <Card className="bg-white shadow-lg">
-              <CardContent className="text-center py-12">
-                <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500 text-lg">لا توجد طلبات متاحة</p>
+            <Card className="bg-white shadow-md">
+              <CardContent className="text-center py-8">
+                <Package className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                <p className="text-gray-500 text-sm">لا توجد طلبات متاحة</p>
               </CardContent>
             </Card>
           )}
         </div>
       ) : (
         // Desktop Table Layout
-        <Card className="bg-white shadow-lg">
-          <CardContent className="p-6">
+        <Card className="bg-white shadow-md">
+          <CardContent className="p-4">
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full text-xs">
                 <thead>
-                  <tr className="bg-gray-50 border-b-2 border-gray-200">
-                    <th className="text-right p-4 font-semibold text-gray-700">رقم الطلب</th>
-                    <th className="text-right p-4 font-semibold text-gray-700">التاريخ</th>
-                    <th className="text-right p-4 font-semibold text-gray-700">اسم العميل</th>
-                    <th className="text-right p-4 font-semibold text-gray-700">التليفون</th>
-                    <th className="text-right p-4 font-semibold text-gray-700">طريقة التوصيل</th>
-                    <th className="text-right p-4 font-semibold text-gray-700">العنوان</th>
-                    <th className="text-right p-4 font-semibold text-gray-700">المحافظة</th>
-                    <th className="text-right p-4 font-semibold text-gray-700">إجمالي الطلب</th>
-                    <th className="text-right p-4 font-semibold text-gray-700">تكلفة الطلب</th>
-                    <th className="text-right p-4 font-semibold text-gray-700">صافي الربح</th>
-                    <th className="text-center p-4 font-semibold text-gray-700">الحالة</th>
-                    <th className="text-center p-4 font-semibold text-gray-700">إجراءات مالية</th>
-                    <th className="text-center p-4 font-semibold text-gray-700">إجراءات</th>
+                  <tr className="bg-gray-50 border-b border-gray-200">
+                    <th className="text-right p-2 font-semibold text-gray-700">رقم الطلب</th>
+                    <th className="text-right p-2 font-semibold text-gray-700">التاريخ</th>
+                    <th className="text-right p-2 font-semibold text-gray-700">اسم العميل</th>
+                    <th className="text-right p-2 font-semibold text-gray-700">التليفون</th>
+                    <th className="text-right p-2 font-semibold text-gray-700">طريقة التوصيل</th>
+                    <th className="text-right p-2 font-semibold text-gray-700">العنوان</th>
+                    <th className="text-right p-2 font-semibold text-gray-700">المحافظة</th>
+                    <th className="text-right p-2 font-semibold text-gray-700">إجمالي الطلب</th>
+                    <th className="text-right p-2 font-semibold text-gray-700">تكلفة الطلب</th>
+                    <th className="text-right p-2 font-semibold text-gray-700">صافي الربح</th>
+                    <th className="text-center p-2 font-semibold text-gray-700">الحالة</th>
+                    <th className="text-center p-2 font-semibold text-gray-700">إجراءات مالية</th>
+                    <th className="text-center p-2 font-semibold text-gray-700">إجراءات</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredOrders.length > 0 ? (
                     filteredOrders.map((order, index) => (
                       <tr key={order.serial} className="border-b border-gray-100 hover:bg-blue-50 transition-colors duration-200">
-                        <td className="p-4 font-medium text-blue-600">{order.serial}</td>
-                        <td className="p-4 text-gray-600">{new Date(order.dateCreated).toLocaleDateString('ar-EG')}</td>
-                        <td className="p-4 font-medium text-gray-800" title={order.clientName}>
-                          {truncateText(order.clientName, 15)}
+                        <td className="p-2 font-medium text-blue-600">{order.serial}</td>
+                        <td className="p-2 text-gray-600">{new Date(order.dateCreated).toLocaleDateString('ar-EG')}</td>
+                        <td className="p-2 font-medium text-gray-800" title={order.clientName}>
+                          {truncateText(order.clientName, 12)}
                         </td>
-                        <td className="p-4 text-gray-600">{order.phone}</td>
-                        <td className="p-4 text-gray-600" title={order.deliveryMethod}>
-                          {truncateText(order.deliveryMethod, 12)}
+                        <td className="p-2 text-gray-600">{order.phone}</td>
+                        <td className="p-2 text-gray-600" title={order.deliveryMethod}>
+                          {truncateText(order.deliveryMethod, 10)}
                         </td>
-                        <td className="p-4 text-gray-600" title={order.address}>
-                          {truncateText(order.address, 20)}
+                        <td className="p-2 text-gray-600" title={order.address}>
+                          {truncateText(order.address, 15)}
                         </td>
-                        <td className="p-4 text-gray-600" title={order.governorate}>
-                          {truncateText(order.governorate, 10)}
+                        <td className="p-2 text-gray-600" title={order.governorate}>
+                          {truncateText(order.governorate, 8)}
                         </td>
-                        <td className="p-4 text-right font-semibold text-green-600">{formatCurrency(order.total)}</td>
-                        <td className="p-4 text-right font-semibold text-red-600">{formatCurrency(calculateOrderCost(order))}</td>
-                        <td className="p-4 text-right font-semibold text-purple-600">{formatCurrency(calculateOrderNetProfit(order))}</td>
-                        <td className="p-4 text-center">
+                        <td className="p-2 text-right font-semibold text-green-600">{formatCurrency(order.total)}</td>
+                        <td className="p-2 text-right font-semibold text-red-600">{formatCurrency(calculateOrderCost(order))}</td>
+                        <td className="p-2 text-right font-semibold text-purple-600">{formatCurrency(calculateOrderNetProfit(order))}</td>
+                        <td className="p-2 text-center">
                           <Select value={order.status} onValueChange={(value) => handleStatusChange(index, value)}>
-                            <SelectTrigger className="w-32 h-9">
+                            <SelectTrigger className="w-24 h-7 text-xs">
                               <SelectValue>
-                                <Badge className={`${getStatusBadgeColor(order.status)} text-xs`}>
+                                <Badge className={`${getStatusBadgeColor(order.status)} text-xs px-1 py-0.5`}>
                                   {getStatusLabel(order.status)}
                                 </Badge>
                               </SelectValue>
@@ -766,95 +768,98 @@ const OrdersTable = () => {
                             </SelectContent>
                           </Select>
                         </td>
-                        <td className="p-4">
-                          <div className="flex flex-col gap-1">
-                            {!hasTransaction(order.serial, 'order_collection') ? (
-                              <Button
-                                size="sm"
-                                onClick={() => openCustomAmountDialog('collection', order)}
-                                className="bg-green-600 hover:bg-green-700 text-white h-7 text-xs"
-                              >
-                                <DollarSign className="h-3 w-3 mr-1" />
-                                تحصيل
-                              </Button>
-                            ) : (
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => handleCancelTransaction(order.serial, 'order_collection')}
-                                className="h-7 text-xs"
-                              >
-                                <X className="h-3 w-3 mr-1" />
-                                إلغاء التحصيل
-                              </Button>
-                            )}
-                            
-                            {!hasTransaction(order.serial, 'shipping_payment') ? (
-                              <Button
-                                size="sm"
-                                onClick={() => openCustomAmountDialog('shipping', order)}
-                                className="bg-blue-600 hover:bg-blue-700 text-white h-7 text-xs"
-                              >
-                                <Truck className="h-3 w-3 mr-1" />
-                                دفع شحن
-                              </Button>
-                            ) : (
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => handleCancelTransaction(order.serial, 'shipping_payment')}
-                                className="h-7 text-xs"
-                              >
-                                <X className="h-3 w-3 mr-1" />
-                                إلغاء الشحن
-                              </Button>
-                            )}
-                            
-                            {!hasTransaction(order.serial, 'cost_payment') ? (
-                              <Button
-                                size="sm"
-                                onClick={() => openCustomAmountDialog('cost', order)}
-                                className="bg-orange-600 hover:bg-orange-700 text-white h-7 text-xs"
-                              >
-                                <CreditCard className="h-3 w-3 mr-1" />
-                                دفع تكلفة
-                              </Button>
-                            ) : (
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => handleCancelTransaction(order.serial, 'cost_payment')}
-                                className="h-7 text-xs"
-                              >
-                                <X className="h-3 w-3 mr-1" />
-                                إلغاء التكلفة
-                              </Button>
-                            )}
+                        <td className="p-2">
+                          <div className="bg-gray-50 rounded-lg p-1.5 space-y-1">
+                            <div className="grid grid-cols-3 gap-1">
+                              {!hasTransaction(order.serial, 'order_collection') ? (
+                                <Button
+                                  size="sm"
+                                  onClick={() => openCustomAmountDialog('collection', order)}
+                                  className="bg-green-600 hover:bg-green-700 text-white h-6 text-xs px-1"
+                                  title="تحصيل من العميل"
+                                >
+                                  <DollarSign className="h-3 w-3" />
+                                </Button>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => handleCancelTransaction(order.serial, 'order_collection')}
+                                  className="h-6 text-xs px-1"
+                                  title="إلغاء التحصيل"
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              )}
+                              
+                              {!hasTransaction(order.serial, 'shipping_payment') ? (
+                                <Button
+                                  size="sm"
+                                  onClick={() => openCustomAmountDialog('shipping', order)}
+                                  className="bg-blue-600 hover:bg-blue-700 text-white h-6 text-xs px-1"
+                                  title="دفع شحن"
+                                >
+                                  <Truck className="h-3 w-3" />
+                                </Button>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => handleCancelTransaction(order.serial, 'shipping_payment')}
+                                  className="h-6 text-xs px-1"
+                                  title="إلغاء الشحن"
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              )}
+                              
+                              {!hasTransaction(order.serial, 'cost_payment') ? (
+                                <Button
+                                  size="sm"
+                                  onClick={() => openCustomAmountDialog('cost', order)}
+                                  className="bg-orange-600 hover:bg-orange-700 text-white h-6 text-xs px-1"
+                                  title="دفع تكلفة"
+                                >
+                                  <CreditCard className="h-3 w-3" />
+                                </Button>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => handleCancelTransaction(order.serial, 'cost_payment')}
+                                  className="h-6 text-xs px-1"
+                                  title="إلغاء التكلفة"
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              )}
+                            </div>
                           </div>
                         </td>
-                        <td className="p-4">
+                        <td className="p-2">
                           <div className="flex gap-1">
                             <Button
                               size="sm"
                               onClick={() => handleViewOrder(order.serial)}
-                              className="bg-blue-500 hover:bg-blue-600 text-white h-8 text-xs"
+                              className="bg-blue-500 hover:bg-blue-600 text-white h-6 text-xs px-1"
+                              title="عرض الطلب"
                             >
-                              <Eye className="h-3 w-3 mr-1" />
-                              عرض
+                              <Eye className="h-3 w-3" />
                             </Button>
                             <Button
                               size="sm"
                               onClick={() => handleEditOrder(order.serial)}
-                              className="bg-green-500 hover:bg-green-600 text-white h-8 text-xs"
+                              className="bg-green-500 hover:bg-green-600 text-white h-6 text-xs px-1"
+                              title="تعديل الطلب"
                             >
-                              <Edit className="h-3 w-3 mr-1" />
-                              تعديل
+                              <Edit className="h-3 w-3" />
                             </Button>
                             <Button
                               size="sm"
                               variant="destructive"
                               onClick={() => handleDeleteOrder(index)}
-                              className="h-8 px-2"
+                              className="h-6 px-1"
+                              title="حذف الطلب"
                             >
                               <Trash2 className="h-3 w-3" />
                             </Button>
@@ -864,9 +869,9 @@ const OrdersTable = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={13} className="text-center py-12">
-                        <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-500 text-lg">لا توجد طلبات متاحة</p>
+                      <td colSpan={13} className="text-center py-8">
+                        <Package className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                        <p className="text-gray-500 text-sm">لا توجد طلبات متاحة</p>
                       </td>
                     </tr>
                   )}
