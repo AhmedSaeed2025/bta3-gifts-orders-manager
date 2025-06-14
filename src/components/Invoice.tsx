@@ -483,7 +483,7 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
             </div>
           </div>
           
-          {/* Items Table - تغيير لون الهيدر إلى أحمر */}
+          {/* Items Table - تغيير لون الهيدر ليطابق لون المجموع الكلي */}
           <div className={`${isMobile ? 'mb-2' : 'mb-4'}`}>
             <h3 className={`font-bold ${isMobile ? 'mb-2 text-[8px]' : 'mb-3 text-sm'} flex items-center gap-2 text-gift-primary`}>
               <FileText size={isMobile ? 8 : 14} /> تفاصيل الطلب
@@ -498,21 +498,21 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
               >
                 <TableHeader>
                   <TableRow 
-                    className="bg-red-600 text-white"
+                    className="bg-gift-primary text-white"
                     style={{ 
-                      backgroundColor: '#dc2626',
+                      backgroundColor: '#e74c3c',
                       transition: 'none',
                       transform: 'none'
                     }}
                   >
-                    <TableHead className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} text-white font-bold text-right ${isMobile ? 'text-[7px]' : 'text-sm'} border border-white`} style={{ backgroundColor: '#dc2626', color: 'white' }}>المنتج</TableHead>
-                    <TableHead className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} text-white font-bold text-right ${isMobile ? 'text-[7px]' : 'text-sm'} border border-white`} style={{ backgroundColor: '#dc2626', color: 'white' }}>المقاس</TableHead>
-                    <TableHead className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} text-white font-bold text-right ${isMobile ? 'text-[7px]' : 'text-sm'} border border-white`} style={{ backgroundColor: '#dc2626', color: 'white' }}>العدد</TableHead>
-                    <TableHead className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} text-white font-bold text-right ${isMobile ? 'text-[7px]' : 'text-sm'} border border-white`} style={{ backgroundColor: '#dc2626', color: 'white' }}>السعر</TableHead>
+                    <TableHead className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} text-white font-bold text-right ${isMobile ? 'text-[7px]' : 'text-sm'} border border-white`} style={{ backgroundColor: '#e74c3c', color: 'white' }}>المنتج</TableHead>
+                    <TableHead className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} text-white font-bold text-right ${isMobile ? 'text-[7px]' : 'text-sm'} border border-white`} style={{ backgroundColor: '#e74c3c', color: 'white' }}>المقاس</TableHead>
+                    <TableHead className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} text-white font-bold text-right ${isMobile ? 'text-[7px]' : 'text-sm'} border border-white`} style={{ backgroundColor: '#e74c3c', color: 'white' }}>العدد</TableHead>
+                    <TableHead className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} text-white font-bold text-right ${isMobile ? 'text-[7px]' : 'text-sm'} border border-white`} style={{ backgroundColor: '#e74c3c', color: 'white' }}>السعر</TableHead>
                     {items.some(item => item.itemDiscount && item.itemDiscount > 0) && (
-                      <TableHead className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} text-white font-bold text-right ${isMobile ? 'text-[7px]' : 'text-sm'} border border-white`} style={{ backgroundColor: '#dc2626', color: 'white' }}>خصم</TableHead>
+                      <TableHead className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} text-white font-bold text-right ${isMobile ? 'text-[7px]' : 'text-sm'} border border-white`} style={{ backgroundColor: '#e74c3c', color: 'white' }}>خصم</TableHead>
                     )}
-                    <TableHead className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} text-white font-bold text-right ${isMobile ? 'text-[7px]' : 'text-sm'} border border-white`} style={{ backgroundColor: '#dc2626', color: 'white' }}>الإجمالي</TableHead>
+                    <TableHead className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} text-white font-bold text-right ${isMobile ? 'text-[7px]' : 'text-sm'} border border-white`} style={{ backgroundColor: '#e74c3c', color: 'white' }}>الإجمالي</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
