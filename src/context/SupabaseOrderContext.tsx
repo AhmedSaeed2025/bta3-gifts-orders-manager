@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Order, OrderStatus, OrderItem } from "@/types";
 import { toast } from "sonner";
@@ -21,7 +22,6 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
-  // Load orders from Supabase
   const loadOrders = async () => {
     if (!user) {
       setOrders([]);
@@ -31,6 +31,7 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
 
     try {
       console.log('Loading orders from Supabase...');
+      
       const { data: ordersData, error } = await supabase
         .from('orders')
         .select(`
@@ -45,39 +46,32 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
         throw error;
       }
 
-      console.log('Orders data from Supabase:', ordersData);
+      const formattedOrders = ordersData?.map(order => ({
+        serial: order.serial,
+        paymentMethod: order.payment_method,
+        clientName: order.client_name,
+        phone: order.phone,
+        deliveryMethod: order.delivery_method,
+        address: order.address || "",
+        governorate: order.governorate || "",
+        items: order.order_items?.map((item: any) => ({
+          productType: item.product_type,
+          size: item.size,
+          quantity: item.quantity,
+          cost: Number(item.cost),
+          price: Number(item.price),
+          profit: Number(item.profit),
+          itemDiscount: Number(item.item_discount || 0)
+        })) || [],
+        shippingCost: Number(order.shipping_cost),
+        discount: Number(order.discount || 0),
+        deposit: Number(order.deposit),
+        total: Number(order.total),
+        profit: Number(order.profit),
+        status: order.status as OrderStatus,
+        dateCreated: order.date_created
+      })) || [];
 
-      const formattedOrders = ordersData?.map(order => {
-        const formattedOrder = {
-          serial: order.serial,
-          paymentMethod: order.payment_method,
-          clientName: order.client_name,
-          phone: order.phone,
-          deliveryMethod: order.delivery_method,
-          address: order.address || "",
-          governorate: order.governorate || "",
-          items: order.order_items?.map((item: any) => ({
-            productType: item.product_type,
-            size: item.size,
-            quantity: item.quantity,
-            cost: Number(item.cost),
-            price: Number(item.price),
-            profit: Number(item.profit),
-            itemDiscount: Number(item.item_discount || 0)
-          })) || [],
-          shippingCost: Number(order.shipping_cost),
-          discount: Number(order.discount || 0),
-          deposit: Number(order.deposit),
-          total: Number(order.total),
-          profit: Number(order.profit),
-          status: order.status as OrderStatus,
-          dateCreated: order.date_created
-        };
-        console.log('Formatted order:', formattedOrder);
-        return formattedOrder;
-      }) || [];
-
-      console.log('Final formatted orders:', formattedOrders);
       setOrders(formattedOrders);
     } catch (error) {
       console.error('Error loading orders:', error);
@@ -88,7 +82,18 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
   };
 
   useEffect(() => {
-    loadOrders();
+    let mounted = true;
+    
+    if (user && mounted) {
+      loadOrders();
+    } else if (!user) {
+      setOrders([]);
+      setLoading(false);
+    }
+
+    return () => {
+      mounted = false;
+    };
   }, [user]);
 
   const generateSerialNumber = async (): Promise<string> => {

@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Product } from "@/types";
 import { toast } from "sonner";
@@ -20,7 +19,6 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
-  // Load products from Supabase
   const loadProducts = async () => {
     if (!user) {
       setProducts([]);
@@ -30,6 +28,7 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
 
     try {
       console.log('Loading products from Supabase...');
+      
       const { data: productsData, error } = await supabase
         .from('products')
         .select(`
@@ -44,8 +43,6 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
         throw error;
       }
 
-      console.log('Products data from Supabase:', productsData);
-
       const formattedProducts = productsData?.map(product => ({
         id: product.id,
         name: product.name,
@@ -56,7 +53,6 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
         })) || []
       })) || [];
 
-      console.log('Formatted products:', formattedProducts);
       setProducts(formattedProducts);
     } catch (error) {
       console.error('Error loading products:', error);
@@ -67,43 +63,18 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
   };
 
   useEffect(() => {
-    loadProducts();
+    let mounted = true;
     
-    // Set up real-time subscription
-    if (user) {
-      const productsSubscription = supabase
-        .channel('products-changes')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'products',
-            filter: `user_id=eq.${user.id}`
-          },
-          (payload) => {
-            console.log('Products table change detected:', payload);
-            loadProducts();
-          }
-        )
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'product_sizes'
-          },
-          (payload) => {
-            console.log('Product sizes table change detected:', payload);
-            loadProducts();
-          }
-        )
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(productsSubscription);
-      };
+    if (user && mounted) {
+      loadProducts();
+    } else if (!user) {
+      setProducts([]);
+      setLoading(false);
     }
+
+    return () => {
+      mounted = false;
+    };
   }, [user]);
 
   const addProduct = async (newProduct: Omit<Product, "id">) => {

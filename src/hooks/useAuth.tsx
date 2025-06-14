@@ -21,55 +21,61 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session);
+        if (!mounted) return;
+        
+        console.log('Auth state changed:', event, session?.user?.id);
         setSession(session);
         setUser(session?.user ?? null);
-        setLoading(false);
         
-        // Auto-sync all data when user signs in
+        // Only sync data on initial sign in, not on token refresh
         if (event === 'SIGNED_IN' && session?.user) {
+          // Delay sync to avoid loading conflicts
           setTimeout(() => {
-            syncAllData();
-          }, 1000); // Delay to ensure database is ready
+            if (mounted) {
+              syncAllData();
+            }
+          }, 2000);
         }
+        
+        setLoading(false);
       }
     );
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const syncAllData = async () => {
     if (!user) return;
 
     try {
-      console.log('بدء مزامنة جميع البيانات المحلية...');
+      console.log('بدء مزامنة البيانات المحلية...');
       
-      let totalSynced = 0;
+      await Promise.all([
+        syncOrders(),
+        syncProducts(),
+        syncProposedPrices()
+      ]);
       
-      // مزامنة الطلبات
-      await syncOrders();
-      
-      // مزامنة المنتجات
-      await syncProducts();
-      
-      // مزامنة الأسعار المقترحة
-      await syncProposedPrices();
-      
-      toast.success('تمت مزامنة جميع البيانات بنجاح');
+      console.log('تمت مزامنة جميع البيانات بنجاح');
       
     } catch (error) {
       console.error('خطأ في مزامنة البيانات:', error);
-      toast.error('حدث خطأ أثناء مزامنة البيانات');
     }
   };
 
@@ -86,19 +92,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       let syncedCount = 0;
       for (const order of orders) {
         try {
-          // التحقق من وجود الطلب في قاعدة البيانات أولاً
           const { data: existingOrder } = await supabase
             .from('orders')
             .select('serial')
             .eq('serial', order.serial)
+            .eq('user_id', user.id)
             .single();
 
           if (existingOrder) {
-            console.log('الطلب موجود بالفعل:', order.serial);
             continue;
           }
 
-          // إضافة الطلب إلى قاعدة البيانات
           const { data: orderData, error: orderError } = await supabase
             .from('orders')
             .insert({
@@ -126,7 +130,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             continue;
           }
 
-          // إضافة عناصر الطلب
           if (order.items && order.items.length > 0) {
             const orderItems = order.items.map((item: any) => ({
               order_id: orderData.id,
