@@ -81,8 +81,8 @@ const InvoiceTab = () => {
           allElements.forEach((el) => {
             if (el instanceof HTMLElement) {
               el.style.fontFamily = 'Tajawal, Arial, sans-serif';
-              el.style.webkitFontSmoothing = 'antialiased';
-              el.style.mozOsxFontSmoothing = 'grayscale';
+              (el.style as any)['-webkit-font-smoothing'] = 'antialiased';
+              (el.style as any)['-moz-osx-font-smoothing'] = 'grayscale';
             }
           });
         }
