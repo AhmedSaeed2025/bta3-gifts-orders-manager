@@ -570,8 +570,8 @@ const OrdersTable = () => {
                       </div>
                     </div>
 
-                    {/* Financial Info */}
-                    <div className="grid grid-cols-2 gap-2">
+                    {/* Financial Info - Updated to show 3 columns with profit */}
+                    <div className="grid grid-cols-3 gap-2">
                       <div className="bg-green-50 rounded-lg p-2 text-center">
                         <p className="text-xs text-green-600 font-medium">إجمالي الطلب</p>
                         <p className="text-xs font-bold text-green-700">{formatCurrency(order.total)}</p>
@@ -579,6 +579,10 @@ const OrdersTable = () => {
                       <div className="bg-red-50 rounded-lg p-2 text-center">
                         <p className="text-xs text-red-600 font-medium">تكلفة الطلب</p>
                         <p className="text-xs font-bold text-red-700">{formatCurrency(calculateOrderCost(order))}</p>
+                      </div>
+                      <div className="bg-purple-50 rounded-lg p-2 text-center">
+                        <p className="text-xs text-purple-600 font-medium">ربح الطلب</p>
+                        <p className="text-xs font-bold text-purple-700">{formatCurrency(calculateOrderNetProfit(order))}</p>
                       </div>
                     </div>
 
