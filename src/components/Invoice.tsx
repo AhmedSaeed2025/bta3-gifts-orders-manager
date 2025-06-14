@@ -80,64 +80,86 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
     if (!printRef.current) return;
     
     try {
-      toast.info("جاري إنشاء ملف PDF...");
+      toast.info("جاري إنشاء ملف PDF بجودة عالية...");
       
       const element = printRef.current;
-      element.classList.add('pdf-export');
       
-      // تحسين إعدادات html2canvas للأداء
+      // تحسين إعدادات html2canvas للحصول على جودة عالية
       const canvas = await html2canvas(element, {
-        scale: 0.8, // تقليل الدقة لتحسين الأداء
+        scale: 2, // زيادة الدقة
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
         allowTaint: false,
         foreignObjectRendering: false,
-        imageTimeout: 1000, // تقليل وقت انتظار الصور
+        imageTimeout: 2000,
         removeContainer: true,
         width: element.offsetWidth,
         height: element.offsetHeight,
         onclone: (clonedDoc) => {
-          // تحسين الصور في النسخة المستنسخة
+          // تحسين عرض الصور في النسخة المستنسخة
           const images = clonedDoc.querySelectorAll('img');
           images.forEach((img) => {
             img.style.opacity = '1';
             img.style.visibility = 'visible';
             img.style.display = 'inline-block';
+            img.style.maxWidth = '100%';
+            img.style.height = 'auto';
+          });
+          
+          // تحسين النصوص والخطوط
+          const allElements = clonedDoc.querySelectorAll('*');
+          allElements.forEach((el) => {
+            if (el instanceof HTMLElement) {
+              el.style.fontFamily = 'Tajawal, Arial, sans-serif';
+              el.style.webkitFontSmoothing = 'antialiased';
+              el.style.mozOsxFontSmoothing = 'grayscale';
+            }
           });
         }
       });
       
-      element.classList.remove('pdf-export');
+      // استخدام PNG بجودة عالية بدلاً من JPEG
+      const imgData = canvas.toDataURL('image/png');
       
-      // استخدام JPEG بجودة منخفضة لتقليل الحجم
-      const imgData = canvas.toDataURL('image/jpeg', 0.6);
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4',
-        compress: true,
+        compress: false, // عدم ضغط PDF للحفاظ على الجودة
       });
       
-      const imgWidth = 210;
-      const pageHeight = 297;
-      const imgHeight = canvas.height * imgWidth / canvas.width;
+      // حساب أبعاد الصورة بشكل صحيح لتجنب التكبير الزائد
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
       
-      let heightLeft = imgHeight;
+      // حساب النسبة المناسبة للاحتفاظ بالأبعاد
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      const finalWidth = imgWidth * ratio;
+      const finalHeight = imgHeight * ratio;
+      
+      // توسيط الصورة في الصفحة
+      const x = (pdfWidth - finalWidth) / 2;
+      const y = 0;
+      
+      // إضافة الصورة بالأبعاد المحسوبة
+      pdf.addImage(imgData, 'PNG', x, y, finalWidth, finalHeight, undefined, 'FAST');
+      
+      // التعامل مع الصفحات المتعددة إذا لزم الأمر
+      let heightLeft = finalHeight;
       let position = 0;
-
-      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
-      heightLeft -= pageHeight;
-
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
+      
+      while (heightLeft > pdfHeight) {
+        position = heightLeft - finalHeight;
         pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
-        heightLeft -= pageHeight;
+        pdf.addImage(imgData, 'PNG', x, position, finalWidth, finalHeight, undefined, 'FAST');
+        heightLeft -= pdfHeight;
       }
       
       pdf.save(`فاتورة_${order.serial}.pdf`);
-      toast.success("تم إنشاء ملف PDF بنجاح");
+      toast.success("تم إنشاء ملف PDF بجودة عالية بنجاح");
     } catch (error) {
       console.error("PDF export error:", error);
       toast.error("حدث خطأ أثناء إنشاء ملف PDF. حاول مرة أخرى.");
@@ -161,7 +183,7 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
           className="h-8 text-xs bg-blue-600 hover:bg-blue-700 flex items-center gap-1 px-3"
         >
           <Download className="h-3 w-3" />
-          <span>PDF</span>
+          <span>PDF عالي الجودة</span>
         </Button>
       </div>
       
@@ -175,11 +197,17 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
                 <img 
                   src="/lovable-uploads/027863c0-c46a-422a-84a8-7bf9c01dbfa6.png" 
                   alt="#بتاع_هدايا_الأصلى Logo" 
-                  className="h-12 w-auto object-contain"
+                  className="h-12 w-12 object-contain"
                   loading="eager"
                   width="48"
                   height="48"
-                  style={{ opacity: 1, visibility: 'visible', display: 'inline-block' }}
+                  style={{ 
+                    opacity: 1, 
+                    visibility: 'visible', 
+                    display: 'inline-block',
+                    maxWidth: '48px',
+                    maxHeight: '48px'
+                  }}
                   onLoad={(e) => {
                     console.log('Invoice logo loaded successfully');
                     const target = e.currentTarget as HTMLImageElement;
@@ -355,11 +383,17 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
               <img 
                 src="/lovable-uploads/027863c0-c46a-422a-84a8-7bf9c01dbfa6.png" 
                 alt="Logo" 
-                className="h-6 w-auto object-contain"
+                className="h-6 w-6 object-contain"
                 loading="eager"
                 width="24"
                 height="24"
-                style={{ opacity: 1, visibility: 'visible', display: 'inline-block' }}
+                style={{ 
+                  opacity: 1, 
+                  visibility: 'visible', 
+                  display: 'inline-block',
+                  maxWidth: '24px',
+                  maxHeight: '24px'
+                }}
                 onLoad={(e) => {
                   console.log('Footer logo loaded successfully');
                   const target = e.currentTarget as HTMLImageElement;

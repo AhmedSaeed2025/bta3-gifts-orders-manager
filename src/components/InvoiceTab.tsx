@@ -49,45 +49,85 @@ const InvoiceTab = () => {
 
     setIsExporting(true);
     try {
-      toast.info("جاري إنشاء ملف PDF، يرجى الانتظار...");
+      toast.info("جاري إنشاء ملف PDF بجودة عالية، يرجى الانتظار...");
 
       const invoiceElement = invoiceRef.current;
+      
+      // تحسين إعدادات html2canvas للحصول على جودة عالية
       const canvas = await html2canvas(invoiceElement, {
-        scale: 1,
+        scale: 2, // زيادة الدقة
         useCORS: true,
         logging: false,
-        allowTaint: true,
+        allowTaint: false,
         backgroundColor: "#ffffff",
-        imageTimeout: 1000,
+        imageTimeout: 2000,
+        foreignObjectRendering: false,
+        removeContainer: true,
+        width: invoiceElement.offsetWidth,
+        height: invoiceElement.offsetHeight,
         onclone: (clonedDoc) => {
+          // تحسين عرض الصور في النسخة المستنسخة
           const images = clonedDoc.querySelectorAll('img');
           images.forEach((img) => {
             img.style.opacity = '1';
             img.style.visibility = 'visible';
             img.style.display = 'inline-block';
+            img.style.maxWidth = '100%';
+            img.style.height = 'auto';
+          });
+          
+          // تحسين النصوص والخطوط
+          const allElements = clonedDoc.querySelectorAll('*');
+          allElements.forEach((el) => {
+            if (el instanceof HTMLElement) {
+              el.style.fontFamily = 'Tajawal, Arial, sans-serif';
+              el.style.webkitFontSmoothing = 'antialiased';
+              el.style.mozOsxFontSmoothing = 'grayscale';
+            }
           });
         }
       });
 
-      const imgData = canvas.toDataURL('image/jpeg', 0.7);
+      // استخدام PNG بجودة عالية
+      const imgData = canvas.toDataURL('image/png');
+      
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4',
-        compress: true
+        compress: false, // عدم ضغط PDF للحفاظ على الجودة
       });
 
+      // حساب أبعاد الصورة بشكل صحيح لتجنب التكبير الزائد
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
       const imgWidth = canvas.width;
       const imgHeight = canvas.height;
-      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-      const imgX = (pdfWidth - imgWidth * ratio) / 2;
       
-      pdf.addImage(imgData, 'JPEG', imgX, 0, imgWidth * ratio, imgHeight * ratio, undefined, 'FAST');
+      // حساب النسبة المناسبة للاحتفاظ بالأبعاد
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      const finalWidth = imgWidth * ratio;
+      const finalHeight = imgHeight * ratio;
+      
+      // توسيط الصورة في الصفحة
+      const x = (pdfWidth - finalWidth) / 2;
+      
+      // إضافة الصورة بالأبعاد المحسوبة
+      pdf.addImage(imgData, 'PNG', x, 0, finalWidth, finalHeight, undefined, 'FAST');
+      
+      // التعامل مع الصفحات المتعددة إذا لزم الأمر
+      let heightLeft = finalHeight;
+      let position = 0;
+      
+      while (heightLeft > pdfHeight) {
+        position = heightLeft - finalHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', x, position, finalWidth, finalHeight, undefined, 'FAST');
+        heightLeft -= pdfHeight;
+      }
       
       pdf.save(`فاتورة-${selectedOrder.clientName}-${selectedOrder.serial}.pdf`);
-      toast.success("تم تصدير الفاتورة بنجاح");
+      toast.success("تم تصدير الفاتورة بجودة عالية بنجاح");
     } catch (error) {
       console.error("Error generating PDF:", error);
       toast.error("حدث خطأ أثناء إنشاء ملف PDF. حاول مرة أخرى.");
@@ -124,7 +164,7 @@ const InvoiceTab = () => {
                   className={`${isMobile ? "text-xs h-6" : "text-xs h-7"} flex items-center gap-1 bg-blue-500 hover:bg-blue-600`}
                 >
                   <Download size={isMobile ? 12 : 14} />
-                  {isExporting ? "جاري التصدير..." : (isMobile ? "PDF" : "تصدير PDF")}
+                  {isExporting ? "جاري التصدير..." : (isMobile ? "PDF عالي الجودة" : "تصدير PDF عالي الجودة")}
                 </Button>
                 <Button 
                   variant="outline" 
