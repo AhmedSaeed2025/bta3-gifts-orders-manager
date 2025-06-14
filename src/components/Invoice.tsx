@@ -1,4 +1,3 @@
-
 import React, { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -147,13 +146,22 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
       
       <Card ref={printRef} className="professional-invoice print:shadow-none print:border-none bg-white w-full max-w-full overflow-hidden">
         <CardContent className="p-3 print:p-2">
-          {/* Header Section */}
+          {/* Header Section with Logo */}
           <div className="text-center mb-3 pb-2 border-b-2 border-gift-primary invoice-header">
             <div className="flex flex-col items-center gap-2 mb-2">
-              <div className="text-center">
-                <h1 className="text-lg font-bold text-gift-primary invoice-title">#بتاع_هدايا_الأصلى</h1>
-                <p className="text-xs text-gray-600">متجر الهدايا المميزة</p>
+              {/* Logo and Brand */}
+              <div className="flex items-center justify-center gap-3">
+                <img 
+                  src="/lovable-uploads/f8e0b4b6-6b5a-4b25-b3d3-8e2c1f5a9d7e.png" 
+                  alt="#بتاع_هدايا_الأصلى Logo" 
+                  className="h-12 w-auto object-contain"
+                />
+                <div className="text-center">
+                  <h1 className="text-lg font-bold text-gift-primary invoice-title">#بتاع_هدايا_الأصلى</h1>
+                  <p className="text-xs text-gray-600">متجر الهدايا المميزة</p>
+                </div>
               </div>
+              
               <div className="flex justify-between w-full text-xs">
                 <div className="text-right">
                   <p className="text-gray-600">فاتورة رقم</p>
@@ -304,11 +312,18 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
           
           {/* Footer */}
           <div className="mt-4 pt-2 border-t border-gray-200 text-center">
-            <div className="bg-gift-accent p-2 rounded mb-2">
-              <p className="text-xs font-bold text-gift-primary mb-1">شكراً لثقتكم في #بتاع_هدايا_الأصلى</p>
-              <div className="flex justify-center items-center gap-1 text-xs mb-1">
-                <Phone size={10} className="text-gift-primary" />
-                <span className="font-medium">للتواصل: 01113977005</span>
+            <div className="bg-gift-accent p-2 rounded mb-2 flex items-center justify-center gap-2">
+              <img 
+                src="/lovable-uploads/f8e0b4b6-6b5a-4b25-b3d3-8e2c1f5a9d7e.png" 
+                alt="Logo" 
+                className="h-6 w-auto object-contain"
+              />
+              <div>
+                <p className="text-xs font-bold text-gift-primary mb-1">شكراً لثقتكم في #بتاع_هدايا_الأصلى</p>
+                <div className="flex justify-center items-center gap-1 text-xs mb-1">
+                  <Phone size={10} className="text-gift-primary" />
+                  <span className="font-medium">للتواصل: 01113977005</span>
+                </div>
               </div>
             </div>
             
@@ -330,7 +345,7 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
             </div>
             
             <p className="text-xs text-gray-500 border-t pt-1">
-              جميع الحقوق محفوظة #بتاع_هدايا_الأصلي 2025
+              جميع الحقوق محفوظة #بتاع_هدايا_الأصلى 2025
             </p>
           </div>
         </CardContent>

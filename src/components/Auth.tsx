@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
-import Logo from './Logo';
 import { Mail, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -73,10 +72,25 @@ const Auth = () => {
     <div className="min-h-screen bg-gift-accent dark:bg-gray-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Logo />
-          <p className="text-gray-600 dark:text-gray-400 mt-4">
-            سجل دخولك لإدارة طلباتك ومنتجاتك
-          </p>
+          {/* Professional Logo Section */}
+          <div className="flex flex-col items-center gap-4 mb-6">
+            <div className="relative group">
+              <img 
+                src="/lovable-uploads/f8e0b4b6-6b5a-4b25-b3d3-8e2c1f5a9d7e.png" 
+                alt="#بتاع_هدايا_الأصلى Logo" 
+                className="h-20 w-auto object-contain transition-all duration-500 group-hover:scale-110 drop-shadow-lg"
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-gift-primary/20 to-gift-secondary/20 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-500 blur-xl -z-10"></div>
+            </div>
+            
+            <div className="text-center">
+              <h1 className="text-2xl md:text-3xl font-bold text-gift-primary mb-2">#بتاع_هدايا_الأصلى</h1>
+              <p className="text-gray-600 dark:text-gray-400">
+                سجل دخولك لإدارة طلباتك ومنتجاتك
+              </p>
+            </div>
+          </div>
+          
           {hasLocalData() && (
             <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
               <p className="text-sm text-blue-700 dark:text-blue-300">
@@ -86,7 +100,7 @@ const Auth = () => {
           )}
         </div>
         
-        <Card>
+        <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm">
           <CardHeader>
             <CardTitle className="text-center">
               {isSignUp ? 'إنشاء حساب جديد' : 'تسجيل الدخول'}
@@ -156,7 +170,7 @@ const Auth = () => {
 
               <Button
                 type="submit"
-                className="w-full flex items-center justify-center gap-2"
+                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-gift-primary to-gift-secondary hover:from-gift-primary/90 hover:to-gift-secondary/90"
                 disabled={emailLoading || loading}
               >
                 <Mail className="h-4 w-4" />
