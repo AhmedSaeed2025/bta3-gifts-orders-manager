@@ -40,7 +40,10 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
 
       if (error) {
         console.error('Error loading products:', error);
-        throw error;
+        // Don't throw error, just log it
+        setProducts([]);
+        setLoading(false);
+        return;
       }
 
       const formattedProducts = productsData?.map(product => ({
@@ -56,7 +59,8 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
       setProducts(formattedProducts);
     } catch (error) {
       console.error('Error loading products:', error);
-      toast.error("حدث خطأ في تحميل المنتجات");
+      // Don't show toast error to avoid spamming user
+      setProducts([]);
     } finally {
       setLoading(false);
     }
@@ -66,7 +70,9 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
     let mounted = true;
     
     if (user && mounted) {
-      loadProducts();
+      loadProducts().catch(error => {
+        console.error('خطأ في تحميل المنتجات:', error);
+      });
     } else if (!user) {
       setProducts([]);
       setLoading(false);

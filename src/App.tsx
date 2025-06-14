@@ -13,6 +13,7 @@ import { ProductProvider } from "@/context/ProductContext";
 import EditOrder from "@/pages/EditOrder";
 import Auth from "@/components/Auth";
 import { useAuth } from "@/hooks/useAuth";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 function AppContent() {
   const { user, loading } = useAuth();
@@ -34,30 +35,38 @@ function AppContent() {
   }
 
   return (
-    <SupabaseOrderProvider>
-      <TransactionProvider>
-        <PriceProvider>
-          <ProductProvider>
-            <div className="min-h-screen bg-gift-accent dark:bg-gray-900 transition-colors duration-300">
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/orders/:serial" element={<OrderDetails />} />
-                <Route path="/edit-order/:serial" element={<EditOrder />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-              <Toaster />
-            </div>
-          </ProductProvider>
-        </PriceProvider>
-      </TransactionProvider>
-    </SupabaseOrderProvider>
+    <ErrorBoundary>
+      <SupabaseOrderProvider>
+        <TransactionProvider>
+          <PriceProvider>
+            <ProductProvider>
+              <div className="min-h-screen bg-gift-accent dark:bg-gray-900 transition-colors duration-300">
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/orders/:serial" element={<OrderDetails />} />
+                  <Route path="/edit-order/:serial" element={<EditOrder />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+                <Toaster />
+              </div>
+            </ProductProvider>
+          </PriceProvider>
+        </TransactionProvider>
+      </SupabaseOrderProvider>
+    </ErrorBoundary>
   );
 }
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: 10 * 60 * 1000, // 10 minutes
+      retry: 2,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: true,
+    },
+    mutations: {
       retry: 1,
     },
   },
@@ -65,11 +74,13 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AppContent />
-      </BrowserRouter>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <AppContent />
+        </BrowserRouter>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

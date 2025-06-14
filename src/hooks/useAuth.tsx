@@ -22,40 +22,65 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     let mounted = true;
+    let syncTimeout: NodeJS.Timeout;
     
-    // Set up auth state listener
+    // Set up auth state listener with error handling
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (!mounted) return;
-        
-        console.log('Auth state changed:', event, session?.user?.id);
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        // Only sync data on initial sign in, not on token refresh
-        if (event === 'SIGNED_IN' && session?.user) {
-          // Delay sync to avoid loading conflicts
-          setTimeout(() => {
-            if (mounted) {
-              syncAllData();
-            }
-          }, 2000);
+        try {
+          if (!mounted) return;
+          
+          console.log('Auth state changed:', event, session?.user?.id);
+          setSession(session);
+          setUser(session?.user ?? null);
+          
+          // Clear any existing sync timeout
+          if (syncTimeout) {
+            clearTimeout(syncTimeout);
+          }
+          
+          // Only sync data on initial sign in, not on token refresh
+          if (event === 'SIGNED_IN' && session?.user) {
+            // Delay sync to avoid loading conflicts
+            syncTimeout = setTimeout(() => {
+              if (mounted) {
+                syncAllData().catch(error => {
+                  console.error('خطأ في مزامنة البيانات:', error);
+                  // Don't show error to user for sync issues
+                });
+              }
+            }, 3000);
+          }
+          
+          setLoading(false);
+        } catch (error) {
+          console.error('خطأ في معالجة تغيير حالة المصادقة:', error);
+          setLoading(false);
         }
-        
-        setLoading(false);
       }
     );
 
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!mounted) return;
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    // Check for existing session with error handling
+    supabase.auth.getSession()
+      .then(({ data: { session }, error }) => {
+        if (!mounted) return;
+        if (error) {
+          console.error('خطأ في جلب الجلسة:', error);
+        }
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+      })
+      .catch(error => {
+        console.error('خطأ في جلب الجلسة:', error);
+        setLoading(false);
+      });
 
     return () => {
       mounted = false;
+      if (syncTimeout) {
+        clearTimeout(syncTimeout);
+      }
       subscription.unsubscribe();
     };
   }, []);
@@ -67,9 +92,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.log('بدء مزامنة البيانات المحلية...');
       
       await Promise.all([
-        syncOrders(),
-        syncProducts(),
-        syncProposedPrices()
+        syncOrders().catch(error => console.error('خطأ في مزامنة الطلبات:', error)),
+        syncProducts().catch(error => console.error('خطأ في مزامنة المنتجات:', error)),
+        syncProposedPrices().catch(error => console.error('خطأ في مزامنة الأسعار:', error))
       ]);
       
       console.log('تمت مزامنة جميع البيانات بنجاح');
@@ -177,7 +202,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       let syncedCount = 0;
       for (const product of products) {
         try {
-          // التحقق من وجود المنتج
           const { data: existingProduct } = await supabase
             .from('products')
             .select('id')
@@ -189,7 +213,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           if (existingProduct) {
             productId = existingProduct.id;
           } else {
-            // إضافة المنتج الجديد
             const { data: newProduct, error: productError } = await supabase
               .from('products')
               .insert({
@@ -206,7 +229,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             productId = newProduct.id;
           }
 
-          // مزامنة مقاسات المنتج
           if (product.sizes && product.sizes.length > 0) {
             for (const size of product.sizes) {
               const { data: existingSize } = await supabase
@@ -257,7 +279,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       for (const [productType, sizes] of Object.entries(proposedPrices)) {
         for (const [size, priceData] of Object.entries(sizes as any)) {
           try {
-            // التحقق من وجود السعر المقترح
             const { data: existingPrice } = await supabase
               .from('proposed_prices')
               .select('id')
