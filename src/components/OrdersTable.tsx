@@ -46,7 +46,6 @@ const OrdersTable = () => {
   const [filterMonth, setFilterMonth] = useState<string>("all");
   const [filterYear, setFilterYear] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [filterPaymentMethod, setFilterPaymentMethod] = useState<string>("all");
 
   // Custom amount dialog states
   const [customAmountDialog, setCustomAmountDialog] = useState<{
@@ -83,11 +82,10 @@ const OrdersTable = () => {
       if (filterYear !== "all" && orderYear !== filterYear) return false;
       if (filterMonth !== "all" && orderMonth !== filterMonth) return false;
       if (filterStatus !== "all" && order.status !== filterStatus) return false;
-      if (filterPaymentMethod !== "all" && order.paymentMethod !== filterPaymentMethod) return false;
       
       return true;
     });
-  }, [safeOrders, filterMonth, filterYear, filterStatus, filterPaymentMethod]);
+  }, [safeOrders, filterMonth, filterYear, filterStatus]);
 
   // Calculate summary statistics
   const summaryStats = React.useMemo(() => {
@@ -239,7 +237,11 @@ const OrdersTable = () => {
     setFilterMonth("all");
     setFilterYear("all");
     setFilterStatus("all");
-    setFilterPaymentMethod("all");
+  };
+
+  // Handle status filter from summary cards
+  const handleStatusFilter = (status: string) => {
+    setFilterStatus(status);
   };
 
   const getStatusBadgeColor = (status: string) => {
@@ -267,6 +269,10 @@ const OrdersTable = () => {
   const calculateOrderNetProfit = (order: any) => {
     const orderCost = order.items?.reduce((sum: number, item: any) => sum + (item.cost * item.quantity), 0) || 0;
     return order.total - orderCost - (order.shippingCost || 0);
+  };
+
+  const calculateOrderCost = (order: any) => {
+    return order.items?.reduce((sum: number, item: any) => sum + (item.cost * item.quantity), 0) || 0;
   };
 
   const getCustomAmountDialogTitle = (type: 'collection' | 'shipping' | 'cost') => {
@@ -339,7 +345,10 @@ const OrdersTable = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white shadow-lg hover:shadow-xl transition-all duration-300">
+        <Card 
+          className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
+          onClick={() => handleStatusFilter('pending')}
+        >
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -353,7 +362,10 @@ const OrdersTable = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-lg hover:shadow-xl transition-all duration-300">
+        <Card 
+          className="bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
+          onClick={() => handleStatusFilter('sentToPrinter')}
+        >
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -367,7 +379,10 @@ const OrdersTable = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-lg hover:shadow-xl transition-all duration-300">
+        <Card 
+          className="bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
+          onClick={() => handleStatusFilter('readyForDelivery')}
+        >
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -449,7 +464,7 @@ const OrdersTable = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className={`grid gap-4 ${isMobile ? "grid-cols-1" : "grid-cols-2 md:grid-cols-5"}`}>
+          <div className={`grid gap-4 ${isMobile ? "grid-cols-1" : "grid-cols-2 md:grid-cols-4"}`}>
             <div className="space-y-2">
               <Label htmlFor="filterYear" className="text-sm font-medium text-gray-700">السنة</Label>
               <Select value={filterYear} onValueChange={setFilterYear}>
@@ -502,22 +517,6 @@ const OrdersTable = () => {
                   <SelectItem value="sentToPrinter">تم الإرسال للمطبعة</SelectItem>
                   <SelectItem value="readyForDelivery">تحت التسليم</SelectItem>
                   <SelectItem value="shipped">تم الشحن</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="filterPaymentMethod" className="text-sm font-medium text-gray-700">طريقة السداد</Label>
-              <Select value={filterPaymentMethod} onValueChange={setFilterPaymentMethod}>
-                <SelectTrigger className="h-10">
-                  <SelectValue placeholder="اختر طريقة السداد" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">جميع الطرق</SelectItem>
-                  <SelectItem value="كاش">كاش</SelectItem>
-                  <SelectItem value="فيزا">فيزا</SelectItem>
-                  <SelectItem value="تحويل">تحويل</SelectItem>
-                  <SelectItem value="آجل">آجل</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -578,9 +577,9 @@ const OrdersTable = () => {
                         <p className="text-xs text-green-600 font-medium">إجمالي الطلب</p>
                         <p className="text-sm font-bold text-green-700">{formatCurrency(order.total)}</p>
                       </div>
-                      <div className="bg-purple-50 rounded-lg p-2 text-center">
-                        <p className="text-xs text-purple-600 font-medium">صافي الربح</p>
-                        <p className="text-sm font-bold text-purple-700">{formatCurrency(calculateOrderNetProfit(order))}</p>
+                      <div className="bg-red-50 rounded-lg p-2 text-center">
+                        <p className="text-xs text-red-600 font-medium">تكلفة الطلب</p>
+                        <p className="text-sm font-bold text-red-700">{formatCurrency(calculateOrderCost(order))}</p>
                       </div>
                     </div>
 
@@ -716,11 +715,11 @@ const OrdersTable = () => {
                     <th className="text-right p-4 font-semibold text-gray-700">التاريخ</th>
                     <th className="text-right p-4 font-semibold text-gray-700">اسم العميل</th>
                     <th className="text-right p-4 font-semibold text-gray-700">التليفون</th>
-                    <th className="text-right p-4 font-semibold text-gray-700">طريقة السداد</th>
                     <th className="text-right p-4 font-semibold text-gray-700">طريقة التوصيل</th>
                     <th className="text-right p-4 font-semibold text-gray-700">العنوان</th>
                     <th className="text-right p-4 font-semibold text-gray-700">المحافظة</th>
                     <th className="text-right p-4 font-semibold text-gray-700">إجمالي الطلب</th>
+                    <th className="text-right p-4 font-semibold text-gray-700">تكلفة الطلب</th>
                     <th className="text-right p-4 font-semibold text-gray-700">صافي الربح</th>
                     <th className="text-center p-4 font-semibold text-gray-700">الحالة</th>
                     <th className="text-center p-4 font-semibold text-gray-700">إجراءات مالية</th>
@@ -737,9 +736,6 @@ const OrdersTable = () => {
                           {truncateText(order.clientName, 15)}
                         </td>
                         <td className="p-4 text-gray-600">{order.phone}</td>
-                        <td className="p-4 text-gray-600" title={order.paymentMethod}>
-                          {truncateText(order.paymentMethod, 12)}
-                        </td>
                         <td className="p-4 text-gray-600" title={order.deliveryMethod}>
                           {truncateText(order.deliveryMethod, 12)}
                         </td>
@@ -750,6 +746,7 @@ const OrdersTable = () => {
                           {truncateText(order.governorate, 10)}
                         </td>
                         <td className="p-4 text-right font-semibold text-green-600">{formatCurrency(order.total)}</td>
+                        <td className="p-4 text-right font-semibold text-red-600">{formatCurrency(calculateOrderCost(order))}</td>
                         <td className="p-4 text-right font-semibold text-purple-600">{formatCurrency(calculateOrderNetProfit(order))}</td>
                         <td className="p-4 text-center">
                           <Select value={order.status} onValueChange={(value) => handleStatusChange(index, value)}>
