@@ -27,6 +27,44 @@ export function exportToExcel(tableId: string, fileName: string) {
   XLSX.writeFile(wb, `${fileName}.xlsx`);
 }
 
+// Enhanced export function for profit report
+export function exportProfitReportToExcel(data: any[], fileName: string) {
+  // Prepare data for Excel export
+  const excelData = data.map(row => ({
+    'الشهر': row.month,
+    'نوع المنتج': row.productType,
+    'الكمية': row.quantity,
+    'إجمالي التكاليف': row.totalCost,
+    'إجمالي المبيعات': row.totalSales,
+    'إجمالي الشحن': row.totalShipping,
+    'إجمالي الخصومات': row.totalDiscounts,
+    'صافي الربح': row.netProfit
+  }));
+
+  // Create workbook and worksheet
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.json_to_sheet(excelData);
+  
+  // Set column widths
+  const colWidths = [
+    { wch: 15 }, // الشهر
+    { wch: 20 }, // نوع المنتج
+    { wch: 10 }, // الكمية
+    { wch: 15 }, // إجمالي التكاليف
+    { wch: 15 }, // إجمالي المبيعات
+    { wch: 15 }, // إجمالي الشحن
+    { wch: 15 }, // إجمالي الخصومات
+    { wch: 15 }, // صافي الربح
+  ];
+  ws['!cols'] = colWidths;
+
+  // Add worksheet to workbook
+  XLSX.utils.book_append_sheet(wb, ws, "تقرير الأرباح");
+  
+  // Save file
+  XLSX.writeFile(wb, `${fileName}.xlsx`);
+}
+
 export function generateMonthlyReport(orders: any[]) {
   const monthlyReport: Record<string, Record<string, any>> = {};
   
@@ -46,23 +84,28 @@ export function generateMonthlyReport(orders: any[]) {
           totalCost: 0,
           totalSales: 0,
           totalShipping: 0,
+          totalDiscounts: 0,
           quantity: 0
         };
       }
       
       const itemCost = item.cost * item.quantity;
       const itemSales = item.price * item.quantity;
+      const itemDiscounts = (item.itemDiscount || 0) * item.quantity;
       
       monthlyReport[monthKey][productType].totalCost += itemCost;
       monthlyReport[monthKey][productType].totalSales += itemSales;
+      monthlyReport[monthKey][productType].totalDiscounts += itemDiscounts;
       monthlyReport[monthKey][productType].quantity += item.quantity;
     });
     
-    // Add shipping cost to the first product type for this order
+    // Add shipping cost and order discount to the first product type for this order
     if (order.items && order.items.length > 0) {
       const firstProductType = order.items[0].productType;
       if (monthlyReport[monthKey][firstProductType]) {
         monthlyReport[monthKey][firstProductType].totalShipping += order.shippingCost || 0;
+        // Add order-level discount to the first product
+        monthlyReport[monthKey][firstProductType].totalDiscounts += order.discount || 0;
       }
     }
   });
