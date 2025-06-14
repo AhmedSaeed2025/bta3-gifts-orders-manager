@@ -15,8 +15,8 @@ import {
 } from "lucide-react";
 
 interface ProfitSummaryProps {
-  totalRevenue: number;
-  totalCosts: number;
+  totalCost: number;
+  totalSales: number;
   totalShipping: number;
   totalDiscounts: number;
   netProfit: number;
@@ -31,7 +31,7 @@ const ProfitSummaryCards: React.FC<{ summary: ProfitSummaryProps }> = ({ summary
   const summaryCards = [
     {
       title: "إجمالي المبيعات",
-      value: summary.totalRevenue,
+      value: summary.totalSales,
       icon: ShoppingCart,
       gradient: "from-blue-500 to-blue-600",
       iconColor: "text-blue-200",
@@ -39,7 +39,7 @@ const ProfitSummaryCards: React.FC<{ summary: ProfitSummaryProps }> = ({ summary
     },
     {
       title: "إجمالي التكاليف",
-      value: summary.totalCosts,
+      value: summary.totalCost,
       icon: TrendingDown,
       gradient: "from-red-500 to-red-600",
       iconColor: "text-red-200",
