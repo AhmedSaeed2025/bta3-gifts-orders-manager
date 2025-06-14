@@ -1,3 +1,4 @@
+
 import React, { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -76,26 +77,30 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
     try {
       toast.info("جاري إنشاء ملف PDF...");
       
-      printRef.current.classList.add('pdf-export');
+      // تحسين إعدادات PDF
+      const element = printRef.current;
+      element.classList.add('pdf-export');
       
-      const canvas = await html2canvas(printRef.current, {
-        scale: 1.5,
+      // تحسين جودة الصورة للPDF
+      const canvas = await html2canvas(element, {
+        scale: 1.2, // تقليل الدقة لتقليل الحجم
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
-        width: 794,
-        height: printRef.current.scrollHeight,
-        windowWidth: 794,
-        windowHeight: 1123
+        allowTaint: false,
+        foreignObjectRendering: false,
+        imageTimeout: 5000,
+        removeContainer: true,
       });
       
-      printRef.current.classList.remove('pdf-export');
+      element.classList.remove('pdf-export');
       
-      const imgData = canvas.toDataURL('image/png');
+      const imgData = canvas.toDataURL('image/jpeg', 0.8); // استخدام JPEG بجودة مضغوطة
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4',
+        compress: true, // ضغط PDF
       });
       
       const imgWidth = 210;
@@ -105,13 +110,14 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
       let heightLeft = imgHeight;
       let position = 0;
 
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      // إضافة الصورة للPDF
+      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'MEDIUM');
       heightLeft -= pageHeight;
 
       while (heightLeft > 0) {
         position = heightLeft - imgHeight;
         pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'MEDIUM');
         heightLeft -= pageHeight;
       }
       
@@ -155,6 +161,14 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
                   src="/lovable-uploads/027863c0-c46a-422a-84a8-7bf9c01dbfa6.png" 
                   alt="#بتاع_هدايا_الأصلى Logo" 
                   className="h-12 w-auto object-contain"
+                  loading="eager"
+                  crossOrigin="anonymous"
+                  width="48"
+                  height="48"
+                  onError={(e) => {
+                    console.log('Invoice logo error');
+                    e.currentTarget.style.display = 'none';
+                  }}
                 />
                 <div className="text-center">
                   <h1 className="text-lg font-bold text-gift-primary invoice-title">#بتاع_هدايا_الأصلى</h1>
@@ -317,6 +331,14 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
                 src="/lovable-uploads/027863c0-c46a-422a-84a8-7bf9c01dbfa6.png" 
                 alt="Logo" 
                 className="h-6 w-auto object-contain"
+                loading="eager"
+                crossOrigin="anonymous"
+                width="24"
+                height="24"
+                onError={(e) => {
+                  console.log('Footer logo error');
+                  e.currentTarget.style.display = 'none';
+                }}
               />
               <div>
                 <p className="text-xs font-bold text-gift-primary mb-1">شكراً لثقتكم في #بتاع_هدايا_الأصلى</p>

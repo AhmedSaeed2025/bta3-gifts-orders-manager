@@ -11,6 +11,15 @@ const Logo = () => {
             src="/lovable-uploads/027863c0-c46a-422a-84a8-7bf9c01dbfa6.png" 
             alt="#بتاع_هدايا_الأصلى Logo" 
             className="h-12 w-auto object-contain hover:scale-105 transition-transform duration-300 cursor-pointer rounded-lg shadow-sm"
+            loading="lazy"
+            decoding="async"
+            width="48"
+            height="48"
+            crossOrigin="anonymous"
+            onError={(e) => {
+              console.log('Logo load error:', e);
+              e.currentTarget.style.display = 'none';
+            }}
           />
           <div className="absolute inset-0 bg-gradient-to-r from-gift-primary/10 to-transparent rounded-lg opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
         </div>

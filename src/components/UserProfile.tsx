@@ -118,7 +118,15 @@ const UserProfile = () => {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={user.user_metadata.avatar_url} />
+            <AvatarImage 
+              src={user.user_metadata.avatar_url} 
+              loading="lazy"
+              crossOrigin="anonymous"
+              onError={(e) => {
+                console.log('Avatar load error');
+                e.currentTarget.style.display = 'none';
+              }}
+            />
             <AvatarFallback>
               <User className="h-4 w-4" />
             </AvatarFallback>

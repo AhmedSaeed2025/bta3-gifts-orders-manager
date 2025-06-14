@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@200;300;400;500;700;800;900&display=swap');
+
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -6,571 +7,247 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 240 10% 3.9%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 240 10% 3.9%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222.2 84% 4.9%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222.2 84% 4.9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 45%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 5.9% 10%;
     --radius: 0.5rem;
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    --gift-primary: 35 91% 55%;
-    --gift-primary-hover: 35 91% 45%;
-    --gift-secondary: 142 71% 45%;
-    --gift-secondary-hover: 142 71% 35%;
-    --gift-accent: 54 91% 95%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
-    --gift-primary: 35 91% 55%;
-    --gift-primary-hover: 35 91% 45%;
-    --gift-secondary: 142 71% 45%;
-    --gift-secondary-hover: 142 71% 35%;
-    --gift-accent: 54 20% 10%;
-  }
-
-  /* ألوان دافئة خاصة للموبايل */
-  @media (max-width: 768px) {
-    :root {
-      --background: 28 25% 97%;
-      --foreground: 25 15% 15%;
-      --card: 30 20% 98%;
-      --card-foreground: 25 15% 15%;
-      --popover: 30 20% 98%;
-      --popover-foreground: 25 15% 15%;
-      --primary: 20 85% 45%;
-      --primary-foreground: 30 25% 95%;
-      --secondary: 35 35% 88%;
-      --secondary-foreground: 25 15% 15%;
-      --muted: 35 25% 90%;
-      --muted-foreground: 25 8% 45%;
-      --accent: 35 30% 92%;
-      --accent-foreground: 25 15% 15%;
-      --destructive: 0 70% 55%;
-      --destructive-foreground: 30 25% 95%;
-      --border: 35 20% 85%;
-      --input: 35 20% 85%;
-      --ring: 20 85% 45%;
-      --gift-primary: 20 85% 50%;
-      --gift-primary-hover: 20 85% 40%;
-      --gift-secondary: 35 75% 45%;
-      --gift-secondary-hover: 35 75% 35%;
-      --gift-accent: 45 40% 92%;
-    }
-
-    .dark {
-      --background: 25 25% 8%;
-      --foreground: 35 20% 92%;
-      --card: 25 25% 10%;
-      --card-foreground: 35 20% 92%;
-      --popover: 25 25% 10%;
-      --popover-foreground: 35 20% 92%;
-      --primary: 35 20% 92%;
-      --primary-foreground: 25 25% 8%;
-      --secondary: 28 20% 18%;
-      --secondary-foreground: 35 20% 92%;
-      --muted: 28 20% 18%;
-      --muted-foreground: 35 12% 65%;
-      --accent: 28 20% 18%;
-      --accent-foreground: 35 20% 92%;
-      --destructive: 0 55% 35%;
-      --destructive-foreground: 35 20% 92%;
-      --border: 28 20% 18%;
-      --input: 28 20% 18%;
-      --ring: 35 80% 75%;
-      --gift-primary: 20 80% 55%;
-      --gift-primary-hover: 20 80% 45%;
-      --gift-secondary: 35 70% 50%;
-      --gift-secondary-hover: 35 70% 40%;
-      --gift-accent: 25 20% 12%;
-    }
   }
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-    font-family: 'Tajawal', sans-serif;
-    direction: rtl;
-  }
+* {
+  border-color: hsl(var(--border));
 }
 
-.rtl {
+body {
+  color: hsl(var(--foreground));
+  background: hsl(var(--background));
+  font-family: 'Tajawal', Arial, sans-serif;
   direction: rtl;
   text-align: right;
 }
 
-.ltr-numbers {
-  direction: ltr;
-  unicode-bidi: plaintext;
-  font-variant-numeric: tabular-nums;
+/* تحسين الأداء للصور */
+img {
+  will-change: auto;
+  image-rendering: optimizeQuality;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
-.gift-primary {
-  background-color: hsl(var(--gift-primary));
-}
-
-.gift-primary-hover {
-  background-color: hsl(var(--gift-primary-hover));
-}
-
-.gift-secondary {
-  background-color: hsl(var(--gift-secondary));
-}
-
-.gift-secondary-hover {
-  background-color: hsl(var(--gift-secondary-hover));
-}
-
-.gift-accent {
-  background-color: hsl(var(--gift-accent));
-}
-
-/* تحسينات للموبايل مع ألوان دافئة */
+/* تحسين للموبايل - ألوان دافئة */
 @media (max-width: 768px) {
-  /* إضافة خلفيات دافئة للموبايل */
   body {
-    background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(35 30% 95%) 100%);
-  }
-
-  .dark body {
-    background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(25 20% 12%) 100%);
-  }
-
-  /* تحسين ألوان الكروت */
-  .mobile-card {
-    background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(40 25% 96%) 100%);
-    border-color: hsl(35 25% 85%);
-    box-shadow: 0 2px 8px hsl(20 30% 70% / 0.1);
-  }
-
-  .dark .mobile-card {
-    background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(28 25% 12%) 100%);
-    border-color: hsl(28 25% 20%);
-    box-shadow: 0 2px 8px hsl(20 30% 10% / 0.3);
-  }
-
-  /* تحسين ألوان الأزرار */
-  .mobile-btn {
-    background: linear-gradient(135deg, hsl(20 80% 50%) 0%, hsl(25 75% 45%) 100%);
-    color: hsl(30 25% 95%);
-    border-color: hsl(20 70% 45%);
-    box-shadow: 0 2px 4px hsl(20 50% 40% / 0.2);
-  }
-
-  .mobile-btn:hover {
-    background: linear-gradient(135deg, hsl(20 80% 45%) 0%, hsl(25 75% 40%) 100%);
-    box-shadow: 0 4px 8px hsl(20 50% 40% / 0.3);
-  }
-
-  .dark .mobile-btn {
-    background: linear-gradient(135deg, hsl(20 70% 45%) 0%, hsl(25 65% 40%) 100%);
-    color: hsl(35 20% 90%);
-  }
-
-  /* تحسين ألوان الجداول */
-  .gift-table th {
-    background: linear-gradient(135deg, hsl(35 40% 90%) 0%, hsl(40 35% 88%) 100%);
-    color: hsl(25 15% 25%);
-    border-color: hsl(35 25% 80%);
-  }
-
-  .dark .gift-table th {
-    background: linear-gradient(135deg, hsl(28 25% 15%) 0%, hsl(30 20% 18%) 100%);
-    color: hsl(35 20% 85%);
-    border-color: hsl(28 20% 25%);
-  }
-
-  .gift-table td {
-    border-color: hsl(35 20% 85%);
-    background-color: hsl(40 25% 98%);
-  }
-
-  .dark .gift-table td {
-    border-color: hsl(28 20% 20%);
-    background-color: hsl(25 25% 10%);
-  }
-
-  /* تحسين ألوان التبويبات */
-  [data-state="active"] {
-    background: linear-gradient(135deg, hsl(20 85% 50%) 0%, hsl(25 80% 45%) 100%) !important;
-    color: hsl(30 25% 95%) !important;
-    box-shadow: 0 2px 6px hsl(20 50% 40% / 0.2);
-  }
-
-  .dark [data-state="active"] {
-    background: linear-gradient(135deg, hsl(20 75% 45%) 0%, hsl(25 70% 40%) 100%) !important;
-    color: hsl(35 20% 90%) !important;
-  }
-
-  .mobile-text-xs {
-    font-size: 0.6rem;
-    line-height: 0.8rem;
+    background: linear-gradient(135deg, #fef7f0 0%, #fff5ee 100%);
   }
   
-  .mobile-text-sm {
-    font-size: 0.7rem;
-    line-height: 0.9rem;
+  .bg-gift-accent {
+    background: linear-gradient(135deg, #fef7f0 0%, #fff5ee 100%) !important;
   }
   
-  .mobile-compact {
-    padding: 0.25rem;
-    margin: 0.125rem;
+  .bg-white {
+    background: #fefcfa !important;
   }
   
-  .tabs-mobile {
-    font-size: 0.65rem !important;
-    padding: 0.25rem 0.5rem !important;
-    height: 2rem !important;
-    background: linear-gradient(135deg, hsl(35 30% 92%) 0%, hsl(40 25% 90%) 100%);
-    border-color: hsl(35 25% 80%);
+  .mobile-warm-bg {
+    background: linear-gradient(135deg, #fef7f0 0%, #fff5ee 100%);
   }
-
-  .dark .tabs-mobile {
-    background: linear-gradient(135deg, hsl(28 20% 18%) 0%, hsl(30 25% 20%) 100%);
-    border-color: hsl(28 20% 25%);
+  
+  .mobile-warm-card {
+    background: #fefcfa;
+    border: 1px solid #f4e4d0;
+    box-shadow: 0 2px 8px rgba(218, 165, 132, 0.1);
   }
-
-  /* تحسينات الجداول للموبايل */
-  .gift-table {
-    font-size: 0.65rem !important;
-    min-width: 100%;
+  
+  .mobile-warm-button {
+    background: linear-gradient(135deg, #d4830f 0%, #ca7a0a 100%);
+    color: white;
+    border: none;
   }
-
-  .gift-table th,
-  .gift-table td {
-    padding: 0.2rem !important;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 80px;
-    font-size: 0.65rem !important;
+  
+  .mobile-warm-button:hover {
+    background: linear-gradient(135deg, #ca7a0a 0%, #b6690a 100%);
   }
-
-  .gift-table thead {
-    position: sticky;
-    top: 0;
-    z-index: 10;
+  
+  .mobile-warm-text {
+    color: #8b4513;
   }
-
-  /* تحسينات الكروت للموبايل */
-  .mobile-card {
-    padding: 0.4rem !important;
-    margin: 0.2rem 0 !important;
+  
+  .mobile-warm-border {
+    border-color: #e6d3c1;
   }
-
-  .mobile-card .card-header {
-    padding: 0.4rem !important;
+  
+  .mobile-warm-table-header {
+    background: linear-gradient(135deg, #f4e4d0 0%, #f0d8c0 100%);
+    color: #8b4513;
   }
-
-  .mobile-card .card-content {
-    padding: 0.4rem !important;
+  
+  .mobile-warm-table-row:nth-child(even) {
+    background: #fefcfa;
   }
-
-  /* تحسينات الأزرار للموبايل */
-  .mobile-btn {
-    font-size: 0.65rem !important;
-    padding: 0.2rem 0.4rem !important;
-    height: auto !important;
-    min-height: 1.8rem;
+  
+  .mobile-warm-table-row:nth-child(odd) {
+    background: #fef9f5;
   }
-
-  /* تحسينات النماذج للموبايل */
-  .mobile-form-grid {
-    grid-template-columns: 1fr !important;
-    gap: 0.4rem !important;
+  
+  .mobile-warm-tabs {
+    background: #fef7f0;
+    border-bottom: 2px solid #e6d3c1;
   }
-
-  .mobile-select,
-  .mobile-input {
-    font-size: 0.75rem !important;
-    padding: 0.4rem !important;
-    height: auto !important;
-    background: hsl(40 25% 97%);
-    border-color: hsl(35 25% 85%);
+  
+  .mobile-warm-tab-active {
+    background: linear-gradient(135deg, #d4830f 0%, #ca7a0a 100%);
+    color: white;
+    border-bottom: 3px solid #b6690a;
   }
-
-  .dark .mobile-select,
-  .dark .mobile-input {
-    background: hsl(25 25% 12%);
-    border-color: hsl(28 20% 20%);
+  
+  .mobile-warm-tab-inactive {
+    background: #f4e4d0;
+    color: #8b4513;
   }
-
-  /* تحسينات الجداول المتجاوبة */
-  .responsive-table-container {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    max-width: 100vw;
-    background: linear-gradient(135deg, hsl(40 25% 98%) 0%, hsl(35 30% 96%) 100%);
-    border-radius: 8px;
-    border: 1px solid hsl(35 25% 85%);
+  
+  .mobile-warm-summary-card {
+    background: linear-gradient(135deg, #fef7f0 0%, #fef2e8 100%);
+    border: 1px solid #e6d3c1;
+    box-shadow: 0 2px 6px rgba(218, 165, 132, 0.15);
   }
-
-  .dark .responsive-table-container {
-    background: linear-gradient(135deg, hsl(25 25% 10%) 0%, hsl(28 20% 12%) 100%);
-    border-color: hsl(28 20% 20%);
+  
+  .mobile-warm-summary-positive {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border-left: 4px solid #0ea5e9;
   }
-
-  .responsive-table {
-    min-width: 100%;
-    width: max-content;
-    font-size: 0.65rem;
+  
+  .mobile-warm-summary-negative {
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    border-left: 4px solid #ef4444;
   }
-
-  .responsive-table th,
-  .responsive-table td {
-    padding: 0.2rem 0.4rem;
-    white-space: nowrap;
-    font-size: 0.65rem;
-  }
-
-  .responsive-table th {
-    font-weight: 600;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-  }
-
-  /* تحسينات النصوص للموبايل */
-  body {
-    font-size: 0.75rem !important;
-  }
-
-  h1, h2, h3, h4, h5, h6 {
-    font-size: 0.8rem !important;
-    color: hsl(25 15% 20%);
-  }
-
-  .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
-    color: hsl(35 20% 85%);
-  }
-
-  .text-xs {
-    font-size: 0.6rem !important;
-  }
-
-  .text-sm {
-    font-size: 0.65rem !important;
-  }
-
-  .text-base {
-    font-size: 0.7rem !important;
-  }
-
-  .text-lg {
-    font-size: 0.75rem !important;
-  }
-
-  .text-xl {
-    font-size: 0.8rem !important;
+  
+  .mobile-warm-summary-neutral {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-left: 4px solid #64748b;
   }
 }
 
-/* تحسينات الطباعة للفاتورة */
+/* PDF styling improvements */
+.pdf-export {
+  background: white !important;
+  color: black !important;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.pdf-export img {
+  max-width: 100% !important;
+  height: auto !important;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+/* تحسين الطباعة */
 @media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
   body {
-    direction: rtl !important;
-    font-family: 'Tajawal', Arial, sans-serif !important;
     background: white !important;
-    font-size: 10px !important;
-    line-height: 1.2 !important;
+    color: black !important;
   }
   
-  .professional-invoice {
-    box-shadow: none !important;
-    border: none !important;
+  img {
     max-width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    font-size: 10px !important;
-  }
-  
-  .invoice-header {
-    font-size: 11px !important;
-  }
-  
-  .invoice-title {
-    font-size: 13px !important;
-  }
-  
-  .invoice-content {
-    font-size: 9px !important;
-  }
-  
-  .invoice-table {
-    font-size: 8px !important;
-  }
-  
-  .invoice-table th,
-  .invoice-table td {
-    padding: 2px 4px !important;
-    font-size: 8px !important;
-  }
-  
-  .invoice-summary {
-    font-size: 9px !important;
-  }
-  
-  .social-links a {
-    font-size: 7px !important;
+    height: auto !important;
+    page-break-inside: avoid;
   }
   
   .print\\:hidden {
     display: none !important;
   }
-  
-  .print\\:shadow-none {
-    box-shadow: none !important;
-  }
-  
-  .print\\:border-none {
-    border: none !important;
-  }
-  
-  .print\\:p-2 {
-    padding: 0.5rem !important;
-  }
-
-  /* تحسينات الموبايل للطباعة */
-  @media (max-width: 768px) {
-    .professional-invoice {
-      font-size: 8px !important;
-    }
-    
-    .invoice-header {
-      font-size: 9px !important;
-    }
-    
-    .invoice-title {
-      font-size: 11px !important;
-    }
-    
-    .invoice-content {
-      font-size: 7px !important;
-    }
-    
-    .invoice-table {
-      font-size: 6px !important;
-    }
-    
-    .invoice-table th,
-    .invoice-table td {
-      padding: 1px 2px !important;
-      font-size: 6px !important;
-    }
-    
-    .invoice-summary {
-      font-size: 7px !important;
-    }
-  }
 }
 
-/* تحسينات PDF */
-.pdf-export {
-  font-size: 10px !important;
-  line-height: 1.2 !important;
-  max-width: 794px !important;
-  margin: 0 auto !important;
+.printing-invoice {
+  background: white !important;
 }
 
-.pdf-export .invoice-header {
-  font-size: 11px !important;
+.printing-invoice * {
+  color: black !important;
+  background: white !important;
 }
 
-.pdf-export .invoice-title {
-  font-size: 13px !important;
+/* تحسين تحميل الصور */
+img[loading="lazy"] {
+  opacity: 0;
+  transition: opacity 0.3s;
 }
 
-.pdf-export .invoice-content {
-  font-size: 9px !important;
+img[loading="lazy"].loaded {
+  opacity: 1;
 }
 
-.pdf-export .invoice-table {
-  font-size: 8px !important;
+/* تحسين الأداء العام */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.pdf-export .invoice-table th,
-.pdf-export .invoice-table td {
-  padding: 2px 4px !important;
-  font-size: 8px !important;
+.container {
+  contain: layout style paint;
 }
 
-.pdf-export .invoice-summary {
-  font-size: 9px !important;
-}
-
-/* تحسينات PDF للموبايل */
-@media (max-width: 768px) {
-  .pdf-export {
-    font-size: 8px !important;
-  }
-  
-  .pdf-export .invoice-header {
-    font-size: 9px !important;
-  }
-  
-  .pdf-export .invoice-title {
-    font-size: 11px !important;
-  }
-  
-  .pdf-export .invoice-content {
-    font-size: 7px !important;
-  }
-  
-  .pdf-export .invoice-table {
-    font-size: 6px !important;
-  }
-  
-  .pdf-export .invoice-table th,
-  .pdf-export .invoice-table td {
-    padding: 1px 2px !important;
-    font-size: 6px !important;
-  }
-  
-  .pdf-export .invoice-summary {
-    font-size: 7px !important;
+/* تحسين للرسوم المتحركة */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
