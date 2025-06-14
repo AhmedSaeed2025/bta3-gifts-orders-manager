@@ -83,7 +83,7 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
           text-align: right !important;
         }
         .invoice-table th {
-          background-color: #2563eb !important;
+          background-color: #dc2626 !important;
           color: white !important;
           font-weight: bold !important;
         }
@@ -205,7 +205,7 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
               vertical-align: middle !important;
             }
             .invoice-table th {
-              background-color: #2563eb !important;
+              background-color: #dc2626 !important;
               color: white !important;
             }
           `;
@@ -267,11 +267,11 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
               row.style.transform = 'none';
               // تثبيت لون الخلفية حسب الصف
               if (row.querySelector('th')) {
-                row.style.backgroundColor = '#2563eb';
+                row.style.backgroundColor = '#dc2626';
                 const cells = row.querySelectorAll('th');
                 cells.forEach(cell => {
                   if (cell instanceof HTMLElement) {
-                    cell.style.backgroundColor = '#2563eb';
+                    cell.style.backgroundColor = '#dc2626';
                     cell.style.color = 'white';
                   }
                 });
@@ -483,7 +483,7 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
             </div>
           </div>
           
-          {/* Items Table - إزالة جميع hover effects */}
+          {/* Items Table - تغيير لون الهيدر إلى أحمر */}
           <div className={`${isMobile ? 'mb-2' : 'mb-4'}`}>
             <h3 className={`font-bold ${isMobile ? 'mb-2 text-[8px]' : 'mb-3 text-sm'} flex items-center gap-2 text-gift-primary`}>
               <FileText size={isMobile ? 8 : 14} /> تفاصيل الطلب
@@ -498,21 +498,21 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
               >
                 <TableHeader>
                   <TableRow 
-                    className="bg-gift-primary text-white"
+                    className="bg-red-600 text-white"
                     style={{ 
-                      backgroundColor: '#2563eb',
+                      backgroundColor: '#dc2626',
                       transition: 'none',
                       transform: 'none'
                     }}
                   >
-                    <TableHead className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} text-white font-bold text-right ${isMobile ? 'text-[7px]' : 'text-sm'} border border-white`} style={{ backgroundColor: '#2563eb', color: 'white' }}>المنتج</TableHead>
-                    <TableHead className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} text-white font-bold text-right ${isMobile ? 'text-[7px]' : 'text-sm'} border border-white`} style={{ backgroundColor: '#2563eb', color: 'white' }}>المقاس</TableHead>
-                    <TableHead className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} text-white font-bold text-right ${isMobile ? 'text-[7px]' : 'text-sm'} border border-white`} style={{ backgroundColor: '#2563eb', color: 'white' }}>العدد</TableHead>
-                    <TableHead className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} text-white font-bold text-right ${isMobile ? 'text-[7px]' : 'text-sm'} border border-white`} style={{ backgroundColor: '#2563eb', color: 'white' }}>السعر</TableHead>
+                    <TableHead className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} text-white font-bold text-right ${isMobile ? 'text-[7px]' : 'text-sm'} border border-white`} style={{ backgroundColor: '#dc2626', color: 'white' }}>المنتج</TableHead>
+                    <TableHead className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} text-white font-bold text-right ${isMobile ? 'text-[7px]' : 'text-sm'} border border-white`} style={{ backgroundColor: '#dc2626', color: 'white' }}>المقاس</TableHead>
+                    <TableHead className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} text-white font-bold text-right ${isMobile ? 'text-[7px]' : 'text-sm'} border border-white`} style={{ backgroundColor: '#dc2626', color: 'white' }}>العدد</TableHead>
+                    <TableHead className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} text-white font-bold text-right ${isMobile ? 'text-[7px]' : 'text-sm'} border border-white`} style={{ backgroundColor: '#dc2626', color: 'white' }}>السعر</TableHead>
                     {items.some(item => item.itemDiscount && item.itemDiscount > 0) && (
-                      <TableHead className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} text-white font-bold text-right ${isMobile ? 'text-[7px]' : 'text-sm'} border border-white`} style={{ backgroundColor: '#2563eb', color: 'white' }}>خصم</TableHead>
+                      <TableHead className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} text-white font-bold text-right ${isMobile ? 'text-[7px]' : 'text-sm'} border border-white`} style={{ backgroundColor: '#dc2626', color: 'white' }}>خصم</TableHead>
                     )}
-                    <TableHead className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} text-white font-bold text-right ${isMobile ? 'text-[7px]' : 'text-sm'} border border-white`} style={{ backgroundColor: '#2563eb', color: 'white' }}>الإجمالي</TableHead>
+                    <TableHead className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} text-white font-bold text-right ${isMobile ? 'text-[7px]' : 'text-sm'} border border-white`} style={{ backgroundColor: '#dc2626', color: 'white' }}>الإجمالي</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
