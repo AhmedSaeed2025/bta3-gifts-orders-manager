@@ -42,37 +42,36 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
     return null;
   }
 
-  const startEditing = (index: number) => {
+  const startEditing = (e: React.MouseEvent, index: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     console.log('Starting edit for index:', index);
     console.log('Item to edit:', items[index]);
     
     try {
-      setEditingIndex(index);
-      // تأكد من نسخ كامل للعنصر مع جميع الخصائص
-      const itemToEdit = {
-        productType: items[index].productType || "",
-        size: items[index].size || "",
-        quantity: items[index].quantity || 1,
-        cost: items[index].cost || 0,
-        price: items[index].price || 0,
-        profit: items[index].profit || 0,
-        itemDiscount: items[index].itemDiscount || 0
-      };
-      
+      const itemToEdit = { ...items[index] };
       console.log('Editing item:', itemToEdit);
+      setEditingIndex(index);
       setEditingItem(itemToEdit);
     } catch (error) {
       console.error('Error starting edit:', error);
     }
   };
 
-  const cancelEditing = () => {
+  const cancelEditing = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     console.log('Canceling edit');
     setEditingIndex(null);
     setEditingItem(null);
   };
 
-  const saveEdit = () => {
+  const saveEdit = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     console.log('Saving edit for index:', editingIndex);
     console.log('Editing item:', editingItem);
     
@@ -129,6 +128,12 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
     } catch (error) {
       console.error('Error updating editing item:', error);
     }
+  };
+
+  const handleRemoveItem = (e: React.MouseEvent, index: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onRemoveItem(index);
   };
 
   const availableProductTypes = products && products.length > 0 
@@ -282,6 +287,7 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
                               variant="default"
                               size="sm"
                               className={`${isMobile ? "h-6 w-6 p-0" : "h-8 w-8 p-0"}`}
+                              type="button"
                             >
                               <Check className={isMobile ? "h-2 w-2" : "h-4 w-4"} />
                             </Button>
@@ -290,6 +296,7 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
                               variant="outline"
                               size="sm"
                               className={`${isMobile ? "h-6 w-6 p-0" : "h-8 w-8 p-0"}`}
+                              type="button"
                             >
                               <X className={isMobile ? "h-2 w-2" : "h-4 w-4"} />
                             </Button>
@@ -298,19 +305,21 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
                           <>
                             {editMode && onUpdateItem && (
                               <Button
-                                onClick={() => startEditing(index)}
+                                onClick={(e) => startEditing(e, index)}
                                 variant="outline"
                                 size="sm"
                                 className={`${isMobile ? "h-6 w-6 p-0" : "h-8 w-8 p-0"}`}
+                                type="button"
                               >
                                 <Edit className={isMobile ? "h-2 w-2" : "h-4 w-4"} />
                               </Button>
                             )}
                             <Button
-                              onClick={() => onRemoveItem(index)}
+                              onClick={(e) => handleRemoveItem(e, index)}
                               variant="destructive"
                               size="sm"
                               className={`${isMobile ? "h-6 w-6 p-0" : "h-8 w-8 p-0"}`}
+                              type="button"
                             >
                               <Trash2 className={isMobile ? "h-2 w-2" : "h-4 w-4"} />
                             </Button>
