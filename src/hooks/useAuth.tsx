@@ -24,7 +24,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     let mounted = true;
     let syncTimeout: NodeJS.Timeout;
     
-    // Set up auth state listener with error handling
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         try {
@@ -34,33 +33,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setSession(session);
           setUser(session?.user ?? null);
           
-          // Clear any existing sync timeout
           if (syncTimeout) {
             clearTimeout(syncTimeout);
           }
           
-          // Only sync data on initial sign in, not on token refresh
           if (event === 'SIGNED_IN' && session?.user) {
-            // Delay sync to avoid loading conflicts
             syncTimeout = setTimeout(() => {
               if (mounted) {
                 syncAllData().catch(error => {
                   console.error('خطأ في مزامنة البيانات:', error);
-                  // Don't show error to user for sync issues
                 });
               }
-            }, 3000);
+            }, 2000);
           }
           
           setLoading(false);
         } catch (error) {
           console.error('خطأ في معالجة تغيير حالة المصادقة:', error);
-          setLoading(false);
+          if (mounted) {
+            setLoading(false);
+          }
         }
       }
     );
 
-    // Check for existing session with error handling
     supabase.auth.getSession()
       .then(({ data: { session }, error }) => {
         if (!mounted) return;
@@ -73,7 +69,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       })
       .catch(error => {
         console.error('خطأ في جلب الجلسة:', error);
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       });
 
     return () => {
@@ -91,10 +89,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       console.log('بدء مزامنة البيانات المحلية...');
       
-      await Promise.all([
-        syncOrders().catch(error => console.error('خطأ في مزامنة الطلبات:', error)),
-        syncProducts().catch(error => console.error('خطأ في مزامنة المنتجات:', error)),
-        syncProposedPrices().catch(error => console.error('خطأ في مزامنة الأسعار:', error))
+      await Promise.allSettled([
+        syncOrders(),
+        syncProducts(),
+        syncProposedPrices()
       ]);
       
       console.log('تمت مزامنة جميع البيانات بنجاح');

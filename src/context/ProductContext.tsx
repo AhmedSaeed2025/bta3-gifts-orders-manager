@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Product } from "@/types";
 import { toast } from "sonner";
@@ -40,7 +41,6 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
 
       if (error) {
         console.error('Error loading products:', error);
-        // Don't throw error, just log it
         setProducts([]);
         setLoading(false);
         return;
@@ -59,7 +59,6 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
       setProducts(formattedProducts);
     } catch (error) {
       console.error('Error loading products:', error);
-      // Don't show toast error to avoid spamming user
       setProducts([]);
     } finally {
       setLoading(false);
@@ -69,14 +68,16 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
   useEffect(() => {
     let mounted = true;
     
-    if (user && mounted) {
-      loadProducts().catch(error => {
-        console.error('خطأ في تحميل المنتجات:', error);
-      });
-    } else if (!user) {
-      setProducts([]);
-      setLoading(false);
-    }
+    const loadData = async () => {
+      if (user && mounted) {
+        await loadProducts();
+      } else if (!user) {
+        setProducts([]);
+        setLoading(false);
+      }
+    };
+
+    loadData();
 
     return () => {
       mounted = false;

@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Order, OrderStatus, OrderItem } from "@/types";
 import { toast } from "sonner";
@@ -42,7 +43,6 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
 
       if (error) {
         console.error('Error loading orders:', error);
-        // Don't throw error, just log it
         setOrders([]);
         setLoading(false);
         return;
@@ -77,7 +77,6 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
       setOrders(formattedOrders);
     } catch (error) {
       console.error('Error loading orders:', error);
-      // Don't show toast error to avoid spamming user
       setOrders([]);
     } finally {
       setLoading(false);
@@ -87,14 +86,16 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
   useEffect(() => {
     let mounted = true;
     
-    if (user && mounted) {
-      loadOrders().catch(error => {
-        console.error('خطأ في تحميل الطلبات:', error);
-      });
-    } else if (!user) {
-      setOrders([]);
-      setLoading(false);
-    }
+    const loadData = async () => {
+      if (user && mounted) {
+        await loadOrders();
+      } else if (!user) {
+        setOrders([]);
+        setLoading(false);
+      }
+    };
+
+    loadData();
 
     return () => {
       mounted = false;
