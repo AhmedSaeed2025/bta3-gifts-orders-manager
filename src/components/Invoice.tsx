@@ -1,3 +1,4 @@
+
 import React, { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -155,8 +156,9 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
       
       const element = printRef.current;
       
+      // تحسين إعدادات html2canvas خاصة للموبايل
       const canvas = await html2canvas(element, {
-        scale: 3,
+        scale: isMobile ? 2 : 3, // تقليل المقياس للموبايل لتحسين الأداء
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
@@ -166,6 +168,8 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
         removeContainer: true,
         width: element.offsetWidth,
         height: element.offsetHeight,
+        windowWidth: isMobile ? 375 : 1200, // تحديد عرض النافذة للموبايل
+        windowHeight: isMobile ? 667 : 800,
         onclone: (clonedDoc) => {
           const clonedElement = clonedDoc.querySelector('.professional-invoice') as HTMLElement;
           if (clonedElement) {
@@ -174,6 +178,9 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
             clonedElement.style.textAlign = 'right';
             clonedElement.style.lineHeight = '1.6';
             clonedElement.style.backgroundColor = 'white';
+            clonedElement.style.transform = 'none';
+            clonedElement.style.width = '100%';
+            clonedElement.style.maxWidth = 'none';
           }
           
           const images = clonedDoc.querySelectorAll('img');
@@ -193,6 +200,8 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
               (el.style as any)['-webkit-font-smoothing'] = 'antialiased';
               (el.style as any)['-moz-osx-font-smoothing'] = 'grayscale';
               (el.style as any)['text-rendering'] = 'optimizeLegibility';
+              // إزالة hover effects التي تسبب المشاكل
+              (el.style as any)['pointer-events'] = 'none';
             }
           });
           
@@ -207,9 +216,13 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
           tableCells.forEach((cell) => {
             if (cell instanceof HTMLElement) {
               cell.style.border = '1px solid #d1d5db';
-              cell.style.padding = '8px';
+              cell.style.padding = isMobile ? '4px' : '8px';
               cell.style.textAlign = 'right';
               cell.style.verticalAlign = 'middle';
+              cell.style.backgroundColor = 'white';
+              cell.style.color = 'black';
+              // منع hover effects
+              (cell.style as any)['pointer-events'] = 'none';
             }
           });
         }
@@ -229,9 +242,19 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
       const imgWidth = canvas.width;
       const imgHeight = canvas.height;
       
-      const ratio = Math.min((pdfWidth - 20) / imgWidth, (pdfHeight - 20) / imgHeight);
-      const finalWidth = imgWidth * ratio;
-      const finalHeight = imgHeight * ratio;
+      // تحسين حساب النسبة للموبايل
+      const maxWidth = pdfWidth - 20; // هامش 10mm من كل جانب
+      const maxHeight = pdfHeight - 20;
+      
+      let ratio = Math.min(maxWidth / (imgWidth * 0.75), maxHeight / (imgHeight * 0.75));
+      
+      // تحسين النسبة للموبايل
+      if (isMobile) {
+        ratio = Math.min(ratio * 1.2, maxWidth / (imgWidth * 0.6));
+      }
+      
+      const finalWidth = (imgWidth * 0.75) * ratio;
+      const finalHeight = (imgHeight * 0.75) * ratio;
       
       const x = (pdfWidth - finalWidth) / 2;
       const y = 10;
@@ -403,10 +426,48 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
                   {items.map((item, index) => {
                     const discountedPrice = item.price - (item.itemDiscount || 0);
                     return (
-                      <TableRow key={index} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
-                        <TableCell className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} font-medium ${isMobile ? 'text-[9px]' : 'text-sm'} border border-gray-300`}>{item.productType}</TableCell>
-                        <TableCell className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} ${isMobile ? 'text-[9px]' : 'text-sm'} border border-gray-300`}>{item.size}</TableCell>
-                        <TableCell className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} text-center font-bold ${isMobile ? 'text-[9px]' : 'text-sm'} border border-gray-300`}>{item.quantity}</TableCell>
+                      <TableRow 
+                        key={index} 
+                        className={`${index % 2 === 0 ? "bg-gray-50" : "bg-white"} invoice-row`}
+                        style={{ 
+                          backgroundColor: index % 2 === 0 ? "#f9fafb" : "white",
+                          transition: "none",
+                          pointerEvents: "none"
+                        }}
+                      >
+                        <TableCell 
+                          className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} font-medium ${isMobile ? 'text-[9px]' : 'text-sm'} border border-gray-300`}
+                          style={{ 
+                            backgroundColor: "inherit",
+                            color: "black",
+                            transition: "none",
+                            pointerEvents: "none"
+                          }}
+                        >
+                          {item.productType}
+                        </TableCell>
+                        <TableCell 
+                          className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} ${isMobile ? 'text-[9px]' : 'text-sm'} border border-gray-300`}
+                          style={{ 
+                            backgroundColor: "inherit",
+                            color: "black",
+                            transition: "none",
+                            pointerEvents: "none"
+                          }}
+                        >
+                          {item.size}
+                        </TableCell>
+                        <TableCell 
+                          className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} text-center font-bold ${isMobile ? 'text-[9px]' : 'text-sm'} border border-gray-300`}
+                          style={{ 
+                            backgroundColor: "inherit",
+                            color: "black",
+                            transition: "none",
+                            pointerEvents: "none"
+                          }}
+                        >
+                          {item.quantity}
+                        </TableCell>
                         <TableCell className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} ${isMobile ? 'text-[9px]' : 'text-sm'} border border-gray-300`}>{formatCurrency(item.price)}</TableCell>
                         {items.some(item => item.itemDiscount && item.itemDiscount > 0) && (
                           <TableCell className={`${isMobile ? 'py-1 px-1' : 'py-2 px-3'} ${isMobile ? 'text-[9px]' : 'text-sm'} text-red-600 border border-gray-300`}>
