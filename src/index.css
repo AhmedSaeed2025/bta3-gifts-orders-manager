@@ -79,6 +79,19 @@ img {
   image-rendering: optimizeQuality;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
+  content-visibility: auto;
+  contain-intrinsic-size: 48px 48px;
+}
+
+/* تحسين تحميل الصور */
+img[loading="lazy"] {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+img[loading="lazy"].loaded,
+img[loading="eager"] {
+  opacity: 1;
 }
 
 /* تحسين للموبايل - ألوان دافئة */
@@ -187,6 +200,9 @@ img {
   height: auto !important;
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: inline-block !important;
 }
 
 /* تحسين الطباعة */
@@ -205,6 +221,9 @@ img {
     max-width: 100% !important;
     height: auto !important;
     page-break-inside: avoid;
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: inline-block !important;
   }
   
   .print\\:hidden {
@@ -221,14 +240,10 @@ img {
   background: white !important;
 }
 
-/* تحسين تحميل الصور */
-img[loading="lazy"] {
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-img[loading="lazy"].loaded {
-  opacity: 1;
+.printing-invoice img {
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: inline-block !important;
 }
 
 /* تحسين الأداء العام */
@@ -250,4 +265,26 @@ img[loading="lazy"].loaded {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+  
+  img {
+    transition: none !important;
+  }
+}
+
+/* تحسين تحميل الصفحة */
+.page-transition {
+  opacity: 0;
+  animation: pageLoad 0.3s ease-in-out forwards;
+}
+
+@keyframes pageLoad {
+  to {
+    opacity: 1;
+  }
+}
+
+/* تحسين الذاكرة */
+.lazy-container {
+  content-visibility: auto;
+  contain-intrinsic-size: 200px;
 }

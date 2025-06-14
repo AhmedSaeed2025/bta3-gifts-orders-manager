@@ -77,25 +77,28 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
     try {
       toast.info("جاري إنشاء ملف PDF...");
       
-      // تحسين إعدادات PDF
+      // تحسين إعدادات PDF للحجم والجودة
       const element = printRef.current;
       element.classList.add('pdf-export');
       
-      // تحسين جودة الصورة للPDF
+      // تقليل دقة الصورة لتقليل الحجم
       const canvas = await html2canvas(element, {
-        scale: 1.2, // تقليل الدقة لتقليل الحجم
+        scale: 1, // تقليل الدقة
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
         allowTaint: false,
         foreignObjectRendering: false,
-        imageTimeout: 5000,
+        imageTimeout: 3000,
         removeContainer: true,
+        width: element.offsetWidth,
+        height: element.offsetHeight,
       });
       
       element.classList.remove('pdf-export');
       
-      const imgData = canvas.toDataURL('image/jpeg', 0.8); // استخدام JPEG بجودة مضغوطة
+      // استخدام JPEG بدلاً من PNG لتقليل الحجم
+      const imgData = canvas.toDataURL('image/jpeg', 0.7); // جودة 70%
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
@@ -111,13 +114,13 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
       let position = 0;
 
       // إضافة الصورة للPDF
-      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'MEDIUM');
+      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
       heightLeft -= pageHeight;
 
       while (heightLeft > 0) {
         position = heightLeft - imgHeight;
         pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'MEDIUM');
+        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
         heightLeft -= pageHeight;
       }
       
@@ -165,9 +168,15 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
                   crossOrigin="anonymous"
                   width="48"
                   height="48"
+                  onLoad={(e) => {
+                    console.log('Invoice logo loaded successfully');
+                  }}
                   onError={(e) => {
-                    console.log('Invoice logo error');
-                    e.currentTarget.style.display = 'none';
+                    console.log('Invoice logo error, trying alternative');
+                    const target = e.currentTarget;
+                    // محاولة تحميل الصورة بدون crossOrigin
+                    target.crossOrigin = '';
+                    target.src = target.src + '?t=' + Date.now();
                   }}
                 />
                 <div className="text-center">
@@ -335,9 +344,14 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
                 crossOrigin="anonymous"
                 width="24"
                 height="24"
+                onLoad={(e) => {
+                  console.log('Footer logo loaded successfully');
+                }}
                 onError={(e) => {
-                  console.log('Footer logo error');
-                  e.currentTarget.style.display = 'none';
+                  console.log('Footer logo error, trying alternative');
+                  const target = e.currentTarget;
+                  target.crossOrigin = '';
+                  target.src = target.src + '?t=' + Date.now();
                 }}
               />
               <div>
