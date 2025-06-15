@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,7 +28,7 @@ interface FormData {
 }
 
 const CheckoutPage = () => {
-  const { cart, clearCart } = useCart();
+  const { cartItems, clearCart } = useCart();
   const { saveOrder } = useSupabaseOrders();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -54,7 +55,7 @@ const CheckoutPage = () => {
     "قنا", "شمال سيناء", "سوهاج"
   ];
 
-  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const total = subtotal + shippingCost - formData.discount - formData.deposit;
 
   useEffect(() => {
@@ -106,7 +107,7 @@ const CheckoutPage = () => {
       return;
     }
 
-    if (cart.length === 0) {
+    if (cartItems.length === 0) {
       toast.error("السلة فارغة");
       return;
     }
@@ -116,13 +117,13 @@ const CheckoutPage = () => {
     try {
       const serial = await generateSerial();
       
-      const orderItems: OrderItem[] = cart.map(item => ({
-        productType: item.productType,
+      const orderItems: OrderItem[] = cartItems.map(item => ({
+        productType: item.product?.name || 'Unknown Product',
         size: item.size,
         quantity: item.quantity,
-        cost: item.cost,
+        cost: 0, // We don't have cost data in cart items
         price: item.price,
-        profit: (item.price - item.cost) * item.quantity,
+        profit: 0, // Will be calculated later
         itemDiscount: 0
       }));
 
@@ -206,7 +207,7 @@ const CheckoutPage = () => {
 
       clearCart();
       toast.success("تم إنشاء الطلب بنجاح!");
-      navigate(`/order/${savedOrder.serial}`);
+      navigate(`/track/${savedOrder.serial}`);
       
     } catch (error) {
       console.error("Error creating order:", error);
@@ -216,7 +217,7 @@ const CheckoutPage = () => {
     }
   };
 
-  if (cart.length === 0) {
+  if (cartItems.length === 0) {
     return (
       <div className="min-h-screen bg-gift-accent dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center p-8">
@@ -361,10 +362,10 @@ const CheckoutPage = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {cart.map((item, index) => (
+                {cartItems.map((item, index) => (
                   <div key={index} className="flex justify-between items-center py-2 border-b">
                     <div>
-                      <p className="font-medium">{item.productType}</p>
+                      <p className="font-medium">{item.product?.name || 'Unknown Product'}</p>
                       <p className="text-sm text-gray-600">المقاس: {item.size} | الكمية: {item.quantity}</p>
                     </div>
                     <p className="font-bold">{formatCurrency(item.price * item.quantity)}</p>
