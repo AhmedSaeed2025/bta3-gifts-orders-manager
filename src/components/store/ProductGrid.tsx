@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
@@ -19,17 +18,7 @@ const ProductGrid = ({ products, isLoading }: ProductGridProps) => {
   const handleAddToCart = (product: any, size: any) => {
     const discountedPrice = size.price * (1 - (product.discount_percentage || 0) / 100);
     
-    addToCart({
-      id: `${product.id}-${size.id}`,
-      productId: product.id,
-      name: product.name,
-      size: size.size,
-      price: discountedPrice,
-      originalPrice: size.price,
-      discount: product.discount_percentage || 0,
-      image: product.image_url,
-      quantity: 1
-    });
+    addToCart(product.id, size.size, 1, discountedPrice);
     
     toast.success('تم إضافة المنتج للسلة');
   };

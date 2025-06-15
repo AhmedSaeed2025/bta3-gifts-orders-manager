@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -538,7 +537,7 @@ const AdminProducts = () => {
                           alt={product.name}
                           className="w-20 h-20 object-cover rounded"
                         />
-                        {product.discount_percentage > 0 && (
+                        {(product.discount_percentage || 0) > 0 && (
                           <Badge className="absolute -top-2 -right-2 bg-red-500">
                             -{product.discount_percentage}%
                           </Badge>
@@ -553,7 +552,7 @@ const AdminProducts = () => {
                         {product.categories && (
                           <Badge variant="outline">{product.categories.name}</Badge>
                         )}
-                        {product.discount_percentage > 0 && (
+                        {(product.discount_percentage || 0) > 0 && (
                           <Badge className="bg-red-500">خصم {product.discount_percentage}%</Badge>
                         )}
                       </div>
@@ -565,11 +564,11 @@ const AdminProducts = () => {
                       {product.product_sizes?.length > 0 && (
                         <div className="flex flex-wrap gap-2 mb-2">
                           {product.product_sizes.map((size: any, index: number) => {
-                            const discountedPrice = size.price * (1 - (product.discount_percentage || 0) / 100);
+                            const discountedPrice = size.price * (1 - ((product.discount_percentage || 0) / 100));
                             return (
                               <Badge key={index} variant="outline" className="text-xs">
                                 {size.size}: 
-                                {product.discount_percentage > 0 ? (
+                                {(product.discount_percentage || 0) > 0 ? (
                                   <>
                                     <span className="line-through text-red-500 ml-1">{size.price}</span>
                                     <span className="text-green-600 mr-1">{discountedPrice.toFixed(2)}</span>

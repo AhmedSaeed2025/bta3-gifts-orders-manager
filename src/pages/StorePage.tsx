@@ -93,7 +93,7 @@ const StorePage = () => {
         
         <ProductGrid 
           products={products || []} 
-          categories={categories || []} 
+          isLoading={productsLoading}
         />
       </main>
       <StoreFooter storeSettings={storeSettings} />
