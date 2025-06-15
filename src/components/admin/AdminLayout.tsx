@@ -12,7 +12,10 @@ import {
   Settings, 
   BarChart3,
   LogOut,
-  Loader2
+  Loader2,
+  Store,
+  User,
+  ArrowLeft
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -92,9 +95,32 @@ const AdminLayout = () => {
     <div className="min-h-screen bg-background flex" dir="rtl">
       {/* Sidebar */}
       <aside className="w-64 bg-card border-r flex flex-col">
+        {/* Header with Navigation Icons */}
         <div className="p-6 border-b">
-          <h1 className="text-xl font-bold">لوحة تحكم الأدمن</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <h1 className="text-xl font-bold mb-3">لوحة تحكم الأدمن</h1>
+          
+          {/* Quick Navigation Icons */}
+          <div className="flex items-center gap-2 mb-3">
+            <Link 
+              to="/" 
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary transition-colors"
+              title="العودة للمتجر"
+            >
+              <Store className="h-4 w-4" />
+              <span className="text-sm font-medium">المتجر</span>
+            </Link>
+            
+            <Link 
+              to="/profile" 
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors"
+              title="الملف الشخصي"
+            >
+              <User className="h-4 w-4" />
+              <span className="text-sm font-medium">الحساب</span>
+            </Link>
+          </div>
+          
+          <p className="text-sm text-muted-foreground">
             {user.email}
           </p>
         </div>
@@ -128,16 +154,21 @@ const AdminLayout = () => {
         <div className="p-4 border-t">
           <Button 
             variant="ghost" 
-            className="w-full justify-start gap-3"
+            className="w-full justify-start gap-3 mb-3"
             onClick={() => signOut()}
           >
             <LogOut className="h-4 w-4" />
             تسجيل الخروج
           </Button>
           
-          <div className="mt-4 pt-4 border-t">
-            <Link to="/" className="text-sm text-muted-foreground hover:text-primary">
-              ← العودة للمتجر
+          {/* Enhanced Return to Store Link */}
+          <div className="pt-3 border-t">
+            <Link 
+              to="/" 
+              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors p-2 rounded-lg hover:bg-muted"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              العودة للمتجر الرئيسي
             </Link>
           </div>
         </div>
