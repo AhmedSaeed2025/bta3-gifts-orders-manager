@@ -47,7 +47,8 @@ const AdminSettings = () => {
     secondary_color: '',
     accent_color: '',
     text_color: '',
-    show_prices: true,
+    show_product_prices: true,
+    show_product_sizes: true,
     show_out_of_stock: false,
     enable_dark_mode: true,
     
@@ -166,7 +167,8 @@ const AdminSettings = () => {
         secondary_color: storeSettings.secondary_color || '#059669',
         accent_color: storeSettings.accent_color || '#F59E0B',
         text_color: storeSettings.text_color || '#1F2937',
-        show_prices: storeSettings.show_prices !== false,
+        show_product_prices: storeSettings.show_product_prices !== false,
+        show_product_sizes: storeSettings.show_product_sizes !== false,
         show_out_of_stock: storeSettings.show_out_of_stock || false,
         enable_dark_mode: storeSettings.enable_dark_mode !== false,
         free_shipping_enabled: storeSettings.free_shipping_enabled || false,
@@ -240,6 +242,7 @@ const AdminSettings = () => {
       queryClient.invalidateQueries({ queryKey: ['store-settings-admin'] });
       queryClient.invalidateQueries({ queryKey: ['store-settings'] });
       queryClient.invalidateQueries({ queryKey: ['store-settings-return-policy'] });
+      queryClient.invalidateQueries({ queryKey: ['store-settings-display'] });
     },
     onError: (error) => {
       console.error('Error saving settings:', error);

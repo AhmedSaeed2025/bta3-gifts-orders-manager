@@ -280,6 +280,7 @@ export type Database = {
           delivery_method: string
           deposit: number | null
           discount: number | null
+          email: string | null
           governorate: string | null
           id: string
           notes: string | null
@@ -301,6 +302,7 @@ export type Database = {
           delivery_method: string
           deposit?: number | null
           discount?: number | null
+          email?: string | null
           governorate?: string | null
           id?: string
           notes?: string | null
@@ -322,6 +324,7 @@ export type Database = {
           delivery_method?: string
           deposit?: number | null
           discount?: number | null
+          email?: string | null
           governorate?: string | null
           id?: string
           notes?: string | null
@@ -555,6 +558,8 @@ export type Database = {
           shipping_policy: string | null
           show_out_of_stock: boolean | null
           show_prices: boolean | null
+          show_product_prices: boolean | null
+          show_product_sizes: boolean | null
           store_name: string
           store_tagline: string | null
           terms_conditions: string | null
@@ -601,6 +606,8 @@ export type Database = {
           shipping_policy?: string | null
           show_out_of_stock?: boolean | null
           show_prices?: boolean | null
+          show_product_prices?: boolean | null
+          show_product_sizes?: boolean | null
           store_name?: string
           store_tagline?: string | null
           terms_conditions?: string | null
@@ -647,6 +654,8 @@ export type Database = {
           shipping_policy?: string | null
           show_out_of_stock?: boolean | null
           show_prices?: boolean | null
+          show_product_prices?: boolean | null
+          show_product_sizes?: boolean | null
           store_name?: string
           store_tagline?: string | null
           terms_conditions?: string | null

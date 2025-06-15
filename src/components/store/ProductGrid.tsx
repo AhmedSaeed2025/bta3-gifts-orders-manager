@@ -9,6 +9,8 @@ import { useCart } from '@/hooks/useCart';
 import { toast } from 'sonner';
 import { ShoppingCart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ProductGridProps {
   products: any[];
@@ -19,6 +21,24 @@ const ProductGrid = ({ products, isLoading }: ProductGridProps) => {
   const { addToCart, clearCart } = useCart();
   const [selectedSizes, setSelectedSizes] = useState<{ [productId: string]: string }>({});
   const navigate = useNavigate();
+
+  // Fetch store settings to check display preferences
+  const { data: storeSettings } = useQuery({
+    queryKey: ['store-settings-display'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('store_settings')
+        .select('show_product_prices, show_product_sizes')
+        .eq('is_active', true)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching store settings:', error);
+      }
+      
+      return data || { show_product_prices: true, show_product_sizes: true };
+    }
+  });
 
   const handleSizeChange = (productId: string, size: string) => {
     setSelectedSizes(prev => ({
@@ -61,7 +81,7 @@ const ProductGrid = ({ products, isLoading }: ProductGridProps) => {
         <Card key={product.id} className="group hover:shadow-lg transition-shadow">
           <div className="relative">
             <img
-              src={product.product_images?.[0]?.url}
+              src={product.product_images?.[0]?.image_url || product.product_images?.[0]?.url || product.image_url || '/placeholder.svg'}
               alt={product.name}
               className="w-full h-64 object-cover rounded-t-md"
             />
@@ -76,25 +96,28 @@ const ProductGrid = ({ products, isLoading }: ProductGridProps) => {
 
             {/* Size and Price Selection */}
             {product.product_sizes && product.product_sizes.length > 0 && (
-              <div className="space-y-3">
-                <div>
-                  <Label className="text-sm font-medium">المقاس:</Label>
-                  <Select
-                    value={selectedSizes[product.id] || ''}
-                    onValueChange={(size) => handleSizeChange(product.id, size)}
-                  >
-                    <SelectTrigger className="w-full mt-1">
-                      <SelectValue placeholder="اختر المقاس" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {product.product_sizes.map((sizeOption: any) => (
-                        <SelectItem key={sizeOption.id} value={sizeOption.size}>
-                          {sizeOption.size} - {formatCurrency(sizeOption.price)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-3 mt-4">
+                {storeSettings?.show_product_sizes !== false && (
+                  <div>
+                    <Label className="text-sm font-medium">المقاس:</Label>
+                    <Select
+                      value={selectedSizes[product.id] || ''}
+                      onValueChange={(size) => handleSizeChange(product.id, size)}
+                    >
+                      <SelectTrigger className="w-full mt-1">
+                        <SelectValue placeholder="اختر المقاس" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {product.product_sizes.map((sizeOption: any) => (
+                          <SelectItem key={sizeOption.id} value={sizeOption.size}>
+                            {sizeOption.size}
+                            {storeSettings?.show_product_prices !== false && ` - ${formatCurrency(sizeOption.price)}`}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
 
                 {selectedSizes[product.id] && (
                   <div className="flex flex-col gap-2">
@@ -124,6 +147,13 @@ const ProductGrid = ({ products, isLoading }: ProductGridProps) => {
                       <ShoppingCart className="h-4 w-4 mr-2" />
                       أضف للسلة
                     </Button>
+                  </div>
+                )}
+
+                {/* Show price even without size selection if there's only one size or if price display is enabled */}
+                {!selectedSizes[product.id] && storeSettings?.show_product_prices !== false && product.product_sizes?.length === 1 && (
+                  <div className="text-lg font-bold text-primary">
+                    {formatCurrency(product.product_sizes[0].price)}
                   </div>
                 )}
               </div>

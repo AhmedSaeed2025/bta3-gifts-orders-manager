@@ -143,8 +143,8 @@ const OrderPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.clientName || !formData.phone || !formData.paymentMethod || !formData.deliveryMethod) {
-      toast.error("يرجى ملء جميع الحقول المطلوبة");
+    if (!formData.clientName || (!formData.phone && !formData.email) || !formData.paymentMethod || !formData.deliveryMethod) {
+      toast.error("يرجى ملء الاسم وطريقة التواصل (هاتف أو إيميل) وطريقة الدفع والاستلام");
       return;
     }
 
@@ -197,7 +197,8 @@ const OrderPage = () => {
           serial,
           payment_method: formData.paymentMethod,
           client_name: formData.clientName,
-          phone: formData.phone,
+          phone: formData.phone || null,
+          email: formData.email || null,
           delivery_method: formData.deliveryMethod,
           address: formData.address,
           governorate: formData.governorate,
@@ -303,12 +304,12 @@ const OrderPage = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="phone">رقم الهاتف *</Label>
+                    <Label htmlFor="phone">رقم الهاتف</Label>
                     <Input
                       id="phone"
                       value={formData.phone}
                       onChange={(e) => handleInputChange('phone', e.target.value)}
-                      required
+                      placeholder="اختياري - يمكن استخدام الإيميل بدلاً منه"
                     />
                   </div>
 
@@ -319,10 +320,20 @@ const OrderPage = () => {
                       type="email"
                       value={formData.email}
                       onChange={(e) => handleInputChange('email', e.target.value)}
+                      placeholder="اختياري - يمكن استخدام الهاتف بدلاً منه"
                       disabled={!!user}
                     />
                   </div>
                 </div>
+
+                {!formData.phone && !formData.email && (
+                  <Alert className="border-amber-200 bg-amber-50">
+                    <Info className="h-4 w-4 text-amber-600" />
+                    <AlertDescription className="text-amber-800">
+                      يجب ملء رقم الهاتف أو البريد الإلكتروني على الأقل للتواصل معك
+                    </AlertDescription>
+                  </Alert>
+                )}
 
                 <div className="space-y-2">
                   <Label htmlFor="paymentMethod">طريقة الدفع *</Label>
