@@ -21,21 +21,21 @@ const StoreFooter = ({ storeSettings }: StoreFooterProps) => {
   ].filter(link => link.url); // Only show links that have URLs
 
   return (
-    <footer className={`border-t mt-8 md:mt-16 ${isMobile ? 'mobile-warm-bg mobile-warm-border' : 'bg-muted/50'}`}>
-      <div className={`container mx-auto px-2 md:px-4 py-6 md:py-12 ${isMobile ? 'max-w-full' : ''}`}>
-        <div className={`grid gap-6 md:gap-8 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4'}`}>
+    <footer className={`border-t mt-6 md:mt-16 ${isMobile ? 'mobile-warm-bg mobile-warm-border' : 'bg-muted/50'}`}>
+      <div className={`container mx-auto px-2 md:px-4 py-4 md:py-12 ${isMobile ? 'max-w-full' : ''}`}>
+        <div className={`grid gap-4 md:gap-8 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4'}`}>
           {/* Store Info */}
           <div className={isMobile ? 'text-center' : ''}>
-            <h3 className={`font-bold mb-3 md:mb-4 ${isMobile ? 'text-base mobile-warm-text' : 'text-lg'}`}>
+            <h3 className={`font-bold mb-2 md:mb-4 ${isMobile ? 'text-sm mobile-warm-text' : 'text-lg'}`}>
               {storeSettings?.store_name || 'متجري الإلكتروني'}
             </h3>
-            <p className={`text-muted-foreground mb-3 md:mb-4 ${isMobile ? 'text-sm mobile-warm-text leading-relaxed' : ''}`}>
+            <p className={`text-muted-foreground mb-2 md:mb-4 ${isMobile ? 'text-xs mobile-warm-text leading-relaxed' : ''}`}>
               {storeSettings?.about_us || 'متجرك الموثوق للتسوق الإلكتروني'}
             </p>
             
             {/* Social Media Links */}
             {socialLinks.length > 0 && (
-              <div className={`flex gap-3 flex-wrap ${isMobile ? 'justify-center' : ''}`}>
+              <div className={`flex gap-2 flex-wrap ${isMobile ? 'justify-center' : ''}`}>
                 {socialLinks.map((social, index) => {
                   const IconComponent = social.icon;
                   return (
@@ -47,7 +47,7 @@ const StoreFooter = ({ storeSettings }: StoreFooterProps) => {
                       className={`${social.color} hover:opacity-75 transition-opacity`}
                       aria-label={social.label}
                     >
-                      <IconComponent className={isMobile ? "h-5 w-5" : "h-6 w-6"} />
+                      <IconComponent className={isMobile ? "h-4 w-4" : "h-6 w-6"} />
                     </a>
                   );
                 })}
@@ -61,7 +61,7 @@ const StoreFooter = ({ storeSettings }: StoreFooterProps) => {
                     className="text-black hover:opacity-75 transition-opacity"
                     aria-label="تيك توك"
                   >
-                    <div className={`bg-black rounded flex items-center justify-center ${isMobile ? 'h-5 w-5' : 'h-6 w-6'}`}>
+                    <div className={`bg-black rounded flex items-center justify-center ${isMobile ? 'h-4 w-4' : 'h-6 w-6'}`}>
                       <span className={`text-white font-bold ${isMobile ? 'text-xs' : 'text-sm'}`}>T</span>
                     </div>
                   </a>
@@ -75,7 +75,7 @@ const StoreFooter = ({ storeSettings }: StoreFooterProps) => {
                     className="text-yellow-400 hover:opacity-75 transition-opacity"
                     aria-label="سناب شات"
                   >
-                    <div className={`bg-yellow-400 rounded flex items-center justify-center ${isMobile ? 'h-5 w-5' : 'h-6 w-6'}`}>
+                    <div className={`bg-yellow-400 rounded flex items-center justify-center ${isMobile ? 'h-4 w-4' : 'h-6 w-6'}`}>
                       <span className={`text-white font-bold ${isMobile ? 'text-xs' : 'text-sm'}`}>S</span>
                     </div>
                   </a>
@@ -84,7 +84,7 @@ const StoreFooter = ({ storeSettings }: StoreFooterProps) => {
             )}
           </div>
 
-          {/* Quick Links - مبسط للموبايل */}
+          {/* Quick Links - مخفي على الموبايل */}
           {!isMobile && (
             <>
               <div>
@@ -144,22 +144,22 @@ const StoreFooter = ({ storeSettings }: StoreFooterProps) => {
 
           {/* Contact Info */}
           <div className={isMobile ? 'text-center' : ''}>
-            <h3 className={`font-bold mb-3 md:mb-4 ${isMobile ? 'text-base mobile-warm-text' : 'text-lg'}`}>معلومات التواصل</h3>
-            <div className={`space-y-2 md:space-y-3 ${isMobile ? 'text-sm' : ''}`}>
+            <h3 className={`font-bold mb-2 md:mb-4 ${isMobile ? 'text-sm mobile-warm-text' : 'text-lg'}`}>معلومات التواصل</h3>
+            <div className={`space-y-1 md:space-y-3 ${isMobile ? 'text-xs' : ''}`}>
               {storeSettings?.contact_phone && (
-                <div className={`flex items-center gap-2 ${isMobile ? 'justify-center mobile-warm-text' : ''}`}>
+                <div className={`flex items-center gap-1 ${isMobile ? 'justify-center mobile-warm-text' : ''}`}>
                   <Phone className={`text-muted-foreground ${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
                   <span className="text-muted-foreground">{storeSettings.contact_phone}</span>
                 </div>
               )}
               {storeSettings?.contact_email && (
-                <div className={`flex items-center gap-2 ${isMobile ? 'justify-center mobile-warm-text' : ''}`}>
+                <div className={`flex items-center gap-1 ${isMobile ? 'justify-center mobile-warm-text' : ''}`}>
                   <Mail className={`text-muted-foreground ${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
                   <span className="text-muted-foreground">{storeSettings.contact_email}</span>
                 </div>
               )}
               {storeSettings?.address && (
-                <div className={`flex items-center gap-2 ${isMobile ? 'justify-center mobile-warm-text' : ''}`}>
+                <div className={`flex items-center gap-1 ${isMobile ? 'justify-center mobile-warm-text' : ''}`}>
                   <MapPin className={`text-muted-foreground ${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
                   <span className="text-muted-foreground">{storeSettings.address}</span>
                 </div>
@@ -170,8 +170,8 @@ const StoreFooter = ({ storeSettings }: StoreFooterProps) => {
 
         {/* Mobile Quick Links */}
         {isMobile && (
-          <div className="mt-6 pt-4 border-t mobile-warm-border">
-            <div className="grid grid-cols-2 gap-3 text-center text-sm">
+          <div className="mt-4 pt-3 border-t mobile-warm-border">
+            <div className="grid grid-cols-2 gap-2 text-center text-xs">
               <Link to="/track" className="mobile-warm-text hover:text-primary">
                 تتبع الطلب
               </Link>
@@ -188,7 +188,7 @@ const StoreFooter = ({ storeSettings }: StoreFooterProps) => {
           </div>
         )}
 
-        <div className={`border-t pt-4 md:pt-8 mt-4 md:mt-8 text-center text-muted-foreground ${isMobile ? 'mobile-warm-border text-xs mobile-warm-text' : ''}`}>
+        <div className={`border-t pt-3 md:pt-8 mt-3 md:mt-8 text-center text-muted-foreground ${isMobile ? 'mobile-warm-border text-xs mobile-warm-text' : ''}`}>
           <p>&copy; 2024 {storeSettings?.store_name || 'متجري الإلكتروني'}. جميع الحقوق محفوظة.</p>
         </div>
       </div>
