@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,34 +27,28 @@ const ProductGrid = ({ products, isLoading }: ProductGridProps) => {
     }));
   };
 
-  const handleAddToCart = (product: any, selectedSize: string, selectedPrice: number) => {
-    const cartItem = {
-      id: `${product.id}-${selectedSize}`,
-      product,
-      size: selectedSize,
-      price: selectedPrice,
-      quantity: 1
-    };
-    
-    addToCart(cartItem);
-    toast.success("تم إضافة المنتج إلى السلة");
+  const handleAddToCart = async (product: any, selectedSize: string, selectedPrice: number) => {
+    try {
+      await addToCart(product.id, selectedSize, 1, selectedPrice);
+      toast.success("تم إضافة المنتج إلى السلة");
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      toast.error("حدث خطأ في إضافة المنتج إلى السلة");
+    }
   };
 
-  const handleOrderNow = (product: any, selectedSize: string, selectedPrice: number) => {
-    const cartItem = {
-      id: `${product.id}-${selectedSize}`,
-      product,
-      size: selectedSize,
-      price: selectedPrice,
-      quantity: 1
-    };
-    
-    // Clear cart and add only this item
-    clearCart();
-    addToCart(cartItem);
-    
-    // Navigate to order page
-    navigate('/order');
+  const handleOrderNow = async (product: any, selectedSize: string, selectedPrice: number) => {
+    try {
+      // Clear cart and add only this item
+      await clearCart();
+      await addToCart(product.id, selectedSize, 1, selectedPrice);
+      
+      // Navigate to order page
+      navigate('/order');
+    } catch (error) {
+      console.error('Error processing order:', error);
+      toast.error("حدث خطأ في معالجة الطلب");
+    }
   };
 
   if (isLoading) {

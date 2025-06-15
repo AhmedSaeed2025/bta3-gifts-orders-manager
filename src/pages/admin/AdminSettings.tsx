@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -169,7 +170,7 @@ const AdminSettings = () => {
         show_out_of_stock: storeSettings.show_out_of_stock || false,
         enable_dark_mode: storeSettings.enable_dark_mode !== false,
         free_shipping_enabled: storeSettings.free_shipping_enabled || false,
-        default_shipping_cost: storeSettings.default_shipping_cost?.toString() || '',
+        default_shipping_cost: storeSettings.default_shipping_cost?.toString() || '0',
         free_shipping_threshold: storeSettings.free_shipping_threshold?.toString() || '',
         estimated_delivery_time: storeSettings.estimated_delivery_time || '',
         shipping_policy: storeSettings.shipping_policy || '',
@@ -190,14 +191,14 @@ const AdminSettings = () => {
         privacy_policy: storeSettings.privacy_policy || '',
         cookie_policy: storeSettings.cookie_policy || '',
         
-        // Add social media field mappings
-        facebook_url: storeSettings.facebook_url || '',
-        instagram_url: storeSettings.instagram_url || '',
-        twitter_url: storeSettings.twitter_url || '',
-        youtube_url: storeSettings.youtube_url || '',
-        linkedin_url: storeSettings.linkedin_url || '',
-        tiktok_url: storeSettings.tiktok_url || '',
-        snapchat_url: storeSettings.snapchat_url || ''
+        // Add social media field mappings with fallback for when they don't exist yet
+        facebook_url: (storeSettings as any).facebook_url || '',
+        instagram_url: (storeSettings as any).instagram_url || '',
+        twitter_url: (storeSettings as any).twitter_url || '',
+        youtube_url: (storeSettings as any).youtube_url || '',
+        linkedin_url: (storeSettings as any).linkedin_url || '',
+        tiktok_url: (storeSettings as any).tiktok_url || '',
+        snapchat_url: (storeSettings as any).snapchat_url || ''
       });
     }
   }, [storeSettings]);
