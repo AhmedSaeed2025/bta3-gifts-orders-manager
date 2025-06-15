@@ -6,11 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
-import { GripVertical, Save } from 'lucide-react';
+import { ArrowUp, ArrowDown, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
-import { OrderStatus, OrderStatusConfig, ORDER_STATUS_LABELS } from '@/types';
+import { OrderStatus, OrderStatusConfig } from '@/types';
 
 const OrderStatusSettings = () => {
   const { user } = useAuth();
@@ -34,20 +33,34 @@ const OrderStatusSettings = () => {
     setLoading(false);
   }, []);
 
-  const handleDragEnd = (result: DropResult) => {
-    if (!result.destination) return;
-
-    const items = Array.from(statusConfigs);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
-
+  const moveStatusUp = (index: number) => {
+    if (index === 0) return;
+    
+    const newConfigs = [...statusConfigs];
+    [newConfigs[index], newConfigs[index - 1]] = [newConfigs[index - 1], newConfigs[index]];
+    
     // Update order numbers
-    const updatedItems = items.map((item, index) => ({
-      ...item,
-      order: index + 1
+    const updatedConfigs = newConfigs.map((config, idx) => ({
+      ...config,
+      order: idx + 1
     }));
+    
+    setStatusConfigs(updatedConfigs);
+  };
 
-    setStatusConfigs(updatedItems);
+  const moveStatusDown = (index: number) => {
+    if (index === statusConfigs.length - 1) return;
+    
+    const newConfigs = [...statusConfigs];
+    [newConfigs[index], newConfigs[index + 1]] = [newConfigs[index + 1], newConfigs[index]];
+    
+    // Update order numbers
+    const updatedConfigs = newConfigs.map((config, idx) => ({
+      ...config,
+      order: idx + 1
+    }));
+    
+    setStatusConfigs(updatedConfigs);
   };
 
   const updateStatusLabel = (index: number, newLabel: string) => {
@@ -69,8 +82,6 @@ const OrderStatusSettings = () => {
         return;
       }
 
-      // For now, we'll save to localStorage since we don't have a dedicated table
-      // In production, you might want to create an order_status_configs table
       localStorage.setItem(`order_status_configs_${user.id}`, JSON.stringify(statusConfigs));
       
       toast.success('تم حفظ إعدادات حالات الطلبات بنجاح');
@@ -114,74 +125,68 @@ const OrderStatusSettings = () => {
           يمكنك ترتيب حالات الطلبات وتخصيص أسمائها حسب احتياجاتك
         </div>
 
-        <DragDropContext onDragEnd={handleDragEnd}>
-          <Droppable droppableId="status-configs">
-            {(provided) => (
-              <div
-                {...provided.droppableProps}
-                ref={provided.innerRef}
-                className="space-y-4"
-              >
-                {statusConfigs.map((config, index) => (
-                  <Draggable
-                    key={config.status}
-                    draggableId={config.status}
-                    index={index}
-                  >
-                    {(provided) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        className="flex items-center gap-4 p-4 border rounded-lg bg-background"
-                      >
-                        <div
-                          {...provided.dragHandleProps}
-                          className="text-muted-foreground hover:text-foreground"
-                        >
-                          <GripVertical className="h-5 w-5" />
-                        </div>
-
-                        <Badge className={`${getStatusColor(config.status)} text-white min-w-[80px] justify-center`}>
-                          {config.status}
-                        </Badge>
-
-                        <div className="flex-1 space-y-2">
-                          <Label htmlFor={`label-${config.status}`}>
-                            الاسم المعروض
-                          </Label>
-                          <Input
-                            id={`label-${config.status}`}
-                            value={config.label}
-                            onChange={(e) => updateStatusLabel(index, e.target.value)}
-                            placeholder="أدخل اسم الحالة"
-                          />
-                        </div>
-
-                        <div className="flex items-center space-x-2">
-                          <Switch
-                            checked={config.enabled}
-                            onCheckedChange={() => toggleStatusEnabled(index)}
-                          />
-                          <Label>مفعل</Label>
-                        </div>
-
-                        <div className="text-sm text-muted-foreground min-w-[60px]">
-                          الترتيب: {config.order}
-                        </div>
-                      </div>
-                    )}
-                  </Draggable>
-                ))}
-                {provided.placeholder}
+        <div className="space-y-4">
+          {statusConfigs.map((config, index) => (
+            <div
+              key={config.status}
+              className="flex items-center gap-4 p-4 border rounded-lg bg-background"
+            >
+              <div className="flex flex-col gap-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => moveStatusUp(index)}
+                  disabled={index === 0}
+                  className="h-8 w-8 p-0"
+                >
+                  <ArrowUp className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => moveStatusDown(index)}
+                  disabled={index === statusConfigs.length - 1}
+                  className="h-8 w-8 p-0"
+                >
+                  <ArrowDown className="h-4 w-4" />
+                </Button>
               </div>
-            )}
-          </Droppable>
-        </DragDropContext>
+
+              <Badge className={`${getStatusColor(config.status)} text-white min-w-[80px] justify-center`}>
+                {config.status}
+              </Badge>
+
+              <div className="flex-1 space-y-2">
+                <Label htmlFor={`label-${config.status}`}>
+                  الاسم المعروض
+                </Label>
+                <Input
+                  id={`label-${config.status}`}
+                  value={config.label}
+                  onChange={(e) => updateStatusLabel(index, e.target.value)}
+                  placeholder="أدخل اسم الحالة"
+                />
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={config.enabled}
+                  onCheckedChange={() => toggleStatusEnabled(index)}
+                />
+                <Label>مفعل</Label>
+              </div>
+
+              <div className="text-sm text-muted-foreground min-w-[60px]">
+                الترتيب: {config.order}
+              </div>
+            </div>
+          ))}
+        </div>
 
         <div className="p-4 bg-muted rounded-lg">
           <h4 className="font-medium mb-2">ملاحظات:</h4>
           <ul className="text-sm text-muted-foreground space-y-1">
-            <li>• يمكنك سحب وإفلات الحالات لإعادة ترتيبها</li>
+            <li>• يمكنك استخدام الأسهم لإعادة ترتيب الحالات</li>
             <li>• تأكد من تفعيل الحالات التي تريد استخدامها</li>
             <li>• الحالات المعطلة لن تظهر في قوائم الاختيار</li>
             <li>• حالة "ملغي" اختيارية ويمكن تعطيلها إذا لم تكن بحاجة إليها</li>
