@@ -520,60 +520,141 @@ export type Database = {
       store_settings: {
         Row: {
           about_us: string | null
+          accent_color: string | null
+          account_holder: string | null
+          account_number: string | null
           address: string | null
+          bank_name: string | null
+          bank_transfer: boolean | null
+          cash_on_delivery: boolean | null
           contact_email: string | null
           contact_phone: string | null
+          contact_phone_2: string | null
+          cookie_policy: string | null
           created_at: string
+          credit_cards: boolean | null
+          default_shipping_cost: number | null
+          enable_dark_mode: boolean | null
+          estimated_delivery_time: string | null
+          etisalat_flex: string | null
+          favicon_url: string | null
+          free_shipping_enabled: boolean | null
+          free_shipping_threshold: number | null
+          hero_banner_url: string | null
+          iban: string | null
           id: string
           is_active: boolean
           logo_url: string | null
+          mobile_wallets: boolean | null
+          orange_money: string | null
+          payment_instructions: string | null
           primary_color: string | null
           privacy_policy: string | null
           return_policy: string | null
           secondary_color: string | null
           shipping_policy: string | null
+          show_out_of_stock: boolean | null
+          show_prices: boolean | null
           store_name: string
+          store_tagline: string | null
           terms_conditions: string | null
+          text_color: string | null
           updated_at: string
           user_id: string
+          vodafone_cash: string | null
+          whatsapp_number: string | null
         }
         Insert: {
           about_us?: string | null
+          accent_color?: string | null
+          account_holder?: string | null
+          account_number?: string | null
           address?: string | null
+          bank_name?: string | null
+          bank_transfer?: boolean | null
+          cash_on_delivery?: boolean | null
           contact_email?: string | null
           contact_phone?: string | null
+          contact_phone_2?: string | null
+          cookie_policy?: string | null
           created_at?: string
+          credit_cards?: boolean | null
+          default_shipping_cost?: number | null
+          enable_dark_mode?: boolean | null
+          estimated_delivery_time?: string | null
+          etisalat_flex?: string | null
+          favicon_url?: string | null
+          free_shipping_enabled?: boolean | null
+          free_shipping_threshold?: number | null
+          hero_banner_url?: string | null
+          iban?: string | null
           id?: string
           is_active?: boolean
           logo_url?: string | null
+          mobile_wallets?: boolean | null
+          orange_money?: string | null
+          payment_instructions?: string | null
           primary_color?: string | null
           privacy_policy?: string | null
           return_policy?: string | null
           secondary_color?: string | null
           shipping_policy?: string | null
+          show_out_of_stock?: boolean | null
+          show_prices?: boolean | null
           store_name?: string
+          store_tagline?: string | null
           terms_conditions?: string | null
+          text_color?: string | null
           updated_at?: string
           user_id: string
+          vodafone_cash?: string | null
+          whatsapp_number?: string | null
         }
         Update: {
           about_us?: string | null
+          accent_color?: string | null
+          account_holder?: string | null
+          account_number?: string | null
           address?: string | null
+          bank_name?: string | null
+          bank_transfer?: boolean | null
+          cash_on_delivery?: boolean | null
           contact_email?: string | null
           contact_phone?: string | null
+          contact_phone_2?: string | null
+          cookie_policy?: string | null
           created_at?: string
+          credit_cards?: boolean | null
+          default_shipping_cost?: number | null
+          enable_dark_mode?: boolean | null
+          estimated_delivery_time?: string | null
+          etisalat_flex?: string | null
+          favicon_url?: string | null
+          free_shipping_enabled?: boolean | null
+          free_shipping_threshold?: number | null
+          hero_banner_url?: string | null
+          iban?: string | null
           id?: string
           is_active?: boolean
           logo_url?: string | null
+          mobile_wallets?: boolean | null
+          orange_money?: string | null
+          payment_instructions?: string | null
           primary_color?: string | null
           privacy_policy?: string | null
           return_policy?: string | null
           secondary_color?: string | null
           shipping_policy?: string | null
+          show_out_of_stock?: boolean | null
+          show_prices?: boolean | null
           store_name?: string
+          store_tagline?: string | null
           terms_conditions?: string | null
+          text_color?: string | null
           updated_at?: string
           user_id?: string
+          vodafone_cash?: string | null
+          whatsapp_number?: string | null
         }
         Relationships: []
       }
