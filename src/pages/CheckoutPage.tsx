@@ -143,6 +143,30 @@ const CheckoutPage = () => {
       const serial = await generateSerial();
       console.log('Generated serial:', serial);
       
+      // Handle image upload if exists
+      let attachedImageUrl = null;
+      if (formData.attachedImage) {
+        try {
+          const fileExt = formData.attachedImage.name.split('.').pop();
+          const fileName = `${user.id}/${serial}-${Date.now()}.${fileExt}`;
+          
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('order-attachments')
+            .upload(fileName, formData.attachedImage);
+
+          if (uploadError) {
+            console.error('Error uploading image:', uploadError);
+          } else {
+            const { data: { publicUrl } } = supabase.storage
+              .from('order-attachments')
+              .getPublicUrl(fileName);
+            attachedImageUrl = publicUrl;
+          }
+        } catch (uploadError) {
+          console.error('Error handling image upload:', uploadError);
+        }
+      }
+      
       // Save to orders table first
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
@@ -160,7 +184,9 @@ const CheckoutPage = () => {
           deposit: 0,
           total,
           profit: 0,
-          status: 'pending'
+          status: 'pending',
+          notes: formData.notes || null,
+          attached_image_url: attachedImageUrl
         })
         .select()
         .single();
@@ -172,7 +198,7 @@ const CheckoutPage = () => {
 
       console.log('Order inserted successfully:', orderData);
 
-      // Insert order items with notes
+      // Insert order items
       const orderItems = cartItems.map(item => ({
         order_id: orderData.id,
         product_type: item.product?.name || 'Unknown Product',
@@ -197,7 +223,7 @@ const CheckoutPage = () => {
 
       console.log('Order items inserted successfully');
 
-      // Save to admin orders table with notes
+      // Save to admin orders table with notes and image
       try {
         const { data: adminOrder, error: adminOrderError } = await supabase
           .from('admin_orders')
@@ -217,7 +243,9 @@ const CheckoutPage = () => {
             total_amount: total,
             profit: 0,
             status: 'pending',
-            order_date: new Date().toISOString()
+            order_date: new Date().toISOString(),
+            notes: formData.notes || null,
+            attached_image_url: attachedImageUrl
           })
           .select()
           .single();

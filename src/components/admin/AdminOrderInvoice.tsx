@@ -1,4 +1,3 @@
-
 import React, { useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -36,6 +35,8 @@ interface AdminOrder {
   profit: number;
   status: string;
   order_date: string;
+  notes?: string;
+  attached_image_url?: string;
   admin_order_items: AdminOrderItem[];
 }
 
@@ -140,6 +141,30 @@ const AdminOrderInvoice: React.FC<AdminOrderInvoiceProps> = ({ order, onClose })
             </div>
           </div>
         </div>
+
+        {/* Notes Section */}
+        {order.notes && (
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold mb-3 text-gray-800">ملاحظات العميل</h3>
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <p className="text-gray-700 whitespace-pre-wrap">{order.notes}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Attached Image Section */}
+        {order.attached_image_url && (
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold mb-3 text-gray-800">الصورة المرفقة</h3>
+            <div className="border border-gray-200 rounded-lg p-4 text-center">
+              <img
+                src={order.attached_image_url}
+                alt="الصورة المرفقة مع الطلب"
+                className="max-w-full h-auto max-h-64 mx-auto rounded border"
+              />
+            </div>
+          </div>
+        )}
 
         {/* Items Table */}
         <div className="mb-6">

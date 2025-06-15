@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,7 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/utils';
-import { Printer, Eye, Edit, Trash2, RefreshCw, Plus } from 'lucide-react';
+import { Printer, Eye, Edit, Trash2, RefreshCw, Plus, FileText, Image } from 'lucide-react';
 import AdminOrderInvoice from '@/components/admin/AdminOrderInvoice';
 
 interface AdminOrder {
@@ -32,6 +31,8 @@ interface AdminOrder {
   order_date: string;
   created_at: string;
   updated_at: string;
+  notes?: string;
+  attached_image_url?: string;
   admin_order_items: AdminOrderItem[];
 }
 
@@ -53,6 +54,10 @@ const AdminOrders = () => {
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null);
   const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
+  const [notesDialogOpen, setNotesDialogOpen] = useState(false);
+  const [imageDialogOpen, setImageDialogOpen] = useState(false);
+  const [selectedOrderForNotes, setSelectedOrderForNotes] = useState<AdminOrder | null>(null);
+  const [selectedOrderForImage, setSelectedOrderForImage] = useState<AdminOrder | null>(null);
 
   // Load orders from database
   const loadOrders = async () => {
@@ -170,6 +175,16 @@ const AdminOrders = () => {
     setInvoiceDialogOpen(true);
   };
 
+  const openNotesDialog = (order: AdminOrder) => {
+    setSelectedOrderForNotes(order);
+    setNotesDialogOpen(true);
+  };
+
+  const openImageDialog = (order: AdminOrder) => {
+    setSelectedOrderForImage(order);
+    setImageDialogOpen(true);
+  };
+
   if (loading) {
     return (
       <div className="p-6 space-y-6">
@@ -251,6 +266,7 @@ const AdminOrders = () => {
                     <TableHead className="text-right">المبلغ الإجمالي</TableHead>
                     <TableHead className="text-right">الحالة</TableHead>
                     <TableHead className="text-right">التاريخ</TableHead>
+                    <TableHead className="text-center">ملاحظات/صور</TableHead>
                     <TableHead className="text-center">الإجراءات</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -286,6 +302,30 @@ const AdminOrders = () => {
                       </TableCell>
                       <TableCell>
                         {new Date(order.order_date).toLocaleDateString('ar-EG')}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2 justify-center">
+                          {order.notes && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => openNotesDialog(order)}
+                              title="عرض الملاحظات"
+                            >
+                              <FileText className="h-4 w-4" />
+                            </Button>
+                          )}
+                          {order.attached_image_url && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => openImageDialog(order)}
+                              title="عرض الصورة المرفقة"
+                            >
+                              <Image className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -325,6 +365,40 @@ const AdminOrders = () => {
               order={selectedOrder}
               onClose={() => setInvoiceDialogOpen(false)}
             />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Notes Dialog */}
+      <Dialog open={notesDialogOpen} onOpenChange={setNotesDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>ملاحظات الطلب - {selectedOrderForNotes?.serial}</DialogTitle>
+          </DialogHeader>
+          {selectedOrderForNotes?.notes && (
+            <div className="p-4">
+              <div className="bg-gray-50 rounded-lg p-4">
+                <p className="text-sm whitespace-pre-wrap">{selectedOrderForNotes.notes}</p>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Image Dialog */}
+      <Dialog open={imageDialogOpen} onOpenChange={setImageDialogOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>الصورة المرفقة - {selectedOrderForImage?.serial}</DialogTitle>
+          </DialogHeader>
+          {selectedOrderForImage?.attached_image_url && (
+            <div className="p-4">
+              <img
+                src={selectedOrderForImage.attached_image_url}
+                alt="الصورة المرفقة مع الطلب"
+                className="w-full h-auto max-h-[70vh] object-contain rounded-lg border"
+              />
+            </div>
           )}
         </DialogContent>
       </Dialog>

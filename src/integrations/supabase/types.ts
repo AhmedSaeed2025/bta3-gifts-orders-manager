@@ -61,6 +61,7 @@ export type Database = {
       }
       admin_orders: {
         Row: {
+          attached_image_url: string | null
           created_at: string
           customer_email: string | null
           customer_name: string
@@ -70,6 +71,7 @@ export type Database = {
           discount: number | null
           governorate: string | null
           id: string
+          notes: string | null
           order_date: string
           payment_method: string
           profit: number | null
@@ -82,6 +84,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          attached_image_url?: string | null
           created_at?: string
           customer_email?: string | null
           customer_name: string
@@ -91,6 +94,7 @@ export type Database = {
           discount?: number | null
           governorate?: string | null
           id?: string
+          notes?: string | null
           order_date?: string
           payment_method: string
           profit?: number | null
@@ -103,6 +107,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          attached_image_url?: string | null
           created_at?: string
           customer_email?: string | null
           customer_name?: string
@@ -112,6 +117,7 @@ export type Database = {
           discount?: number | null
           governorate?: string | null
           id?: string
+          notes?: string | null
           order_date?: string
           payment_method?: string
           profit?: number | null
@@ -268,6 +274,7 @@ export type Database = {
       orders: {
         Row: {
           address: string | null
+          attached_image_url: string | null
           client_name: string
           date_created: string
           delivery_method: string
@@ -275,6 +282,7 @@ export type Database = {
           discount: number | null
           governorate: string | null
           id: string
+          notes: string | null
           payment_method: string
           phone: string
           profit: number
@@ -287,6 +295,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          attached_image_url?: string | null
           client_name: string
           date_created?: string
           delivery_method: string
@@ -294,6 +303,7 @@ export type Database = {
           discount?: number | null
           governorate?: string | null
           id?: string
+          notes?: string | null
           payment_method: string
           phone: string
           profit: number
@@ -306,6 +316,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          attached_image_url?: string | null
           client_name?: string
           date_created?: string
           delivery_method?: string
@@ -313,6 +324,7 @@ export type Database = {
           discount?: number | null
           governorate?: string | null
           id?: string
+          notes?: string | null
           payment_method?: string
           phone?: string
           profit?: number
