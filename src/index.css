@@ -5,123 +5,27 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 142 76% 36%;
-    --primary-foreground: 355.7 100% 97.3%;
-    --secondary: 142 69% 28%;
-    --secondary-foreground: 222.2 84% 4.9%;
-    --muted: 210 40% 98%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 45 93% 47%;
-    --accent-foreground: 222.2 84% 4.9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 142 76% 36%;
-    --radius: 0.75rem;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 142 76% 36%;
-    --primary-foreground: 355.7 100% 97.3%;
-    --secondary: 142 69% 28%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 45 93% 47%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 142 76% 36%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-  }
-}
-
-@layer base {
   * {
     @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Cairo', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-    direction: rtl;
+    font-family: 'Cairo', sans-serif;
   }
 }
 
-/* Professional Mobile Styles */
-.mobile-professional-header {
-  @apply bg-white/95 backdrop-blur-sm border-b border-gray-200;
+/* Arabic RTL Support */
+[dir="rtl"] {
+  direction: rtl;
 }
 
-.mobile-professional-bg {
-  @apply bg-gray-50;
+[dir="rtl"] .space-x-reverse > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-x-reverse: 1;
+  margin-right: calc(1.5rem * var(--tw-space-x-reverse));
+  margin-left: calc(1.5rem * calc(1 - var(--tw-space-x-reverse)));
 }
 
-.mobile-professional-heading {
-  @apply text-2xl font-bold text-gray-900;
-}
-
-.mobile-professional-subheading {
-  @apply text-lg font-semibold text-gray-800;
-}
-
-.mobile-professional-body-text {
-  @apply text-sm text-gray-700 leading-relaxed;
-}
-
-.mobile-professional-text {
-  @apply text-sm text-gray-600;
-}
-
-.mobile-professional-small-text {
-  @apply text-xs text-gray-500;
-}
-
-.mobile-professional-button {
-  @apply bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors;
-}
-
-.mobile-professional-nav-button {
-  @apply text-gray-700 hover:text-primary hover:bg-gray-50 transition-colors;
-}
-
-.mobile-professional-search {
-  @apply bg-white border-gray-200 placeholder:text-gray-400;
-}
-
-.mobile-professional-footer {
-  @apply bg-white border-t border-gray-200;
-}
-
-.mobile-professional-border {
-  @apply border-gray-200;
-}
-
-/* Animation for customer reviews carousel */
+/* Smooth scrolling animations */
 @keyframes scroll-horizontal {
   0% {
     transform: translateX(0);
@@ -139,70 +43,68 @@
   animation-play-state: paused;
 }
 
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
 
-/* Custom gradient backgrounds */
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+/* Professional gradient backgrounds */
 .bg-gradient-professional {
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
-/* Enhanced card hover effects */
-.card-hover-effect {
-  @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+.bg-gradient-elegant {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
 }
 
-/* Professional spacing */
-.section-padding {
-  @apply py-12 md:py-20;
+/* Enhanced shadows for cards */
+.shadow-professional {
+  box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
-/* Mobile responsive containers */
-@media (max-width: 768px) {
-  .container {
-    @apply px-4;
+.shadow-elegant {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Responsive typography */
+@media (max-width: 640px) {
+  .text-responsive {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
   }
 }
 
-/* RTL support improvements */
-[dir="rtl"] .animate-scroll-horizontal {
-  transform: translateX(0);
-}
-
-[dir="rtl"] .animate-scroll-horizontal {
-  animation: scroll-horizontal-rtl 30s linear infinite;
-}
-
-@keyframes scroll-horizontal-rtl {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(50%);
-  }
-}
-
-/* Loading animations */
-@keyframes pulse-soft {
+/* Animation for back to top button */
+@keyframes float {
   0%, 100% {
-    opacity: 1;
+    transform: translateY(0);
   }
   50% {
-    opacity: 0.7;
+    transform: translateY(-5px);
   }
 }
 
-.animate-pulse-soft {
-  animation: pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+.animate-float {
+  animation: float 3s ease-in-out infinite;
 }
 
-/* Professional shadows */
-.shadow-professional {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-
-.shadow-professional-lg {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+/* Enhanced focus states for accessibility */
+.focus-enhanced:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
 }

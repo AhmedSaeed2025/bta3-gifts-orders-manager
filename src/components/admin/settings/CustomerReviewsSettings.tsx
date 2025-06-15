@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -104,11 +105,44 @@ const CustomerReviewsSettings = ({ formData, onToggleChange }: CustomerReviewsSe
   });
 
   const handleAddReview = () => {
-    if (!newReview.image_url || !newReview.customer_name) {
-      toast.error('يرجى ملء الحقول المطلوبة');
+    if (!newReview.customer_name) {
+      toast.error('يرجى ملء اسم العميل على الأقل');
       return;
     }
-    addReviewMutation.mutate(newReview);
+    
+    // If no image URL provided, use placeholder
+    const reviewData = {
+      ...newReview,
+      image_url: newReview.image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(newReview.customer_name)}&background=10B981&color=fff&size=100`
+    };
+    
+    addReviewMutation.mutate(reviewData);
+  };
+
+  const addSampleReview = () => {
+    const sampleReviews = [
+      {
+        customer_name: 'نهال رمضان',
+        review_text: 'منتجات ممتازة وجودة عالية، أنصح بالتعامل معهم',
+        rating: 5,
+        image_url: 'https://ui-avatars.com/api/?name=نهال رمضان&background=10B981&color=fff&size=100'
+      },
+      {
+        customer_name: 'أحمد محمد',
+        review_text: 'خدمة رائعة وتوصيل سريع، شكراً لكم',
+        rating: 5,
+        image_url: 'https://ui-avatars.com/api/?name=أحمد محمد&background=059669&color=fff&size=100'
+      },
+      {
+        customer_name: 'فاطمة علي',
+        review_text: 'أسعار مناسبة وجودة ممتازة',
+        rating: 4,
+        image_url: 'https://ui-avatars.com/api/?name=فاطمة علي&background=F59E0B&color=fff&size=100'
+      }
+    ];
+
+    const randomSample = sampleReviews[Math.floor(Math.random() * sampleReviews.length)];
+    setNewReview(randomSample);
   };
 
   return (
@@ -141,10 +175,20 @@ const CustomerReviewsSettings = ({ formData, onToggleChange }: CustomerReviewsSe
           <>
             {/* Add New Review */}
             <div className="border rounded-lg p-4 space-y-4 bg-gray-50">
-              <h3 className="font-medium flex items-center gap-2">
-                <Plus className="h-4 w-4" />
-                إضافة مراجعة جديدة
-              </h3>
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium flex items-center gap-2">
+                  <Plus className="h-4 w-4" />
+                  إضافة مراجعة جديدة
+                </h3>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addSampleReview}
+                >
+                  إضافة مثال
+                </Button>
+              </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -175,12 +219,12 @@ const CustomerReviewsSettings = ({ formData, onToggleChange }: CustomerReviewsSe
               </div>
               
               <div>
-                <Label htmlFor="image_url">رابط صورة العميل *</Label>
+                <Label htmlFor="image_url">رابط صورة العميل (اختياري)</Label>
                 <Input
                   id="image_url"
                   value={newReview.image_url}
                   onChange={(e) => setNewReview({ ...newReview, image_url: e.target.value })}
-                  placeholder="https://example.com/image.jpg"
+                  placeholder="https://example.com/image.jpg (سيتم إنشاء صورة تلقائياً إذا ترك فارغاً)"
                 />
               </div>
               
@@ -215,11 +259,17 @@ const CustomerReviewsSettings = ({ formData, onToggleChange }: CustomerReviewsSe
                     <div key={review.id} className="border rounded-lg p-4 bg-white">
                       <div className="flex items-start justify-between">
                         <div className="flex gap-4 flex-1">
-                          <img
-                            src={review.image_url}
-                            alt={review.customer_name}
-                            className="w-12 h-12 rounded-full object-cover"
-                          />
+                          <div className="relative w-12 h-12 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+                            <img
+                              src={review.image_url}
+                              alt={review.customer_name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(review.customer_name || 'عميل')}&background=10B981&color=fff&size=48`;
+                              }}
+                            />
+                          </div>
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
                               <h4 className="font-medium">{review.customer_name}</h4>
