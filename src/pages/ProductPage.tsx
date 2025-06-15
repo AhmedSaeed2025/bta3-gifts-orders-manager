@@ -10,6 +10,7 @@ import { useCart } from '@/hooks/useCart';
 import { Loader2, ArrowLeft, Heart, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import ProductImageGallery from '@/components/product/ProductImageGallery';
+import RelatedProducts from '@/components/product/RelatedProducts';
 
 const ProductPage = () => {
   const { id } = useParams();
@@ -44,7 +45,7 @@ const ProductPage = () => {
           *,
           product_sizes (*),
           product_images (*),
-          categories (name)
+          categories (id, name)
         `)
         .eq('id', id)
         .eq('is_active', true)
@@ -55,6 +56,35 @@ const ProductPage = () => {
     },
     enabled: !!id
   });
+
+  // Apply custom colors to CSS variables
+  React.useEffect(() => {
+    const loadStoreColors = async () => {
+      const { data: colorSettings } = await supabase
+        .from('store_settings')
+        .select('primary_color, secondary_color, accent_color, text_color')
+        .eq('is_active', true)
+        .single();
+
+      if (colorSettings) {
+        const root = document.documentElement;
+        if (colorSettings.primary_color) {
+          root.style.setProperty('--primary-color', colorSettings.primary_color);
+        }
+        if (colorSettings.secondary_color) {
+          root.style.setProperty('--secondary-color', colorSettings.secondary_color);
+        }
+        if (colorSettings.accent_color) {
+          root.style.setProperty('--accent-color', colorSettings.accent_color);
+        }
+        if (colorSettings.text_color) {
+          root.style.setProperty('--text-color', colorSettings.text_color);
+        }
+      }
+    };
+
+    loadStoreColors();
+  }, []);
 
   if (isLoading) {
     return (
@@ -143,7 +173,7 @@ const ProductPage = () => {
           <div className="space-y-6">
             <div>
               <div className="flex items-center justify-between mb-2">
-                <h1 className="text-3xl font-bold">{product.name}</h1>
+                <h1 className="text-3xl font-bold" style={{ color: 'var(--text-color, #1F2937)' }}>{product.name}</h1>
                 <div className="flex gap-2">
                   <Button variant="outline" size="icon">
                     <Heart className="h-4 w-4" />
@@ -170,7 +200,7 @@ const ProductPage = () => {
 
               {product.description && (
                 <div className="mb-6">
-                  <h3 className="font-semibold mb-2 text-lg">وصف المنتج</h3>
+                  <h3 className="font-semibold mb-2 text-lg" style={{ color: 'var(--text-color, #1F2937)' }}>وصف المنتج</h3>
                   <p className="text-muted-foreground leading-relaxed text-base whitespace-pre-wrap">
                     {product.description}
                   </p>
@@ -181,7 +211,7 @@ const ProductPage = () => {
             {/* Size Selection */}
             {product.product_sizes && product.product_sizes.length > 0 && storeSettings?.show_product_sizes !== false && (
               <div>
-                <h3 className="font-semibold mb-3">اختر المقاس</h3>
+                <h3 className="font-semibold mb-3" style={{ color: 'var(--text-color, #1F2937)' }}>اختر المقاس</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {product.product_sizes.map((size) => {
                     const originalPrice = size.price;
@@ -193,6 +223,7 @@ const ProductPage = () => {
                         variant={selectedSize === size.size ? "default" : "outline"}
                         onClick={() => setSelectedSize(size.size)}
                         className="h-16 p-2"
+                        style={selectedSize === size.size ? { backgroundColor: 'var(--primary-color, #10B981)' } : {}}
                       >
                         <div className="text-center w-full">
                           <div className="font-medium text-sm">{size.size}</div>
@@ -225,23 +256,23 @@ const ProductPage = () => {
             {/* Price Display */}
             {storeSettings?.show_product_prices !== false && selectedSizeData && (
               <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="font-semibold mb-2">السعر</h3>
+                <h3 className="font-semibold mb-2" style={{ color: 'var(--text-color, #1F2937)' }}>السعر</h3>
                 {hasDiscount ? (
                   <div className="space-y-2">
                     <div className="flex items-center gap-3">
-                      <span className="text-3xl font-bold text-green-600">
+                      <span className="text-3xl font-bold" style={{ color: 'var(--accent-color, #F59E0B)' }}>
                         {calculateDiscountedPrice(selectedSizeData.price).toFixed(0)} ج.م
                       </span>
                       <span className="text-xl text-gray-500 line-through">
                         {selectedSizeData.price} ج.م
                       </span>
                     </div>
-                    <div className="text-sm text-green-600 font-medium">
+                    <div className="text-sm font-medium" style={{ color: 'var(--accent-color, #F59E0B)' }}>
                       وفّر {(selectedSizeData.price - calculateDiscountedPrice(selectedSizeData.price)).toFixed(0)} ج.م
                     </div>
                   </div>
                 ) : (
-                  <div className="text-3xl font-bold text-primary">
+                  <div className="text-3xl font-bold" style={{ color: 'var(--primary-color, #10B981)' }}>
                     {selectedSizeData.price} ج.م
                   </div>
                 )}
@@ -250,7 +281,7 @@ const ProductPage = () => {
 
             {/* Quantity */}
             <div>
-              <h3 className="font-semibold mb-3">الكمية</h3>
+              <h3 className="font-semibold mb-3" style={{ color: 'var(--text-color, #1F2937)' }}>الكمية</h3>
               <div className="flex items-center gap-2 w-32">
                 <Button
                   variant="outline"
@@ -273,7 +304,8 @@ const ProductPage = () => {
             {/* Add to Cart */}
             <div className="space-y-3">
               <Button
-                className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+                className="w-full hover:opacity-90"
+                style={{ backgroundColor: 'var(--primary-color, #10B981)' }}
                 size="lg"
                 onClick={handleAddToCart}
                 disabled={cartLoading || (product.product_sizes && product.product_sizes.length > 0 && !selectedSize)}
@@ -297,6 +329,12 @@ const ProductPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Related Products */}
+      <RelatedProducts 
+        currentProductId={product.id} 
+        categoryId={product.category_id}
+      />
     </div>
   );
 };

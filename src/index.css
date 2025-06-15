@@ -31,6 +31,12 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
+
+    /* Custom store colors - these will be overridden by JavaScript */
+    --primary-color: #10B981;
+    --secondary-color: #059669;
+    --accent-color: #F59E0B;
+    --text-color: #1F2937;
   }
 
   .dark {
@@ -72,6 +78,56 @@
   }
 }
 
+/* Custom store color utility classes */
+.text-store-primary {
+  color: var(--primary-color);
+}
+
+.bg-store-primary {
+  background-color: var(--primary-color);
+}
+
+.text-store-secondary {
+  color: var(--secondary-color);
+}
+
+.bg-store-secondary {
+  background-color: var(--secondary-color);
+}
+
+.text-store-accent {
+  color: var(--accent-color);
+}
+
+.bg-store-accent {
+  background-color: var(--accent-color);
+}
+
+.text-store-text {
+  color: var(--text-color);
+}
+
+.border-store-primary {
+  border-color: var(--primary-color);
+}
+
+.hover\:bg-store-primary:hover {
+  background-color: var(--primary-color);
+}
+
+.hover\:text-store-primary:hover {
+  color: var(--primary-color);
+}
+
+/* Gradient utilities using store colors */
+.bg-gradient-store {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+}
+
+.bg-gradient-store-accent {
+  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+}
+
 /* Professional Mobile Styles */
 .mobile-professional-header {
   @apply bg-white/95 backdrop-blur-sm border-b border-gray-200;
@@ -102,11 +158,21 @@
 }
 
 .mobile-professional-button {
-  @apply bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors;
+  @apply px-4 py-2 rounded-lg text-sm font-medium transition-colors;
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.mobile-professional-button:hover {
+  opacity: 0.9;
 }
 
 .mobile-professional-nav-button {
-  @apply text-gray-700 hover:text-primary hover:bg-gray-50 transition-colors;
+  @apply text-gray-700 hover:bg-gray-50 transition-colors;
+}
+
+.mobile-professional-nav-button:hover {
+  color: var(--primary-color);
 }
 
 .mobile-professional-search {

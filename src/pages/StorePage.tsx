@@ -41,10 +41,23 @@ const StorePage = () => {
     }
   });
 
-  const { data: products, isLoading: productsLoading } = useQuery({
-    queryKey: ['products'],
+  const { data: categoriesWithProducts, isLoading: productsLoading } = useQuery({
+    queryKey: ['categories-with-products'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First get all active categories
+      const { data: categories, error: categoriesError } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('is_active', true)
+        .order('name', { ascending: true });
+      
+      if (categoriesError) {
+        console.error('Error fetching categories:', categoriesError);
+        return [];
+      }
+
+      // Get all active products with their relationships
+      const { data: products, error: productsError } = await supabase
         .from('products')
         .select(`
           *,
@@ -55,14 +68,53 @@ const StorePage = () => {
         .eq('is_active', true)
         .order('sort_order', { ascending: true });
       
-      if (error) {
-        console.error('Error fetching products:', error);
+      if (productsError) {
+        console.error('Error fetching products:', productsError);
         return [];
       }
-      
-      return data || [];
+
+      // Group products by category
+      const categorizedProducts = categories?.map(category => ({
+        ...category,
+        products: products?.filter(product => product.category_id === category.id) || []
+      })) || [];
+
+      // Add uncategorized products
+      const uncategorizedProducts = products?.filter(product => !product.category_id) || [];
+      if (uncategorizedProducts.length > 0) {
+        categorizedProducts.push({
+          id: 'uncategorized',
+          name: 'منتجات أخرى',
+          description: null,
+          is_active: true,
+          created_at: '',
+          user_id: '',
+          products: uncategorizedProducts
+        });
+      }
+
+      return categorizedProducts.filter(category => category.products.length > 0);
     }
   });
+
+  // Apply custom colors to CSS variables
+  React.useEffect(() => {
+    if (storeSettings) {
+      const root = document.documentElement;
+      if (storeSettings.primary_color) {
+        root.style.setProperty('--primary-color', storeSettings.primary_color);
+      }
+      if (storeSettings.secondary_color) {
+        root.style.setProperty('--secondary-color', storeSettings.secondary_color);
+      }
+      if (storeSettings.accent_color) {
+        root.style.setProperty('--accent-color', storeSettings.accent_color);
+      }
+      if (storeSettings.text_color) {
+        root.style.setProperty('--text-color', storeSettings.text_color);
+      }
+    }
+  }, [storeSettings]);
 
   if (storeLoading || productsLoading) {
     return (
@@ -83,25 +135,33 @@ const StorePage = () => {
         {/* Hero Section */}
         <HeroSection storeSettings={storeSettings} />
         
-        {/* Products Section */}
+        {/* Products Section by Categories */}
         <section className={`${isMobile ? 'py-6 px-3' : 'py-12 px-4'}`}>
           <div className="container mx-auto">
-            <div className="text-center mb-8 md:mb-12">
-              <h2 className={`font-bold text-gray-900 mb-4 ${isMobile ? 'text-xl' : 'text-3xl'}`}>
-                منتجاتنا المميزة
-              </h2>
-              <div className="w-24 h-1 bg-gradient-to-r from-primary to-secondary mx-auto mb-4"></div>
-              <p className={`text-gray-600 max-w-2xl mx-auto ${isMobile ? 'text-sm' : 'text-lg'}`}>
-                اختر من بين مجموعتنا الواسعة من المنتجات عالية الجودة
-              </p>
-            </div>
-            
-            <ProductGrid 
-              products={products || []} 
-              isLoading={productsLoading}
-            />
-
-            {products && products.length === 0 && !productsLoading && (
+            {categoriesWithProducts && categoriesWithProducts.length > 0 ? (
+              <div className="space-y-12">
+                {categoriesWithProducts.map((category) => (
+                  <div key={category.id} className="space-y-6">
+                    <div className="text-center">
+                      <h2 className={`font-bold text-gray-900 mb-2 ${isMobile ? 'text-xl' : 'text-2xl'}`} style={{ color: 'var(--text-color, #1F2937)' }}>
+                        {category.name}
+                      </h2>
+                      {category.description && (
+                        <p className={`text-gray-600 max-w-2xl mx-auto mb-4 ${isMobile ? 'text-sm' : 'text-base'}`}>
+                          {category.description}
+                        </p>
+                      )}
+                      <div className="w-24 h-1 mx-auto mb-6" style={{ background: `linear-gradient(to right, var(--primary-color, #10B981), var(--secondary-color, #059669))` }}></div>
+                    </div>
+                    
+                    <ProductGrid 
+                      products={category.products} 
+                      isLoading={false}
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
               <div className="text-center py-16">
                 <div className="max-w-md mx-auto">
                   <div className="mb-6">

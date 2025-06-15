@@ -81,9 +81,9 @@ const ProductGrid = ({ products, isLoading }: ProductGridProps) => {
 
   if (isLoading) {
     return (
-      <div className={`grid gap-4 ${isMobile ? 'mobile-professional-grid' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'}`}>
+      <div className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'}`}>
         {[...Array(8)].map((_, i) => (
-          <Card key={i} className={`animate-pulse ${isMobile ? 'mobile-professional-card' : ''}`}>
+          <Card key={i} className="animate-pulse">
             <div className={`bg-gray-200 rounded-t-md ${isMobile ? 'h-40' : 'h-64'}`}></div>
             <CardContent className={isMobile ? 'p-3' : 'p-4'}>
               <div className={`h-4 bg-gray-200 rounded ${isMobile ? 'mb-2' : 'mb-2'}`}></div>
@@ -97,7 +97,7 @@ const ProductGrid = ({ products, isLoading }: ProductGridProps) => {
   }
 
   return (
-    <div className={`grid gap-4 ${isMobile ? 'mobile-professional-grid' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'}`}>
+    <div className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'}`}>
       {products.map((product) => {
         const hasDiscount = (product.discount_percentage || 0) > 0;
         const firstSize = product.product_sizes?.[0];
@@ -105,13 +105,13 @@ const ProductGrid = ({ products, isLoading }: ProductGridProps) => {
         const discountedPrice = hasDiscount ? calculateDiscountedPrice(originalPrice, product.discount_percentage) : originalPrice;
 
         return (
-          <Card key={product.id} className={`group hover:shadow-xl transition-all duration-300 overflow-hidden border-0 shadow-lg ${isMobile ? 'mobile-professional-product-card' : ''}`}>
+          <Card key={product.id} className="group hover:shadow-xl transition-all duration-300 overflow-hidden border-0 shadow-lg">
             <div className="relative">
               <Link to={`/product/${product.id}`}>
                 <img
                   src={product.product_images?.[0]?.image_url || product.image_url || '/placeholder.svg'}
                   alt={product.name}
-                  className={`w-full object-cover transition-transform duration-300 group-hover:scale-105 ${isMobile ? 'mobile-professional-product-image' : 'h-64'}`}
+                  className={`w-full object-cover transition-transform duration-300 group-hover:scale-105 ${isMobile ? 'h-40' : 'h-64'}`}
                 />
                 
                 {/* Overlay for better visibility */}
@@ -125,7 +125,7 @@ const ProductGrid = ({ products, isLoading }: ProductGridProps) => {
               {/* Badges */}
               <div className={`absolute flex flex-col gap-1 ${isMobile ? 'top-2 left-2' : 'top-3 left-3 gap-2'}`}>
                 {product.categories?.name && (
-                  <Badge className={`bg-white/90 text-gray-800 hover:bg-white ${isMobile ? 'mobile-professional-badge text-xs px-2 py-1' : ''}`}>
+                  <Badge className={`bg-white/90 text-gray-800 hover:bg-white ${isMobile ? 'text-xs px-2 py-1' : ''}`}>
                     {product.categories.name}
                   </Badge>
                 )}
@@ -140,17 +140,20 @@ const ProductGrid = ({ products, isLoading }: ProductGridProps) => {
               {/* Discount Badge */}
               {hasDiscount && (
                 <div className={`absolute ${isMobile ? 'top-2 right-2' : 'top-3 right-3'}`}>
-                  <Badge className={`${isMobile ? 'mobile-professional-discount' : 'bg-red-500 text-white font-bold'}`}>
+                  <Badge className="bg-red-500 text-white font-bold">
                     خصم {product.discount_percentage}%
                   </Badge>
                 </div>
               )}
             </div>
             
-            <CardContent className={`space-y-3 ${isMobile ? 'mobile-professional-product-content' : 'p-4 space-y-4'}`}>
+            <CardContent className={`space-y-3 ${isMobile ? 'p-3 space-y-2' : 'p-4 space-y-4'}`}>
               <div>
                 <Link to={`/product/${product.id}`}>
-                  <h3 className={`font-bold mb-2 hover:text-primary transition-colors cursor-pointer line-clamp-2 ${isMobile ? 'mobile-professional-product-title' : 'text-lg'}`}>
+                  <h3 className={`font-bold mb-2 hover:transition-colors cursor-pointer line-clamp-2 ${isMobile ? 'text-sm' : 'text-lg'}`}
+                      style={{ color: 'var(--text-color, #1F2937)' }}
+                      onMouseEnter={(e) => e.currentTarget.style.color = 'var(--primary-color, #10B981)'}
+                      onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-color, #1F2937)'}>
                     {product.name}
                   </h3>
                 </Link>
@@ -167,7 +170,8 @@ const ProductGrid = ({ products, isLoading }: ProductGridProps) => {
                   <div className={`flex items-center ${isMobile ? 'gap-2' : 'gap-2'}`}>
                     {hasDiscount ? (
                       <>
-                        <span className={`font-bold ${isMobile ? 'mobile-professional-price text-lg' : 'text-2xl text-green-600'}`}>
+                        <span className={`font-bold ${isMobile ? 'text-lg' : 'text-2xl'}`}
+                              style={{ color: 'var(--accent-color, #F59E0B)' }}>
                           {formatCurrency(discountedPrice)}
                         </span>
                         <span className={`text-gray-500 line-through ${isMobile ? 'text-sm' : 'text-lg'}`}>
@@ -175,46 +179,48 @@ const ProductGrid = ({ products, isLoading }: ProductGridProps) => {
                         </span>
                       </>
                     ) : (
-                      <span className={`font-bold ${isMobile ? 'mobile-professional-price text-lg' : 'text-2xl text-primary'}`}>
+                      <span className={`font-bold ${isMobile ? 'text-lg' : 'text-2xl'}`}
+                            style={{ color: 'var(--primary-color, #10B981)' }}>
                         {formatCurrency(originalPrice)}
                       </span>
                     )}
                   </div>
                   
                   {hasDiscount && !isMobile && (
-                    <div className="text-sm text-green-600 font-medium">
+                    <div className="text-sm font-medium" style={{ color: 'var(--accent-color, #F59E0B)' }}>
                       وفّر {formatCurrency(originalPrice - discountedPrice)}
                     </div>
                   )}
                 </div>
               )}
 
-              {/* Size Selection - مبسط للموبايل */}
+              {/* Size Selection */}
               {product.product_sizes && product.product_sizes.length > 1 && storeSettings?.show_product_sizes !== false && (
                 <div className="space-y-2">
                   <div>
-                    <Label className={`font-medium ${isMobile ? 'text-sm' : 'text-sm'}`}>المقاس:</Label>
+                    <Label className={`font-medium ${isMobile ? 'text-sm' : 'text-sm'}`} style={{ color: 'var(--text-color, #1F2937)' }}>المقاس:</Label>
                     <Select
                       value={selectedSizes[product.id] || ''}
                       onValueChange={(size) => handleSizeChange(product.id, size)}
                     >
-                      <SelectTrigger className={`w-full mt-1 ${isMobile ? 'mobile-professional-input h-9 text-sm' : ''}`}>
+                      <SelectTrigger className={`w-full mt-1 bg-white border-gray-300 ${isMobile ? 'h-9 text-sm' : ''}`}>
                         <SelectValue placeholder="اختر المقاس" />
                       </SelectTrigger>
-                      <SelectContent className="bg-white border mobile-professional-border z-50">
+                      <SelectContent className="bg-white border border-gray-300 z-50">
                         {product.product_sizes.map((sizeOption: any) => {
                           const sizeOriginalPrice = sizeOption.price;
                           const sizeDiscountedPrice = hasDiscount ? calculateDiscountedPrice(sizeOriginalPrice, product.discount_percentage) : sizeOriginalPrice;
                           
                           return (
-                            <SelectItem key={sizeOption.id} value={sizeOption.size} className="hover:mobile-professional-button">
+                            <SelectItem key={sizeOption.id} value={sizeOption.size} className="hover:bg-gray-50">
                               <div className="flex items-center justify-between w-full">
                                 <span className={isMobile ? 'text-sm' : ''}>{sizeOption.size}</span>
                                 {storeSettings?.show_product_prices !== false && (
                                   <div className={`flex items-center gap-2 mr-3 ${isMobile ? 'gap-1 mr-2' : 'gap-2 mr-3'}`}>
                                     {hasDiscount ? (
                                       <>
-                                        <span className={`font-bold text-green-600 ${isMobile ? 'text-sm' : ''}`}>
+                                        <span className={`font-bold ${isMobile ? 'text-sm' : ''}`}
+                                              style={{ color: 'var(--accent-color, #F59E0B)' }}>
                                           {formatCurrency(sizeDiscountedPrice)}
                                         </span>
                                         <span className={`text-gray-500 line-through ${isMobile ? 'text-xs' : 'text-sm'}`}>
@@ -222,7 +228,8 @@ const ProductGrid = ({ products, isLoading }: ProductGridProps) => {
                                         </span>
                                       </>
                                     ) : (
-                                      <span className={`font-bold ${isMobile ? 'text-sm' : ''}`}>
+                                      <span className={`font-bold ${isMobile ? 'text-sm' : ''}`}
+                                            style={{ color: 'var(--primary-color, #10B981)' }}>
                                         {formatCurrency(sizeOriginalPrice)}
                                       </span>
                                     )}
@@ -252,7 +259,8 @@ const ProductGrid = ({ products, isLoading }: ProductGridProps) => {
                             handleOrderNow(product, selectedSize, finalPrice);
                           }
                         }}
-                        className={`bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 ${isMobile ? 'mobile-professional-product-button flex-1' : 'w-full'}`}
+                        className={`hover:opacity-90 ${isMobile ? 'flex-1 h-9 text-sm' : 'w-full'}`}
+                        style={{ backgroundColor: 'var(--primary-color, #10B981)', color: 'white' }}
                       >
                         {isMobile ? 'اطلب الآن' : 'اطلب الآن'}
                       </Button>
@@ -266,7 +274,8 @@ const ProductGrid = ({ products, isLoading }: ProductGridProps) => {
                             handleAddToCart(product, selectedSize, finalPrice);
                           }
                         }}
-                        className={`border-2 hover:bg-gray-50 ${isMobile ? 'mobile-professional-product-button-secondary flex-1' : 'w-full'}`}
+                        className={`border-2 hover:bg-gray-50 ${isMobile ? 'flex-1 h-9 text-sm' : 'w-full'}`}
+                        style={{ borderColor: 'var(--primary-color, #10B981)' }}
                       >
                         <ShoppingCart className={isMobile ? "h-4 w-4" : "h-4 w-4 mr-2"} />
                         {isMobile ? '' : 'أضف للسلة'}
@@ -274,7 +283,7 @@ const ProductGrid = ({ products, isLoading }: ProductGridProps) => {
                     </div>
                   ) : (
                     <Link to={`/product/${product.id}`}>
-                      <Button variant="outline" className={`mobile-professional-border hover:mobile-professional-button ${isMobile ? 'mobile-professional-product-button-secondary' : 'w-full'}`}>
+                      <Button variant="outline" className={`border-gray-300 hover:bg-gray-50 ${isMobile ? 'w-full h-9 text-sm' : 'w-full'}`}>
                         <Eye className={isMobile ? "h-4 w-4 mr-1" : "h-4 w-4 mr-2"} />
                         {isMobile ? 'التفاصيل' : 'عرض التفاصيل'}
                       </Button>
@@ -282,7 +291,7 @@ const ProductGrid = ({ products, isLoading }: ProductGridProps) => {
                   )
                 ) : (
                   <Link to={`/product/${product.id}`}>
-                    <Button variant="outline" className={`mobile-professional-border hover:mobile-professional-button ${isMobile ? 'mobile-professional-product-button-secondary' : 'w-full'}`}>
+                    <Button variant="outline" className={`border-gray-300 hover:bg-gray-50 ${isMobile ? 'w-full h-9 text-sm' : 'w-full'}`}>
                       <Eye className={isMobile ? "h-4 w-4 mr-1" : "h-4 w-4 mr-2"} />
                       {isMobile ? 'التفاصيل' : 'عرض التفاصيل'}
                     </Button>
