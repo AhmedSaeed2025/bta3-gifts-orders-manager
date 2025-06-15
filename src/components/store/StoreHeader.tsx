@@ -81,17 +81,25 @@ const StoreHeader = ({ storeSettings }: StoreHeaderProps) => {
             {storeSettings?.logo_url ? (
               <img 
                 src={storeSettings.logo_url} 
-                alt={storeSettings.store_name}
-                className={`object-contain rounded ${isMobile ? 'mobile-professional-logo' : 'h-10 w-auto'}`}
+                alt={storeSettings.store_name || 'شعار المتجر'}
+                className={`object-contain rounded-lg ${isMobile ? 'h-8 w-8' : 'h-10 w-10'}`}
                 onError={(e) => {
+                  console.log('Logo failed to load, showing fallback');
                   e.currentTarget.style.display = 'none';
-                  const defaultLogo = e.currentTarget.nextElementSibling as HTMLElement;
-                  if (defaultLogo) defaultLogo.style.display = 'flex';
+                  const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                  if (fallback) {
+                    fallback.style.display = 'flex';
+                  }
+                }}
+                onLoad={() => {
+                  console.log('Logo loaded successfully');
                 }}
               />
             ) : null}
+            
+            {/* Fallback logo */}
             <div 
-              className={`rounded flex items-center justify-center text-white font-bold ${isMobile ? 'h-8 w-8' : 'h-10 w-10'}`}
+              className={`rounded-lg flex items-center justify-center text-white font-bold ${isMobile ? 'h-8 w-8 text-sm' : 'h-10 w-10 text-lg'}`}
               style={{ 
                 backgroundColor: storeSettings?.primary_color || '#10B981',
                 display: storeSettings?.logo_url ? 'none' : 'flex'
@@ -99,6 +107,7 @@ const StoreHeader = ({ storeSettings }: StoreHeaderProps) => {
             >
               {storeSettings?.store_name?.charAt(0) || 'م'}
             </div>
+            
             <span className={`font-bold ${isMobile ? 'mobile-professional-subheading' : 'text-xl'}`}>
               {isMobile ? (storeSettings?.store_name?.split(' ')[0] || 'متجري') : (storeSettings?.store_name || 'متجري')}
             </span>

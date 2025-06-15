@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 interface AppearanceSettingsProps {
   formData: any;
@@ -18,35 +19,85 @@ const AppearanceSettings = ({ formData, onInputChange, onToggleChange }: Appeara
         <CardHeader>
           <CardTitle>صور وشعارات المتجر</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="logo_url">رابط الشعار</Label>
+        <CardContent className="space-y-6">
+          <div className="space-y-4">
+            <Label htmlFor="logo_url">شعار المتجر</Label>
+            
+            {/* Logo Preview */}
+            <div className="flex items-center gap-4 p-4 border rounded-lg bg-gray-50">
+              <div className="flex-shrink-0">
+                <Avatar className="h-16 w-16">
+                  <AvatarImage 
+                    src={formData.logo_url} 
+                    alt="شعار المتجر"
+                    className="object-contain"
+                  />
+                  <AvatarFallback 
+                    className="text-white font-bold text-lg"
+                    style={{ backgroundColor: formData.primary_color || '#10B981' }}
+                  >
+                    {formData.store_name?.charAt(0) || 'م'}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+              <div className="flex-1">
+                <h4 className="font-semibold text-sm">معاينة الشعار</h4>
+                <p className="text-xs text-muted-foreground">
+                  {formData.logo_url ? 'شعار مخصص' : 'شعار افتراضي (الحرف الأول من اسم المتجر)'}
+                </p>
+              </div>
+            </div>
+
             <Input
               id="logo_url"
-              value={formData.logo_url}
+              value={formData.logo_url || ''}
               onChange={(e) => onInputChange('logo_url', e.target.value)}
               placeholder="https://example.com/logo.png"
+              dir="ltr"
             />
+            <p className="text-xs text-muted-foreground">
+              أدخل رابط الشعار أو اتركه فارغاً لاستخدام الشعار الافتراضي
+            </p>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="favicon_url">رابط الأيقونة المفضلة</Label>
             <Input
               id="favicon_url"
-              value={formData.favicon_url}
+              value={formData.favicon_url || ''}
               onChange={(e) => onInputChange('favicon_url', e.target.value)}
               placeholder="https://example.com/favicon.ico"
+              dir="ltr"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="hero_banner_url">رابط بانر الصفحة الرئيسية</Label>
+          <div className="space-y-4">
+            <Label htmlFor="hero_banner_url">بانر الصفحة الرئيسية</Label>
+            
+            {/* Banner Preview */}
+            {formData.hero_banner_url && (
+              <div className="border rounded-lg overflow-hidden bg-gray-50">
+                <img
+                  src={formData.hero_banner_url}
+                  alt="معاينة البانر"
+                  className="w-full h-32 object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              </div>
+            )}
+            
             <Input
               id="hero_banner_url"
-              value={formData.hero_banner_url}
+              value={formData.hero_banner_url || ''}
               onChange={(e) => onInputChange('hero_banner_url', e.target.value)}
               placeholder="https://example.com/banner.jpg"
+              dir="ltr"
             />
+            <p className="text-xs text-muted-foreground">
+              البانر سيظهر في أعلى الصفحة الرئيسية للمتجر
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -62,15 +113,16 @@ const AppearanceSettings = ({ formData, onInputChange, onToggleChange }: Appeara
               <Input
                 id="primary_color"
                 type="color"
-                value={formData.primary_color}
+                value={formData.primary_color || '#10B981'}
                 onChange={(e) => onInputChange('primary_color', e.target.value)}
                 className="w-16 h-10"
               />
               <Input
-                value={formData.primary_color}
+                value={formData.primary_color || '#10B981'}
                 onChange={(e) => onInputChange('primary_color', e.target.value)}
                 placeholder="#10B981"
                 className="flex-1"
+                dir="ltr"
               />
             </div>
           </div>
@@ -81,15 +133,16 @@ const AppearanceSettings = ({ formData, onInputChange, onToggleChange }: Appeara
               <Input
                 id="secondary_color"
                 type="color"
-                value={formData.secondary_color}
+                value={formData.secondary_color || '#059669'}
                 onChange={(e) => onInputChange('secondary_color', e.target.value)}
                 className="w-16 h-10"
               />
               <Input
-                value={formData.secondary_color}
+                value={formData.secondary_color || '#059669'}
                 onChange={(e) => onInputChange('secondary_color', e.target.value)}
                 placeholder="#059669"
                 className="flex-1"
+                dir="ltr"
               />
             </div>
           </div>
@@ -100,15 +153,16 @@ const AppearanceSettings = ({ formData, onInputChange, onToggleChange }: Appeara
               <Input
                 id="accent_color"
                 type="color"
-                value={formData.accent_color}
+                value={formData.accent_color || '#F59E0B'}
                 onChange={(e) => onInputChange('accent_color', e.target.value)}
                 className="w-16 h-10"
               />
               <Input
-                value={formData.accent_color}
+                value={formData.accent_color || '#F59E0B'}
                 onChange={(e) => onInputChange('accent_color', e.target.value)}
                 placeholder="#F59E0B"
                 className="flex-1"
+                dir="ltr"
               />
             </div>
           </div>
@@ -119,15 +173,16 @@ const AppearanceSettings = ({ formData, onInputChange, onToggleChange }: Appeara
               <Input
                 id="text_color"
                 type="color"
-                value={formData.text_color}
+                value={formData.text_color || '#1F2937'}
                 onChange={(e) => onInputChange('text_color', e.target.value)}
                 className="w-16 h-10"
               />
               <Input
-                value={formData.text_color}
+                value={formData.text_color || '#1F2937'}
                 onChange={(e) => onInputChange('text_color', e.target.value)}
                 placeholder="#1F2937"
                 className="flex-1"
+                dir="ltr"
               />
             </div>
           </div>
