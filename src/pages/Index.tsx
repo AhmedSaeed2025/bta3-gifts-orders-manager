@@ -1,5 +1,32 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
+import Logo from "@/components/Logo";
+import UserProfile from "@/components/UserProfile";
+import OrderForm from "@/components/OrderForm";
+import OrdersTable from "@/components/OrdersTable";
+import SummaryReport from "@/components/SummaryReport";
+import ProfitReport from "@/components/ProfitReport";
+import ImprovedAccountStatement from "@/components/ImprovedAccountStatement";
+import InvoiceTab from "@/components/InvoiceTab";
+import ProductsTab from "@/components/ProductsTab";
+import WebhookTab from "@/components/WebhookTab";
+import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from "@/components/ui/tabs";
+import {
+  Plus,
+  List,
+  BarChart3,
+  TrendingUp,
+  Receipt,
+  FileText,
+  Package,
+  Globe,
+} from "lucide-react";
 
 const navLinks = [
   { to: "/", label: "المتجر" },
