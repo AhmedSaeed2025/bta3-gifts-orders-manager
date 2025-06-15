@@ -19,17 +19,63 @@ const OrderTrackingPage = () => {
     queryFn: async () => {
       if (!searchSerial) return null;
       
-      const { data, error } = await supabase
+      // First try to find in admin_orders table
+      const { data: adminOrder, error: adminError } = await supabase
         .from('admin_orders')
         .select('*')
         .eq('serial', searchSerial.toUpperCase())
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
-        throw error;
+      if (adminOrder) {
+        return {
+          serial: adminOrder.serial,
+          customer_name: adminOrder.customer_name,
+          customer_phone: adminOrder.customer_phone,
+          customer_email: adminOrder.customer_email,
+          shipping_address: adminOrder.shipping_address,
+          governorate: adminOrder.governorate,
+          payment_method: adminOrder.payment_method,
+          delivery_method: adminOrder.delivery_method,
+          total_amount: adminOrder.total_amount,
+          status: adminOrder.status,
+          order_date: adminOrder.order_date,
+          shipping_cost: adminOrder.shipping_cost
+        };
       }
 
-      return data;
+      // If not found in admin_orders, try orders table
+      const { data: regularOrder, error: regularError } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('serial', searchSerial.toUpperCase())
+        .maybeSingle();
+
+      if (regularOrder) {
+        return {
+          serial: regularOrder.serial,
+          customer_name: regularOrder.client_name,
+          customer_phone: regularOrder.phone,
+          customer_email: regularOrder.email,
+          shipping_address: regularOrder.address,
+          governorate: regularOrder.governorate,
+          payment_method: regularOrder.payment_method,
+          delivery_method: regularOrder.delivery_method,
+          total_amount: regularOrder.total,
+          status: regularOrder.status,
+          order_date: regularOrder.date_created,
+          shipping_cost: regularOrder.shipping_cost
+        };
+      }
+
+      // If not found in either table
+      if (adminError && adminError.code !== 'PGRST116') {
+        throw adminError;
+      }
+      if (regularError && regularError.code !== 'PGRST116') {
+        throw regularError;
+      }
+
+      return null;
     },
     enabled: !!searchSerial
   });

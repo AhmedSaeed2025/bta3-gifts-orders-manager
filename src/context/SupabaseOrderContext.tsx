@@ -167,7 +167,7 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
       const serial = await generateSerialNumber();
       console.log('Generated serial for new order:', serial);
       
-      // Insert order
+      // Insert order into the main orders table
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .insert({
@@ -176,6 +176,7 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
           payment_method: newOrder.paymentMethod,
           client_name: newOrder.clientName,
           phone: newOrder.phone,
+          email: newOrder.clientName.includes('@') ? newOrder.clientName : null,
           delivery_method: newOrder.deliveryMethod,
           address: newOrder.address,
           governorate: newOrder.governorate,
@@ -217,6 +218,60 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
       if (itemsError) {
         console.error('Error inserting order items:', itemsError);
         throw itemsError;
+      }
+
+      // Also insert into admin_orders table for admin dashboard
+      const { data: adminOrderData, error: adminOrderError } = await supabase
+        .from('admin_orders')
+        .insert({
+          user_id: user.id,
+          serial,
+          customer_name: newOrder.clientName,
+          customer_phone: newOrder.phone,
+          customer_email: newOrder.clientName.includes('@') ? newOrder.clientName : null,
+          shipping_address: newOrder.address,
+          governorate: newOrder.governorate,
+          payment_method: newOrder.paymentMethod,
+          delivery_method: newOrder.deliveryMethod,
+          shipping_cost: newOrder.shippingCost,
+          discount: newOrder.discount || 0,
+          deposit: newOrder.deposit,
+          total_amount: newOrder.total,
+          profit: newOrder.profit,
+          status: newOrder.status,
+          order_date: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (adminOrderError) {
+        console.error('Error inserting admin order:', adminOrderError);
+        // Don't throw error here, main order is already created
+      } else {
+        console.log('Admin order inserted successfully:', adminOrderData);
+
+        // Insert admin order items
+        const adminOrderItems = newOrder.items.map(item => ({
+          order_id: adminOrderData.id,
+          product_name: item.productType,
+          product_size: item.size,
+          quantity: item.quantity,
+          unit_cost: item.cost,
+          unit_price: item.price,
+          item_discount: item.itemDiscount || 0,
+          total_price: (item.price - (item.itemDiscount || 0)) * item.quantity,
+          profit: ((item.price - (item.itemDiscount || 0)) - item.cost) * item.quantity
+        }));
+
+        const { error: adminItemsError } = await supabase
+          .from('admin_order_items')
+          .insert(adminOrderItems);
+
+        if (adminItemsError) {
+          console.error('Error inserting admin order items:', adminItemsError);
+        } else {
+          console.log('Admin order items inserted successfully');
+        }
       }
 
       console.log('Order items inserted successfully');
@@ -296,6 +351,31 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
 
       if (itemsError) throw itemsError;
 
+      // Also update admin_orders if it exists
+      const { error: adminUpdateError } = await supabase
+        .from('admin_orders')
+        .update({
+          customer_name: updatedOrder.clientName,
+          customer_phone: updatedOrder.phone,
+          shipping_address: updatedOrder.address,
+          governorate: updatedOrder.governorate,
+          payment_method: updatedOrder.paymentMethod,
+          delivery_method: updatedOrder.deliveryMethod,
+          shipping_cost: updatedOrder.shippingCost,
+          discount: updatedOrder.discount,
+          deposit: updatedOrder.deposit,
+          total_amount: updatedOrder.total,
+          profit: updatedOrder.profit,
+          status: updatedOrder.status,
+          updated_at: new Date().toISOString()
+        })
+        .eq('serial', serial)
+        .eq('user_id', user.id);
+
+      if (adminUpdateError) {
+        console.error('Error updating admin order:', adminUpdateError);
+      }
+
       console.log('Order updated successfully');
       toast.success("تم تحديث الطلب بنجاح");
       await loadOrders(); // Reload to get the updated list
@@ -326,6 +406,7 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
         console.error('Error deleting transactions:', transactionError);
       }
 
+      // Delete from orders table
       const { error } = await supabase
         .from('orders')
         .delete()
@@ -333,6 +414,17 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
         .eq('user_id', user.id);
 
       if (error) throw error;
+
+      // Also delete from admin_orders
+      const { error: adminDeleteError } = await supabase
+        .from('admin_orders')
+        .delete()
+        .eq('serial', orderToDelete.serial)
+        .eq('user_id', user.id);
+
+      if (adminDeleteError) {
+        console.error('Error deleting admin order:', adminDeleteError);
+      }
 
       console.log('Order deleted successfully');
       toast.success("تم حذف الطلب بنجاح");
@@ -353,6 +445,7 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
       const orderToUpdate = orders[index];
       console.log('Updating order status:', orderToUpdate.serial, 'to', status);
       
+      // Update orders table
       const { error } = await supabase
         .from('orders')
         .update({ 
@@ -363,6 +456,20 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
         .eq('user_id', user.id);
 
       if (error) throw error;
+
+      // Also update admin_orders
+      const { error: adminStatusError } = await supabase
+        .from('admin_orders')
+        .update({ 
+          status,
+          updated_at: new Date().toISOString()
+        })
+        .eq('serial', orderToUpdate.serial)
+        .eq('user_id', user.id);
+
+      if (adminStatusError) {
+        console.error('Error updating admin order status:', adminStatusError);
+      }
 
       console.log('Order status updated successfully');
       toast.success("تم تحديث حالة الطلب بنجاح");
