@@ -139,11 +139,11 @@ const AppearanceSettings = ({ formData, onInputChange, onToggleChange }: Appeara
           <CardTitle>إعدادات عرض المنتجات</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between p-4 border rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50">
             <div className="space-y-1">
-              <Label>إظهار الأسعار</Label>
-              <p className="text-sm text-muted-foreground">
-                تحكم في إظهار أو إخفاء أسعار المنتجات في المتجر
+              <Label className="text-base font-semibold text-blue-900">إظهار الأسعار</Label>
+              <p className="text-sm text-blue-700">
+                تحكم في إظهار أو إخفاء أسعار المنتجات في المتجر. عند الإيقاف، سيتم إخفاء جميع الأسعار
               </p>
             </div>
             <Switch
@@ -152,11 +152,11 @@ const AppearanceSettings = ({ formData, onInputChange, onToggleChange }: Appeara
             />
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between p-4 border rounded-lg bg-gradient-to-r from-purple-50 to-pink-50">
             <div className="space-y-1">
-              <Label>إظهار المقاسات</Label>
-              <p className="text-sm text-muted-foreground">
-                تحكم في إظهار أو إخفاء مقاسات المنتجات في المتجر
+              <Label className="text-base font-semibold text-purple-900">إظهار المقاسات</Label>
+              <p className="text-sm text-purple-700">
+                تحكم في إظهار أو إخفاء مقاسات المنتجات في المتجر. مفيد للمنتجات التي لا تحتاج مقاسات
               </p>
             </div>
             <Switch
@@ -165,10 +165,10 @@ const AppearanceSettings = ({ formData, onInputChange, onToggleChange }: Appeara
             />
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between p-4 border rounded-lg bg-gradient-to-r from-green-50 to-emerald-50">
             <div className="space-y-1">
-              <Label>إظهار المنتجات غير المتوفرة</Label>
-              <p className="text-sm text-muted-foreground">
+              <Label className="text-base font-semibold text-green-900">إظهار المنتجات غير المتوفرة</Label>
+              <p className="text-sm text-green-700">
                 عرض المنتجات حتى لو كانت غير متوفرة في المخزون
               </p>
             </div>
@@ -178,10 +178,10 @@ const AppearanceSettings = ({ formData, onInputChange, onToggleChange }: Appeara
             />
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between p-4 border rounded-lg bg-gradient-to-r from-gray-50 to-slate-50">
             <div className="space-y-1">
-              <Label>تفعيل الوضع الليلي</Label>
-              <p className="text-sm text-muted-foreground">
+              <Label className="text-base font-semibold text-gray-900">تفعيل الوضع الليلي</Label>
+              <p className="text-sm text-gray-700">
                 السماح للزوار بالتبديل إلى الوضع الليلي
               </p>
             </div>

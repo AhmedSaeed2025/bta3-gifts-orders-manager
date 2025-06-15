@@ -24,7 +24,9 @@ const StorePage = () => {
       return data || {
         store_name: 'متجر بتاع هدايا الأصلى',
         primary_color: '#10B981',
-        secondary_color: '#059669'
+        secondary_color: '#059669',
+        show_product_prices: true,
+        show_product_sizes: true
       };
     }
   });
@@ -72,29 +74,56 @@ const StorePage = () => {
 
   if (storeLoading || productsLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-gray-600">جاري تحميل المنتجات...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
       <StoreHeader storeSettings={storeSettings} />
       <main className="container mx-auto px-4 py-8">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-4">
+        <div className="text-center mb-12">
+          <h1 className="text-5xl font-bold text-foreground mb-6 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
             {storeSettings?.store_name || 'متجر بتاع هدايا الأصلى'}
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            اكتشف مجموعتنا المتميزة من الهدايا الأصلية عالية الجودة
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+            اكتشف مجموعتنا المتميزة من الهدايا الأصلية عالية الجودة بأفضل الأسعار
           </p>
+          
+          {storeSettings?.hero_banner_url && (
+            <div className="mt-8 mb-12">
+              <img
+                src={storeSettings.hero_banner_url}
+                alt="بانر المتجر"
+                className="w-full max-w-4xl mx-auto rounded-2xl shadow-2xl"
+              />
+            </div>
+          )}
         </div>
         
         <ProductGrid 
           products={products || []} 
           isLoading={productsLoading}
         />
+
+        {products && products.length === 0 && !productsLoading && (
+          <div className="text-center py-16">
+            <div className="max-w-md mx-auto">
+              <div className="mb-6">
+                <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Loader2 className="h-12 w-12 text-gray-400" />
+                </div>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">لا توجد منتجات متاحة حالياً</h3>
+              <p className="text-gray-600">سيتم إضافة منتجات جديدة قريباً</p>
+            </div>
+          </div>
+        )}
       </main>
       <StoreFooter storeSettings={storeSettings} />
     </div>
