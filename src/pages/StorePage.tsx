@@ -6,8 +6,11 @@ import StoreHeader from '@/components/store/StoreHeader';
 import ProductGrid from '@/components/store/ProductGrid';
 import StoreFooter from '@/components/store/StoreFooter';
 import { Loader2 } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const StorePage = () => {
+  const isMobile = useIsMobile();
+  
   const { data: storeSettings, isLoading: storeLoading } = useQuery({
     queryKey: ['store-settings'],
     queryFn: async () => {
@@ -75,53 +78,56 @@ const StorePage = () => {
 
   if (storeLoading || productsLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className={`min-h-screen flex items-center justify-center ${isMobile ? 'mobile-warm-bg' : 'bg-gradient-to-br from-blue-50 to-indigo-100'}`}>
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-gray-600">جاري تحميل المنتجات...</p>
+          <p className={`${isMobile ? 'mobile-warm-text text-sm' : 'text-gray-600'}`}>جاري تحميل المنتجات...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+    <div className={`min-h-screen ${isMobile ? 'mobile-warm-bg' : 'bg-gradient-to-br from-gray-50 to-white'}`}>
       <StoreHeader storeSettings={storeSettings} />
-      <main className="container mx-auto px-4 py-8">
-        <div className="text-center mb-12">
-          <h1 className="text-5xl font-bold text-foreground mb-6 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+      <main className={`container mx-auto px-2 md:px-4 py-4 md:py-8 ${isMobile ? 'max-w-full' : ''}`}>
+        <div className={`text-center mb-6 md:mb-12 ${isMobile ? 'px-2' : ''}`}>
+          <h1 className={`font-bold text-foreground mb-3 md:mb-6 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent ${isMobile ? 'text-2xl' : 'text-5xl'}`}>
             {storeSettings?.store_name || 'متجر بتاع هدايا الأصلى'}
           </h1>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+          <p className={`text-muted-foreground max-w-3xl mx-auto leading-relaxed ${isMobile ? 'text-sm px-2' : 'text-xl'}`}>
             اكتشف مجموعتنا المتميزة من الهدايا الأصلية عالية الجودة بأفضل الأسعار
           </p>
           
           {storeSettings?.hero_banner_url && (
-            <div className="mt-8 mb-12">
+            <div className={`mt-4 md:mt-8 mb-6 md:mb-12 ${isMobile ? 'px-2' : ''}`}>
               <img
                 src={storeSettings.hero_banner_url}
                 alt="بانر المتجر"
-                className="w-full max-w-4xl mx-auto rounded-2xl shadow-2xl"
+                className={`w-full max-w-4xl mx-auto rounded-xl md:rounded-2xl shadow-lg md:shadow-2xl ${isMobile ? 'max-h-48 object-cover' : ''}`}
+                loading="lazy"
               />
             </div>
           )}
         </div>
         
-        <ProductGrid 
-          products={products || []} 
-          isLoading={productsLoading}
-        />
+        <div className={isMobile ? 'px-1' : ''}>
+          <ProductGrid 
+            products={products || []} 
+            isLoading={productsLoading}
+          />
+        </div>
 
         {products && products.length === 0 && !productsLoading && (
-          <div className="text-center py-16">
+          <div className={`text-center py-8 md:py-16 ${isMobile ? 'px-4' : ''}`}>
             <div className="max-w-md mx-auto">
-              <div className="mb-6">
-                <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Loader2 className="h-12 w-12 text-gray-400" />
+              <div className="mb-4 md:mb-6">
+                <div className={`bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4 ${isMobile ? 'w-16 h-16' : 'w-24 h-24'}`}>
+                  <Loader2 className={`text-gray-400 ${isMobile ? 'h-8 w-8' : 'h-12 w-12'}`} />
                 </div>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">لا توجد منتجات متاحة حالياً</h3>
-              <p className="text-gray-600">سيتم إضافة منتجات جديدة قريباً</p>
+              <h3 className={`font-semibold text-gray-900 mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`}>لا توجد منتجات متاحة حالياً</h3>
+              <p className={`text-gray-600 ${isMobile ? 'text-sm' : ''}`}>سيتم إضافة منتجات جديدة قريباً</p>
             </div>
           </div>
         )}

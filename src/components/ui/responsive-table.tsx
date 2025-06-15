@@ -16,10 +16,14 @@ export const ResponsiveTable: React.FC<ResponsiveTableProps> = ({
   const isMobile = useIsMobile();
   
   return (
-    <div className="responsive-table-container">
+    <div className={`responsive-table-container ${isMobile ? 'overflow-x-auto -mx-2 px-2' : 'overflow-x-auto'}`}>
       <table 
         id={id}
-        className={`responsive-table gift-table ${className} ${isMobile ? 'mobile-text-xs' : ''}`}
+        className={`responsive-table gift-table w-full ${className} ${
+          isMobile 
+            ? 'text-xs mobile-warm-table border-collapse mobile-warm-border border' 
+            : ''
+        }`}
       >
         {children}
       </table>
@@ -28,7 +32,12 @@ export const ResponsiveTable: React.FC<ResponsiveTableProps> = ({
 };
 
 export const ResponsiveTableHead: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return <thead>{children}</thead>;
+  const isMobile = useIsMobile();
+  return (
+    <thead className={isMobile ? 'mobile-warm-table-header' : ''}>
+      {children}
+    </thead>
+  );
 };
 
 export const ResponsiveTableBody: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -39,14 +48,24 @@ export const ResponsiveTableRow: React.FC<{ children: React.ReactNode; className
   children, 
   className = "" 
 }) => {
-  return <tr className={className}>{children}</tr>;
+  const isMobile = useIsMobile();
+  return (
+    <tr className={`${className} ${isMobile ? 'mobile-warm-table-row border-b mobile-warm-border' : ''}`}>
+      {children}
+    </tr>
+  );
 };
 
 export const ResponsiveTableHeader: React.FC<{ children: React.ReactNode; className?: string }> = ({ 
   children, 
   className = "" 
 }) => {
-  return <th className={className}>{children}</th>;
+  const isMobile = useIsMobile();
+  return (
+    <th className={`${className} ${isMobile ? 'p-2 text-xs font-medium mobile-warm-text border-r mobile-warm-border last:border-r-0' : 'p-4'}`}>
+      {children}
+    </th>
+  );
 };
 
 export const ResponsiveTableCell: React.FC<{ 
@@ -60,5 +79,14 @@ export const ResponsiveTableCell: React.FC<{
   colSpan,
   title
 }) => {
-  return <td className={className} colSpan={colSpan} title={title}>{children}</td>;
+  const isMobile = useIsMobile();
+  return (
+    <td 
+      className={`${className} ${isMobile ? 'p-2 text-xs border-r mobile-warm-border last:border-r-0' : 'p-4'}`} 
+      colSpan={colSpan} 
+      title={title}
+    >
+      {children}
+    </td>
+  );
 };
