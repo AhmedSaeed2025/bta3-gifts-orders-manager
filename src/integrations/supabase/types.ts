@@ -594,6 +594,7 @@ export type Database = {
           is_active: boolean
           linkedin_url: string | null
           logo_url: string | null
+          main_text: string | null
           mobile_wallets: boolean | null
           orange_money: string | null
           payment_instructions: string | null
@@ -666,6 +667,7 @@ export type Database = {
           is_active?: boolean
           linkedin_url?: string | null
           logo_url?: string | null
+          main_text?: string | null
           mobile_wallets?: boolean | null
           orange_money?: string | null
           payment_instructions?: string | null
@@ -738,6 +740,7 @@ export type Database = {
           is_active?: boolean
           linkedin_url?: string | null
           logo_url?: string | null
+          main_text?: string | null
           mobile_wallets?: boolean | null
           orange_money?: string | null
           payment_instructions?: string | null
