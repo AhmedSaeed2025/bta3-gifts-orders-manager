@@ -54,12 +54,15 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       setLoading(true);
       console.log('Loading cart for user:', user.id);
       
-      // Get user's cart
-      let { data: cart } = await supabase
+      // Get user's cart - fix: limit to 1 and order by created_at
+      let { data: carts } = await supabase
         .from('carts')
         .select('id')
         .eq('user_id', user.id)
-        .single();
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      let cart = carts?.[0];
 
       if (!cart) {
         // Create cart if doesn't exist
@@ -139,12 +142,15 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      // Get or create cart
-      let { data: cart } = await supabase
+      // Get user's most recent cart - fix: limit to 1 and order by created_at
+      let { data: carts } = await supabase
         .from('carts')
         .select('id')
         .eq('user_id', user.id)
-        .single();
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      let cart = carts?.[0];
 
       if (!cart) {
         const { data: newCart, error: createError } = await supabase
@@ -171,7 +177,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         .eq('cart_id', cart.id)
         .eq('product_id', productId)
         .eq('size', size)
-        .single();
+        .maybeSingle();
 
       if (existingItem) {
         // Update quantity
@@ -283,11 +289,14 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      const { data: cart } = await supabase
+      const { data: carts } = await supabase
         .from('carts')
         .select('id')
         .eq('user_id', user.id)
-        .single();
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      const cart = carts?.[0];
 
       if (cart) {
         await supabase

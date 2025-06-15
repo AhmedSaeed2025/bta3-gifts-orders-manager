@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,6 +16,7 @@ const AdminSettings = () => {
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
     store_name: '',
+    logo_url: '',
     primary_color: '',
     secondary_color: '',
     contact_phone: '',
@@ -47,6 +49,7 @@ const AdminSettings = () => {
     if (storeSettings) {
       setFormData({
         store_name: storeSettings.store_name || '',
+        logo_url: storeSettings.logo_url || '',
         primary_color: storeSettings.primary_color || '',
         secondary_color: storeSettings.secondary_color || '',
         contact_phone: storeSettings.contact_phone || '',
@@ -145,6 +148,32 @@ const AdminSettings = () => {
                   placeholder="info@store.com"
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="logo_url">رابط صورة اللوجو</Label>
+              <Input
+                id="logo_url"
+                value={formData.logo_url}
+                onChange={(e) => handleInputChange('logo_url', e.target.value)}
+                placeholder="https://example.com/logo.png أو https://example.com/logo.gif"
+              />
+              <p className="text-sm text-muted-foreground">
+                يمكنك استخدام رابط صورة ثابتة أو متحركة (GIF)
+              </p>
+              {formData.logo_url && (
+                <div className="mt-2">
+                  <p className="text-sm text-muted-foreground mb-2">معاينة اللوجو:</p>
+                  <img 
+                    src={formData.logo_url} 
+                    alt="معاينة اللوجو" 
+                    className="h-16 w-auto object-contain border rounded"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

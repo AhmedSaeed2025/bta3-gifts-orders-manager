@@ -20,11 +20,18 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({
   videoUrl,
   productName
 }) => {
+  // ترتيب الصور بحيث تظهر الصورة الأساسية أولاً
+  const sortedImages = [...images].sort((a, b) => {
+    if (a.is_primary && !b.is_primary) return -1;
+    if (!a.is_primary && b.is_primary) return 1;
+    return 0;
+  });
+
   const [currentIndex, setCurrentIndex] = useState(0);
   
   // Combine images and video into one array for navigation
   const mediaItems = [
-    ...images.map(img => ({ type: 'image', url: img.image_url, alt: img.alt_text })),
+    ...sortedImages.map(img => ({ type: 'image', url: img.image_url, alt: img.alt_text })),
     ...(videoUrl ? [{ type: 'video', url: videoUrl, alt: 'فيديو المنتج' }] : [])
   ];
 
@@ -102,6 +109,13 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({
             فيديو
           </div>
         )}
+
+        {/* Primary Image Indicator */}
+        {currentMedia?.type === 'image' && sortedImages[currentIndex]?.is_primary && (
+          <div className="absolute top-2 right-2 bg-primary text-white px-2 py-1 rounded text-xs">
+            الصورة الرئيسية
+          </div>
+        )}
       </div>
       
       {/* Thumbnail Navigation */}
@@ -111,7 +125,7 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({
             <button
               key={index}
               onClick={() => goToMedia(index)}
-              className={`aspect-square bg-muted rounded-md overflow-hidden border-2 transition-colors ${
+              className={`aspect-square bg-muted rounded-md overflow-hidden border-2 transition-colors relative ${
                 index === currentIndex ? 'border-primary' : 'border-transparent'
               }`}
             >
@@ -123,11 +137,19 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({
                   </span>
                 </div>
               ) : (
-                <img
-                  src={media.url}
-                  alt={media.alt || `صورة ${index + 1}`}
-                  className="w-full h-full object-cover cursor-pointer hover:opacity-80"
-                />
+                <>
+                  <img
+                    src={media.url}
+                    alt={media.alt || `صورة ${index + 1}`}
+                    className="w-full h-full object-cover cursor-pointer hover:opacity-80"
+                  />
+                  {/* Primary indicator on thumbnail */}
+                  {sortedImages[index]?.is_primary && (
+                    <div className="absolute top-1 right-1 bg-primary text-white rounded-full w-4 h-4 flex items-center justify-center text-xs">
+                      ★
+                    </div>
+                  )}
+                </>
               )}
             </button>
           ))}

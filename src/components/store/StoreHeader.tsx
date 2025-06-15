@@ -78,16 +78,24 @@ const StoreHeader = ({ storeSettings }: StoreHeaderProps) => {
               <img 
                 src={storeSettings.logo_url} 
                 alt={storeSettings.store_name}
-                className="h-10 w-10 object-cover rounded"
+                className="h-10 w-auto object-contain rounded"
+                onError={(e) => {
+                  // في حالة فشل تحميل الصورة، إخفاؤها وإظهار اللوجو الافتراضي
+                  e.currentTarget.style.display = 'none';
+                  const defaultLogo = e.currentTarget.nextElementSibling as HTMLElement;
+                  if (defaultLogo) defaultLogo.style.display = 'flex';
+                }}
               />
-            ) : (
-              <div 
-                className="h-10 w-10 rounded flex items-center justify-center text-white font-bold"
-                style={{ backgroundColor: storeSettings?.primary_color || '#10B981' }}
-              >
-                {storeSettings?.store_name?.charAt(0) || 'م'}
-              </div>
-            )}
+            ) : null}
+            <div 
+              className="h-10 w-10 rounded flex items-center justify-center text-white font-bold"
+              style={{ 
+                backgroundColor: storeSettings?.primary_color || '#10B981',
+                display: storeSettings?.logo_url ? 'none' : 'flex'
+              }}
+            >
+              {storeSettings?.store_name?.charAt(0) || 'م'}
+            </div>
             <span className="text-xl font-bold">
               {storeSettings?.store_name || 'متجري'}
             </span>
