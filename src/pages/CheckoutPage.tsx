@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,8 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useCart } from "@/hooks/useCart";
 import { formatCurrency } from "@/lib/utils";
-import { Order, OrderItem } from "@/types";
-import { useSupabaseOrders } from "@/context/SupabaseOrderContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import Logo from "@/components/Logo";
@@ -30,7 +29,6 @@ interface FormData {
 
 const CheckoutPage = () => {
   const { cartItems, clearCart } = useCart();
-  const { addOrder } = useSupabaseOrders();
   const { user } = useAuth();
   const navigate = useNavigate();
   
@@ -124,101 +122,132 @@ const CheckoutPage = () => {
       return;
     }
 
+    if (!user) {
+      toast.error("يجب تسجيل الدخول أولاً");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
+      console.log('Starting order submission...');
       const serial = await generateSerial();
+      console.log('Generated serial:', serial);
       
-      const orderItems: OrderItem[] = cartItems.map(item => ({
-        productType: item.product?.name || 'Unknown Product',
+      // Save to orders table first
+      const { data: orderData, error: orderError } = await supabase
+        .from('orders')
+        .insert({
+          user_id: user.id,
+          serial,
+          payment_method: formData.paymentMethod,
+          client_name: formData.clientName,
+          phone: formData.phone,
+          delivery_method: formData.deliveryMethod,
+          address: formData.address,
+          governorate: formData.governorate,
+          shipping_cost: shippingCost,
+          discount: formData.discount || 0,
+          deposit: formData.deposit || 0,
+          total,
+          profit: 0, // Will be calculated later
+          status: 'pending'
+        })
+        .select()
+        .single();
+
+      if (orderError) {
+        console.error('Error inserting order:', orderError);
+        throw orderError;
+      }
+
+      console.log('Order inserted successfully:', orderData);
+
+      // Insert order items
+      const orderItems = cartItems.map(item => ({
+        order_id: orderData.id,
+        product_type: item.product?.name || 'Unknown Product',
         size: item.size,
         quantity: item.quantity,
         cost: 0,
         price: item.price,
         profit: 0,
-        itemDiscount: 0
+        item_discount: 0
       }));
 
-      // Save to legacy orders table via context
-      const orderData: Omit<Order, 'serial' | 'dateCreated'> = {
-        clientName: formData.clientName,
-        phone: formData.phone,
-        paymentMethod: formData.paymentMethod,
-        deliveryMethod: formData.deliveryMethod,
-        address: formData.address,
-        governorate: formData.governorate,
-        items: orderItems,
-        shippingCost,
-        discount: formData.discount,
-        deposit: formData.deposit,
-        total,
-        profit: orderItems.reduce((sum, item) => sum + item.profit, 0),
-        status: 'pending'
-      };
+      console.log('Inserting order items:', orderItems);
 
-      await addOrder(orderData);
-      
-      // Save to admin orders table
-      if (user) {
-        try {
-          const { data: adminOrder, error: adminOrderError } = await supabase
-            .from('admin_orders')
-            .insert({
-              user_id: user.id,
-              serial: serial,
-              customer_name: formData.clientName,
-              customer_phone: formData.phone,
-              customer_email: '',
-              shipping_address: formData.address,
-              governorate: formData.governorate,
-              payment_method: formData.paymentMethod,
-              delivery_method: formData.deliveryMethod,
-              shipping_cost: shippingCost,
-              discount: formData.discount,
-              deposit: formData.deposit,
-              total_amount: total,
-              profit: orderItems.reduce((sum, item) => sum + item.profit, 0),
-              status: 'pending',
-              order_date: new Date().toISOString()
-            })
-            .select()
-            .single();
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItems);
 
-          if (adminOrderError) {
-            console.error('Error saving admin order:', adminOrderError);
-          } else if (adminOrder) {
-            const adminOrderItems = orderItems.map(item => ({
-              order_id: adminOrder.id,
-              product_name: item.productType,
-              product_size: item.size,
-              quantity: item.quantity,
-              unit_cost: item.cost,
-              unit_price: item.price,
-              item_discount: item.itemDiscount || 0,
-              total_price: item.price * item.quantity,
-              profit: item.profit
-            }));
-
-            const { error: itemsError } = await supabase
-              .from('admin_order_items')
-              .insert(adminOrderItems);
-
-            if (itemsError) {
-              console.error('Error saving admin order items:', itemsError);
-            }
-          }
-        } catch (adminError) {
-          console.error('Error saving to admin tables:', adminError);
-        }
+      if (itemsError) {
+        console.error('Error inserting order items:', itemsError);
+        throw itemsError;
       }
 
-      clearCart();
+      console.log('Order items inserted successfully');
+
+      // Save to admin orders table
+      try {
+        const { data: adminOrder, error: adminOrderError } = await supabase
+          .from('admin_orders')
+          .insert({
+            user_id: user.id,
+            serial: serial,
+            customer_name: formData.clientName,
+            customer_phone: formData.phone,
+            customer_email: '',
+            shipping_address: formData.address,
+            governorate: formData.governorate,
+            payment_method: formData.paymentMethod,
+            delivery_method: formData.deliveryMethod,
+            shipping_cost: shippingCost,
+            discount: formData.discount,
+            deposit: formData.deposit,
+            total_amount: total,
+            profit: 0,
+            status: 'pending',
+            order_date: new Date().toISOString()
+          })
+          .select()
+          .single();
+
+        if (adminOrderError) {
+          console.error('Error saving admin order:', adminOrderError);
+        } else if (adminOrder) {
+          const adminOrderItems = cartItems.map(item => ({
+            order_id: adminOrder.id,
+            product_name: item.product?.name || 'Unknown Product',
+            product_size: item.size,
+            quantity: item.quantity,
+            unit_cost: 0,
+            unit_price: item.price,
+            item_discount: 0,
+            total_price: item.price * item.quantity,
+            profit: 0
+          }));
+
+          const { error: adminItemsError } = await supabase
+            .from('admin_order_items')
+            .insert(adminOrderItems);
+
+          if (adminItemsError) {
+            console.error('Error saving admin order items:', adminItemsError);
+          }
+        }
+      } catch (adminError) {
+        console.error('Error saving to admin tables:', adminError);
+        // Don't throw here, as main order was saved successfully
+      }
+
+      await clearCart();
       toast.success("تم إنشاء الطلب بنجاح!");
       navigate("/");
       
     } catch (error) {
       console.error("Error creating order:", error);
-      toast.error("حدث خطأ في إنشاء الطلب");
+      toast.error("حدث خطأ في إنشاء الطلب. يرجى المحاولة مرة أخرى");
     } finally {
       setIsSubmitting(false);
     }
