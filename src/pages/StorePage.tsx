@@ -32,6 +32,8 @@ const StorePage = () => {
         store_name: 'متجر بتاع هدايا الأصلى',
         primary_color: '#10B981',
         secondary_color: '#059669',
+        accent_color: '#F59E0B',
+        text_color: '#1F2937',
         show_product_prices: true,
         show_product_sizes: true,
         hero_banner_url: null,
