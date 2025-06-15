@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { Loader2, Settings, Palette, Truck, CreditCard, FileText, Save } from 'lucide-react';
+import { Facebook } from 'lucide-react';
 
 // Import the new component modules
 import GeneralSettings from '@/components/admin/settings/GeneralSettings';
@@ -13,6 +14,7 @@ import AppearanceSettings from '@/components/admin/settings/AppearanceSettings';
 import ShippingSettings from '@/components/admin/settings/ShippingSettings';
 import PaymentSettings from '@/components/admin/settings/PaymentSettings';
 import PolicySettings from '@/components/admin/settings/PolicySettings';
+import SocialMediaSettings from '@/components/admin/settings/SocialMediaSettings';
 
 interface ShippingRate {
   id?: string;
@@ -73,7 +75,16 @@ const AdminSettings = () => {
     return_policy: '',
     terms_conditions: '',
     privacy_policy: '',
-    cookie_policy: ''
+    cookie_policy: '',
+    
+    // Social Media Settings
+    facebook_url: '',
+    instagram_url: '',
+    twitter_url: '',
+    youtube_url: '',
+    linkedin_url: '',
+    tiktok_url: '',
+    snapchat_url: ''
   });
 
   const [shippingRates, setShippingRates] = useState<ShippingRate[]>([]);
@@ -177,7 +188,16 @@ const AdminSettings = () => {
         return_policy: storeSettings.return_policy || '',
         terms_conditions: storeSettings.terms_conditions || '',
         privacy_policy: storeSettings.privacy_policy || '',
-        cookie_policy: storeSettings.cookie_policy || ''
+        cookie_policy: storeSettings.cookie_policy || '',
+        
+        // Add social media field mappings
+        facebook_url: storeSettings.facebook_url || '',
+        instagram_url: storeSettings.instagram_url || '',
+        twitter_url: storeSettings.twitter_url || '',
+        youtube_url: storeSettings.youtube_url || '',
+        linkedin_url: storeSettings.linkedin_url || '',
+        tiktok_url: storeSettings.tiktok_url || '',
+        snapchat_url: storeSettings.snapchat_url || ''
       });
     }
   }, [storeSettings]);
@@ -297,7 +317,7 @@ const AdminSettings = () => {
       </div>
 
       <Tabs defaultValue="general" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="general" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             عام
@@ -313,6 +333,10 @@ const AdminSettings = () => {
           <TabsTrigger value="payment" className="flex items-center gap-2">
             <CreditCard className="h-4 w-4" />
             الدفع
+          </TabsTrigger>
+          <TabsTrigger value="social" className="flex items-center gap-2">
+            <Facebook className="h-4 w-4" />
+            السوشيال ميديا
           </TabsTrigger>
           <TabsTrigger value="policies" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
@@ -356,6 +380,13 @@ const AdminSettings = () => {
             formData={formData}
             onInputChange={handleInputChange}
             onToggleChange={handleToggleChange}
+          />
+        </TabsContent>
+
+        <TabsContent value="social">
+          <SocialMediaSettings 
+            formData={formData}
+            onInputChange={handleInputChange}
           />
         </TabsContent>
 

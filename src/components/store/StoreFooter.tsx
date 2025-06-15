@@ -1,13 +1,22 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Facebook, Instagram, Twitter, Phone, Mail, MapPin } from 'lucide-react';
+import { Facebook, Instagram, Twitter, Youtube, Linkedin, Phone, Mail, MapPin } from 'lucide-react';
 
 interface StoreFooterProps {
   storeSettings: any;
 }
 
 const StoreFooter = ({ storeSettings }: StoreFooterProps) => {
+  // Social media links array
+  const socialLinks = [
+    { url: storeSettings?.facebook_url, icon: Facebook, label: 'فيسبوك', color: 'text-blue-600' },
+    { url: storeSettings?.instagram_url, icon: Instagram, label: 'انستجرام', color: 'text-pink-600' },
+    { url: storeSettings?.twitter_url, icon: Twitter, label: 'تويتر', color: 'text-blue-400' },
+    { url: storeSettings?.youtube_url, icon: Youtube, label: 'يوتيوب', color: 'text-red-600' },
+    { url: storeSettings?.linkedin_url, icon: Linkedin, label: 'لينكد إن', color: 'text-blue-700' },
+  ].filter(link => link.url); // Only show links that have URLs
+
   return (
     <footer className="bg-muted/50 border-t mt-16">
       <div className="container mx-auto px-4 py-12">
@@ -20,11 +29,56 @@ const StoreFooter = ({ storeSettings }: StoreFooterProps) => {
             <p className="text-muted-foreground mb-4">
               {storeSettings?.about_us || 'متجرك الموثوق للتسوق الإلكتروني'}
             </p>
-            <div className="flex gap-4">
-              <Facebook className="h-5 w-5 text-muted-foreground hover:text-primary cursor-pointer" />
-              <Instagram className="h-5 w-5 text-muted-foreground hover:text-primary cursor-pointer" />
-              <Twitter className="h-5 w-5 text-muted-foreground hover:text-primary cursor-pointer" />
-            </div>
+            
+            {/* Social Media Links */}
+            {socialLinks.length > 0 && (
+              <div className="flex gap-3 flex-wrap">
+                {socialLinks.map((social, index) => {
+                  const IconComponent = social.icon;
+                  return (
+                    <a
+                      key={index}
+                      href={social.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`${social.color} hover:opacity-75 transition-opacity`}
+                      aria-label={social.label}
+                    >
+                      <IconComponent className="h-6 w-6" />
+                    </a>
+                  );
+                })}
+                
+                {/* Custom icons for TikTok and Snapchat */}
+                {storeSettings?.tiktok_url && (
+                  <a
+                    href={storeSettings.tiktok_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-black hover:opacity-75 transition-opacity"
+                    aria-label="تيك توك"
+                  >
+                    <div className="h-6 w-6 bg-black rounded flex items-center justify-center">
+                      <span className="text-white text-sm font-bold">T</span>
+                    </div>
+                  </a>
+                )}
+                
+                {storeSettings?.snapchat_url && (
+                  <a
+                    href={storeSettings.snapchat_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-yellow-400 hover:opacity-75 transition-opacity"
+                    aria-label="سناب شات"
+                  >
+                    <div className="h-6 w-6 bg-yellow-400 rounded flex items-center justify-center">
+                      <span className="text-white text-sm font-bold">S</span>
+                    </div>
+                  </a>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Quick Links */}

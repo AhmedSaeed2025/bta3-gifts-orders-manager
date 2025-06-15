@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/hooks/useAuth";
@@ -12,6 +11,8 @@ import StorePage from "@/pages/StorePage";
 import ProductPage from "@/pages/ProductPage";
 import CartPage from "@/pages/CartPage";
 import CheckoutPage from "@/pages/CheckoutPage";
+import OrderPage from "@/pages/OrderPage";
+import OrderConfirmationPage from "@/pages/OrderConfirmationPage";
 import OrderTrackingPage from "@/pages/OrderTrackingPage";
 import ReturnPolicy from "@/components/store/ReturnPolicy";
 
@@ -63,6 +64,8 @@ function App() {
                     <Route path="/product/:id" element={<ProductPage />} />
                     <Route path="/cart" element={<CartPage />} />
                     <Route path="/checkout" element={<CheckoutPage />} />
+                    <Route path="/order" element={<OrderPage />} />
+                    <Route path="/order-confirmation/:serial" element={<OrderConfirmationPage />} />
                     <Route path="/track/:serial" element={<OrderTrackingPage />} />
                     <Route path="/return-policy" element={<ReturnPolicy />} />
                     <Route path="/auth" element={<AuthPage />} />
