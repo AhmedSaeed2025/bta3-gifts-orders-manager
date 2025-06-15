@@ -44,6 +44,7 @@ import { CartProvider } from "./hooks/useCart";
 import ErrorBoundary from "./components/ErrorBoundary";
 import AdminLayout from "./components/admin/AdminLayout";
 import StoreReturnPolicy from "./components/store/ReturnPolicy";
+import IndexLayout from "./components/layout/IndexLayout";
 
 const queryClient = new QueryClient();
 
@@ -93,13 +94,8 @@ function App() {
                                   <Route path="reports" element={<AdminReports />} />
                                 </Route>
                                 
-                                {/* Legacy Admin Route - Import IndexLayout for the accounting program */}
-                                <Route path="/legacy-admin" element={
-                                  <div>
-                                    <h1>برنامج الحسابات</h1>
-                                    <p>سيتم تطوير هذه الصفحة لاحقاً</p>
-                                  </div>
-                                } />
+                                {/* Legacy Admin Route - برنامج الحسابات */}
+                                <Route path="/legacy-admin" element={<IndexLayout />} />
                                 
                                 {/* Order Management */}
                                 <Route path="/order" element={<OrderPage />} />
