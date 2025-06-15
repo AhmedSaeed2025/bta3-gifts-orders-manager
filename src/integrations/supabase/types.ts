@@ -621,6 +621,7 @@ export type Database = {
           store_description: string | null
           store_name: string
           store_tagline: string | null
+          telegram_url: string | null
           terms_conditions: string | null
           text_color: string | null
           tiktok_url: string | null
@@ -628,6 +629,8 @@ export type Database = {
           updated_at: string
           user_id: string
           vodafone_cash: string | null
+          whatsapp_catalog_url: string | null
+          whatsapp_chat_url: string | null
           whatsapp_number: string | null
           youtube_url: string | null
         }
@@ -695,6 +698,7 @@ export type Database = {
           store_description?: string | null
           store_name?: string
           store_tagline?: string | null
+          telegram_url?: string | null
           terms_conditions?: string | null
           text_color?: string | null
           tiktok_url?: string | null
@@ -702,6 +706,8 @@ export type Database = {
           updated_at?: string
           user_id: string
           vodafone_cash?: string | null
+          whatsapp_catalog_url?: string | null
+          whatsapp_chat_url?: string | null
           whatsapp_number?: string | null
           youtube_url?: string | null
         }
@@ -769,6 +775,7 @@ export type Database = {
           store_description?: string | null
           store_name?: string
           store_tagline?: string | null
+          telegram_url?: string | null
           terms_conditions?: string | null
           text_color?: string | null
           tiktok_url?: string | null
@@ -776,6 +783,8 @@ export type Database = {
           updated_at?: string
           user_id?: string
           vodafone_cash?: string | null
+          whatsapp_catalog_url?: string | null
+          whatsapp_chat_url?: string | null
           whatsapp_number?: string | null
           youtube_url?: string | null
         }

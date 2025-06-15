@@ -13,7 +13,7 @@ const ContactPage = () => {
         .from('store_settings')
         .select('store_name, contact_phone, contact_phone_2, contact_email, address, whatsapp_number, whatsapp_chat_url')
         .eq('is_active', true)
-        .single();
+        .maybeSingle();
       
       if (error && error.code !== 'PGRST116') {
         console.error('Error fetching store settings:', error);

@@ -36,11 +36,11 @@ import { OrderProvider } from "./context/OrderContext";
 import { PriceProvider } from "./context/PriceContext";
 import { ProductProvider } from "./context/ProductContext";
 import { TransactionProvider } from "./context/TransactionContext";
-import { ThemeContextProvider } from "./context/ThemeContext";
+import { ThemeProvider as ThemeContextProvider } from "./context/ThemeContext";
 import { SupabaseOrderProvider } from "./context/SupabaseOrderContext";
 
 import ErrorBoundary from "./components/ErrorBoundary";
-import { StoreReturnPolicy } from "./components/store/ReturnPolicy";
+import StoreReturnPolicy from "./components/store/ReturnPolicy";
 
 const queryClient = new QueryClient();
 
