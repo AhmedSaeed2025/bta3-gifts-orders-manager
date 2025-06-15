@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { Plus, Edit, Trash2, Eye, EyeOff, Loader2, Image, Video, Tag } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, EyeOff, Loader2, Image, Video, Tag, Star, Globe, X } from 'lucide-react';
 
 const AdminProducts = () => {
   const { user } = useAuth();
@@ -92,7 +93,8 @@ const AdminProducts = () => {
     image_url: '',
     video_url: '',
     discount_percentage: 0,
-    sizes: [{ size: '', price: 0, cost: 0 }]
+    sizes: [{ size: '', price: 0, cost: 0 }],
+    images: [{ url: '', alt: '' }]
   });
 
   const handleAddSize = () => {
@@ -114,6 +116,29 @@ const AdminProducts = () => {
       ...prev,
       sizes: prev.sizes.map((size, i) => 
         i === index ? { ...size, [field]: value } : size
+      )
+    }));
+  };
+
+  const handleAddImage = () => {
+    setProductForm(prev => ({
+      ...prev,
+      images: [...prev.images, { url: '', alt: '' }]
+    }));
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setProductForm(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleImageChange = (index: number, field: string, value: string) => {
+    setProductForm(prev => ({
+      ...prev,
+      images: prev.images.map((img, i) => 
+        i === index ? { ...img, [field]: value } : img
       )
     }));
   };
@@ -155,7 +180,7 @@ const AdminProducts = () => {
           .update({
             name: data.name,
             description: data.description,
-            category_id: data.category_id || null,
+            category_id: data.category_id === 'no-category' ? null : data.category_id,
             featured: data.featured,
             is_active: data.is_active,
             image_url: data.image_url,
@@ -168,6 +193,9 @@ const AdminProducts = () => {
 
         // Delete old sizes
         await supabase.from('product_sizes').delete().eq('product_id', productId);
+        
+        // Delete old images
+        await supabase.from('product_images').delete().eq('product_id', productId);
       } else {
         // Create product
         const { data: newProduct, error } = await supabase
@@ -176,7 +204,7 @@ const AdminProducts = () => {
             user_id: user!.id,
             name: data.name,
             description: data.description,
-            category_id: data.category_id || null,
+            category_id: data.category_id === 'no-category' ? null : data.category_id,
             featured: data.featured,
             is_active: data.is_active,
             image_url: data.image_url,
@@ -209,6 +237,27 @@ const AdminProducts = () => {
           if (error) throw error;
         }
       }
+
+      // Add images
+      if (data.images.length > 0) {
+        const imagesToInsert = data.images
+          .filter(img => img.url.trim() !== '')
+          .map((img, index) => ({
+            product_id: productId,
+            image_url: img.url,
+            alt_text: img.alt,
+            is_primary: index === 0,
+            sort_order: index
+          }));
+
+        if (imagesToInsert.length > 0) {
+          const { error } = await supabase
+            .from('product_images')
+            .insert(imagesToInsert);
+          
+          if (error) throw error;
+        }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
@@ -218,15 +267,20 @@ const AdminProducts = () => {
       setProductForm({
         name: '',
         description: '',
-        category_id: '',
+        category_id: 'no-category',
         featured: false,
         is_active: true,
         image_url: '',
         video_url: '',
         discount_percentage: 0,
-        sizes: [{ size: '', price: 0, cost: 0 }]
+        sizes: [{ size: '', price: 0, cost: 0 }],
+        images: [{ url: '', alt: '' }]
       });
       toast.success(editingProduct ? 'تم تحديث المنتج' : 'تم إضافة المنتج');
+    },
+    onError: (error) => {
+      console.error('Error saving product:', error);
+      toast.error('حدث خطأ في حفظ المنتج');
     }
   });
 
@@ -235,7 +289,7 @@ const AdminProducts = () => {
     setProductForm({
       name: product.name,
       description: product.description || '',
-      category_id: product.category_id || 'no-category', // <<< fix here
+      category_id: product.category_id || 'no-category',
       featured: product.featured,
       is_active: product.is_active,
       image_url: product.image_url || '',
@@ -247,7 +301,13 @@ const AdminProducts = () => {
             price: s.price,
             cost: s.cost
           }))
-        : [{ size: '', price: 0, cost: 0 }]
+        : [{ size: '', price: 0, cost: 0 }],
+      images: product.product_images?.length > 0
+        ? product.product_images.map((img: any) => ({
+            url: img.image_url,
+            alt: img.alt_text || ''
+          }))
+        : [{ url: '', alt: '' }]
     });
     setIsProductDialogOpen(true);
   };
@@ -316,7 +376,7 @@ const AdminProducts = () => {
                 إضافة منتج
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{editingProduct ? 'تعديل منتج' : 'إضافة منتج جديد'}</DialogTitle>
               </DialogHeader>
@@ -364,7 +424,7 @@ const AdminProducts = () => {
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2">
                       <Image className="h-4 w-4" />
-                      رابط الصورة
+                      رابط الصورة الرئيسية
                     </Label>
                     <Input
                       value={productForm.image_url}
@@ -385,20 +445,69 @@ const AdminProducts = () => {
                   </div>
                 </div>
 
+                {/* Multiple Images Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label className="flex items-center gap-2">
+                      <Image className="h-4 w-4" />
+                      صور إضافية (يدعم الصور المتحركة GIF)
+                    </Label>
+                    <Button type="button" variant="outline" size="sm" onClick={handleAddImage}>
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  
+                  {productForm.images.map((image, index) => (
+                    <div key={index} className="grid grid-cols-5 gap-2 items-end">
+                      <div className="col-span-2 space-y-1">
+                        <Label className="text-xs">رابط الصورة</Label>
+                        <Input
+                          placeholder="https://example.com/image.jpg"
+                          value={image.url}
+                          onChange={(e) => handleImageChange(index, 'url', e.target.value)}
+                        />
+                      </div>
+                      <div className="col-span-2 space-y-1">
+                        <Label className="text-xs">وصف الصورة</Label>
+                        <Input
+                          placeholder="وصف الصورة"
+                          value={image.alt}
+                          onChange={(e) => handleImageChange(index, 'alt', e.target.value)}
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRemoveImage(index)}
+                        disabled={productForm.images.length === 1}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+
                 <div className="grid grid-cols-3 gap-4">
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 bg-gradient-to-r from-yellow-50 to-yellow-100 p-3 rounded-lg border border-yellow-200">
                     <Switch
                       checked={productForm.featured}
                       onCheckedChange={(checked) => setProductForm(prev => ({ ...prev, featured: checked }))}
                     />
-                    <Label>منتج مميز</Label>
+                    <div className="flex items-center gap-2">
+                      <Star className="h-4 w-4 text-yellow-600" />
+                      <Label className="text-yellow-800 font-medium">منتج مميز</Label>
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 bg-gradient-to-r from-green-50 to-green-100 p-3 rounded-lg border border-green-200">
                     <Switch
                       checked={productForm.is_active}
                       onCheckedChange={(checked) => setProductForm(prev => ({ ...prev, is_active: checked }))}
                     />
-                    <Label>ظاهر في المتجر</Label>
+                    <div className="flex items-center gap-2">
+                      <Globe className="h-4 w-4 text-green-600" />
+                      <Label className="text-green-800 font-medium">ظاهر في المتجر</Label>
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2">
@@ -548,12 +657,25 @@ const AdminProducts = () => {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         <h3 className="font-semibold">{product.name}</h3>
-                        {product.featured && <Badge variant="secondary">مميز</Badge>}
+                        {product.featured && (
+                          <Badge className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white">
+                            <Star className="h-3 w-3 mr-1" />
+                            مميز
+                          </Badge>
+                        )}
                         {product.categories && (
                           <Badge variant="outline">{product.categories.name}</Badge>
                         )}
                         {(product.discount_percentage || 0) > 0 && (
                           <Badge className="bg-red-500">خصم {product.discount_percentage}%</Badge>
+                        )}
+                        {product.is_active ? (
+                          <Badge className="bg-gradient-to-r from-green-400 to-green-600 text-white">
+                            <Globe className="h-3 w-3 mr-1" />
+                            ظاهر
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary">مخفي</Badge>
                         )}
                       </div>
                       
@@ -586,6 +708,9 @@ const AdminProducts = () => {
                       <div className="flex gap-2 text-xs text-muted-foreground">
                         {product.image_url && <span>🖼️ صورة</span>}
                         {product.video_url && <span>🎥 فيديو</span>}
+                        {product.product_images?.length > 0 && (
+                          <span>📷 {product.product_images.length} صور</span>
+                        )}
                       </div>
                     </div>
 
