@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { Order, OrderStatus, OrderItem } from "@/types";
+import { Order, OrderStatus, OrderItem, ORDER_STATUS_LABELS } from "@/types";
 import { toast } from "sonner";
 
 interface OrderContextType {
@@ -107,7 +107,9 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
       newOrders[index] = { ...newOrders[index], status };
       return newOrders;
     });
-    toast.success("تم تحديث حالة الطلب بنجاح");
+    
+    const statusLabel = ORDER_STATUS_LABELS[status] || status;
+    toast.success(`تم تحديث حالة الطلب إلى: ${statusLabel}`);
   };
 
   const getOrderBySerial = (serial: string) => {

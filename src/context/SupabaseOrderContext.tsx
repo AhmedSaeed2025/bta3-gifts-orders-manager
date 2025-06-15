@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { Order, OrderStatus, OrderItem } from "@/types";
+import { Order, OrderStatus, OrderItem, ORDER_STATUS_LABELS } from "@/types";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";

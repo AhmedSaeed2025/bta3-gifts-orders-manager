@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/utils';
 import { Printer, Eye, Edit, Trash2, RefreshCw, Plus, FileText, Image } from 'lucide-react';
 import AdminOrderInvoice from '@/components/admin/AdminOrderInvoice';
+import { ORDER_STATUS_LABELS } from '@/types';
 
 interface AdminOrder {
   id: string;
@@ -171,24 +172,16 @@ const AdminOrders = () => {
     switch (status) {
       case 'pending': return 'bg-yellow-500 text-white';
       case 'confirmed': return 'bg-blue-500 text-white';
-      case 'processing': return 'bg-purple-500 text-white';
-      case 'shipped': return 'bg-green-500 text-white';
-      case 'delivered': return 'bg-emerald-500 text-white';
+      case 'processing': return 'bg-orange-500 text-white';
+      case 'shipped': return 'bg-purple-500 text-white';
+      case 'delivered': return 'bg-green-500 text-white';
       case 'cancelled': return 'bg-red-500 text-white';
       default: return 'bg-gray-500 text-white';
     }
   };
 
   const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'pending': return 'في الانتظار';
-      case 'confirmed': return 'مؤكد';
-      case 'processing': return 'قيد التجهيز';
-      case 'shipped': return 'تم الشحن';
-      case 'delivered': return 'تم التوصيل';
-      case 'cancelled': return 'ملغي';
-      default: return status;
-    }
+    return ORDER_STATUS_LABELS[status as keyof typeof ORDER_STATUS_LABELS] || status;
   };
 
   const openInvoiceDialog = (order: AdminOrder) => {
@@ -312,9 +305,9 @@ const AdminOrders = () => {
                             </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="pending">في الانتظار</SelectItem>
-                            <SelectItem value="confirmed">مؤكد</SelectItem>
-                            <SelectItem value="processing">قيد التجهيز</SelectItem>
+                            <SelectItem value="pending">قيد المراجعة</SelectItem>
+                            <SelectItem value="confirmed">تم التأكيد</SelectItem>
+                            <SelectItem value="processing">قيد التحضير</SelectItem>
                             <SelectItem value="shipped">تم الشحن</SelectItem>
                             <SelectItem value="delivered">تم التوصيل</SelectItem>
                             <SelectItem value="cancelled">ملغي</SelectItem>

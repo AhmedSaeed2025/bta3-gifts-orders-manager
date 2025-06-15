@@ -27,15 +27,31 @@ export interface Order {
   dateCreated: string;
 }
 
-export type OrderStatus = "pending" | "confirmed" | "sentToPrinter" | "readyForDelivery" | "shipped";
+export type OrderStatus = "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled";
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
-  pending: "في انتظار التأكيد",
-  confirmed: "تم التأكيد",
-  sentToPrinter: "تم الأرسال للمطبعة",
-  readyForDelivery: "تحت التسليم",
-  shipped: "تم الشحن"
+  pending: "قيد المراجعة",
+  confirmed: "تم التأكيد", 
+  processing: "قيد التحضير",
+  shipped: "تم الشحن",
+  delivered: "تم التوصيل",
+  cancelled: "ملغي"
 };
+
+export const ORDER_STATUS_ORDER: OrderStatus[] = [
+  "pending",
+  "confirmed", 
+  "processing",
+  "shipped",
+  "delivered"
+];
+
+export interface OrderStatusConfig {
+  status: OrderStatus;
+  label: string;
+  order: number;
+  enabled: boolean;
+}
 
 export interface ProposedPrice {
   cost: number;

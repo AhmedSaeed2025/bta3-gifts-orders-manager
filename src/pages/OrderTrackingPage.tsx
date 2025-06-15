@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -8,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Search, Package, Truck, CheckCircle, Clock, Phone, Mail, MapPin, Loader2, ArrowLeft } from 'lucide-react';
+import { ORDER_STATUS_LABELS } from '@/types';
 
 const OrderTrackingPage = () => {
   const navigate = useNavigate();
