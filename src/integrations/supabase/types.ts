@@ -540,13 +540,16 @@ export type Database = {
           enable_dark_mode: boolean | null
           estimated_delivery_time: string | null
           etisalat_flex: string | null
+          facebook_url: string | null
           favicon_url: string | null
           free_shipping_enabled: boolean | null
           free_shipping_threshold: number | null
           hero_banner_url: string | null
           iban: string | null
           id: string
+          instagram_url: string | null
           is_active: boolean
+          linkedin_url: string | null
           logo_url: string | null
           mobile_wallets: boolean | null
           orange_money: string | null
@@ -560,14 +563,18 @@ export type Database = {
           show_prices: boolean | null
           show_product_prices: boolean | null
           show_product_sizes: boolean | null
+          snapchat_url: string | null
           store_name: string
           store_tagline: string | null
           terms_conditions: string | null
           text_color: string | null
+          tiktok_url: string | null
+          twitter_url: string | null
           updated_at: string
           user_id: string
           vodafone_cash: string | null
           whatsapp_number: string | null
+          youtube_url: string | null
         }
         Insert: {
           about_us?: string | null
@@ -588,13 +595,16 @@ export type Database = {
           enable_dark_mode?: boolean | null
           estimated_delivery_time?: string | null
           etisalat_flex?: string | null
+          facebook_url?: string | null
           favicon_url?: string | null
           free_shipping_enabled?: boolean | null
           free_shipping_threshold?: number | null
           hero_banner_url?: string | null
           iban?: string | null
           id?: string
+          instagram_url?: string | null
           is_active?: boolean
+          linkedin_url?: string | null
           logo_url?: string | null
           mobile_wallets?: boolean | null
           orange_money?: string | null
@@ -608,14 +618,18 @@ export type Database = {
           show_prices?: boolean | null
           show_product_prices?: boolean | null
           show_product_sizes?: boolean | null
+          snapchat_url?: string | null
           store_name?: string
           store_tagline?: string | null
           terms_conditions?: string | null
           text_color?: string | null
+          tiktok_url?: string | null
+          twitter_url?: string | null
           updated_at?: string
           user_id: string
           vodafone_cash?: string | null
           whatsapp_number?: string | null
+          youtube_url?: string | null
         }
         Update: {
           about_us?: string | null
@@ -636,13 +650,16 @@ export type Database = {
           enable_dark_mode?: boolean | null
           estimated_delivery_time?: string | null
           etisalat_flex?: string | null
+          facebook_url?: string | null
           favicon_url?: string | null
           free_shipping_enabled?: boolean | null
           free_shipping_threshold?: number | null
           hero_banner_url?: string | null
           iban?: string | null
           id?: string
+          instagram_url?: string | null
           is_active?: boolean
+          linkedin_url?: string | null
           logo_url?: string | null
           mobile_wallets?: boolean | null
           orange_money?: string | null
@@ -656,14 +673,18 @@ export type Database = {
           show_prices?: boolean | null
           show_product_prices?: boolean | null
           show_product_sizes?: boolean | null
+          snapchat_url?: string | null
           store_name?: string
           store_tagline?: string | null
           terms_conditions?: string | null
           text_color?: string | null
+          tiktok_url?: string | null
+          twitter_url?: string | null
           updated_at?: string
           user_id?: string
           vodafone_cash?: string | null
           whatsapp_number?: string | null
+          youtube_url?: string | null
         }
         Relationships: []
       }
