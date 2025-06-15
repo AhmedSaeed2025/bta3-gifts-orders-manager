@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/hooks/useAuth";
@@ -36,6 +35,7 @@ import { PriceProvider } from "@/context/PriceContext";
 import { TransactionProvider } from "@/context/TransactionContext";
 
 import "./App.css";
+import Navigation from "@/components/Navigation";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -94,6 +94,9 @@ function App() {
                     {/* Fallback */}
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
+                  
+                  {/* Global Navigation */}
+                  <Navigation />
                   <Toaster />
                 </div>
               </Router>

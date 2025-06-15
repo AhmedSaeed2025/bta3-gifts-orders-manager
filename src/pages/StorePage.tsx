@@ -22,7 +22,7 @@ const StorePage = () => {
       }
       
       return data || {
-        store_name: 'متجري الإلكتروني',
+        store_name: 'متجر بتاع هدايا الأصلى',
         primary_color: '#10B981',
         secondary_color: '#059669'
       };
@@ -36,6 +36,7 @@ const StorePage = () => {
         .from('products')
         .select(`
           *,
+          categories (id, name),
           product_sizes (*),
           product_images (*)
         `)
@@ -57,7 +58,8 @@ const StorePage = () => {
       const { data, error } = await supabase
         .from('categories')
         .select('*')
-        .eq('is_active', true);
+        .eq('is_active', true)
+        .order('name');
       
       if (error) {
         console.error('Error fetching categories:', error);
@@ -82,10 +84,10 @@ const StorePage = () => {
       <main className="container mx-auto px-4 py-8">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-foreground mb-4">
-            {storeSettings?.store_name || 'متجري الإلكتروني'}
+            {storeSettings?.store_name || 'متجر بتاع هدايا الأصلى'}
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            اكتشف مجموعتنا المتميزة من المنتجات عالية الجودة
+            اكتشف مجموعتنا المتميزة من الهدايا الأصلية عالية الجودة
           </p>
         </div>
         

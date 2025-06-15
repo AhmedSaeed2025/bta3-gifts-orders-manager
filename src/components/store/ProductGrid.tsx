@@ -11,6 +11,7 @@ interface Product {
   name: string;
   description?: string;
   featured: boolean;
+  is_active: boolean;
   category_id?: string;
   product_sizes: Array<{
     size: string;
@@ -22,6 +23,10 @@ interface Product {
     alt_text?: string;
     is_primary: boolean;
   }>;
+  categories?: {
+    id: string;
+    name: string;
+  };
 }
 
 interface ProductGridProps {
@@ -35,9 +40,27 @@ interface ProductGridProps {
 const ProductGrid = ({ products, categories }: ProductGridProps) => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
+  // Filter only active products
+  const activeProducts = products.filter(product => product.is_active);
+  
   const filteredProducts = selectedCategory 
-    ? products.filter(product => product.category_id === selectedCategory)
-    : products;
+    ? activeProducts.filter(product => product.category_id === selectedCategory)
+    : activeProducts;
+
+  // Group products by category
+  const productsByCategory = categories.reduce((acc, category) => {
+    const categoryProducts = activeProducts.filter(product => product.category_id === category.id);
+    if (categoryProducts.length > 0) {
+      acc[category.id] = {
+        category,
+        products: categoryProducts
+      };
+    }
+    return acc;
+  }, {} as Record<string, { category: any; products: Product[] }>);
+
+  // Products without category
+  const uncategorizedProducts = activeProducts.filter(product => !product.category_id);
 
   const getProductImage = (product: Product) => {
     const primaryImage = product.product_images?.find(img => img.is_primary);
@@ -57,7 +80,7 @@ const ProductGrid = ({ products, categories }: ProductGridProps) => {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-12">
       {/* Categories Filter */}
       {categories.length > 0 && (
         <div className="flex flex-wrap gap-2 justify-center">
@@ -67,24 +90,29 @@ const ProductGrid = ({ products, categories }: ProductGridProps) => {
           >
             جميع المنتجات
           </Button>
-          {categories.map((category) => (
-            <Button
-              key={category.id}
-              variant={selectedCategory === category.id ? "default" : "outline"}
-              onClick={() => setSelectedCategory(category.id)}
-            >
-              {category.name}
-            </Button>
-          ))}
+          {categories.map((category) => {
+            const hasProducts = activeProducts.some(p => p.category_id === category.id);
+            if (!hasProducts) return null;
+            
+            return (
+              <Button
+                key={category.id}
+                variant={selectedCategory === category.id ? "default" : "outline"}
+                onClick={() => setSelectedCategory(category.id)}
+              >
+                {category.name}
+              </Button>
+            );
+          })}
         </div>
       )}
 
       {/* Featured Products */}
-      {products.some(p => p.featured) && (
+      {activeProducts.some(p => p.featured) && !selectedCategory && (
         <section>
           <h2 className="text-2xl font-bold mb-6 text-center">المنتجات المميزة</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {products
+            {activeProducts
               .filter(product => product.featured)
               .slice(0, 4)
               .map((product) => (
@@ -94,24 +122,59 @@ const ProductGrid = ({ products, categories }: ProductGridProps) => {
         </section>
       )}
 
-      {/* All Products */}
-      <section>
-        <h2 className="text-2xl font-bold mb-6 text-center">
-          {selectedCategory ? `فئة: ${categories.find(c => c.id === selectedCategory)?.name}` : 'جميع المنتجات'}
-        </h2>
-        
-        {filteredProducts.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground text-lg">لا توجد منتجات في هذه الفئة</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        )}
-      </section>
+      {/* Display by categories or filtered products */}
+      {selectedCategory ? (
+        <section>
+          <h2 className="text-2xl font-bold mb-6 text-center">
+            فئة: {categories.find(c => c.id === selectedCategory)?.name}
+          </h2>
+          
+          {filteredProducts.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground text-lg">لا توجد منتجات في هذه الفئة</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filteredProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
+        </section>
+      ) : (
+        <>
+          {/* Products by category */}
+          {Object.values(productsByCategory).map(({ category, products }) => (
+            <section key={category.id}>
+              <h2 className="text-2xl font-bold mb-6 text-center">{category.name}</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {products.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+            </section>
+          ))}
+
+          {/* Uncategorized products */}
+          {uncategorizedProducts.length > 0 && (
+            <section>
+              <h2 className="text-2xl font-bold mb-6 text-center">منتجات أخرى</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {uncategorizedProducts.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* No products message */}
+          {activeProducts.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground text-lg">لا توجد منتجات متاحة حالياً</p>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 };
@@ -129,11 +192,14 @@ const ProductCard = ({ product }: { product: Product }) => {
           className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
         />
         
-        {product.featured && (
-          <Badge className="absolute top-2 left-2">
-            مميز
-          </Badge>
-        )}
+        <div className="absolute top-2 left-2 flex flex-col gap-1">
+          {product.featured && (
+            <Badge className="bg-yellow-500">مميز</Badge>
+          )}
+          {product.categories && (
+            <Badge variant="secondary">{product.categories.name}</Badge>
+          )}
+        </div>
         
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
           <div className="flex gap-2">
@@ -181,7 +247,7 @@ const ProductCard = ({ product }: { product: Product }) => {
   );
 };
 
-// Helper function to get product price
+// Helper functions
 const getProductPrice = (product: Product) => {
   if (!product.product_sizes || product.product_sizes.length === 0) {
     return { min: 0, max: 0 };
@@ -194,7 +260,6 @@ const getProductPrice = (product: Product) => {
   };
 };
 
-// Helper function to get product image
 const getProductImage = (product: Product) => {
   const primaryImage = product.product_images?.find(img => img.is_primary);
   return primaryImage?.image_url || product.product_images?.[0]?.image_url || '/placeholder.svg';
