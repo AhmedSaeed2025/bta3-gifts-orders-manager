@@ -29,6 +29,12 @@ import AuthPage from "@/pages/AuthPage";
 // Legacy admin (current system)
 import Index from "@/pages/Index";
 
+// Context providers
+import { SupabaseOrderProvider } from "@/context/SupabaseOrderContext";
+import { ProductProvider } from "@/context/ProductContext";
+import { PriceProvider } from "@/context/PriceContext";
+import { TransactionProvider } from "@/context/TransactionContext";
+
 import "./App.css";
 
 const queryClient = new QueryClient({
@@ -69,8 +75,21 @@ function App() {
                       <Route path="settings" element={<AdminSettings />} />
                     </Route>
 
-                    {/* Legacy Admin (current system) */}
-                    <Route path="/legacy-admin" element={<Index />} />
+                    {/* Legacy Admin (current system) - wrapped with necessary providers */}
+                    <Route 
+                      path="/legacy-admin" 
+                      element={
+                        <SupabaseOrderProvider>
+                          <ProductProvider>
+                            <PriceProvider>
+                              <TransactionProvider>
+                                <Index />
+                              </TransactionProvider>
+                            </PriceProvider>
+                          </ProductProvider>
+                        </SupabaseOrderProvider>
+                      } 
+                    />
                     
                     {/* Fallback */}
                     <Route path="*" element={<Navigate to="/" replace />} />
