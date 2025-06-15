@@ -11,6 +11,7 @@ export interface AdminSettingsFormData {
   store_description: string;
   about_us: string;
   main_text: string;
+  footer_brand_text: string;
   contact_phone: string;
   contact_phone_2: string;
   contact_email: string;
@@ -91,6 +92,7 @@ const defaultFormData: AdminSettingsFormData = {
   store_description: '',
   about_us: '',
   main_text: '',
+  footer_brand_text: 'بتاع هدايا الأصلى',
   contact_phone: '',
   contact_phone_2: '',
   contact_email: '',
@@ -197,6 +199,7 @@ export const useAdminSettings = () => {
         store_description: (storeSettings as any).store_description || '',
         about_us: storeSettings.about_us || '',
         main_text: (storeSettings as any).main_text || '',
+        footer_brand_text: (storeSettings as any).footer_brand_text || 'بتاع هدايا الأصلى',
         contact_phone: storeSettings.contact_phone || '',
         contact_phone_2: storeSettings.contact_phone_2 || '',
         contact_email: storeSettings.contact_email || '',

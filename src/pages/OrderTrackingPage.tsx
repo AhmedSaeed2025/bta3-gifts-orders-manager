@@ -1,14 +1,16 @@
 
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Search, Package, Truck, CheckCircle, Clock, Phone, Mail, MapPin, Loader2 } from 'lucide-react';
+import { Search, Package, Truck, CheckCircle, Clock, Phone, Mail, MapPin, Loader2, ArrowLeft } from 'lucide-react';
 
 const OrderTrackingPage = () => {
+  const navigate = useNavigate();
   const [serial, setSerial] = useState('');
   const [searchSerial, setSearchSerial] = useState('');
 
@@ -81,10 +83,20 @@ const OrderTrackingPage = () => {
       <div className="container mx-auto px-4 py-8">
         <Card className="max-w-4xl mx-auto">
           <CardHeader>
-            <CardTitle className="flex items-center gap-3">
-              <Search className="h-6 w-6" />
-              تتبع الطلب
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-3">
+                <Search className="h-6 w-6" />
+                تتبع الطلب
+              </CardTitle>
+              <Button 
+                variant="outline" 
+                onClick={() => navigate(-1)}
+                className="flex items-center gap-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                العودة للخلف
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             {/* Search Form */}

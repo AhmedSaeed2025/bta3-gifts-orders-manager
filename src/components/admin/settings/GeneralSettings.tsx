@@ -81,6 +81,19 @@ const GeneralSettings = ({ formData, onInputChange }: GeneralSettingsProps) => {
               هذا النص سيظهر بدلاً من النص الافتراضي في المتجر. اتركه فارغاً لإخفاء النص تماماً.
             </p>
           </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="footer_brand_text">نص العلامة التجارية في الفوتر</Label>
+            <Input
+              id="footer_brand_text"
+              value={formData.footer_brand_text}
+              onChange={(e) => onInputChange('footer_brand_text', e.target.value)}
+              placeholder="بتاع هدايا الأصلى"
+            />
+            <p className="text-sm text-gray-500">
+              هذا النص سيظهر في أسفل المتجر كعلامة تجارية.
+            </p>
+          </div>
         </CardContent>
       </Card>
 
