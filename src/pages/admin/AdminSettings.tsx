@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -33,28 +32,30 @@ const AdminSettings = () => {
         .eq('user_id', user!.id)
         .eq('is_active', true)
         .single();
-      
+
       if (error && error.code !== 'PGRST116') {
         throw error;
       }
-      
+
       return data;
     },
-    enabled: !!user,
-    onSuccess: (data) => {
-      if (data) {
-        setFormData({
-          store_name: data.store_name || '',
-          primary_color: data.primary_color || '',
-          secondary_color: data.secondary_color || '',
-          contact_phone: data.contact_phone || '',
-          contact_email: data.contact_email || '',
-          address: data.address || '',
-          about_us: data.about_us || ''
-        });
-      }
-    }
+    enabled: !!user
   });
+
+  // تحديث formData عند تغير storeSettings
+  useEffect(() => {
+    if (storeSettings) {
+      setFormData({
+        store_name: storeSettings.store_name || '',
+        primary_color: storeSettings.primary_color || '',
+        secondary_color: storeSettings.secondary_color || '',
+        contact_phone: storeSettings.contact_phone || '',
+        contact_email: storeSettings.contact_email || '',
+        address: storeSettings.address || '',
+        about_us: storeSettings.about_us || ''
+      });
+    }
+  }, [storeSettings]);
 
   const updateSettingsMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
@@ -67,7 +68,7 @@ const AdminSettings = () => {
             updated_at: new Date().toISOString()
           })
           .eq('id', storeSettings.id);
-        
+
         if (error) throw error;
       } else {
         // Create new settings
@@ -77,7 +78,7 @@ const AdminSettings = () => {
             user_id: user!.id,
             ...data
           });
-        
+
         if (error) throw error;
       }
     },
