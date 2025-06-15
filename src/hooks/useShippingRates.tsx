@@ -1,6 +1,7 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
 
 export interface ShippingRate {
   id?: string;
@@ -11,6 +12,7 @@ export interface ShippingRate {
 }
 
 export const useShippingRates = () => {
+  const { user } = useAuth();
   const [shippingRates, setShippingRates] = useState<ShippingRate[]>([]);
   const [newShippingRate, setNewShippingRate] = useState<ShippingRate>({
     product_type: '',
@@ -19,25 +21,74 @@ export const useShippingRates = () => {
     shipping_cost: 0
   });
 
+  // Load shipping rates from localStorage on mount
+  useEffect(() => {
+    if (user) {
+      try {
+        const savedRates = localStorage.getItem(`shipping_rates_${user.id}`);
+        if (savedRates) {
+          const parsed = JSON.parse(savedRates);
+          setShippingRates(parsed);
+        }
+      } catch (error) {
+        console.error('Error loading shipping rates:', error);
+      }
+    }
+  }, [user]);
+
+  // Save shipping rates to localStorage whenever they change
+  useEffect(() => {
+    if (user && shippingRates.length >= 0) {
+      try {
+        localStorage.setItem(`shipping_rates_${user.id}`, JSON.stringify(shippingRates));
+      } catch (error) {
+        console.error('Error saving shipping rates:', error);
+      }
+    }
+  }, [shippingRates, user]);
+
   const addShippingRate = () => {
     if (!newShippingRate.product_type || !newShippingRate.product_size || !newShippingRate.governorate) {
       toast.error('يرجى ملء جميع الحقول المطلوبة');
       return;
     }
 
-    setShippingRates(prev => [...prev, { ...newShippingRate, id: Date.now().toString() }]);
+    // Check for duplicates
+    const exists = shippingRates.some(rate => 
+      rate.product_type === newShippingRate.product_type &&
+      rate.product_size === newShippingRate.product_size &&
+      rate.governorate === newShippingRate.governorate
+    );
+
+    if (exists) {
+      toast.error('هذه التكلفة موجودة بالفعل للمنتج والمقاس والمحافظة المحددة');
+      return;
+    }
+
+    const rateWithId = { 
+      ...newShippingRate, 
+      id: Date.now().toString(),
+      shipping_cost: Number(newShippingRate.shipping_cost) 
+    };
+
+    setShippingRates(prev => [...prev, rateWithId]);
     setNewShippingRate({
       product_type: '',
       product_size: '',
       governorate: '',
       shipping_cost: 0
     });
-    toast.success('تم إضافة تكلفة الشحن');
+    toast.success('تم إضافة تكلفة الشحن بنجاح');
   };
 
   const removeShippingRate = (index: number) => {
     setShippingRates(prev => prev.filter((_, i) => i !== index));
-    toast.success('تم حذف تكلفة الشحن');
+    toast.success('تم حذف تكلفة الشحن بنجاح');
+  };
+
+  const updateShippingRate = (index: number, updatedRate: ShippingRate) => {
+    setShippingRates(prev => prev.map((rate, i) => i === index ? updatedRate : rate));
+    toast.success('تم تحديث تكلفة الشحن بنجاح');
   };
 
   return {
@@ -46,6 +97,7 @@ export const useShippingRates = () => {
     newShippingRate,
     setNewShippingRate,
     addShippingRate,
-    removeShippingRate
+    removeShippingRate,
+    updateShippingRate
   };
 };

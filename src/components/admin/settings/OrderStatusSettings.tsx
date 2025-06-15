@@ -15,23 +15,46 @@ const OrderStatusSettings = () => {
   const { user } = useAuth();
   const [statusConfigs, setStatusConfigs] = useState<OrderStatusConfig[]>([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   // Initialize default status configs
   useEffect(() => {
-    const defaultConfigs: OrderStatusConfig[] = [
-      { status: 'pending', label: 'قيد المراجعة', order: 1, enabled: true },
-      { status: 'confirmed', label: 'تم التأكيد', order: 2, enabled: true },
-      { status: 'processing', label: 'قيد التحضير', order: 3, enabled: true },
-      { status: 'sentToPrinter', label: 'تم الإرسال للمطبعة', order: 4, enabled: true },
-      { status: 'readyForDelivery', label: 'تحت التسليم', order: 5, enabled: true },
-      { status: 'shipped', label: 'تم الشحن', order: 6, enabled: true },
-      { status: 'delivered', label: 'تم التوصيل', order: 7, enabled: true },
-      { status: 'cancelled', label: 'ملغي', order: 8, enabled: true }
-    ];
-    
-    setStatusConfigs(defaultConfigs);
-    setLoading(false);
-  }, []);
+    const loadConfigurations = () => {
+      try {
+        // Try to load from localStorage first
+        const savedConfigs = user ? localStorage.getItem(`order_status_configs_${user.id}`) : null;
+        
+        if (savedConfigs) {
+          const parsed = JSON.parse(savedConfigs);
+          setStatusConfigs(parsed);
+        } else {
+          // Use default configurations
+          const defaultConfigs: OrderStatusConfig[] = [
+            { status: 'pending', label: 'قيد المراجعة', order: 1, enabled: true },
+            { status: 'confirmed', label: 'تم التأكيد', order: 2, enabled: true },
+            { status: 'processing', label: 'قيد التحضير', order: 3, enabled: true },
+            { status: 'sentToPrinter', label: 'تم الإرسال للمطبعة', order: 4, enabled: true },
+            { status: 'readyForDelivery', label: 'تحت التسليم', order: 5, enabled: true },
+            { status: 'shipped', label: 'تم الشحن', order: 6, enabled: true },
+            { status: 'delivered', label: 'تم التوصيل', order: 7, enabled: true },
+            { status: 'cancelled', label: 'ملغي', order: 8, enabled: true }
+          ];
+          setStatusConfigs(defaultConfigs);
+        }
+      } catch (error) {
+        console.error('Error loading status configurations:', error);
+        toast.error('حدث خطأ في تحميل الإعدادات');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (user) {
+      loadConfigurations();
+    } else {
+      setLoading(false);
+    }
+  }, [user]);
 
   const moveStatusUp = (index: number) => {
     if (index === 0) return;
@@ -77,17 +100,28 @@ const OrderStatusSettings = () => {
 
   const saveConfigurations = async () => {
     try {
+      setSaving(true);
+      
       if (!user) {
         toast.error('يجب تسجيل الدخول أولاً');
         return;
       }
 
+      // Validate configurations
+      if (statusConfigs.length === 0) {
+        toast.error('يجب أن تحتوي على حالة واحدة على الأقل');
+        return;
+      }
+
+      // Save to localStorage
       localStorage.setItem(`order_status_configs_${user.id}`, JSON.stringify(statusConfigs));
       
       toast.success('تم حفظ إعدادات حالات الطلبات بنجاح');
     } catch (error) {
       console.error('Error saving status configurations:', error);
       toast.error('حدث خطأ في حفظ الإعدادات');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -106,7 +140,11 @@ const OrderStatusSettings = () => {
   };
 
   if (loading) {
-    return <div>جاري التحميل...</div>;
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="text-muted-foreground">جاري التحميل...</div>
+      </div>
+    );
   }
 
   return (
@@ -114,9 +152,13 @@ const OrderStatusSettings = () => {
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>إعدادات حالات الطلبات</CardTitle>
-          <Button onClick={saveConfigurations} className="flex items-center gap-2">
+          <Button 
+            onClick={saveConfigurations} 
+            disabled={saving}
+            className="flex items-center gap-2"
+          >
             <Save className="h-4 w-4" />
-            حفظ الإعدادات
+            {saving ? 'جاري الحفظ...' : 'حفظ الإعدادات'}
           </Button>
         </div>
       </CardHeader>
@@ -168,7 +210,7 @@ const OrderStatusSettings = () => {
                 />
               </div>
 
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 space-x-reverse">
                 <Switch
                   checked={config.enabled}
                   onCheckedChange={() => toggleStatusEnabled(index)}
