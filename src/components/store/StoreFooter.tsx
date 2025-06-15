@@ -114,7 +114,7 @@ const StoreFooter = () => {
               © {currentYear} {storeSettings?.store_name || 'متجري'}. جميع الحقوق محفوظة.
             </p>
             <p className="text-green-400 text-sm font-medium mt-2 md:mt-0">
-              {storeSettings?.footer_brand_text || 'بتاع هدايا الأصلى'}
+              {(storeSettings as any)?.footer_brand_text || 'بتاع هدايا الأصلى'}
             </p>
           </div>
         </div>

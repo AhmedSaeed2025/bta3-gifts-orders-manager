@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -195,7 +194,7 @@ const StorePage = () => {
         <SocialMediaSection storeSettings={storeSettings} />
       </main>
       
-      <StoreFooter storeSettings={storeSettings} />
+      <StoreFooter />
       
       {/* Back to Top Button */}
       {storeSettings?.show_back_to_top && <BackToTop />}
