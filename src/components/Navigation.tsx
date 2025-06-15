@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Store } from 'lucide-react';
+import { Store, Settings, Calculator } from 'lucide-react';
 
 const Navigation = () => {
   const { user } = useAuth();
@@ -38,9 +38,9 @@ const Navigation = () => {
   return (
     <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
       <div className="bg-white border rounded-full shadow-lg px-4 py-2 flex items-center gap-2">
-        <Link to="/">
+        <Link to="/store">
           <Button
-            variant={location.pathname === '/' ? 'default' : 'ghost'}
+            variant={location.pathname === '/store' || location.pathname === '/' ? 'default' : 'ghost'}
             size="sm"
             className="rounded-full"
           >
@@ -48,6 +48,33 @@ const Navigation = () => {
             المتجر
           </Button>
         </Link>
+
+        {/* أزرار الأدمن */}
+        {user && userRole === 'admin' && (
+          <>
+            <Link to="/admin/dashboard">
+              <Button
+                variant={location.pathname.startsWith('/admin') ? 'default' : 'ghost'}
+                size="sm"
+                className="rounded-full"
+              >
+                <Settings className="h-4 w-4 ml-1" />
+                لوحة التحكم
+              </Button>
+            </Link>
+
+            <Link to="/legacy-admin">
+              <Button
+                variant={location.pathname.startsWith('/legacy-admin') ? 'default' : 'ghost'}
+                size="sm"
+                className="rounded-full"
+              >
+                <Calculator className="h-4 w-4 ml-1" />
+                الحسابات
+              </Button>
+            </Link>
+          </>
+        )}
 
         {/* لو لم يكن هناك مستخدم (غير مسجل دخول) */}
         {!user && (

@@ -4,7 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const navLinks = [
-  { to: "/", label: "المتجر" },
+  { to: "/store", label: "المتجر" },
   { to: "/admin/dashboard", label: "لوحة التحكم" },
   { to: "/legacy-admin", label: "برنامج الحسابات" },
 ];
@@ -20,7 +20,9 @@ const AccountsNavbar = () => {
           const isActive =
             link.to === "/legacy-admin"
               ? location.pathname.startsWith("/legacy-admin")
-              : location.pathname === link.to;
+              : link.to === "/admin/dashboard"
+              ? location.pathname.startsWith("/admin")
+              : location.pathname === link.to || (link.to === "/store" && location.pathname === "/");
           return (
             <Link
               key={link.to}

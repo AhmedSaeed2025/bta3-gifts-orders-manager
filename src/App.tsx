@@ -93,8 +93,13 @@ function App() {
                                   <Route path="reports" element={<AdminReports />} />
                                 </Route>
                                 
-                                {/* Legacy Admin Route */}
-                                <Route path="/legacy-admin" element={<Index />} />
+                                {/* Legacy Admin Route - Import IndexLayout for the accounting program */}
+                                <Route path="/legacy-admin" element={
+                                  <div>
+                                    <h1>برنامج الحسابات</h1>
+                                    <p>سيتم تطوير هذه الصفحة لاحقاً</p>
+                                  </div>
+                                } />
                                 
                                 {/* Order Management */}
                                 <Route path="/order" element={<OrderPage />} />
