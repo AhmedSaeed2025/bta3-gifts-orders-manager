@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Facebook, Instagram, Twitter, Youtube, Linkedin, Phone, Mail, MapPin } from 'lucide-react';
@@ -189,8 +188,8 @@ const StoreFooter = ({ storeSettings }: StoreFooterProps) => {
         )}
 
         <div className={`border-t border-gray-600 pt-6 mt-8 text-center text-gray-400 ${isMobile ? 'text-sm' : ''}`}>
-          <p>&copy; 2024 {storeSettings?.store_name || 'متجري الإلكتروني'}. جميع الحقوق محفوظة.</p>
-          <p className="mt-2 text-xs">تم التطوير بواسطة فريق التطوير المحترف</p>
+          <p>&copy; 2025 {storeSettings?.store_name || 'متجري الإلكتروني'}. جميع الحقوق محفوظة.</p>
+          <p className="mt-2 text-xs">بواسطة #بتاع_هدايا_الأصلى</p>
         </div>
       </div>
     </footer>
