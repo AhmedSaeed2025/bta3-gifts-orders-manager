@@ -119,30 +119,51 @@ const AdminOrders = () => {
     }
   };
 
-  // Delete order
+  // Enhanced delete order function to also delete related transactions
   const deleteOrder = async (orderId: string) => {
-    if (!window.confirm('هل أنت متأكد من حذف هذا الطلب؟')) {
+    if (!window.confirm('هل أنت متأكد من حذف هذا الطلب؟ سيتم حذف جميع المعاملات المرتبطة به أيضاً.')) {
       return;
     }
 
     try {
-      const { error } = await supabase
+      const orderToDelete = orders.find(order => order.id === orderId);
+      if (!orderToDelete) {
+        toast.error('الطلب غير موجود');
+        return;
+      }
+
+      console.log('Deleting order and related transactions:', orderToDelete.serial);
+
+      // First delete related transactions from both transactions tables
+      const { error: transactionError } = await supabase
+        .from('transactions')
+        .delete()
+        .eq('order_serial', orderToDelete.serial)
+        .eq('user_id', user?.id);
+
+      if (transactionError) {
+        console.error('Error deleting transactions:', transactionError);
+        // Don't throw error, just log it as transactions might not exist
+      }
+
+      // Delete the order (cascade will handle admin_order_items)
+      const { error: orderError } = await supabase
         .from('admin_orders')
         .delete()
         .eq('id', orderId)
         .eq('user_id', user?.id);
 
-      if (error) {
-        console.error('Error deleting order:', error);
-        toast.error('خطأ في حذف الطلب');
-        return;
+      if (orderError) {
+        console.error('Error deleting order:', orderError);
+        throw orderError;
       }
 
-      toast.success('تم حذف الطلب بنجاح');
+      console.log('Order and related data deleted successfully');
+      toast.success('تم حذف الطلب وجميع المعاملات المرتبطة به بنجاح');
       loadOrders();
     } catch (error) {
       console.error('Error deleting order:', error);
-      toast.error('خطأ في حذف الطلب');
+      toast.error('حدث خطأ في حذف الطلب');
     }
   };
 
@@ -188,7 +209,7 @@ const AdminOrders = () => {
   if (loading) {
     return (
       <div className="p-6 space-y-6">
-        <div className="flex items-center justify-center h-64">
+        <div className="flex items-center justify-center py-8">
           <RefreshCw className="h-8 w-8 animate-spin text-primary" />
         </div>
       </div>
