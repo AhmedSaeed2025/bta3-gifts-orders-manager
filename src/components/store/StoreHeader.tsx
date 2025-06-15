@@ -77,12 +77,12 @@ const StoreHeader = ({ storeSettings }: StoreHeaderProps) => {
       <div className={`container mx-auto px-3 md:px-4 py-3 md:py-4 ${isMobile ? 'max-w-full' : ''}`}>
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link to="/" className={`flex items-center gap-2 ${isMobile ? 'flex-1' : ''}`}>
+          <Link to="/" className={`flex items-center gap-3 ${isMobile ? 'flex-1 min-w-0' : ''}`}>
             {storeSettings?.logo_url ? (
               <img 
                 src={storeSettings.logo_url} 
                 alt={storeSettings.store_name || 'شعار المتجر'}
-                className={`object-contain rounded-lg ${isMobile ? 'h-8 w-8' : 'h-10 w-10'}`}
+                className={`object-contain rounded-lg flex-shrink-0 ${isMobile ? 'h-8 w-8' : 'h-10 w-10'}`}
                 onError={(e) => {
                   console.log('Logo failed to load, showing fallback');
                   e.currentTarget.style.display = 'none';
@@ -99,7 +99,7 @@ const StoreHeader = ({ storeSettings }: StoreHeaderProps) => {
             
             {/* Fallback logo */}
             <div 
-              className={`rounded-lg flex items-center justify-center text-white font-bold ${isMobile ? 'h-8 w-8 text-sm' : 'h-10 w-10 text-lg'}`}
+              className={`rounded-lg flex items-center justify-center text-white font-bold flex-shrink-0 ${isMobile ? 'h-8 w-8 text-sm' : 'h-10 w-10 text-lg'}`}
               style={{ 
                 backgroundColor: storeSettings?.primary_color || '#10B981',
                 display: storeSettings?.logo_url ? 'none' : 'flex'
@@ -108,9 +108,22 @@ const StoreHeader = ({ storeSettings }: StoreHeaderProps) => {
               {storeSettings?.store_name?.charAt(0) || 'م'}
             </div>
             
-            <span className={`font-bold ${isMobile ? 'mobile-professional-subheading' : 'text-xl'}`}>
-              {isMobile ? (storeSettings?.store_name?.split(' ')[0] || 'متجري') : (storeSettings?.store_name || 'متجري')}
-            </span>
+            <div className="min-w-0 flex-1">
+              <h1 
+                className={`font-bold leading-tight truncate ${isMobile ? 'text-sm' : 'text-xl'}`}
+                style={{ color: storeSettings?.text_color || '#1F2937' }}
+              >
+                {storeSettings?.store_name || 'متجري'}
+              </h1>
+              {storeSettings?.store_tagline && (
+                <p 
+                  className={`text-xs leading-tight truncate ${isMobile ? 'text-xs' : 'text-sm'}`}
+                  style={{ color: storeSettings?.secondary_color || '#059669' }}
+                >
+                  {storeSettings.store_tagline}
+                </p>
+              )}
+            </div>
           </Link>
 
           {/* Search bar - مخفي على الموبايل في الهيدر الرئيسي */}
@@ -127,7 +140,7 @@ const StoreHeader = ({ storeSettings }: StoreHeaderProps) => {
           )}
 
           {/* Actions */}
-          <div className={`flex items-center ${isMobile ? 'gap-2' : 'gap-4'}`}>
+          <div className={`flex items-center flex-shrink-0 ${isMobile ? 'gap-2' : 'gap-4'}`}>
             {!isMobile && (
               <Button variant="ghost" size="icon">
                 <Heart className="h-5 w-5" />
