@@ -39,14 +39,20 @@ const AdminSettings = () => {
     whatsapp_number: '',
     address: '',
     
-    // Appearance Settings
+    // Appearance Settings - Enhanced color controls
     logo_url: '',
     favicon_url: '',
     hero_banner_url: '',
-    primary_color: '',
-    secondary_color: '',
-    accent_color: '',
-    text_color: '',
+    primary_color: '#10B981',
+    secondary_color: '#059669',
+    accent_color: '#F59E0B',
+    text_color: '#1F2937',
+    success_color: '#22C55E',
+    warning_color: '#F59E0B',
+    error_color: '#EF4444',
+    background_color: '#FFFFFF',
+    card_background_color: '#F9FAFB',
+    border_color: '#E5E7EB',
     show_product_prices: true,
     show_product_sizes: true,
     show_out_of_stock: false,
@@ -148,7 +154,7 @@ const AdminSettings = () => {
     'قنا', 'شمال سيناء', 'سوهاج'
   ];
 
-  // Update formData when storeSettings changes
+  // Update formData when storeSettings changes - Enhanced with new color fields
   useEffect(() => {
     if (storeSettings) {
       setFormData({
@@ -167,6 +173,12 @@ const AdminSettings = () => {
         secondary_color: storeSettings.secondary_color || '#059669',
         accent_color: storeSettings.accent_color || '#F59E0B',
         text_color: storeSettings.text_color || '#1F2937',
+        success_color: (storeSettings as any).success_color || '#22C55E',
+        warning_color: (storeSettings as any).warning_color || '#F59E0B',
+        error_color: (storeSettings as any).error_color || '#EF4444',
+        background_color: (storeSettings as any).background_color || '#FFFFFF',
+        card_background_color: (storeSettings as any).card_background_color || '#F9FAFB',
+        border_color: (storeSettings as any).border_color || '#E5E7EB',
         show_product_prices: storeSettings.show_product_prices !== false,
         show_product_sizes: storeSettings.show_product_sizes !== false,
         show_out_of_stock: storeSettings.show_out_of_stock || false,
@@ -204,6 +216,41 @@ const AdminSettings = () => {
       });
     }
   }, [storeSettings]);
+
+  // Apply colors to CSS variables when formData changes
+  useEffect(() => {
+    const root = document.documentElement;
+    if (formData.primary_color) {
+      root.style.setProperty('--primary-color', formData.primary_color);
+    }
+    if (formData.secondary_color) {
+      root.style.setProperty('--secondary-color', formData.secondary_color);
+    }
+    if (formData.accent_color) {
+      root.style.setProperty('--accent-color', formData.accent_color);
+    }
+    if (formData.text_color) {
+      root.style.setProperty('--text-color', formData.text_color);
+    }
+    if (formData.success_color) {
+      root.style.setProperty('--success-color', formData.success_color);
+    }
+    if (formData.warning_color) {
+      root.style.setProperty('--warning-color', formData.warning_color);
+    }
+    if (formData.error_color) {
+      root.style.setProperty('--error-color', formData.error_color);
+    }
+    if (formData.background_color) {
+      root.style.setProperty('--background-color', formData.background_color);
+    }
+    if (formData.card_background_color) {
+      root.style.setProperty('--card-background-color', formData.card_background_color);
+    }
+    if (formData.border_color) {
+      root.style.setProperty('--border-color', formData.border_color);
+    }
+  }, [formData]);
 
   const updateSettingsMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
