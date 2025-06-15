@@ -27,6 +27,13 @@ const HeroSection = ({ storeSettings }: HeroSectionProps) => {
               {storeSettings.store_tagline}
             </p>
           )}
+
+          {/* Show store description if available */}
+          {storeSettings?.store_description && (
+            <p className={`text-gray-600 font-medium mb-6 ${isMobile ? 'text-base' : 'text-lg md:text-xl'}`}>
+              {storeSettings.store_description}
+            </p>
+          )}
           
           {/* Show custom main text if available, otherwise show default text or about_us */}
           {storeSettings?.main_text ? (

@@ -618,6 +618,7 @@ export type Database = {
           side_banner_2_link: string | null
           side_banner_2_url: string | null
           snapchat_url: string | null
+          store_description: string | null
           store_name: string
           store_tagline: string | null
           terms_conditions: string | null
@@ -691,6 +692,7 @@ export type Database = {
           side_banner_2_link?: string | null
           side_banner_2_url?: string | null
           snapchat_url?: string | null
+          store_description?: string | null
           store_name?: string
           store_tagline?: string | null
           terms_conditions?: string | null
@@ -764,6 +766,7 @@ export type Database = {
           side_banner_2_link?: string | null
           side_banner_2_url?: string | null
           snapchat_url?: string | null
+          store_description?: string | null
           store_name?: string
           store_tagline?: string | null
           terms_conditions?: string | null

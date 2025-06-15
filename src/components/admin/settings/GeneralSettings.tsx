@@ -44,6 +44,20 @@ const GeneralSettings = ({ formData, onInputChange }: GeneralSettingsProps) => {
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="store_description">وصف المتجر</Label>
+            <Textarea
+              id="store_description"
+              value={formData.store_description}
+              onChange={(e) => onInputChange('store_description', e.target.value)}
+              placeholder="وصف مختصر يظهر في أعلى المتجر..."
+              rows={3}
+            />
+            <p className="text-sm text-gray-500">
+              هذا الوصف سيظهر في أعلى المتجر تحت اسم المتجر مباشرة.
+            </p>
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="about_us">نبذة عن المتجر</Label>
             <Textarea
               id="about_us"

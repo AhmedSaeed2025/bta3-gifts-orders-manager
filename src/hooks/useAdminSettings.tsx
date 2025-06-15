@@ -9,6 +9,7 @@ export interface AdminSettingsFormData {
   // General Settings
   store_name: string;
   store_tagline: string;
+  store_description: string;
   about_us: string;
   main_text: string;
   contact_phone: string;
@@ -85,6 +86,7 @@ const defaultFormData: AdminSettingsFormData = {
   // General Settings
   store_name: '',
   store_tagline: '',
+  store_description: '',
   about_us: '',
   main_text: '',
   contact_phone: '',
@@ -187,6 +189,7 @@ export const useAdminSettings = () => {
       setFormData({
         store_name: storeSettings.store_name || '',
         store_tagline: storeSettings.store_tagline || '',
+        store_description: (storeSettings as any).store_description || '',
         about_us: storeSettings.about_us || '',
         main_text: (storeSettings as any).main_text || '',
         contact_phone: storeSettings.contact_phone || '',
