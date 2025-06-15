@@ -39,8 +39,10 @@ import { TransactionProvider } from "./context/TransactionContext";
 import { ThemeProvider as ThemeContextProvider } from "./context/ThemeContext";
 import { SupabaseOrderProvider } from "./context/SupabaseOrderContext";
 import { AuthProvider } from "./hooks/useAuth";
+import { CartProvider } from "./hooks/useCart";
 
 import ErrorBoundary from "./components/ErrorBoundary";
+import AdminLayout from "./components/admin/AdminLayout";
 import StoreReturnPolicy from "./components/store/ReturnPolicy";
 
 const queryClient = new QueryClient();
@@ -50,60 +52,68 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
         <AuthProvider>
-          <ThemeContextProvider>
-            <TransactionProvider>
-              <ProductProvider>
-                <PriceProvider>
-                  <OrderProvider>
-                    <SupabaseOrderProvider>
-                      <TooltipProvider>
-                        <Toaster />
-                        <BrowserRouter>
-                          <ErrorBoundary>
-                            <Routes>
-                              {/* Public Routes */}
-                              <Route path="/" element={<Index />} />
-                              <Route path="/auth" element={<AuthPage />} />
-                              
-                              {/* Store Routes */}
-                              <Route path="/store" element={<StorePage />} />
-                              <Route path="/product/:id" element={<ProductPage />} />
-                              <Route path="/cart" element={<CartPage />} />
-                              <Route path="/checkout" element={<CheckoutPage />} />
-                              <Route path="/order-confirmation/:serial" element={<OrderConfirmationPage />} />
-                              <Route path="/track" element={<OrderTrackingPage />} />
-                              <Route path="/track/:serial" element={<OrderTrackingPage />} />
-                              <Route path="/about" element={<AboutPage />} />
-                              <Route path="/contact" element={<ContactPage />} />
-                              <Route path="/shipping" element={<ShippingPolicyPage />} />
-                              <Route path="/terms" element={<TermsPage />} />
-                              <Route path="/return-policy" element={<StoreReturnPolicy />} />
-                              
-                              {/* Admin Routes */}
-                              <Route path="/admin" element={<AdminDashboard />} />
-                              <Route path="/admin/products" element={<AdminProducts />} />
-                              <Route path="/admin/orders" element={<AdminOrders />} />
-                              <Route path="/admin/customers" element={<AdminCustomers />} />
-                              <Route path="/admin/settings" element={<AdminSettings />} />
-                              <Route path="/admin/reports" element={<AdminReports />} />
-                              
-                              {/* Order Management */}
-                              <Route path="/order" element={<OrderPage />} />
-                              <Route path="/order/:id" element={<OrderDetails />} />
-                              <Route path="/order/:id/edit" element={<EditOrder />} />
-                              
-                              {/* Catch all */}
-                              <Route path="*" element={<NotFound />} />
-                            </Routes>
-                          </ErrorBoundary>
-                        </BrowserRouter>
-                      </TooltipProvider>
-                    </SupabaseOrderProvider>
-                  </OrderProvider>
-                </PriceProvider>
-              </ProductProvider>
-            </TransactionProvider>
-          </ThemeContextProvider>
+          <CartProvider>
+            <ThemeContextProvider>
+              <TransactionProvider>
+                <ProductProvider>
+                  <PriceProvider>
+                    <OrderProvider>
+                      <SupabaseOrderProvider>
+                        <TooltipProvider>
+                          <Toaster />
+                          <BrowserRouter>
+                            <ErrorBoundary>
+                              <Routes>
+                                {/* Public Routes */}
+                                <Route path="/" element={<Index />} />
+                                <Route path="/auth" element={<AuthPage />} />
+                                
+                                {/* Store Routes */}
+                                <Route path="/store" element={<StorePage />} />
+                                <Route path="/product/:id" element={<ProductPage />} />
+                                <Route path="/cart" element={<CartPage />} />
+                                <Route path="/checkout" element={<CheckoutPage />} />
+                                <Route path="/order-confirmation/:serial" element={<OrderConfirmationPage />} />
+                                <Route path="/track" element={<OrderTrackingPage />} />
+                                <Route path="/track/:serial" element={<OrderTrackingPage />} />
+                                <Route path="/about" element={<AboutPage />} />
+                                <Route path="/contact" element={<ContactPage />} />
+                                <Route path="/shipping" element={<ShippingPolicyPage />} />
+                                <Route path="/terms" element={<TermsPage />} />
+                                <Route path="/return-policy" element={<StoreReturnPolicy />} />
+                                
+                                {/* Admin Routes with Layout */}
+                                <Route path="/admin/*" element={<AdminLayout />}>
+                                  <Route index element={<AdminDashboard />} />
+                                  <Route path="dashboard" element={<AdminDashboard />} />
+                                  <Route path="products" element={<AdminProducts />} />
+                                  <Route path="orders" element={<AdminOrders />} />
+                                  <Route path="customers" element={<AdminCustomers />} />
+                                  <Route path="settings" element={<AdminSettings />} />
+                                  <Route path="reports" element={<AdminReports />} />
+                                </Route>
+                                
+                                {/* Legacy Admin Route */}
+                                <Route path="/legacy-admin" element={<Index />} />
+                                
+                                {/* Order Management */}
+                                <Route path="/order" element={<OrderPage />} />
+                                <Route path="/order/:id" element={<OrderDetails />} />
+                                <Route path="/order/:id/edit" element={<EditOrder />} />
+                                
+                                {/* Catch all */}
+                                <Route path="*" element={<NotFound />} />
+                              </Routes>
+                            </ErrorBoundary>
+                          </BrowserRouter>
+                        </TooltipProvider>
+                      </SupabaseOrderProvider>
+                    </OrderProvider>
+                  </PriceProvider>
+                </ProductProvider>
+              </TransactionProvider>
+            </ThemeContextProvider>
+          </CartProvider>
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>

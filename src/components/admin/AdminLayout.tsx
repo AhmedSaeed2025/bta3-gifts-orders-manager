@@ -102,7 +102,7 @@ const AdminLayout = () => {
           {/* Quick Navigation Icons */}
           <div className="flex items-center gap-2 mb-3">
             <Link 
-              to="/" 
+              to="/store" 
               className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary transition-colors"
               title="العودة للمتجر"
             >
@@ -164,7 +164,7 @@ const AdminLayout = () => {
           {/* Enhanced Return to Store Link */}
           <div className="pt-3 border-t">
             <Link 
-              to="/" 
+              to="/store" 
               className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors p-2 rounded-lg hover:bg-muted"
             >
               <ArrowLeft className="h-4 w-4" />
