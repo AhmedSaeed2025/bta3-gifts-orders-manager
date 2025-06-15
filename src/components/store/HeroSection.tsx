@@ -28,11 +28,26 @@ const HeroSection = ({ storeSettings }: HeroSectionProps) => {
             </p>
           )}
           
-          <p className={`text-gray-700 max-w-3xl mx-auto leading-relaxed mb-8 ${
-            isMobile ? 'text-sm px-2' : 'text-lg md:text-xl'
-          }`}>
-            {storeSettings?.about_us || 'اكتشف مجموعتنا المتميزة من الهدايا الأصلية عالية الجودة بأفضل الأسعار'}
-          </p>
+          {/* Show custom main text if available, otherwise show default text or about_us */}
+          {storeSettings?.main_text ? (
+            <div className={`text-gray-700 max-w-3xl mx-auto leading-relaxed mb-8 whitespace-pre-line ${
+              isMobile ? 'text-sm px-2' : 'text-lg md:text-xl'
+            }`}>
+              {storeSettings.main_text}
+            </div>
+          ) : storeSettings?.about_us ? (
+            <p className={`text-gray-700 max-w-3xl mx-auto leading-relaxed mb-8 ${
+              isMobile ? 'text-sm px-2' : 'text-lg md:text-xl'
+            }`}>
+              {storeSettings.about_us}
+            </p>
+          ) : (
+            <p className={`text-gray-700 max-w-3xl mx-auto leading-relaxed mb-8 ${
+              isMobile ? 'text-sm px-2' : 'text-lg md:text-xl'
+            }`}>
+              اكتشف مجموعتنا المتميزة من الهدايا الأصلية عالية الجودة بأفضل الأسعار
+            </p>
+          )}
           
           {storeSettings?.hero_banner_url && (
             <div className={`relative group ${isMobile ? 'mt-6' : 'mt-12'}`}>

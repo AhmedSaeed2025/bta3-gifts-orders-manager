@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Building2, Mail, Phone, MapPin } from 'lucide-react';
+import { Building2, Mail, Phone, MapPin, Type } from 'lucide-react';
 
 interface GeneralSettingsProps {
   formData: any;
@@ -52,6 +52,20 @@ const GeneralSettings = ({ formData, onInputChange }: GeneralSettingsProps) => {
               placeholder="نبذة مختصرة عن متجرك..."
               rows={4}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="main_text">النص الرئيسي للمتجر</Label>
+            <Textarea
+              id="main_text"
+              value={formData.main_text}
+              onChange={(e) => onInputChange('main_text', e.target.value)}
+              placeholder="النص الرئيسي الذي سيظهر في المتجر... اتركه فارغاً لإخفاء النص"
+              rows={6}
+            />
+            <p className="text-sm text-gray-500">
+              هذا النص سيظهر بدلاً من النص الافتراضي في المتجر. اتركه فارغاً لإخفاء النص تماماً.
+            </p>
           </div>
         </CardContent>
       </Card>
