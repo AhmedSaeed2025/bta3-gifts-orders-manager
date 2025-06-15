@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -56,14 +57,36 @@ const CheckoutPage = () => {
     );
   }
 
+  // Generate serial number function
+  const generateSerialNumber = async (): Promise<string> => {
+    try {
+      const { data, error } = await supabase.rpc('generate_serial_number');
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error generating serial number:', error);
+      // Fallback to client-side generation
+      const now = new Date();
+      const year = now.getFullYear().toString().slice(-2);
+      const month = (now.getMonth() + 1).toString().padStart(2, '0');
+      const timestamp = Date.now();
+      return `INV-${year}${month}-${timestamp}`;
+    }
+  };
+
   const onSubmit = async (data: CheckoutForm) => {
     setSubmitting(true);
     try {
       console.log('Creating order with data:', { ...data, cartItems, total });
 
+      // Generate serial number
+      const serial = await generateSerialNumber();
+      console.log('Generated serial number:', serial);
+
       // Create the order in database
       const orderData = {
         user_id: user?.id || null,
+        serial: serial,
         client_name: data.fullName,
         phone: data.phone,
         address: data.address,
