@@ -111,7 +111,7 @@ const AdminLayout = () => {
             </Link>
             
             <Link 
-              to="/" 
+              to="/legacy-admin" 
               className="flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors"
               title="الحسابات والطلبات"
             >

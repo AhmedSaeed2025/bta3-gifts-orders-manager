@@ -64,8 +64,8 @@ const StoreFooter = ({ storeSettings }: StoreFooterProps) => {
                 </Link>
               </li>
               <li>
-                <Link to="/returns" className="text-muted-foreground hover:text-primary">
-                  سياسة الإرجاع
+                <Link to="/return-policy" className="text-muted-foreground hover:text-primary">
+                  سياسة الاسترجاع والاستبدال
                 </Link>
               </li>
               <li>

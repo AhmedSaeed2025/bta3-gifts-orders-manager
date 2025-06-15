@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/hooks/useAuth";
@@ -12,6 +13,7 @@ import ProductPage from "@/pages/ProductPage";
 import CartPage from "@/pages/CartPage";
 import CheckoutPage from "@/pages/CheckoutPage";
 import OrderTrackingPage from "@/pages/OrderTrackingPage";
+import ReturnPolicy from "@/components/store/ReturnPolicy";
 
 // Admin pages
 import AdminLayout from "@/components/admin/AdminLayout";
@@ -62,6 +64,7 @@ function App() {
                     <Route path="/cart" element={<CartPage />} />
                     <Route path="/checkout" element={<CheckoutPage />} />
                     <Route path="/track/:serial" element={<OrderTrackingPage />} />
+                    <Route path="/return-policy" element={<ReturnPolicy />} />
                     <Route path="/auth" element={<AuthPage />} />
                     
                     {/* Admin Routes */}

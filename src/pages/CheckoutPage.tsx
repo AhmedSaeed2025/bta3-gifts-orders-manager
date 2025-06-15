@@ -114,6 +114,8 @@ const CheckoutPage = () => {
     setIsSubmitting(true);
 
     try {
+      const serial = await generateSerial();
+      
       const orderItems: OrderItem[] = cartItems.map(item => ({
         productType: item.product?.name || 'Unknown Product',
         size: item.size,
@@ -124,6 +126,7 @@ const CheckoutPage = () => {
         itemDiscount: 0
       }));
 
+      // First save to legacy orders table via context
       const orderData: Omit<Order, 'serial' | 'dateCreated'> = {
         clientName: formData.clientName,
         phone: formData.phone,
@@ -140,14 +143,12 @@ const CheckoutPage = () => {
         status: 'pending'
       };
 
-      // Save order using addOrder from context
+      // Save order using addOrder from context (for legacy system)
       await addOrder(orderData);
       
-      // Also save to admin orders table if user is authenticated
+      // Also save to admin orders table
       if (user) {
         try {
-          const serial = await generateSerial();
-          
           // First, save the admin order
           const { data: adminOrder, error: adminOrderError } = await supabase
             .from('admin_orders')
@@ -200,6 +201,56 @@ const CheckoutPage = () => {
           console.error('Error saving to admin tables:', adminError);
           // Don't fail the entire order if admin save fails
         }
+      }
+
+      // Also save to legacy orders table (for Supabase orders context)
+      try {
+        const { data: legacyOrder, error: legacyError } = await supabase
+          .from('orders')
+          .insert({
+            user_id: user?.id || null,
+            serial: serial,
+            client_name: formData.clientName,
+            phone: formData.phone,
+            payment_method: formData.paymentMethod,
+            delivery_method: formData.deliveryMethod,
+            address: formData.address,
+            governorate: formData.governorate,
+            shipping_cost: shippingCost,
+            discount: formData.discount,
+            deposit: formData.deposit,
+            total: total,
+            profit: orderItems.reduce((sum, item) => sum + item.profit, 0),
+            status: 'pending'
+          })
+          .select()
+          .single();
+
+        if (legacyError) {
+          console.error('Error saving legacy order:', legacyError);
+        } else if (legacyOrder) {
+          // Save legacy order items
+          const legacyOrderItems = orderItems.map(item => ({
+            order_id: legacyOrder.id,
+            product_type: item.productType,
+            size: item.size,
+            quantity: item.quantity,
+            cost: item.cost,
+            price: item.price,
+            profit: item.profit,
+            item_discount: item.itemDiscount || 0
+          }));
+
+          const { error: legacyItemsError } = await supabase
+            .from('order_items')
+            .insert(legacyOrderItems);
+
+          if (legacyItemsError) {
+            console.error('Error saving legacy order items:', legacyItemsError);
+          }
+        }
+      } catch (legacyError) {
+        console.error('Error saving to legacy tables:', legacyError);
       }
 
       clearCart();
