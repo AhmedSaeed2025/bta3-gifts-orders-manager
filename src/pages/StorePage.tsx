@@ -78,40 +78,40 @@ const StorePage = () => {
 
   if (storeLoading || productsLoading) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${isMobile ? 'mobile-warm-bg' : 'bg-gradient-to-br from-blue-50 to-indigo-100'}`}>
+      <div className={`min-h-screen flex items-center justify-center ${isMobile ? 'mobile-professional-bg' : 'bg-gradient-to-br from-blue-50 to-indigo-100'}`}>
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
-          <p className={`${isMobile ? 'mobile-warm-text text-xs' : 'text-gray-600'}`}>جاري تحميل المنتجات...</p>
+          <p className={`${isMobile ? 'mobile-professional-text text-sm' : 'text-gray-600'}`}>جاري تحميل المنتجات...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`min-h-screen ${isMobile ? 'mobile-warm-bg' : 'bg-gradient-to-br from-gray-50 to-white'}`}>
+    <div className={`min-h-screen ${isMobile ? 'mobile-professional-bg' : 'bg-gradient-to-br from-gray-50 to-white'}`}>
       <StoreHeader storeSettings={storeSettings} />
-      <main className={`container mx-auto px-2 md:px-4 py-4 md:py-8 ${isMobile ? 'max-w-full' : ''}`}>
-        <div className={`text-center mb-4 md:mb-12 ${isMobile ? 'px-2' : ''}`}>
-          <h1 className={`font-bold text-foreground mb-2 md:mb-6 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent ${isMobile ? 'text-lg' : 'text-5xl'}`}>
+      <main className={`container mx-auto px-3 md:px-4 py-4 md:py-8 ${isMobile ? 'max-w-full' : ''}`}>
+        <div className={`text-center mb-6 md:mb-12 ${isMobile ? 'px-3' : ''}`}>
+          <h1 className={`font-bold mb-3 md:mb-6 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent ${isMobile ? 'mobile-professional-heading' : 'text-5xl text-foreground'}`}>
             {storeSettings?.store_name || 'متجر بتاع هدايا الأصلى'}
           </h1>
-          <p className={`text-muted-foreground max-w-3xl mx-auto leading-relaxed ${isMobile ? 'text-xs px-2' : 'text-xl'}`}>
+          <p className={`max-w-3xl mx-auto leading-relaxed ${isMobile ? 'mobile-professional-body-text px-3' : 'text-xl text-muted-foreground'}`}>
             اكتشف مجموعتنا المتميزة من الهدايا الأصلية عالية الجودة بأفضل الأسعار
           </p>
           
           {storeSettings?.hero_banner_url && (
-            <div className={`mt-3 md:mt-8 mb-4 md:mb-12 ${isMobile ? 'px-2' : ''}`}>
+            <div className={`mt-4 md:mt-8 mb-6 md:mb-12 ${isMobile ? 'px-3' : ''}`}>
               <img
                 src={storeSettings.hero_banner_url}
                 alt="بانر المتجر"
-                className={`w-full max-w-4xl mx-auto rounded-xl md:rounded-2xl shadow-lg md:shadow-2xl ${isMobile ? 'max-h-32 object-cover' : ''}`}
+                className={`w-full max-w-4xl mx-auto rounded-lg md:rounded-2xl shadow-md md:shadow-2xl ${isMobile ? 'max-h-40 object-cover' : ''}`}
                 loading="lazy"
               />
             </div>
           )}
         </div>
         
-        <div className={isMobile ? 'px-1' : ''}>
+        <div className={isMobile ? 'px-2' : ''}>
           <ProductGrid 
             products={products || []} 
             isLoading={productsLoading}
@@ -119,15 +119,15 @@ const StorePage = () => {
         </div>
 
         {products && products.length === 0 && !productsLoading && (
-          <div className={`text-center py-6 md:py-16 ${isMobile ? 'px-4' : ''}`}>
+          <div className={`text-center py-8 md:py-16 ${isMobile ? 'px-4' : ''}`}>
             <div className="max-w-md mx-auto">
-              <div className="mb-3 md:mb-6">
-                <div className={`bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3 ${isMobile ? 'w-12 h-12' : 'w-24 h-24'}`}>
-                  <Loader2 className={`text-gray-400 ${isMobile ? 'h-6 w-6' : 'h-12 w-12'}`} />
+              <div className="mb-4 md:mb-6">
+                <div className={`bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4 ${isMobile ? 'w-16 h-16' : 'w-24 h-24'}`}>
+                  <Loader2 className={`text-gray-400 ${isMobile ? 'h-8 w-8' : 'h-12 w-12'}`} />
                 </div>
               </div>
-              <h3 className={`font-semibold text-gray-900 mb-1 ${isMobile ? 'text-sm' : 'text-xl'}`}>لا توجد منتجات متاحة حالياً</h3>
-              <p className={`text-gray-600 ${isMobile ? 'text-xs' : ''}`}>سيتم إضافة منتجات جديدة قريباً</p>
+              <h3 className={`font-semibold text-gray-900 mb-2 ${isMobile ? 'mobile-professional-subheading' : 'text-xl'}`}>لا توجد منتجات متاحة حالياً</h3>
+              <p className={`${isMobile ? 'mobile-professional-body-text' : 'text-gray-600'}`}>سيتم إضافة منتجات جديدة قريباً</p>
             </div>
           </div>
         )}

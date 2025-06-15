@@ -53,7 +53,7 @@ const StoreHeader = ({ storeSettings }: StoreHeaderProps) => {
   };
 
   return (
-    <header className={`sticky top-0 z-50 w-full border-b backdrop-blur supports-[backdrop-filter]:bg-background/60 ${isMobile ? 'mobile-warm-bg' : 'bg-background/95'}`}>
+    <header className={`sticky top-0 z-50 w-full border-b backdrop-blur supports-[backdrop-filter]:bg-background/60 ${isMobile ? 'mobile-professional-header' : 'bg-background/95'}`}>
       {/* Top bar - مخفي على الموبايل */}
       {!isMobile && (
         <div className="border-b bg-muted/50">
@@ -74,7 +74,7 @@ const StoreHeader = ({ storeSettings }: StoreHeaderProps) => {
       )}
 
       {/* Main header */}
-      <div className={`container mx-auto px-2 md:px-4 py-2 md:py-4 ${isMobile ? 'max-w-full' : ''}`}>
+      <div className={`container mx-auto px-3 md:px-4 py-3 md:py-4 ${isMobile ? 'max-w-full' : ''}`}>
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className={`flex items-center gap-2 ${isMobile ? 'flex-1' : ''}`}>
@@ -82,7 +82,7 @@ const StoreHeader = ({ storeSettings }: StoreHeaderProps) => {
               <img 
                 src={storeSettings.logo_url} 
                 alt={storeSettings.store_name}
-                className={`object-contain rounded ${isMobile ? 'h-6 w-auto' : 'h-10 w-auto'}`}
+                className={`object-contain rounded ${isMobile ? 'mobile-professional-logo' : 'h-10 w-auto'}`}
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                   const defaultLogo = e.currentTarget.nextElementSibling as HTMLElement;
@@ -91,7 +91,7 @@ const StoreHeader = ({ storeSettings }: StoreHeaderProps) => {
               />
             ) : null}
             <div 
-              className={`rounded flex items-center justify-center text-white font-bold ${isMobile ? 'h-6 w-6' : 'h-10 w-10'}`}
+              className={`rounded flex items-center justify-center text-white font-bold ${isMobile ? 'h-8 w-8' : 'h-10 w-10'}`}
               style={{ 
                 backgroundColor: storeSettings?.primary_color || '#10B981',
                 display: storeSettings?.logo_url ? 'none' : 'flex'
@@ -99,7 +99,7 @@ const StoreHeader = ({ storeSettings }: StoreHeaderProps) => {
             >
               {storeSettings?.store_name?.charAt(0) || 'م'}
             </div>
-            <span className={`font-bold ${isMobile ? 'text-sm' : 'text-xl'}`}>
+            <span className={`font-bold ${isMobile ? 'mobile-professional-subheading' : 'text-xl'}`}>
               {isMobile ? (storeSettings?.store_name?.split(' ')[0] || 'متجري') : (storeSettings?.store_name || 'متجري')}
             </span>
           </Link>
@@ -118,7 +118,7 @@ const StoreHeader = ({ storeSettings }: StoreHeaderProps) => {
           )}
 
           {/* Actions */}
-          <div className={`flex items-center ${isMobile ? 'gap-1' : 'gap-4'}`}>
+          <div className={`flex items-center ${isMobile ? 'gap-2' : 'gap-4'}`}>
             {!isMobile && (
               <Button variant="ghost" size="icon">
                 <Heart className="h-5 w-5" />
@@ -129,19 +129,19 @@ const StoreHeader = ({ storeSettings }: StoreHeaderProps) => {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size={isMobile ? "sm" : "icon"} className={isMobile ? 'mobile-warm-button text-white h-7 px-2' : ''}>
-                    <User className={isMobile ? "h-3 w-3" : "h-5 w-5"} />
-                    {isMobile && <span className="mr-1 text-xs">حساب</span>}
+                  <Button variant="ghost" size={isMobile ? "sm" : "icon"} className={isMobile ? 'mobile-professional-nav-button h-8 px-3' : ''}>
+                    <User className={isMobile ? "h-4 w-4" : "h-5 w-5"} />
+                    {isMobile && <span className="mr-1">حساب</span>}
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 bg-white border mobile-warm-border z-50">
-                  <DropdownMenuItem disabled className="mobile-warm-text">
+                <DropdownMenuContent align="end" className="w-56 bg-white border mobile-professional-border z-50">
+                  <DropdownMenuItem disabled className="mobile-professional-text">
                     مرحباً، {user.user_metadata?.full_name || user.email}
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator className="mobile-warm-border" />
+                  <DropdownMenuSeparator className="mobile-professional-border" />
                   
                   <Link to="/">
-                    <DropdownMenuItem className="hover:mobile-warm-button">
+                    <DropdownMenuItem className="hover:mobile-professional-button">
                       <Store className="h-4 w-4 mr-2" />
                       المتجر
                     </DropdownMenuItem>
@@ -150,19 +150,19 @@ const StoreHeader = ({ storeSettings }: StoreHeaderProps) => {
                   {userRole === 'admin' && (
                     <>
                       <Link to="/admin/dashboard">
-                        <DropdownMenuItem className="hover:mobile-warm-button">
+                        <DropdownMenuItem className="hover:mobile-professional-button">
                           <Settings className="h-4 w-4 mr-2" />
                           لوحة التحكم
                         </DropdownMenuItem>
                       </Link>
                       
                       <Link to="/legacy-admin">
-                        <DropdownMenuItem className="hover:mobile-warm-button">
+                        <DropdownMenuItem className="hover:mobile-professional-button">
                           <Calculator className="h-4 w-4 mr-2" />
                           برنامج الحسابات
                         </DropdownMenuItem>
                       </Link>
-                      <DropdownMenuSeparator className="mobile-warm-border" />
+                      <DropdownMenuSeparator className="mobile-professional-border" />
                     </>
                   )}
                   
@@ -174,21 +174,21 @@ const StoreHeader = ({ storeSettings }: StoreHeaderProps) => {
               </DropdownMenu>
             ) : (
               <Link to="/auth">
-                <Button variant="ghost" size={isMobile ? "sm" : "icon"} className={isMobile ? 'mobile-warm-button text-white h-7 px-2' : ''}>
-                  <User className={isMobile ? "h-3 w-3" : "h-5 w-5"} />
-                  {isMobile && <span className="mr-1 text-xs">دخول</span>}
+                <Button variant="ghost" size={isMobile ? "sm" : "icon"} className={isMobile ? 'mobile-professional-nav-button h-8 px-3' : ''}>
+                  <User className={isMobile ? "h-4 w-4" : "h-5 w-5"} />
+                  {isMobile && <span className="mr-1">دخول</span>}
                 </Button>
               </Link>
             )}
             
             <Link to="/cart">
-              <Button variant="ghost" size={isMobile ? "sm" : "icon"} className={`relative ${isMobile ? 'mobile-warm-button text-white h-7 px-2' : ''}`}>
-                <ShoppingCart className={isMobile ? "h-3 w-3" : "h-5 w-5"} />
-                {isMobile && <span className="mr-1 text-xs">سلة</span>}
+              <Button variant="ghost" size={isMobile ? "sm" : "icon"} className={`relative ${isMobile ? 'mobile-professional-nav-button h-8 px-3' : ''}`}>
+                <ShoppingCart className={isMobile ? "h-4 w-4" : "h-5 w-5"} />
+                {isMobile && <span className="mr-1">سلة</span>}
                 {cartItemsCount > 0 && (
                   <Badge 
                     variant="destructive" 
-                    className={`absolute flex items-center justify-center p-0 text-xs ${isMobile ? '-top-1 -right-1 h-3 w-3 text-xs' : '-top-2 -right-2 h-5 w-5'}`}
+                    className={`absolute flex items-center justify-center p-0 text-xs ${isMobile ? '-top-1 -right-1 h-4 w-4 text-xs' : '-top-2 -right-2 h-5 w-5'}`}
                   >
                     {cartItemsCount}
                   </Badge>
@@ -200,12 +200,12 @@ const StoreHeader = ({ storeSettings }: StoreHeaderProps) => {
 
         {/* Mobile search */}
         {isMobile && (
-          <div className="mt-2">
+          <div className="mt-3">
             <div className="relative">
-              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground h-3 w-3" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input 
                 placeholder="ابحث عن المنتجات..."
-                className="pl-8 mobile-warm-border text-xs h-8"
+                className="pl-10 mobile-professional-search h-9"
               />
             </div>
           </div>
@@ -213,12 +213,12 @@ const StoreHeader = ({ storeSettings }: StoreHeaderProps) => {
 
         {/* Mobile top info */}
         {isMobile && (storeSettings?.contact_phone || storeSettings?.contact_email) && (
-          <div className="mt-1 flex items-center justify-center gap-3 text-xs mobile-warm-text">
+          <div className="mt-2 flex items-center justify-center gap-4 mobile-professional-small-text">
             {storeSettings?.contact_phone && (
-              <span className="text-xs">📞 {storeSettings.contact_phone}</span>
+              <span>📞 {storeSettings.contact_phone}</span>
             )}
             {storeSettings?.contact_email && (
-              <span className="text-xs">✉️ {storeSettings.contact_email}</span>
+              <span>✉️ {storeSettings.contact_email}</span>
             )}
           </div>
         )}
