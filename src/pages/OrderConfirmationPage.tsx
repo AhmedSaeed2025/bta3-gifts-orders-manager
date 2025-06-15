@@ -321,7 +321,7 @@ const OrderConfirmationPage = () => {
       </div>
 
       {/* Print Styles */}
-      <style jsx>{`
+      <style>{`
         @media print {
           body * {
             visibility: hidden;

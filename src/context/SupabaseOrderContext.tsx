@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Order, OrderStatus, OrderItem, ORDER_STATUS_LABELS } from "@/types";
 import { toast } from "sonner";
@@ -220,58 +219,64 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
         throw itemsError;
       }
 
-      // Also insert into admin_orders table for admin dashboard
-      const { data: adminOrderData, error: adminOrderError } = await supabase
-        .from('admin_orders')
-        .insert({
-          user_id: user.id,
-          serial,
-          customer_name: newOrder.clientName,
-          customer_phone: newOrder.phone,
-          customer_email: newOrder.clientName.includes('@') ? newOrder.clientName : null,
-          shipping_address: newOrder.address,
-          governorate: newOrder.governorate,
-          payment_method: newOrder.paymentMethod,
-          delivery_method: newOrder.deliveryMethod,
-          shipping_cost: newOrder.shippingCost,
-          discount: newOrder.discount || 0,
-          deposit: newOrder.deposit,
-          total_amount: newOrder.total,
-          profit: newOrder.profit,
-          status: newOrder.status,
-          order_date: new Date().toISOString()
-        })
-        .select()
-        .single();
+      // Also insert into admin_orders table for admin dashboard - ALWAYS DO THIS
+      try {
+        console.log('Inserting into admin_orders table...');
+        const { data: adminOrderData, error: adminOrderError } = await supabase
+          .from('admin_orders')
+          .insert({
+            user_id: user.id,
+            serial,
+            customer_name: newOrder.clientName,
+            customer_phone: newOrder.phone,
+            customer_email: newOrder.clientName.includes('@') ? newOrder.clientName : null,
+            shipping_address: newOrder.address,
+            governorate: newOrder.governorate,
+            payment_method: newOrder.paymentMethod,
+            delivery_method: newOrder.deliveryMethod,
+            shipping_cost: newOrder.shippingCost,
+            discount: newOrder.discount || 0,
+            deposit: newOrder.deposit,
+            total_amount: newOrder.total,
+            profit: newOrder.profit,
+            status: newOrder.status,
+            order_date: new Date().toISOString()
+          })
+          .select()
+          .single();
 
-      if (adminOrderError) {
-        console.error('Error inserting admin order:', adminOrderError);
-        // Don't throw error here, main order is already created
-      } else {
-        console.log('Admin order inserted successfully:', adminOrderData);
-
-        // Insert admin order items
-        const adminOrderItems = newOrder.items.map(item => ({
-          order_id: adminOrderData.id,
-          product_name: item.productType,
-          product_size: item.size,
-          quantity: item.quantity,
-          unit_cost: item.cost,
-          unit_price: item.price,
-          item_discount: item.itemDiscount || 0,
-          total_price: (item.price - (item.itemDiscount || 0)) * item.quantity,
-          profit: ((item.price - (item.itemDiscount || 0)) - item.cost) * item.quantity
-        }));
-
-        const { error: adminItemsError } = await supabase
-          .from('admin_order_items')
-          .insert(adminOrderItems);
-
-        if (adminItemsError) {
-          console.error('Error inserting admin order items:', adminItemsError);
+        if (adminOrderError) {
+          console.error('Error inserting admin order:', adminOrderError);
+          // Log error but don't fail the main order creation
         } else {
-          console.log('Admin order items inserted successfully');
+          console.log('Admin order inserted successfully:', adminOrderData);
+
+          // Insert admin order items
+          const adminOrderItems = newOrder.items.map(item => ({
+            order_id: adminOrderData.id,
+            product_name: item.productType,
+            product_size: item.size,
+            quantity: item.quantity,
+            unit_cost: item.cost,
+            unit_price: item.price,
+            item_discount: item.itemDiscount || 0,
+            total_price: (item.price - (item.itemDiscount || 0)) * item.quantity,
+            profit: ((item.price - (item.itemDiscount || 0)) - item.cost) * item.quantity
+          }));
+
+          const { error: adminItemsError } = await supabase
+            .from('admin_order_items')
+            .insert(adminOrderItems);
+
+          if (adminItemsError) {
+            console.error('Error inserting admin order items:', adminItemsError);
+          } else {
+            console.log('Admin order items inserted successfully');
+          }
         }
+      } catch (adminError) {
+        console.error('Error with admin order insertion:', adminError);
+        // Don't throw - main order was successful
       }
 
       console.log('Order items inserted successfully');
