@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useCart } from "@/hooks/useCart";
@@ -14,7 +15,7 @@ import Logo from "@/components/Logo";
 import UserProfile from "@/components/UserProfile";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Info } from "lucide-react";
+import { Info, Upload, X } from "lucide-react";
 
 interface FormData {
   clientName: string;
@@ -23,8 +24,8 @@ interface FormData {
   deliveryMethod: string;
   address: string;
   governorate: string;
-  discount: number;
-  deposit: number;
+  notes: string;
+  attachedImage: File | null;
 }
 
 const CheckoutPage = () => {
@@ -39,13 +40,14 @@ const CheckoutPage = () => {
     deliveryMethod: "",
     address: "",
     governorate: "",
-    discount: 0,
-    deposit: 0
+    notes: "",
+    attachedImage: null as File | null
   });
 
   const [shippingCost, setShippingCost] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [shippingMessage, setShippingMessage] = useState("");
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const governorates = [
     "القاهرة", "الجيزة", "الإسكندرية", "الدقهلية", "البحر الأحمر", "البحيرة",
@@ -56,28 +58,37 @@ const CheckoutPage = () => {
   ];
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const total = subtotal + shippingCost - formData.discount - formData.deposit;
+  const total = subtotal + shippingCost;
 
   useEffect(() => {
     if (formData.deliveryMethod === "شحن للمنزل" && formData.governorate) {
-      // Check if shipping cost is available for this combination
-      const hasShippingRate = false; // This would be a real check in production
-      
-      if (hasShippingRate) {
-        setShippingCost(50); // This would be the actual shipping cost
-        setShippingMessage("");
-      } else {
-        setShippingCost(0);
-        setShippingMessage("سيتم تحديد تكلفة الشحن وإبلاغكم بها قبل التأكيد النهائي للطلب");
-      }
+      setShippingCost(0);
+      setShippingMessage("سيتم تحديد تكلفة الشحن وإبلاغكم بها قبل التأكيد النهائي للطلب");
     } else {
       setShippingCost(0);
       setShippingMessage("");
     }
   }, [formData.deliveryMethod, formData.governorate]);
 
-  const handleInputChange = (field: string, value: string | number) => {
+  const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setFormData(prev => ({ ...prev, attachedImage: file }));
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    setFormData(prev => ({ ...prev, attachedImage: null }));
+    setImagePreview(null);
   };
 
   const generateSerial = async (): Promise<string> => {
@@ -85,7 +96,6 @@ const CheckoutPage = () => {
       const { data, error } = await supabase.rpc('generate_serial_number');
       if (error) {
         console.error('Error generating serial:', error);
-        // Fallback to manual generation
         const now = new Date();
         const year = now.getFullYear().toString().slice(-2);
         const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -95,7 +105,6 @@ const CheckoutPage = () => {
       return data;
     } catch (error) {
       console.error('Error in generateSerial:', error);
-      // Fallback
       const now = new Date();
       const year = now.getFullYear().toString().slice(-2);
       const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -147,10 +156,10 @@ const CheckoutPage = () => {
           address: formData.address,
           governorate: formData.governorate,
           shipping_cost: shippingCost,
-          discount: formData.discount || 0,
-          deposit: formData.deposit || 0,
+          discount: 0,
+          deposit: 0,
           total,
-          profit: 0, // Will be calculated later
+          profit: 0,
           status: 'pending'
         })
         .select()
@@ -163,7 +172,7 @@ const CheckoutPage = () => {
 
       console.log('Order inserted successfully:', orderData);
 
-      // Insert order items
+      // Insert order items with notes
       const orderItems = cartItems.map(item => ({
         order_id: orderData.id,
         product_type: item.product?.name || 'Unknown Product',
@@ -188,7 +197,7 @@ const CheckoutPage = () => {
 
       console.log('Order items inserted successfully');
 
-      // Save to admin orders table
+      // Save to admin orders table with notes
       try {
         const { data: adminOrder, error: adminOrderError } = await supabase
           .from('admin_orders')
@@ -203,8 +212,8 @@ const CheckoutPage = () => {
             payment_method: formData.paymentMethod,
             delivery_method: formData.deliveryMethod,
             shipping_cost: shippingCost,
-            discount: formData.discount,
-            deposit: formData.deposit,
+            discount: 0,
+            deposit: 0,
             total_amount: total,
             profit: 0,
             status: 'pending',
@@ -238,7 +247,6 @@ const CheckoutPage = () => {
         }
       } catch (adminError) {
         console.error('Error saving to admin tables:', adminError);
-        // Don't throw here, as main order was saved successfully
       }
 
       await clearCart();
@@ -365,27 +373,54 @@ const CheckoutPage = () => {
                   </>
                 )}
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="discount">الخصم</Label>
-                    <Input
-                      id="discount"
-                      type="number"
-                      value={formData.discount}
-                      onChange={(e) => handleInputChange('discount', Number(e.target.value))}
-                      min="0"
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="notes">ملاحظات إضافية</Label>
+                  <Textarea
+                    id="notes"
+                    value={formData.notes}
+                    onChange={(e) => handleInputChange('notes', e.target.value)}
+                    placeholder="أي ملاحظات أو متطلبات خاصة..."
+                    rows={3}
+                  />
+                </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="deposit">العربون</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="image">إرفاق صورة (اختياري)</Label>
+                  <div className="flex items-center gap-2">
                     <Input
-                      id="deposit"
-                      type="number"
-                      value={formData.deposit}
-                      onChange={(e) => handleInputChange('deposit', Number(e.target.value))}
-                      min="0"
+                      id="image"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
                     />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => document.getElementById('image')?.click()}
+                      className="flex items-center gap-2"
+                    >
+                      <Upload className="h-4 w-4" />
+                      اختر صورة
+                    </Button>
+                    {imagePreview && (
+                      <div className="relative">
+                        <img
+                          src={imagePreview}
+                          alt="معاينة الصورة"
+                          className="w-16 h-16 object-cover rounded border"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
+                          onClick={removeImage}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -427,20 +462,6 @@ const CheckoutPage = () => {
                     <div className="flex justify-between">
                       <span>مصاريف الشحن:</span>
                       <span>{formatCurrency(shippingCost)}</span>
-                    </div>
-                  )}
-                  
-                  {formData.discount > 0 && (
-                    <div className="flex justify-between text-red-600">
-                      <span>الخصم:</span>
-                      <span>-{formatCurrency(formData.discount)}</span>
-                    </div>
-                  )}
-                  
-                  {formData.deposit > 0 && (
-                    <div className="flex justify-between text-blue-600">
-                      <span>العربون:</span>
-                      <span>-{formatCurrency(formData.deposit)}</span>
                     </div>
                   )}
                   
