@@ -9,6 +9,122 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_order_items: {
+        Row: {
+          created_at: string
+          id: string
+          item_discount: number | null
+          order_id: string
+          product_name: string
+          product_size: string
+          profit: number
+          quantity: number
+          total_price: number
+          unit_cost: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_discount?: number | null
+          order_id: string
+          product_name: string
+          product_size: string
+          profit: number
+          quantity: number
+          total_price: number
+          unit_cost: number
+          unit_price: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_discount?: number | null
+          order_id?: string
+          product_name?: string
+          product_size?: string
+          profit?: number
+          quantity?: number
+          total_price?: number
+          unit_cost?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "admin_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_orders: {
+        Row: {
+          created_at: string
+          customer_email: string | null
+          customer_name: string
+          customer_phone: string
+          delivery_method: string
+          deposit: number | null
+          discount: number | null
+          governorate: string | null
+          id: string
+          order_date: string
+          payment_method: string
+          profit: number | null
+          serial: string
+          shipping_address: string | null
+          shipping_cost: number | null
+          status: string
+          total_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          customer_email?: string | null
+          customer_name: string
+          customer_phone: string
+          delivery_method: string
+          deposit?: number | null
+          discount?: number | null
+          governorate?: string | null
+          id?: string
+          order_date?: string
+          payment_method: string
+          profit?: number | null
+          serial: string
+          shipping_address?: string | null
+          shipping_cost?: number | null
+          status?: string
+          total_amount: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          customer_email?: string | null
+          customer_name?: string
+          customer_phone?: string
+          delivery_method?: string
+          deposit?: number | null
+          discount?: number | null
+          governorate?: string | null
+          id?: string
+          order_date?: string
+          payment_method?: string
+          profit?: number | null
+          serial?: string
+          shipping_address?: string | null
+          shipping_cost?: number | null
+          status?: string
+          total_amount?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       cart_items: {
         Row: {
           cart_id: string

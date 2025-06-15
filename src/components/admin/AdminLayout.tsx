@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Outlet, Link, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -17,7 +16,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-const AdminLayout = () => {
+const AdminLayout = ({ children }: AdminLayoutProps) => {
   const { user, signOut } = useAuth();
   const location = useLocation();
 
@@ -55,13 +54,37 @@ const AdminLayout = () => {
     return <Navigate to="/" replace />;
   }
 
-  const navItems = [
-    { path: '/admin/dashboard', label: 'لوحة التحكم', icon: LayoutDashboard },
-    { path: '/admin/products', label: 'المنتجات', icon: Package },
-    { path: '/admin/orders', label: 'الطلبات', icon: ShoppingCart },
-    { path: '/admin/customers', label: 'العملاء', icon: Users },
-    { path: '/admin/reports', label: 'التقارير', icon: BarChart3 },
-    { path: '/admin/settings', label: 'الإعدادات', icon: Settings },
+  const menuItems = [
+    { 
+      title: 'لوحة التحكم', 
+      href: '/admin/dashboard', 
+      icon: LayoutDashboard 
+    },
+    { 
+      title: 'المنتجات', 
+      href: '/admin/products', 
+      icon: Package 
+    },
+    { 
+      title: 'الطلبات', 
+      href: '/admin/orders', 
+      icon: ShoppingCart 
+    },
+    { 
+      title: 'العملاء', 
+      href: '/admin/customers', 
+      icon: Users 
+    },
+    { 
+      title: 'التقارير', 
+      href: '/admin/reports', 
+      icon: BarChart3 
+    },
+    { 
+      title: 'الإعدادات', 
+      href: '/admin/settings', 
+      icon: Settings 
+    }
   ];
 
   return (
@@ -77,14 +100,14 @@ const AdminLayout = () => {
 
         <nav className="flex-1 p-4">
           <ul className="space-y-2">
-            {navItems.map((item) => {
+            {menuItems.map((item) => {
               const Icon = item.icon;
-              const isActive = location.pathname === item.path;
+              const isActive = location.pathname === item.href;
               
               return (
-                <li key={item.path}>
+                <li key={item.href}>
                   <Link
-                    to={item.path}
+                    to={item.href}
                     className={cn(
                       "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
                       isActive 
@@ -93,7 +116,7 @@ const AdminLayout = () => {
                     )}
                   >
                     <Icon className="h-4 w-4" />
-                    {item.label}
+                    {item.title}
                   </Link>
                 </li>
               );

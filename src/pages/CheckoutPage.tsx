@@ -1,63 +1,61 @@
-
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useNavigate } from 'react-router-dom';
+import { useCart } from '@/hooks/useCart';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useCart } from '@/hooks/useCart';
-import { useAuth } from '@/hooks/useAuth';
-import { Badge } from '@/components/ui/badge';
-import { Loader2, ArrowLeft } from 'lucide-react';
-import { toast } from 'sonner';
-import { useForm } from 'react-hook-form';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { formatCurrency } from '@/lib/utils';
+import {
+  Home,
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  ShoppingCart,
+  Loader2
+} from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
 
-interface CheckoutForm {
+interface FormData {
   fullName: string;
   email: string;
   phone: string;
   address: string;
-  city: string;
   governorate: string;
-  notes?: string;
+  paymentMethod: string;
 }
 
 const CheckoutPage = () => {
-  const { cartItems, total, clearCart, loading: cartLoading } = useCart();
-  const { user } = useAuth();
   const navigate = useNavigate();
-  const [submitting, setSubmitting] = useState(false);
+  const { cartItems, clearCart } = useCart();
+  const { user } = useAuth();
+  const isMobile = useIsMobile();
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors }
-  } = useForm<CheckoutForm>();
+  const [formData, setFormData] = useState<FormData>({
+    fullName: user?.user_metadata?.full_name || '',
+    email: user?.email || '',
+    phone: '',
+    address: '',
+    governorate: '',
+    paymentMethod: 'cash'
+  });
 
-  if (cartItems.length === 0) {
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-8">
-          <Card>
-            <CardContent className="p-8">
-              <div className="text-center">
-                <h1 className="text-2xl font-bold mb-4">السلة فارغة</h1>
-                <p className="text-muted-foreground mb-6">
-                  يجب إضافة منتجات إلى السلة أولاً
-                </p>
-                <Link to="/">
-                  <Button>تصفح المنتجات</Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
+  const [shippingCost, setShippingCost] = useState(50);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Generate serial number function
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   const generateSerialNumber = async (): Promise<string> => {
     try {
       const { data, error } = await supabase.rpc('generate_serial_number');
@@ -69,272 +67,262 @@ const CheckoutPage = () => {
       const now = new Date();
       const year = now.getFullYear().toString().slice(-2);
       const month = (now.getMonth() + 1).toString().padStart(2, '0');
-      const timestamp = Date.now();
+      const timestamp = Date.now().toString().slice(-6);
       return `INV-${year}${month}-${timestamp}`;
     }
   };
 
-  const onSubmit = async (data: CheckoutForm) => {
-    setSubmitting(true);
-    try {
-      console.log('Creating order with data:', { ...data, cartItems, total });
+  const handlePlaceOrder = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
 
+    if (cartItems.length === 0) {
+      toast.error('السلة فارغة');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
       // Generate serial number
       const serial = await generateSerialNumber();
-      console.log('Generated serial number:', serial);
+      
+      // Calculate totals
+      const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const totalAmount = subtotal + shippingCost;
 
-      // Create the order in database
-      const orderData = {
-        user_id: user?.id || null,
-        serial: serial,
-        client_name: data.fullName,
-        phone: data.phone,
-        address: data.address,
-        governorate: data.governorate,
-        payment_method: 'نقدي عند الاستلام',
-        delivery_method: 'شحن للمنزل',
-        shipping_cost: 30,
-        discount: 0,
-        deposit: 0,
-        total: total + 30, // Add shipping cost
-        profit: 0, // Will be calculated based on product costs
-        status: 'pending'
-      };
-
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .insert(orderData)
+      // Create admin order
+      const { data: adminOrder, error: adminOrderError } = await supabase
+        .from('admin_orders')
+        .insert({
+          user_id: user.id,
+          serial: serial,
+          customer_name: formData.fullName,
+          customer_phone: formData.phone,
+          customer_email: formData.email || null,
+          shipping_address: formData.address,
+          governorate: formData.governorate,
+          payment_method: formData.paymentMethod,
+          delivery_method: 'home_delivery',
+          shipping_cost: shippingCost,
+          discount: 0,
+          deposit: 0,
+          total_amount: totalAmount,
+          profit: 0, // Will be calculated from items
+          status: 'pending'
+        })
         .select()
         .single();
 
-      if (orderError) {
-        console.error('Error creating order:', orderError);
-        throw orderError;
+      if (adminOrderError) {
+        console.error('Error creating admin order:', adminOrderError);
+        throw adminOrderError;
       }
 
-      console.log('Order created successfully:', order);
-
-      // Create order items
+      // Create admin order items
       const orderItems = cartItems.map(item => ({
-        order_id: order.id,
-        product_type: item.product?.name || 'منتج',
-        size: item.size,
+        order_id: adminOrder.id,
+        product_name: item.product?.name || 'منتج غير محدد',
+        product_size: item.size,
         quantity: item.quantity,
-        price: item.price,
-        cost: 0, // Default cost, should be updated from product data
-        profit: item.price, // Simplified profit calculation
-        item_discount: 0
+        unit_cost: 0, // You may want to add cost to cart items
+        unit_price: item.price,
+        item_discount: 0,
+        total_price: item.price * item.quantity,
+        profit: item.price * item.quantity // Adjust based on actual cost
       }));
 
       const { error: itemsError } = await supabase
-        .from('order_items')
+        .from('admin_order_items')
         .insert(orderItems);
 
       if (itemsError) {
-        console.error('Error creating order items:', itemsError);
+        console.error('Error creating admin order items:', itemsError);
         throw itemsError;
       }
 
-      console.log('Order items created successfully');
-
-      // Clear the cart
+      // Clear cart
       await clearCart();
       
-      toast.success(`تم إنشاء طلبك بنجاح! رقم الطلب: ${order.serial}`);
-      navigate('/');
+      toast.success('تم إنشاء الطلب بنجاح!');
+      navigate('/order-tracking', { 
+        state: { 
+          orderSerial: serial,
+          orderDetails: {
+            ...formData,
+            serial,
+            items: cartItems,
+            total: totalAmount,
+            status: 'pending'
+          }
+        }
+      });
+
     } catch (error) {
-      console.error('Error submitting order:', error);
-      toast.error('حدث خطأ في إرسال الطلب. يرجى المحاولة مرة أخرى');
+      console.error('Error placing order:', error);
+      toast.error('حدث خطأ أثناء إنشاء الطلب');
     } finally {
-      setSubmitting(false);
+      setIsSubmitting(false);
     }
   };
 
-  const shippingCost = 30; // رسوم شحن ثابتة
-  const finalTotal = total + shippingCost;
-
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-2 mb-6">
-          <Link to="/cart" className="flex items-center gap-2 text-muted-foreground hover:text-primary">
-            <ArrowLeft className="h-4 w-4" />
-            العودة للسلة
-          </Link>
-        </div>
+    <div className="container mx-auto py-8 px-4">
+      <Card className="max-w-2xl mx-auto">
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold">
+            <ShoppingCart className="inline-block h-6 w-6 ml-2" />
+            إتمام الطلب
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <form onSubmit={handlePlaceOrder} className="space-y-4">
+            {/* Personal Information */}
+            <div className="space-y-2">
+              <Label htmlFor="fullName">
+                <User className="inline-block h-4 w-4 ml-1" />
+                الاسم الكامل
+              </Label>
+              <Input
+                type="text"
+                id="fullName"
+                name="fullName"
+                value={formData.fullName}
+                onChange={handleInputChange}
+                placeholder="أدخل اسمك الكامل"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">
+                <Mail className="inline-block h-4 w-4 ml-1" />
+                البريد الإلكتروني
+              </Label>
+              <Input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                placeholder="أدخل بريدك الإلكتروني"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone">
+                <Phone className="inline-block h-4 w-4 ml-1" />
+                رقم الهاتف
+              </Label>
+              <Input
+                type="tel"
+                id="phone"
+                name="phone"
+                value={formData.phone}
+                onChange={handleInputChange}
+                placeholder="أدخل رقم هاتفك"
+                required
+              />
+            </div>
 
-        <h1 className="text-3xl font-bold mb-8">إتمام الطلب</h1>
+            {/* Shipping Information */}
+            <div className="space-y-2">
+              <Label htmlFor="address">
+                <Home className="inline-block h-4 w-4 ml-1" />
+                العنوان
+              </Label>
+              <Input
+                type="text"
+                id="address"
+                name="address"
+                value={formData.address}
+                onChange={handleInputChange}
+                placeholder="أدخل عنوان التوصيل"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="governorate">
+                <MapPin className="inline-block h-4 w-4 ml-1" />
+                المحافظة
+              </Label>
+              <Select
+                name="governorate"
+                onValueChange={(value) => setFormData(prev => ({ ...prev, governorate: value }))}
+                defaultValue={formData.governorate}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="اختر محافظتك" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Cairo">القاهرة</SelectItem>
+                  <SelectItem value="Giza">الجيزة</SelectItem>
+                  {/* Add more governorates as needed */}
+                </SelectContent>
+              </Select>
+            </div>
 
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Customer Information */}
-            <div className="lg:col-span-2 space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>بيانات العميل</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="fullName">الاسم الكامل *</Label>
-                      <Input
-                        id="fullName"
-                        {...register('fullName', { required: 'الاسم مطلوب' })}
-                        defaultValue={user?.user_metadata?.full_name || ''}
-                      />
-                      {errors.fullName && (
-                        <p className="text-sm text-destructive mt-1">{errors.fullName.message}</p>
-                      )}
-                    </div>
-
-                    <div>
-                      <Label htmlFor="phone">رقم الهاتف *</Label>
-                      <Input
-                        id="phone"
-                        type="tel"
-                        {...register('phone', { 
-                          required: 'رقم الهاتف مطلوب',
-                          pattern: {
-                            value: /^[0-9+\-\s()]+$/,
-                            message: 'رقم هاتف غير صحيح'
-                          }
-                        })}
-                      />
-                      {errors.phone && (
-                        <p className="text-sm text-destructive mt-1">{errors.phone.message}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="email">البريد الإلكتروني</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      {...register('email')}
-                      defaultValue={user?.email || ''}
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="address">العنوان التفصيلي *</Label>
-                    <Input
-                      id="address"
-                      {...register('address', { required: 'العنوان مطلوب' })}
-                      placeholder="الشارع، رقم المبنى، الدور، الشقة"
-                    />
-                    {errors.address && (
-                      <p className="text-sm text-destructive mt-1">{errors.address.message}</p>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="city">المدينة *</Label>
-                      <Input
-                        id="city"
-                        {...register('city', { required: 'المدينة مطلوبة' })}
-                      />
-                      {errors.city && (
-                        <p className="text-sm text-destructive mt-1">{errors.city.message}</p>
-                      )}
-                    </div>
-
-                    <div>
-                      <Label htmlFor="governorate">المحافظة *</Label>
-                      <Input
-                        id="governorate"
-                        {...register('governorate', { required: 'المحافظة مطلوبة' })}
-                      />
-                      {errors.governorate && (
-                        <p className="text-sm text-destructive mt-1">{errors.governorate.message}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="notes">ملاحظات إضافية</Label>
-                    <Input
-                      id="notes"
-                      {...register('notes')}
-                      placeholder="أي تعليقات أو طلبات خاصة"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
+            {/* Payment Method */}
+            <div className="space-y-2">
+              <Label htmlFor="paymentMethod">طريقة الدفع</Label>
+              <Select
+                name="paymentMethod"
+                onValueChange={(value) => setFormData(prev => ({ ...prev, paymentMethod: value }))}
+                defaultValue={formData.paymentMethod}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="اختر طريقة الدفع" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cash">الدفع عند الاستلام</SelectItem>
+                  {/* Add more payment methods as needed */}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Order Summary */}
-            <div className="lg:col-span-1">
-              <Card className="sticky top-4">
-                <CardHeader>
-                  <CardTitle>ملخص الطلب</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {/* Cart Items */}
-                    <div className="space-y-3">
-                      {cartItems.map((item) => (
-                        <div key={item.id} className="flex justify-between items-start text-sm">
-                          <div className="flex-1">
-                            <div className="font-medium">{item.product?.name || 'منتج'}</div>
-                            <div className="text-muted-foreground">
-                              {item.size} × {item.quantity}
-                            </div>
-                          </div>
-                          <div className="font-medium">
-                            {item.price * item.quantity} ج.م
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    <hr />
-
-                    {/* Totals */}
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span>المجموع الفرعي</span>
-                        <span>{total} ج.م</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>رسوم الشحن</span>
-                        <span>{shippingCost} ج.م</span>
-                      </div>
-                      <hr />
-                      <div className="flex justify-between font-semibold text-lg">
-                        <span>الإجمالي</span>
-                        <span>{finalTotal} ج.م</span>
-                      </div>
-                    </div>
-
-                    <Badge variant="outline" className="w-full justify-center">
-                      الدفع عند الاستلام
-                    </Badge>
-
-                    <Button
-                      type="submit"
-                      className="w-full"
-                      size="lg"
-                      disabled={submitting || cartLoading}
-                    >
-                      {submitting ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                          جاري إرسال الطلب...
-                        </>
-                      ) : (
-                        'تأكيد الطلب'
-                      )}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+            <div className="border-t pt-4">
+              <h3 className="text-lg font-semibold">ملخص الطلب</h3>
+              <ul className="space-y-2 mt-2">
+                {cartItems.map(item => (
+                  <li key={item.id} className="flex justify-between">
+                    <span>
+                      {item.product?.name} ({item.size}) × {item.quantity}
+                    </span>
+                    <span>{formatCurrency(item.price * item.quantity)}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="flex justify-between font-semibold mt-2">
+                <span>المجموع الفرعي:</span>
+                <span>{formatCurrency(cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0))}</span>
+              </div>
+              <div className="flex justify-between font-semibold mt-2">
+                <span>تكلفة الشحن:</span>
+                <span>{formatCurrency(shippingCost)}</span>
+              </div>
+              <div className="flex justify-between text-xl font-bold mt-4">
+                <span>الإجمالي:</span>
+                <span>{formatCurrency(cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0) + shippingCost)}</span>
+              </div>
             </div>
-          </div>
-        </form>
-      </div>
+
+            {/* Place Order Button */}
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  جاري إنشاء الطلب...
+                  <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                </>
+              ) : (
+                "تأكيد الطلب"
+              )}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 };
