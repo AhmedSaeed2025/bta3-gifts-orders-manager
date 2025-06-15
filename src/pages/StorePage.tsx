@@ -8,6 +8,7 @@ import StoreFooter from '@/components/store/StoreFooter';
 import HeroSection from '@/components/store/HeroSection';
 import CustomerReviews from '@/components/store/CustomerReviews';
 import SocialMediaSection from '@/components/store/SocialMediaSection';
+import BannersSection from '@/components/store/BannersSection';
 import BackToTop from '@/components/store/BackToTop';
 import { Loader2, ShoppingBag } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -38,7 +39,8 @@ const StorePage = () => {
         show_product_sizes: true,
         hero_banner_url: null,
         customer_reviews_enabled: true,
-        show_back_to_top: true
+        show_back_to_top: true,
+        enable_banners: true
       };
     }
   });
@@ -136,6 +138,9 @@ const StorePage = () => {
       <main>
         {/* Hero Section */}
         <HeroSection storeSettings={storeSettings} />
+        
+        {/* Promotional Banners Section */}
+        <BannersSection storeSettings={storeSettings} />
         
         {/* Products Section by Categories */}
         <section className={`${isMobile ? 'py-6 px-3' : 'py-12 px-4'}`}>

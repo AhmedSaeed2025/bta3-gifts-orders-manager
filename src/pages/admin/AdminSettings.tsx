@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -5,12 +6,13 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Loader2, Settings, Palette, Truck, CreditCard, FileText, Save, Star } from 'lucide-react';
+import { Loader2, Settings, Palette, Truck, CreditCard, FileText, Save, Star, ImageIcon } from 'lucide-react';
 import { Facebook } from 'lucide-react';
 
 // Import the new component modules
 import GeneralSettings from '@/components/admin/settings/GeneralSettings';
 import AppearanceSettings from '@/components/admin/settings/AppearanceSettings';
+import BannerSettings from '@/components/admin/settings/BannerSettings';
 import ShippingSettings from '@/components/admin/settings/ShippingSettings';
 import PaymentSettings from '@/components/admin/settings/PaymentSettings';
 import PolicySettings from '@/components/admin/settings/PolicySettings';
