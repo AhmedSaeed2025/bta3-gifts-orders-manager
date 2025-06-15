@@ -11,8 +11,6 @@ export interface AdminSettingsFormData {
   store_tagline: string;
   store_description: string;
   about_us: string;
-  main_text: string;
-  footer_brand_text: string;
   contact_phone: string;
   contact_phone_2: string;
   contact_email: string;
@@ -92,8 +90,6 @@ const defaultFormData: AdminSettingsFormData = {
   store_tagline: '',
   store_description: '',
   about_us: '',
-  main_text: '',
-  footer_brand_text: 'بتاع هدايا الأصلى',
   contact_phone: '',
   contact_phone_2: '',
   contact_email: '',
@@ -199,8 +195,6 @@ export const useAdminSettings = () => {
         store_tagline: storeSettings.store_tagline || '',
         store_description: (storeSettings as any).store_description || '',
         about_us: storeSettings.about_us || '',
-        main_text: (storeSettings as any).main_text || '',
-        footer_brand_text: (storeSettings as any).footer_brand_text || 'بتاع هدايا الأصلى',
         contact_phone: storeSettings.contact_phone || '',
         contact_phone_2: storeSettings.contact_phone_2 || '',
         contact_email: storeSettings.contact_email || '',
@@ -250,8 +244,6 @@ export const useAdminSettings = () => {
         terms_conditions: storeSettings.terms_conditions || '',
         privacy_policy: storeSettings.privacy_policy || '',
         cookie_policy: storeSettings.cookie_policy || '',
-        
-        // Social media fields
         facebook_url: (storeSettings as any).facebook_url || '',
         instagram_url: (storeSettings as any).instagram_url || '',
         twitter_url: (storeSettings as any).twitter_url || '',
