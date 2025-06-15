@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -171,7 +172,7 @@ const AdminSettings = () => {
         store_name: storeSettings.store_name || '',
         store_tagline: storeSettings.store_tagline || '',
         about_us: storeSettings.about_us || '',
-        main_text: storeSettings.main_text || '',
+        main_text: (storeSettings as any).main_text || '',
         contact_phone: storeSettings.contact_phone || '',
         contact_phone_2: storeSettings.contact_phone_2 || '',
         contact_email: storeSettings.contact_email || '',
