@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Facebook, Instagram, Twitter, Youtube, Linkedin, Phone, Mail, MapPin } from 'lucide-react';
@@ -79,6 +80,36 @@ const StoreFooter = ({ storeSettings }: StoreFooterProps) => {
                     </div>
                   </a>
                 )}
+
+                {/* WhatsApp Catalog */}
+                {storeSettings?.whatsapp_catalog_url && (
+                  <a
+                    href={storeSettings.whatsapp_catalog_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:scale-110 transition-all duration-300 bg-white/10 hover:bg-white/20 p-3 rounded-full"
+                    aria-label="كتالوج الواتساب"
+                  >
+                    <div className={`bg-green-500 rounded flex items-center justify-center ${isMobile ? 'h-5 w-5' : 'h-6 w-6'}`}>
+                      <span className={`text-white font-bold ${isMobile ? 'text-xs' : 'text-sm'}`}>W</span>
+                    </div>
+                  </a>
+                )}
+
+                {/* Telegram */}
+                {storeSettings?.telegram_url && (
+                  <a
+                    href={storeSettings.telegram_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:scale-110 transition-all duration-300 bg-white/10 hover:bg-white/20 p-3 rounded-full"
+                    aria-label="تلجرام"
+                  >
+                    <div className={`bg-blue-500 rounded flex items-center justify-center ${isMobile ? 'h-5 w-5' : 'h-6 w-6'}`}>
+                      <span className={`text-white font-bold ${isMobile ? 'text-xs' : 'text-sm'}`}>TG</span>
+                    </div>
+                  </a>
+                )}
               </div>
             )}
           </div>
@@ -112,7 +143,6 @@ const StoreFooter = ({ storeSettings }: StoreFooterProps) => {
                 </ul>
               </div>
 
-              {/* Customer Service */}
               <div>
                 <h3 className="font-bold text-lg mb-4 text-white">خدمة العملاء</h3>
                 <ul className="space-y-3">
@@ -189,7 +219,7 @@ const StoreFooter = ({ storeSettings }: StoreFooterProps) => {
 
         <div className={`border-t border-gray-600 pt-6 mt-8 text-center text-gray-400 ${isMobile ? 'text-sm' : ''}`}>
           <p>&copy; 2025 {storeSettings?.store_name || 'متجري الإلكتروني'}. جميع الحقوق محفوظة.</p>
-          <p className="mt-2 text-xs">بواسطة #بتاع_هدايا_الأصلى</p>
+          <p className="mt-2 text-xs">تم التطوير بواسطة #بتاع_هدايا_الأصلى</p>
         </div>
       </div>
     </footer>

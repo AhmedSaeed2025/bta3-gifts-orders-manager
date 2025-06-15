@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Facebook, Instagram, Twitter, Youtube, Linkedin } from 'lucide-react';
+import { Facebook, Instagram, Twitter, Youtube, Linkedin, MessageCircle, Send } from 'lucide-react';
 
 interface SocialMediaSettingsProps {
   formData: any;
@@ -117,6 +117,32 @@ const SocialMediaSettings = ({ formData, onInputChange }: SocialMediaSettingsPro
                 value={formData.snapchat_url || ''}
                 onChange={(e) => onInputChange('snapchat_url', e.target.value)}
                 placeholder="https://snapchat.com/add/yourpage"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="whatsapp_catalog_url" className="flex items-center gap-2">
+                <MessageCircle className="h-4 w-4 text-green-600" />
+                كتالوج الواتساب
+              </Label>
+              <Input
+                id="whatsapp_catalog_url"
+                value={formData.whatsapp_catalog_url || ''}
+                onChange={(e) => onInputChange('whatsapp_catalog_url', e.target.value)}
+                placeholder="https://wa.me/c/your-catalog-link"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="telegram_url" className="flex items-center gap-2">
+                <Send className="h-4 w-4 text-blue-500" />
+                تلجرام
+              </Label>
+              <Input
+                id="telegram_url"
+                value={formData.telegram_url || ''}
+                onChange={(e) => onInputChange('telegram_url', e.target.value)}
+                placeholder="https://t.me/yourchannel"
               />
             </div>
           </div>

@@ -80,6 +80,8 @@ export interface AdminSettingsFormData {
   linkedin_url: string;
   tiktok_url: string;
   snapchat_url: string;
+  whatsapp_catalog_url: string;
+  telegram_url: string;
 }
 
 const defaultFormData: AdminSettingsFormData = {
@@ -156,7 +158,9 @@ const defaultFormData: AdminSettingsFormData = {
   youtube_url: '',
   linkedin_url: '',
   tiktok_url: '',
-  snapchat_url: ''
+  snapchat_url: '',
+  whatsapp_catalog_url: '',
+  telegram_url: ''
 };
 
 export const useAdminSettings = () => {
@@ -252,7 +256,9 @@ export const useAdminSettings = () => {
         youtube_url: (storeSettings as any).youtube_url || '',
         linkedin_url: (storeSettings as any).linkedin_url || '',
         tiktok_url: (storeSettings as any).tiktok_url || '',
-        snapchat_url: (storeSettings as any).snapchat_url || ''
+        snapchat_url: (storeSettings as any).snapchat_url || '',
+        whatsapp_catalog_url: (storeSettings as any).whatsapp_catalog_url || '',
+        telegram_url: (storeSettings as any).telegram_url || ''
       });
     }
   }, [storeSettings]);

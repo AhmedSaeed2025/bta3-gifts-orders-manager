@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Facebook, Instagram, Twitter, Youtube, Linkedin } from 'lucide-react';
+import { Facebook, Instagram, Twitter, Youtube, Linkedin, MessageCircle, Send } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface SocialMediaSectionProps {
@@ -44,6 +44,20 @@ const SocialMediaSection = ({ storeSettings }: SocialMediaSectionProps) => {
       icon: Linkedin, 
       label: 'لينكد إن', 
       color: 'hover:text-blue-700 hover:bg-blue-50',
+      bgColor: 'bg-blue-100'
+    },
+    { 
+      url: storeSettings?.whatsapp_catalog_url, 
+      icon: MessageCircle, 
+      label: 'كتالوج الواتساب', 
+      color: 'hover:text-green-600 hover:bg-green-50',
+      bgColor: 'bg-green-100'
+    },
+    { 
+      url: storeSettings?.telegram_url, 
+      icon: Send, 
+      label: 'تلجرام', 
+      color: 'hover:text-blue-500 hover:bg-blue-50',
       bgColor: 'bg-blue-100'
     },
   ].filter(link => link.url);
