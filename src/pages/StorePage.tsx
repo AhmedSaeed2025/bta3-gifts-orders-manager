@@ -26,7 +26,8 @@ const StorePage = () => {
         primary_color: '#10B981',
         secondary_color: '#059669',
         show_product_prices: true,
-        show_product_sizes: true
+        show_product_sizes: true,
+        hero_banner_url: null
       };
     }
   });
