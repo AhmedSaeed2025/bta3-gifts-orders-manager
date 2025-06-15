@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -85,25 +84,6 @@ const AdminSettings = () => {
     shipping_cost: 0
   });
 
-  const { data: storeSettings, isLoading } = useQuery({
-    queryKey: ['store-settings-admin'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('store_settings')
-        .select('*')
-        .eq('user_id', user!.id)
-        .eq('is_active', true)
-        .single();
-
-      if (error && error.code !== 'PGRST116') {
-        throw error;
-      }
-
-      return data;
-    },
-    enabled: !!user
-  });
-
   // Fetch products for shipping rate configuration
   const { data: products } = useQuery({
     queryKey: ['products-for-shipping'],
@@ -159,8 +139,8 @@ const AdminSettings = () => {
         show_out_of_stock: storeSettings.show_out_of_stock || false,
         enable_dark_mode: storeSettings.enable_dark_mode !== false,
         free_shipping_enabled: storeSettings.free_shipping_enabled || false,
-        default_shipping_cost: storeSettings.default_shipping_cost || '',
-        free_shipping_threshold: storeSettings.free_shipping_threshold || '',
+        default_shipping_cost: storeSettings.default_shipping_cost?.toString() || '',
+        free_shipping_threshold: storeSettings.free_shipping_threshold?.toString() || '',
         estimated_delivery_time: storeSettings.estimated_delivery_time || '',
         shipping_policy: storeSettings.shipping_policy || '',
         cash_on_delivery: storeSettings.cash_on_delivery !== false,
@@ -185,12 +165,19 @@ const AdminSettings = () => {
 
   const updateSettingsMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
+      // Convert string values to numbers where needed
+      const processedData = {
+        ...data,
+        default_shipping_cost: data.default_shipping_cost ? parseFloat(data.default_shipping_cost) : 0,
+        free_shipping_threshold: data.free_shipping_threshold ? parseFloat(data.free_shipping_threshold) : null,
+      };
+
       if (storeSettings) {
         // Update existing settings
         const { error } = await supabase
           .from('store_settings')
           .update({
-            ...data,
+            ...processedData,
             updated_at: new Date().toISOString()
           })
           .eq('id', storeSettings.id);
@@ -202,7 +189,7 @@ const AdminSettings = () => {
           .from('store_settings')
           .insert({
             user_id: user!.id,
-            ...data
+            ...processedData
           });
 
         if (error) throw error;
