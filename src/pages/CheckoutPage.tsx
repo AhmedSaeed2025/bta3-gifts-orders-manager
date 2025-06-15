@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,7 +28,7 @@ interface FormData {
 
 const CheckoutPage = () => {
   const { cartItems, clearCart } = useCart();
-  const { saveOrder } = useSupabaseOrders();
+  const { addOrder } = useSupabaseOrders();
   const { user } = useAuth();
   const navigate = useNavigate();
   
@@ -115,8 +114,6 @@ const CheckoutPage = () => {
     setIsSubmitting(true);
 
     try {
-      const serial = await generateSerial();
-      
       const orderItems: OrderItem[] = cartItems.map(item => ({
         productType: item.product?.name || 'Unknown Product',
         size: item.size,
@@ -127,8 +124,7 @@ const CheckoutPage = () => {
         itemDiscount: 0
       }));
 
-      const orderData: Omit<Order, 'id'> = {
-        serial,
+      const orderData: Omit<Order, 'serial' | 'dateCreated'> = {
         clientName: formData.clientName,
         phone: formData.phone,
         paymentMethod: formData.paymentMethod,
@@ -141,22 +137,23 @@ const CheckoutPage = () => {
         deposit: formData.deposit,
         total,
         profit: orderItems.reduce((sum, item) => sum + item.profit, 0),
-        status: 'pending',
-        dateCreated: new Date().toISOString()
+        status: 'pending'
       };
 
-      // Save to regular orders table
-      const savedOrder = await saveOrder(orderData);
+      // Save order using addOrder from context
+      await addOrder(orderData);
       
       // Also save to admin orders table if user is authenticated
-      if (user && savedOrder) {
+      if (user) {
         try {
+          const serial = await generateSerial();
+          
           // First, save the admin order
           const { data: adminOrder, error: adminOrderError } = await supabase
             .from('admin_orders')
             .insert({
               user_id: user.id,
-              serial: savedOrder.serial,
+              serial: serial,
               customer_name: formData.clientName,
               customer_phone: formData.phone,
               customer_email: '',
@@ -207,7 +204,9 @@ const CheckoutPage = () => {
 
       clearCart();
       toast.success("تم إنشاء الطلب بنجاح!");
-      navigate(`/track/${savedOrder.serial}`);
+      
+      // Navigate to a success page or order tracking
+      navigate("/");
       
     } catch (error) {
       console.error("Error creating order:", error);
