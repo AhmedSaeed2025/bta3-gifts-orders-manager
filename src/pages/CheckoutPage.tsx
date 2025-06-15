@@ -1,328 +1,413 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useCart } from '@/hooks/useCart';
-import { useAuth } from '@/hooks/useAuth';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { formatCurrency } from '@/lib/utils';
-import {
-  Home,
-  User,
-  Mail,
-  Phone,
-  MapPin,
-  ShoppingCart,
-  Loader2
-} from 'lucide-react';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { supabase } from '@/integrations/supabase/client';
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useCart } from "@/hooks/useCart";
+import { formatCurrency } from "@/lib/utils";
+import { Order, OrderItem } from "@/types";
+import { useSupabaseOrders } from "@/context/SupabaseOrderContext";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import Logo from "@/components/Logo";
+import UserProfile from "@/components/UserProfile";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface FormData {
-  fullName: string;
-  email: string;
+  clientName: string;
   phone: string;
+  paymentMethod: string;
+  deliveryMethod: string;
   address: string;
   governorate: string;
-  paymentMethod: string;
+  discount: number;
+  deposit: number;
 }
 
 const CheckoutPage = () => {
-  const navigate = useNavigate();
-  const { cartItems, clearCart } = useCart();
+  const { cart, clearCart } = useCart();
+  const { saveOrder } = useSupabaseOrders();
   const { user } = useAuth();
-  const isMobile = useIsMobile();
-
-  const [formData, setFormData] = useState<FormData>({
-    fullName: user?.user_metadata?.full_name || '',
-    email: user?.email || '',
-    phone: '',
-    address: '',
-    governorate: '',
-    paymentMethod: 'cash'
+  const navigate = useNavigate();
+  
+  const [formData, setFormData] = useState({
+    clientName: "",
+    phone: "",
+    paymentMethod: "",
+    deliveryMethod: "",
+    address: "",
+    governorate: "",
+    discount: 0,
+    deposit: 0
   });
 
-  const [shippingCost, setShippingCost] = useState(50);
+  const [shippingCost, setShippingCost] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+  const governorates = [
+    "القاهرة", "الجيزة", "الإسكندرية", "الدقهلية", "البحر الأحمر", "البحيرة",
+    "الفيوم", "الغربية", "الإسماعيلية", "المنوفية", "المنيا", "القليوبية",
+    "الوادي الجديد", "السويس", "أسوان", "أسيوط", "بني سويف", "بورسعيد",
+    "دمياط", "الشرقية", "جنوب سيناء", "كفر الشيخ", "مطروح", "الأقصر",
+    "قنا", "شمال سيناء", "سوهاج"
+  ];
+
+  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const total = subtotal + shippingCost - formData.discount - formData.deposit;
+
+  useEffect(() => {
+    if (formData.deliveryMethod === "شحن للمنزل" && formData.governorate) {
+      setShippingCost(50); // Default shipping cost
+    } else {
+      setShippingCost(0);
+    }
+  }, [formData.deliveryMethod, formData.governorate]);
+
+  const handleInputChange = (field: string, value: string | number) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const generateSerialNumber = async (): Promise<string> => {
+  const generateSerial = async (): Promise<string> => {
     try {
       const { data, error } = await supabase.rpc('generate_serial_number');
-      if (error) throw error;
+      if (error) {
+        console.error('Error generating serial:', error);
+        // Fallback to manual generation
+        const now = new Date();
+        const year = now.getFullYear().toString().slice(-2);
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const random = Math.floor(Math.random() * 9999).toString().padStart(4, '0');
+        return `INV-${year}${month}-${random}`;
+      }
       return data;
     } catch (error) {
-      console.error('Error generating serial number:', error);
-      // Fallback to client-side generation
+      console.error('Error in generateSerial:', error);
+      // Fallback
       const now = new Date();
       const year = now.getFullYear().toString().slice(-2);
-      const month = (now.getMonth() + 1).toString().padStart(2, '0');
-      const timestamp = Date.now().toString().slice(-6);
-      return `INV-${year}${month}-${timestamp}`;
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const random = Math.floor(Math.random() * 9999).toString().padStart(4, '0');
+      return `INV-${year}${month}-${random}`;
     }
   };
 
-  const handlePlaceOrder = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!user) {
-      navigate('/auth');
+    if (!formData.clientName || !formData.phone || !formData.paymentMethod || !formData.deliveryMethod) {
+      toast.error("يرجى ملء جميع الحقول المطلوبة");
       return;
     }
 
-    if (cartItems.length === 0) {
-      toast.error('السلة فارغة');
+    if (formData.deliveryMethod === "شحن للمنزل" && (!formData.address || !formData.governorate)) {
+      toast.error("يرجى ملء عنوان الشحن والمحافظة");
+      return;
+    }
+
+    if (cart.length === 0) {
+      toast.error("السلة فارغة");
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      // Generate serial number
-      const serial = await generateSerialNumber();
+      const serial = await generateSerial();
       
-      // Calculate totals
-      const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-      const totalAmount = subtotal + shippingCost;
-
-      // Create admin order
-      const { data: adminOrder, error: adminOrderError } = await supabase
-        .from('admin_orders')
-        .insert({
-          user_id: user.id,
-          serial: serial,
-          customer_name: formData.fullName,
-          customer_phone: formData.phone,
-          customer_email: formData.email || null,
-          shipping_address: formData.address,
-          governorate: formData.governorate,
-          payment_method: formData.paymentMethod,
-          delivery_method: 'home_delivery',
-          shipping_cost: shippingCost,
-          discount: 0,
-          deposit: 0,
-          total_amount: totalAmount,
-          profit: 0, // Will be calculated from items
-          status: 'pending'
-        })
-        .select()
-        .single();
-
-      if (adminOrderError) {
-        console.error('Error creating admin order:', adminOrderError);
-        throw adminOrderError;
-      }
-
-      // Create admin order items
-      const orderItems = cartItems.map(item => ({
-        order_id: adminOrder.id,
-        product_name: item.product?.name || 'منتج غير محدد',
-        product_size: item.size,
+      const orderItems: OrderItem[] = cart.map(item => ({
+        productType: item.productType,
+        size: item.size,
         quantity: item.quantity,
-        unit_cost: 0, // You may want to add cost to cart items
-        unit_price: item.price,
-        item_discount: 0,
-        total_price: item.price * item.quantity,
-        profit: item.price * item.quantity // Adjust based on actual cost
+        cost: item.cost,
+        price: item.price,
+        profit: (item.price - item.cost) * item.quantity,
+        itemDiscount: 0
       }));
 
-      const { error: itemsError } = await supabase
-        .from('admin_order_items')
-        .insert(orderItems);
+      const orderData: Omit<Order, 'id'> = {
+        serial,
+        clientName: formData.clientName,
+        phone: formData.phone,
+        paymentMethod: formData.paymentMethod,
+        deliveryMethod: formData.deliveryMethod,
+        address: formData.address,
+        governorate: formData.governorate,
+        items: orderItems,
+        shippingCost,
+        discount: formData.discount,
+        deposit: formData.deposit,
+        total,
+        profit: orderItems.reduce((sum, item) => sum + item.profit, 0),
+        status: 'pending',
+        dateCreated: new Date().toISOString()
+      };
 
-      if (itemsError) {
-        console.error('Error creating admin order items:', itemsError);
-        throw itemsError;
+      // Save to regular orders table
+      const savedOrder = await saveOrder(orderData);
+      
+      // Also save to admin orders table if user is authenticated
+      if (user && savedOrder) {
+        try {
+          // First, save the admin order
+          const { data: adminOrder, error: adminOrderError } = await supabase
+            .from('admin_orders')
+            .insert({
+              user_id: user.id,
+              serial: savedOrder.serial,
+              customer_name: formData.clientName,
+              customer_phone: formData.phone,
+              customer_email: '',
+              shipping_address: formData.address,
+              governorate: formData.governorate,
+              payment_method: formData.paymentMethod,
+              delivery_method: formData.deliveryMethod,
+              shipping_cost: shippingCost,
+              discount: formData.discount,
+              deposit: formData.deposit,
+              total_amount: total,
+              profit: orderItems.reduce((sum, item) => sum + item.profit, 0),
+              status: 'pending',
+              order_date: new Date().toISOString()
+            })
+            .select()
+            .single();
+
+          if (adminOrderError) {
+            console.error('Error saving admin order:', adminOrderError);
+          } else if (adminOrder) {
+            // Save admin order items
+            const adminOrderItems = orderItems.map(item => ({
+              order_id: adminOrder.id,
+              product_name: item.productType,
+              product_size: item.size,
+              quantity: item.quantity,
+              unit_cost: item.cost,
+              unit_price: item.price,
+              item_discount: item.itemDiscount || 0,
+              total_price: item.price * item.quantity,
+              profit: item.profit
+            }));
+
+            const { error: itemsError } = await supabase
+              .from('admin_order_items')
+              .insert(adminOrderItems);
+
+            if (itemsError) {
+              console.error('Error saving admin order items:', itemsError);
+            }
+          }
+        } catch (adminError) {
+          console.error('Error saving to admin tables:', adminError);
+          // Don't fail the entire order if admin save fails
+        }
       }
 
-      // Clear cart
-      await clearCart();
+      clearCart();
+      toast.success("تم إنشاء الطلب بنجاح!");
+      navigate(`/order/${savedOrder.serial}`);
       
-      toast.success('تم إنشاء الطلب بنجاح!');
-      navigate('/order-tracking', { 
-        state: { 
-          orderSerial: serial,
-          orderDetails: {
-            ...formData,
-            serial,
-            items: cartItems,
-            total: totalAmount,
-            status: 'pending'
-          }
-        }
-      });
-
     } catch (error) {
-      console.error('Error placing order:', error);
-      toast.error('حدث خطأ أثناء إنشاء الطلب');
+      console.error("Error creating order:", error);
+      toast.error("حدث خطأ في إنشاء الطلب");
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  if (cart.length === 0) {
+    return (
+      <div className="min-h-screen bg-gift-accent dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center p-8">
+          <h2 className="text-xl font-bold mb-4">السلة فارغة</h2>
+          <Button onClick={() => navigate("/")} variant="outline">العودة للتسوق</Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="container mx-auto py-8 px-4">
-      <Card className="max-w-2xl mx-auto">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold">
-            <ShoppingCart className="inline-block h-6 w-6 ml-2" />
-            إتمام الطلب
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <form onSubmit={handlePlaceOrder} className="space-y-4">
-            {/* Personal Information */}
-            <div className="space-y-2">
-              <Label htmlFor="fullName">
-                <User className="inline-block h-4 w-4 ml-1" />
-                الاسم الكامل
-              </Label>
-              <Input
-                type="text"
-                id="fullName"
-                name="fullName"
-                value={formData.fullName}
-                onChange={handleInputChange}
-                placeholder="أدخل اسمك الكامل"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">
-                <Mail className="inline-block h-4 w-4 ml-1" />
-                البريد الإلكتروني
-              </Label>
-              <Input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                placeholder="أدخل بريدك الإلكتروني"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">
-                <Phone className="inline-block h-4 w-4 ml-1" />
-                رقم الهاتف
-              </Label>
-              <Input
-                type="tel"
-                id="phone"
-                name="phone"
-                value={formData.phone}
-                onChange={handleInputChange}
-                placeholder="أدخل رقم هاتفك"
-                required
-              />
-            </div>
+    <div className="min-h-screen bg-gift-accent dark:bg-gray-900 transition-colors duration-300">
+      <div className="container mx-auto px-4 py-4 md:py-6">
+        <div className="flex items-center justify-between mb-4">
+          <Logo />
+          <UserProfile />
+        </div>
+        
+        <div className="grid lg:grid-cols-2 gap-6">
+          {/* Order Form */}
+          <Card>
+            <CardHeader>
+              <CardTitle>بيانات الطلب</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Customer Information */}
+                <div className="space-y-2">
+                  <Label htmlFor="clientName">اسم العميل *</Label>
+                  <Input
+                    id="clientName"
+                    value={formData.clientName}
+                    onChange={(e) => handleInputChange('clientName', e.target.value)}
+                    required
+                  />
+                </div>
 
-            {/* Shipping Information */}
-            <div className="space-y-2">
-              <Label htmlFor="address">
-                <Home className="inline-block h-4 w-4 ml-1" />
-                العنوان
-              </Label>
-              <Input
-                type="text"
-                id="address"
-                name="address"
-                value={formData.address}
-                onChange={handleInputChange}
-                placeholder="أدخل عنوان التوصيل"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="governorate">
-                <MapPin className="inline-block h-4 w-4 ml-1" />
-                المحافظة
-              </Label>
-              <Select
-                name="governorate"
-                onValueChange={(value) => setFormData(prev => ({ ...prev, governorate: value }))}
-                defaultValue={formData.governorate}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="اختر محافظتك" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Cairo">القاهرة</SelectItem>
-                  <SelectItem value="Giza">الجيزة</SelectItem>
-                  {/* Add more governorates as needed */}
-                </SelectContent>
-              </Select>
-            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phone">رقم الهاتف *</Label>
+                  <Input
+                    id="phone"
+                    value={formData.phone}
+                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                    required
+                  />
+                </div>
 
-            {/* Payment Method */}
-            <div className="space-y-2">
-              <Label htmlFor="paymentMethod">طريقة الدفع</Label>
-              <Select
-                name="paymentMethod"
-                onValueChange={(value) => setFormData(prev => ({ ...prev, paymentMethod: value }))}
-                defaultValue={formData.paymentMethod}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="اختر طريقة الدفع" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="cash">الدفع عند الاستلام</SelectItem>
-                  {/* Add more payment methods as needed */}
-                </SelectContent>
-              </Select>
-            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="paymentMethod">طريقة الدفع *</Label>
+                  <Select value={formData.paymentMethod} onValueChange={(value) => handleInputChange('paymentMethod', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="اختر طريقة الدفع" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="نقدي عند الاستلام">نقدي عند الاستلام</SelectItem>
+                      <SelectItem value="تحويل بنكي">تحويل بنكي</SelectItem>
+                      <SelectItem value="فودافون كاش">فودافون كاش</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            {/* Order Summary */}
-            <div className="border-t pt-4">
-              <h3 className="text-lg font-semibold">ملخص الطلب</h3>
-              <ul className="space-y-2 mt-2">
-                {cartItems.map(item => (
-                  <li key={item.id} className="flex justify-between">
-                    <span>
-                      {item.product?.name} ({item.size}) × {item.quantity}
-                    </span>
-                    <span>{formatCurrency(item.price * item.quantity)}</span>
-                  </li>
+                <div className="space-y-2">
+                  <Label htmlFor="deliveryMethod">طريقة الاستلام *</Label>
+                  <Select value={formData.deliveryMethod} onValueChange={(value) => handleInputChange('deliveryMethod', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="اختر طريقة الاستلام" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="استلام من المحل">استلام من المحل</SelectItem>
+                      <SelectItem value="شحن للمنزل">شحن للمنزل</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {formData.deliveryMethod === "شحن للمنزل" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="governorate">المحافظة *</Label>
+                      <Select value={formData.governorate} onValueChange={(value) => handleInputChange('governorate', value)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="اختر المحافظة" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {governorates.map((gov) => (
+                            <SelectItem key={gov} value={gov}>{gov}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="address">العنوان التفصيلي *</Label>
+                      <Input
+                        id="address"
+                        value={formData.address}
+                        onChange={(e) => handleInputChange('address', e.target.value)}
+                        placeholder="الشارع، رقم المبنى، الدور..."
+                      />
+                    </div>
+                  </>
+                )}
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="discount">الخصم</Label>
+                    <Input
+                      id="discount"
+                      type="number"
+                      value={formData.discount}
+                      onChange={(e) => handleInputChange('discount', Number(e.target.value))}
+                      min="0"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="deposit">العربون</Label>
+                    <Input
+                      id="deposit"
+                      type="number"
+                      value={formData.deposit}
+                      onChange={(e) => handleInputChange('deposit', Number(e.target.value))}
+                      min="0"
+                    />
+                  </div>
+                </div>
+
+                <Button 
+                  type="submit" 
+                  className="w-full" 
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "جاري إنشاء الطلب..." : "تأكيد الطلب"}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+
+          {/* Order Summary */}
+          <Card>
+            <CardHeader>
+              <CardTitle>ملخص الطلب</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {cart.map((item, index) => (
+                  <div key={index} className="flex justify-between items-center py-2 border-b">
+                    <div>
+                      <p className="font-medium">{item.productType}</p>
+                      <p className="text-sm text-gray-600">المقاس: {item.size} | الكمية: {item.quantity}</p>
+                    </div>
+                    <p className="font-bold">{formatCurrency(item.price * item.quantity)}</p>
+                  </div>
                 ))}
-              </ul>
-              <div className="flex justify-between font-semibold mt-2">
-                <span>المجموع الفرعي:</span>
-                <span>{formatCurrency(cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0))}</span>
-              </div>
-              <div className="flex justify-between font-semibold mt-2">
-                <span>تكلفة الشحن:</span>
-                <span>{formatCurrency(shippingCost)}</span>
-              </div>
-              <div className="flex justify-between text-xl font-bold mt-4">
-                <span>الإجمالي:</span>
-                <span>{formatCurrency(cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0) + shippingCost)}</span>
-              </div>
-            </div>
 
-            {/* Place Order Button */}
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? (
-                <>
-                  جاري إنشاء الطلب...
-                  <Loader2 className="ml-2 h-4 w-4 animate-spin" />
-                </>
-              ) : (
-                "تأكيد الطلب"
-              )}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+                <div className="space-y-2 pt-4 border-t">
+                  <div className="flex justify-between">
+                    <span>المجموع الفرعي:</span>
+                    <span>{formatCurrency(subtotal)}</span>
+                  </div>
+                  
+                  {shippingCost > 0 && (
+                    <div className="flex justify-between">
+                      <span>مصاريف الشحن:</span>
+                      <span>{formatCurrency(shippingCost)}</span>
+                    </div>
+                  )}
+                  
+                  {formData.discount > 0 && (
+                    <div className="flex justify-between text-red-600">
+                      <span>الخصم:</span>
+                      <span>-{formatCurrency(formData.discount)}</span>
+                    </div>
+                  )}
+                  
+                  {formData.deposit > 0 && (
+                    <div className="flex justify-between text-blue-600">
+                      <span>العربون:</span>
+                      <span>-{formatCurrency(formData.deposit)}</span>
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-between text-lg font-bold pt-2 border-t">
+                    <span>المجموع الكلي:</span>
+                    <span>{formatCurrency(total)}</span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 };

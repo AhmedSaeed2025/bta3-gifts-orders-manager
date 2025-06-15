@@ -10,6 +10,9 @@ import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface InvoiceProps {
   order: Order;
@@ -20,6 +23,30 @@ interface InvoiceProps {
 const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) => {
   const printRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
+  const { user } = useAuth();
+
+  // Fetch store settings
+  const { data: storeSettings } = useQuery({
+    queryKey: ['store-settings'],
+    queryFn: async () => {
+      if (!user) return null;
+      
+      const { data, error } = await supabase
+        .from('store_settings')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching store settings:', error);
+        return null;
+      }
+
+      return data;
+    },
+    enabled: !!user
+  });
 
   if (!order) {
     return <div>لا توجد بيانات للفاتورة</div>;
@@ -361,6 +388,10 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
 
   const items = order.items || [];
 
+  // Default store info if no settings found
+  const storeName = storeSettings?.store_name || "#بتاع_هدايا_الأصلى";
+  const logoUrl = storeSettings?.logo_url || "/lovable-uploads/027863c0-c46a-422a-84a8-7bf9c01dbfa6.png";
+
   return (
     <div className="rtl w-full" style={{ direction: 'rtl', fontFamily: 'Tajawal, Cairo, Amiri, Arial, sans-serif' }}>
       <div className={`mb-3 flex flex-wrap gap-2 justify-end print:hidden ${isMobile ? 'mb-2' : ''}`}>
@@ -397,8 +428,8 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
               {/* Logo and Brand */}
               <div className="flex items-center justify-center gap-4">
                 <img 
-                  src="/lovable-uploads/027863c0-c46a-422a-84a8-7bf9c01dbfa6.png" 
-                  alt="#بتاع_هدايا_الأصلى Logo" 
+                  src={logoUrl} 
+                  alt={`${storeName} Logo`} 
                   className={`${isMobile ? 'h-10 w-10' : 'h-14 w-14'} object-contain`}
                   loading="eager"
                   width={isMobile ? "40" : "56"}
@@ -412,7 +443,7 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
                   }}
                 />
                 <div className="text-center">
-                  <h1 className={`${isMobile ? 'text-sm' : 'text-xl'} font-bold text-gift-primary invoice-title`}>#بتاع_هدايا_الأصلى</h1>
+                  <h1 className={`${isMobile ? 'text-sm' : 'text-xl'} font-bold text-gift-primary invoice-title`}>{storeName}</h1>
                   <p className={`${isMobile ? 'text-[8px]' : 'text-sm'} text-gray-600`}>ملوك الهدايا في مصر</p>
                 </div>
               </div>
@@ -648,7 +679,7 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
           <div className={`${isMobile ? 'mt-2 pt-2' : 'mt-4 pt-3'} border-t border-gray-200 text-center`}>
             <div className={`bg-gift-accent ${isMobile ? 'p-2' : 'p-3'} rounded mb-3 flex items-center justify-center gap-3`}>
               <img 
-                src="/lovable-uploads/027863c0-c46a-422a-84a8-7bf9c01dbfa6.png" 
+                src={logoUrl} 
                 alt="Logo" 
                 className={`${isMobile ? 'h-6 w-6' : 'h-8 w-8'} object-contain`}
                 loading="eager"
@@ -663,10 +694,10 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
                 }}
               />
               <div>
-                <p className={`${isMobile ? 'text-[8px]' : 'text-sm'} font-bold text-gift-primary mb-1`}>شكراً لثقتكم في #بتاع_هدايا_الأصلى</p>
+                <p className={`${isMobile ? 'text-[8px]' : 'text-sm'} font-bold text-gift-primary mb-1`}>شكراً لثقتكم في {storeName}</p>
                 <div className={`flex justify-center items-center gap-2 ${isMobile ? 'text-[7px]' : 'text-sm'} mb-1`}>
                   <Phone size={isMobile ? 6 : 12} className="text-gift-primary" />
-                  <span className="font-medium">للتواصل: 01113977005</span>
+                  <span className="font-medium">للتواصل: {storeSettings?.contact_phone || '01113977005'}</span>
                 </div>
               </div>
             </div>
@@ -689,7 +720,7 @@ const Invoice: React.FC<InvoiceProps> = ({ order, allowEdit = false, onEdit }) =
             </div>
             
             <p className={`${isMobile ? 'text-[7px]' : 'text-sm'} text-gray-500 border-t pt-2`}>
-              جميع الحقوق محفوظة #بتاع_هدايا_الأصلى 2025
+              جميع الحقوق محفوظة {storeName} 2025
             </p>
           </div>
         </CardContent>

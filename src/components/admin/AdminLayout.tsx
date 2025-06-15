@@ -14,7 +14,7 @@ import {
   LogOut,
   Loader2,
   Store,
-  User,
+  FileText,
   ArrowLeft
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -111,12 +111,12 @@ const AdminLayout = () => {
             </Link>
             
             <Link 
-              to="/profile" 
+              to="/" 
               className="flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors"
-              title="الملف الشخصي"
+              title="الحسابات والطلبات"
             >
-              <User className="h-4 w-4" />
-              <span className="text-sm font-medium">الحساب</span>
+              <FileText className="h-4 w-4" />
+              <span className="text-sm font-medium">الحسابات</span>
             </Link>
           </div>
           
