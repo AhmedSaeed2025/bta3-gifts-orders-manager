@@ -233,7 +233,6 @@ const CustomerReviewsSettings = ({ formData, onToggleChange }: CustomerReviewsSe
                                 onCheckedChange={(checked) => 
                                   toggleReviewMutation.mutate({ id: review.id, isActive: checked })
                                 }
-                                size="sm"
                               />
                             </div>
                             {review.review_text && (
