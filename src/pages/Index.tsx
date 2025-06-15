@@ -10,6 +10,7 @@ import InvoiceTab from "@/components/InvoiceTab";
 import ProductsTab from "@/components/ProductsTab";
 import ImprovedAccountStatement from "@/components/ImprovedAccountStatement";
 import UserProfile from "@/components/UserProfile";
+import WebhookTab from "@/components/WebhookTab";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { 
   Plus, 
@@ -18,7 +19,8 @@ import {
   TrendingUp, 
   Receipt, 
   FileText, 
-  Package 
+  Package,
+  Globe
 } from "lucide-react";
 
 const Index = () => {
@@ -33,7 +35,7 @@ const Index = () => {
         </div>
         
         <Tabs defaultValue="addOrder" className="mt-2 md:mt-4" dir="rtl">
-          <TabsList className={`grid w-full grid-cols-7 gap-1 ${isMobile ? 'h-16' : 'h-10'}`} dir="rtl">
+          <TabsList className={`grid w-full grid-cols-8 gap-1 ${isMobile ? 'h-16' : 'h-10'}`} dir="rtl">
             <TabsTrigger 
               value="addOrder" 
               className={`${isMobile ? 'flex-col text-xs p-1 h-14' : 'text-sm'}`}
@@ -125,6 +127,19 @@ const Index = () => {
                 "إدارة المنتجات"
               )}
             </TabsTrigger>
+            <TabsTrigger 
+              value="webhook" 
+              className={`${isMobile ? 'flex-col text-xs p-1 h-14' : 'text-sm'}`}
+            >
+              {isMobile ? (
+                <>
+                  <Globe className="h-3 w-3 mb-1" />
+                  <span className="text-xs leading-none">Webhook</span>
+                </>
+              ) : (
+                "Webhook"
+              )}
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="addOrder">
@@ -153,6 +168,10 @@ const Index = () => {
           
           <TabsContent value="products">
             <ProductsTab />
+          </TabsContent>
+          
+          <TabsContent value="webhook">
+            <WebhookTab />
           </TabsContent>
         </Tabs>
       </div>

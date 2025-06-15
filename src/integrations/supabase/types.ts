@@ -253,6 +253,66 @@ export type Database = {
         }
         Relationships: []
       }
+      webhook_configs: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          updated_at: string
+          user_id: string
+          webhook_key: string
+          webhook_url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+          user_id: string
+          webhook_key?: string
+          webhook_url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+          user_id?: string
+          webhook_key?: string
+          webhook_url?: string
+        }
+        Relationships: []
+      }
+      webhook_logs: {
+        Row: {
+          created_at: string
+          id: string
+          order_serial: string | null
+          request_data: Json
+          response_message: string | null
+          response_status: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_serial?: string | null
+          request_data: Json
+          response_message?: string | null
+          response_status: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_serial?: string | null
+          request_data?: Json
+          response_message?: string | null
+          response_status?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
