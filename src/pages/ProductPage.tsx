@@ -17,6 +17,7 @@ const ProductPage = () => {
   const { addToCart, loading: cartLoading } = useCart();
   const [selectedSize, setSelectedSize] = useState<string>('');
   const [quantity, setQuantity] = useState(1);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
 
   // Fetch store settings to check if prices should be shown
   const { data: storeSettings } = useQuery({
@@ -121,6 +122,9 @@ const ProductPage = () => {
   };
 
   const handleAddToCart = async () => {
+    console.log('Add to cart clicked', { product: product.id, selectedSize, quantity });
+    
+    // Validation for size selection if sizes exist
     if (product.product_sizes && product.product_sizes.length > 0 && !selectedSize) {
       toast.error('يرجى اختيار المقاس');
       return;
@@ -131,16 +135,48 @@ const ProductPage = () => {
       return;
     }
 
+    // Prevent multiple simultaneous add to cart actions
+    if (isAddingToCart || cartLoading) {
+      return;
+    }
+
     try {
-      const priceToUse = selectedSizeData ? selectedSizeData.price : 0;
+      setIsAddingToCart(true);
+      
+      // Determine price to use
+      let priceToUse = 0;
+      if (selectedSizeData) {
+        priceToUse = selectedSizeData.price;
+      } else if (product.product_sizes && product.product_sizes.length > 0) {
+        // If no size selected but sizes exist, use first size price
+        priceToUse = product.product_sizes[0].price;
+      }
+
       const finalPrice = hasDiscount ? calculateDiscountedPrice(priceToUse) : priceToUse;
+      
+      console.log('Adding to cart with data:', {
+        productId: product.id,
+        size: selectedSize || 'default',
+        quantity,
+        price: finalPrice
+      });
+
       await addToCart(product.id, selectedSize || 'default', quantity, finalPrice);
       toast.success('تم إضافة المنتج إلى السلة بنجاح');
     } catch (error) {
       console.error('Error adding to cart:', error);
       toast.error('حدث خطأ في إضافة المنتج للسلة');
+    } finally {
+      setIsAddingToCart(false);
     }
   };
+
+  // Auto-select first size if only one size available
+  React.useEffect(() => {
+    if (product?.product_sizes && product.product_sizes.length === 1 && !selectedSize) {
+      setSelectedSize(product.product_sizes[0].size);
+    }
+  }, [product?.product_sizes, selectedSize]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -287,6 +323,7 @@ const ProductPage = () => {
                   variant="outline"
                   size="icon"
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  disabled={quantity <= 1}
                 >
                   -
                 </Button>
@@ -308,9 +345,13 @@ const ProductPage = () => {
                 style={{ backgroundColor: 'var(--primary-color, #10B981)' }}
                 size="lg"
                 onClick={handleAddToCart}
-                disabled={cartLoading || (product.product_sizes && product.product_sizes.length > 0 && !selectedSize)}
+                disabled={
+                  isAddingToCart || 
+                  cartLoading || 
+                  (product.product_sizes && product.product_sizes.length > 0 && !selectedSize)
+                }
               >
-                {cartLoading ? (
+                {isAddingToCart || cartLoading ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
                     جاري الإضافة...
