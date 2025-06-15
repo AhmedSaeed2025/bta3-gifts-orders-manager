@@ -143,12 +143,28 @@ const OrderPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.clientName || (!formData.phone && !formData.email) || !formData.paymentMethod || !formData.deliveryMethod) {
-      toast.error("يرجى ملء الاسم وطريقة التواصل (هاتف أو إيميل) وطريقة الدفع والاستلام");
+    // Validation: require name and at least phone OR email
+    if (!formData.clientName.trim()) {
+      toast.error("يرجى إدخال الاسم الكامل");
       return;
     }
 
-    if (formData.deliveryMethod === "شحن للمنزل" && (!formData.address || !formData.governorate)) {
+    if (!formData.phone.trim() && !formData.email.trim()) {
+      toast.error("يرجى إدخال رقم الهاتف أو البريد الإلكتروني على الأقل");
+      return;
+    }
+
+    if (!formData.paymentMethod) {
+      toast.error("يرجى اختيار طريقة الدفع");
+      return;
+    }
+
+    if (!formData.deliveryMethod) {
+      toast.error("يرجى اختيار طريقة الاستلام");
+      return;
+    }
+
+    if (formData.deliveryMethod === "شحن للمنزل" && (!formData.address.trim() || !formData.governorate)) {
       toast.error("يرجى ملء عنوان الشحن والمحافظة");
       return;
     }
@@ -189,55 +205,70 @@ const OrderPage = () => {
         }
       }
       
+      // Prepare order data with proper null handling
+      const orderData = {
+        user_id: user?.id || null,
+        serial,
+        payment_method: formData.paymentMethod,
+        client_name: formData.clientName.trim(),
+        phone: formData.phone.trim() || null,
+        email: formData.email.trim() || null,
+        delivery_method: formData.deliveryMethod,
+        address: formData.address.trim() || null,
+        governorate: formData.governorate || null,
+        shipping_cost: shippingCost,
+        discount: 0,
+        deposit: 0,
+        total,
+        profit: 0,
+        status: 'pending',
+        notes: formData.notes.trim() || null,
+        attached_image_url: attachedImageUrl
+      };
+
+      console.log('Order data to insert:', orderData);
+      
       // Save to orders table
-      const { data: orderData, error: orderError } = await supabase
+      const { data: orderData_response, error: orderError } = await supabase
         .from('orders')
-        .insert({
-          user_id: user?.id,
-          serial,
-          payment_method: formData.paymentMethod,
-          client_name: formData.clientName,
-          phone: formData.phone || null,
-          email: formData.email || null,
-          delivery_method: formData.deliveryMethod,
-          address: formData.address,
-          governorate: formData.governorate,
-          shipping_cost: shippingCost,
-          discount: 0,
-          deposit: 0,
-          total,
-          profit: 0,
-          status: 'pending',
-          notes: formData.notes || null,
-          attached_image_url: attachedImageUrl
-        })
+        .insert(orderData)
         .select()
         .single();
 
       if (orderError) {
         console.error('Error inserting order:', orderError);
-        throw orderError;
+        toast.error("حدث خطأ في إنشاء الطلب: " + orderError.message);
+        return;
       }
 
+      console.log('Order inserted successfully:', orderData_response);
+
       // Insert order items
-      const orderItems = cartItems.map(item => ({
-        order_id: orderData.id,
-        product_type: item.product?.name || 'Unknown Product',
-        size: item.size,
-        quantity: item.quantity,
-        cost: 0,
-        price: item.price,
-        profit: 0,
-        item_discount: 0
-      }));
+      if (orderData_response) {
+        const orderItems = cartItems.map(item => ({
+          order_id: orderData_response.id,
+          product_type: item.product?.name || 'Unknown Product',
+          size: item.size,
+          quantity: item.quantity,
+          cost: 0,
+          price: item.price,
+          profit: 0,
+          item_discount: 0
+        }));
 
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems);
+        console.log('Inserting order items:', orderItems);
 
-      if (itemsError) {
-        console.error('Error inserting order items:', itemsError);
-        throw itemsError;
+        const { error: itemsError } = await supabase
+          .from('order_items')
+          .insert(orderItems);
+
+        if (itemsError) {
+          console.error('Error inserting order items:', itemsError);
+          toast.error("حدث خطأ في إضافة عناصر الطلب");
+          return;
+        }
+
+        console.log('Order items inserted successfully');
       }
 
       await clearCart();
@@ -309,7 +340,7 @@ const OrderPage = () => {
                       id="phone"
                       value={formData.phone}
                       onChange={(e) => handleInputChange('phone', e.target.value)}
-                      placeholder="اختياري - يمكن استخدام الإيميل بدلاً منه"
+                      placeholder="مطلوب إذا لم يتم ملء الإيميل"
                     />
                   </div>
 
@@ -320,13 +351,13 @@ const OrderPage = () => {
                       type="email"
                       value={formData.email}
                       onChange={(e) => handleInputChange('email', e.target.value)}
-                      placeholder="اختياري - يمكن استخدام الهاتف بدلاً منه"
+                      placeholder="مطلوب إذا لم يتم ملء رقم الهاتف"
                       disabled={!!user}
                     />
                   </div>
                 </div>
 
-                {!formData.phone && !formData.email && (
+                {!formData.phone.trim() && !formData.email.trim() && (
                   <Alert className="border-amber-200 bg-amber-50">
                     <Info className="h-4 w-4 text-amber-600" />
                     <AlertDescription className="text-amber-800">
