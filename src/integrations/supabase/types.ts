@@ -576,13 +576,17 @@ export type Database = {
           customer_reviews_enabled: boolean | null
           default_language: string | null
           default_shipping_cost: number | null
+          enable_banners: boolean | null
           enable_dark_mode: boolean | null
           estimated_delivery_time: string | null
           etisalat_flex: string | null
           facebook_url: string | null
           favicon_url: string | null
+          footer_banner_link: string | null
+          footer_banner_url: string | null
           free_shipping_enabled: boolean | null
           free_shipping_threshold: number | null
+          hero_banner_link: string | null
           hero_banner_url: string | null
           iban: string | null
           id: string
@@ -595,6 +599,10 @@ export type Database = {
           payment_instructions: string | null
           primary_color: string | null
           privacy_policy: string | null
+          promo_banner_1_link: string | null
+          promo_banner_1_url: string | null
+          promo_banner_2_link: string | null
+          promo_banner_2_url: string | null
           return_policy: string | null
           rtl_enabled: boolean | null
           secondary_color: string | null
@@ -604,6 +612,10 @@ export type Database = {
           show_prices: boolean | null
           show_product_prices: boolean | null
           show_product_sizes: boolean | null
+          side_banner_1_link: string | null
+          side_banner_1_url: string | null
+          side_banner_2_link: string | null
+          side_banner_2_url: string | null
           snapchat_url: string | null
           store_name: string
           store_tagline: string | null
@@ -636,13 +648,17 @@ export type Database = {
           customer_reviews_enabled?: boolean | null
           default_language?: string | null
           default_shipping_cost?: number | null
+          enable_banners?: boolean | null
           enable_dark_mode?: boolean | null
           estimated_delivery_time?: string | null
           etisalat_flex?: string | null
           facebook_url?: string | null
           favicon_url?: string | null
+          footer_banner_link?: string | null
+          footer_banner_url?: string | null
           free_shipping_enabled?: boolean | null
           free_shipping_threshold?: number | null
+          hero_banner_link?: string | null
           hero_banner_url?: string | null
           iban?: string | null
           id?: string
@@ -655,6 +671,10 @@ export type Database = {
           payment_instructions?: string | null
           primary_color?: string | null
           privacy_policy?: string | null
+          promo_banner_1_link?: string | null
+          promo_banner_1_url?: string | null
+          promo_banner_2_link?: string | null
+          promo_banner_2_url?: string | null
           return_policy?: string | null
           rtl_enabled?: boolean | null
           secondary_color?: string | null
@@ -664,6 +684,10 @@ export type Database = {
           show_prices?: boolean | null
           show_product_prices?: boolean | null
           show_product_sizes?: boolean | null
+          side_banner_1_link?: string | null
+          side_banner_1_url?: string | null
+          side_banner_2_link?: string | null
+          side_banner_2_url?: string | null
           snapchat_url?: string | null
           store_name?: string
           store_tagline?: string | null
@@ -696,13 +720,17 @@ export type Database = {
           customer_reviews_enabled?: boolean | null
           default_language?: string | null
           default_shipping_cost?: number | null
+          enable_banners?: boolean | null
           enable_dark_mode?: boolean | null
           estimated_delivery_time?: string | null
           etisalat_flex?: string | null
           facebook_url?: string | null
           favicon_url?: string | null
+          footer_banner_link?: string | null
+          footer_banner_url?: string | null
           free_shipping_enabled?: boolean | null
           free_shipping_threshold?: number | null
+          hero_banner_link?: string | null
           hero_banner_url?: string | null
           iban?: string | null
           id?: string
@@ -715,6 +743,10 @@ export type Database = {
           payment_instructions?: string | null
           primary_color?: string | null
           privacy_policy?: string | null
+          promo_banner_1_link?: string | null
+          promo_banner_1_url?: string | null
+          promo_banner_2_link?: string | null
+          promo_banner_2_url?: string | null
           return_policy?: string | null
           rtl_enabled?: boolean | null
           secondary_color?: string | null
@@ -724,6 +756,10 @@ export type Database = {
           show_prices?: boolean | null
           show_product_prices?: boolean | null
           show_product_sizes?: boolean | null
+          side_banner_1_link?: string | null
+          side_banner_1_url?: string | null
+          side_banner_2_link?: string | null
+          side_banner_2_url?: string | null
           snapchat_url?: string | null
           store_name?: string
           store_tagline?: string | null

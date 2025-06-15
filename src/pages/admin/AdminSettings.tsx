@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -59,6 +58,20 @@ const AdminSettings = () => {
     show_product_sizes: true,
     show_out_of_stock: false,
     enable_dark_mode: true,
+    
+    // Banner Settings
+    enable_banners: true,
+    hero_banner_link: '',
+    promo_banner_1_url: '',
+    promo_banner_1_link: '',
+    promo_banner_2_url: '',
+    promo_banner_2_link: '',
+    side_banner_1_url: '',
+    side_banner_1_link: '',
+    side_banner_2_url: '',
+    side_banner_2_link: '',
+    footer_banner_url: '',
+    footer_banner_link: '',
     
     // Shipping Settings
     free_shipping_enabled: false,
@@ -156,7 +169,7 @@ const AdminSettings = () => {
     'قنا', 'شمال سيناء', 'سوهاج'
   ];
 
-  // Update formData when storeSettings changes - Enhanced with new color fields
+  // Update formData when storeSettings changes - Enhanced with banner fields
   useEffect(() => {
     if (storeSettings) {
       setFormData({
@@ -185,6 +198,21 @@ const AdminSettings = () => {
         show_product_sizes: storeSettings.show_product_sizes !== false,
         show_out_of_stock: storeSettings.show_out_of_stock || false,
         enable_dark_mode: storeSettings.enable_dark_mode !== false,
+        
+        // Banner fields
+        enable_banners: storeSettings.enable_banners !== false,
+        hero_banner_link: storeSettings.hero_banner_link || '',
+        promo_banner_1_url: storeSettings.promo_banner_1_url || '',
+        promo_banner_1_link: storeSettings.promo_banner_1_link || '',
+        promo_banner_2_url: storeSettings.promo_banner_2_url || '',
+        promo_banner_2_link: storeSettings.promo_banner_2_link || '',
+        side_banner_1_url: storeSettings.side_banner_1_url || '',
+        side_banner_1_link: storeSettings.side_banner_1_link || '',
+        side_banner_2_url: storeSettings.side_banner_2_url || '',
+        side_banner_2_link: storeSettings.side_banner_2_link || '',
+        footer_banner_url: storeSettings.footer_banner_url || '',
+        footer_banner_link: storeSettings.footer_banner_link || '',
+        
         free_shipping_enabled: storeSettings.free_shipping_enabled || false,
         default_shipping_cost: storeSettings.default_shipping_cost?.toString() || '0',
         free_shipping_threshold: storeSettings.free_shipping_threshold?.toString() || '',
@@ -370,7 +398,7 @@ const AdminSettings = () => {
       </div>
 
       <Tabs defaultValue="general" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="general" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             عام
@@ -378,6 +406,10 @@ const AdminSettings = () => {
           <TabsTrigger value="appearance" className="flex items-center gap-2">
             <Palette className="h-4 w-4" />
             المظهر
+          </TabsTrigger>
+          <TabsTrigger value="banners" className="flex items-center gap-2">
+            <ImageIcon className="h-4 w-4" />
+            البانرات
           </TabsTrigger>
           <TabsTrigger value="shipping" className="flex items-center gap-2">
             <Truck className="h-4 w-4" />
@@ -410,6 +442,14 @@ const AdminSettings = () => {
 
         <TabsContent value="appearance">
           <AppearanceSettings 
+            formData={formData}
+            onInputChange={handleInputChange}
+            onToggleChange={handleToggleChange}
+          />
+        </TabsContent>
+
+        <TabsContent value="banners">
+          <BannerSettings 
             formData={formData}
             onInputChange={handleInputChange}
             onToggleChange={handleToggleChange}
