@@ -86,7 +86,7 @@ const AdminProducts = () => {
   const [productForm, setProductForm] = useState({
     name: '',
     description: '',
-    category_id: '',
+    category_id: 'no-category',
     featured: false,
     is_active: true,
     image_url: '',
@@ -235,7 +235,7 @@ const AdminProducts = () => {
     setProductForm({
       name: product.name,
       description: product.description || '',
-      category_id: product.category_id || '',
+      category_id: product.category_id || 'no-category', // <<< fix here
       featured: product.featured,
       is_active: product.is_active,
       image_url: product.image_url || '',
@@ -340,7 +340,7 @@ const AdminProducts = () => {
                         <SelectValue placeholder="اختر فئة" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">بدون فئة</SelectItem>
+                        <SelectItem value="no-category">بدون فئة</SelectItem>
                         {categories.map((category) => (
                           <SelectItem key={category.id} value={category.id}>
                             {category.name}
