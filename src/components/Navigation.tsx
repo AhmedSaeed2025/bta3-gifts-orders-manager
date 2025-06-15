@@ -5,32 +5,34 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Store, Settings, Calculator, User } from 'lucide-react';
+// فقط استخدم Store من أيقونات لوسيد
+import { Store } from 'lucide-react';
 
 const Navigation = () => {
   const { user } = useAuth();
   const location = useLocation();
 
-  // Check if user is admin
+  // التأكد من إذا كان المستخدم أدمن
   const { data: userRole } = useQuery({
     queryKey: ['user-role', user?.id],
     queryFn: async () => {
       if (!user) return null;
-      
       const { data, error } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', user.id)
         .single();
-      
       if (error) return null;
       return data?.role;
     },
-    enabled: !!user
+    enabled: !!user,
   });
 
-  // Don't show navigation on admin or legacy-admin pages
-  if (location.pathname.startsWith('/admin') || location.pathname.startsWith('/legacy-admin')) {
+  // إخفاء النافيجيشن في صفحات لوحة التحكم والبرنامج الحسابي
+  if (
+    location.pathname.startsWith('/admin') ||
+    location.pathname.startsWith('/legacy-admin')
+  ) {
     return null;
   }
 
@@ -38,8 +40,8 @@ const Navigation = () => {
     <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
       <div className="bg-white border rounded-full shadow-lg px-4 py-2 flex items-center gap-2">
         <Link to="/">
-          <Button 
-            variant={location.pathname === '/' ? "default" : "ghost"} 
+          <Button
+            variant={location.pathname === '/' ? 'default' : 'ghost'}
             size="sm"
             className="rounded-full"
           >
@@ -47,37 +49,41 @@ const Navigation = () => {
             المتجر
           </Button>
         </Link>
-        
+
+        {/* يظهر زر لوحة التحكم وبرنامج الحسابات للأدمن فقط */}
         {user && userRole === 'admin' && (
           <>
-            <Link to="/admin">
-              <Button 
-                variant={location.pathname.startsWith('/admin') ? "default" : "ghost"} 
+            <Link to="/admin/dashboard">
+              <Button
+                variant={
+                  location.pathname.startsWith('/admin') ? 'default' : 'ghost'
+                }
                 size="sm"
                 className="rounded-full"
               >
-                <Settings className="h-4 w-4 ml-1" />
+                {/* استخدم text فقط دون ايقونات أخرى */}
                 لوحة التحكم
               </Button>
             </Link>
-            
+
             <Link to="/legacy-admin">
-              <Button 
-                variant={location.pathname === '/legacy-admin' ? "default" : "ghost"} 
+              <Button
+                variant={
+                  location.pathname === '/legacy-admin' ? 'default' : 'ghost'
+                }
                 size="sm"
                 className="rounded-full"
               >
-                <Calculator className="h-4 w-4 ml-1" />
                 برنامج الحسابات
               </Button>
             </Link>
           </>
         )}
-        
+
+        {/* لو لم يكن هناك مستخدم (غير مسجل دخول) */}
         {!user && (
           <Link to="/auth">
             <Button variant="ghost" size="sm" className="rounded-full">
-              <User className="h-4 w-4 ml-1" />
               تسجيل الدخول
             </Button>
           </Link>
