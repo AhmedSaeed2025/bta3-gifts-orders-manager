@@ -139,16 +139,16 @@ const AppearanceSettings = ({ formData, onInputChange, onToggleChange }: Appeara
           <CardTitle>إعدادات عرض المنتجات</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between p-4 border rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50">
+          <div className="flex items-center justify-between p-4 border rounded-lg bg-gradient-to-r from-red-50 to-pink-50">
             <div className="space-y-1">
-              <Label className="text-base font-semibold text-blue-900">إظهار الأسعار</Label>
-              <p className="text-sm text-blue-700">
-                تحكم في إظهار أو إخفاء أسعار المنتجات في المتجر. عند الإيقاف، سيتم إخفاء جميع الأسعار
+              <Label className="text-base font-semibold text-red-900">إخفاء الأسعار نهائياً</Label>
+              <p className="text-sm text-red-700">
+                إخفاء جميع الأسعار في المتجر بالكامل. مفيد للمتاجر التي تعتمد على التواصل المباشر لمعرفة الأسعار
               </p>
             </div>
             <Switch
-              checked={formData.show_product_prices}
-              onCheckedChange={(checked) => onToggleChange('show_product_prices', checked)}
+              checked={!formData.show_product_prices}
+              onCheckedChange={(checked) => onToggleChange('show_product_prices', !checked)}
             />
           </div>
 

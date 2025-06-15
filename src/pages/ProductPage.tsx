@@ -17,6 +17,24 @@ const ProductPage = () => {
   const [selectedSize, setSelectedSize] = useState<string>('');
   const [quantity, setQuantity] = useState(1);
 
+  // Fetch store settings to check if prices should be shown
+  const { data: storeSettings } = useQuery({
+    queryKey: ['store-settings-product-page'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('store_settings')
+        .select('show_product_prices, show_product_sizes')
+        .eq('is_active', true)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching store settings:', error);
+      }
+      
+      return data || { show_product_prices: true, show_product_sizes: true };
+    }
+  });
+
   const { data: product, isLoading } = useQuery({
     queryKey: ['product', id],
     queryFn: async () => {
@@ -66,20 +84,27 @@ const ProductPage = () => {
   }
 
   const selectedSizeData = product.product_sizes?.find(size => size.size === selectedSize);
+  const hasDiscount = (product.discount_percentage || 0) > 0;
+
+  const calculateDiscountedPrice = (originalPrice: number) => {
+    return originalPrice * (1 - (product.discount_percentage || 0) / 100);
+  };
 
   const handleAddToCart = async () => {
-    if (!selectedSize) {
+    if (product.product_sizes && product.product_sizes.length > 0 && !selectedSize) {
       toast.error('يرجى اختيار المقاس');
       return;
     }
 
-    if (!selectedSizeData) {
+    if (!selectedSizeData && product.product_sizes && product.product_sizes.length > 0) {
       toast.error('المقاس المحدد غير متوفر');
       return;
     }
 
     try {
-      await addToCart(product.id, selectedSize, quantity, selectedSizeData.price);
+      const priceToUse = selectedSizeData ? selectedSizeData.price : 0;
+      const finalPrice = hasDiscount ? calculateDiscountedPrice(priceToUse) : priceToUse;
+      await addToCart(product.id, selectedSize || 'default', quantity, finalPrice);
       toast.success('تم إضافة المنتج إلى السلة بنجاح');
     } catch (error) {
       console.error('Error adding to cart:', error);
@@ -129,43 +154,97 @@ const ProductPage = () => {
                 </div>
               </div>
               
-              {product.featured && (
-                <Badge className="mb-4">منتج مميز</Badge>
-              )}
+              <div className="flex items-center gap-2 mb-4">
+                {product.featured && (
+                  <Badge className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white">
+                    منتج مميز
+                  </Badge>
+                )}
+                
+                {hasDiscount && (
+                  <Badge className="bg-red-500 text-white font-bold">
+                    خصم {product.discount_percentage}%
+                  </Badge>
+                )}
+              </div>
 
               {product.description && (
-                <p className="text-muted-foreground leading-relaxed">
-                  {product.description}
-                </p>
+                <div className="mb-6">
+                  <h3 className="font-semibold mb-2 text-lg">وصف المنتج</h3>
+                  <p className="text-muted-foreground leading-relaxed text-base whitespace-pre-wrap">
+                    {product.description}
+                  </p>
+                </div>
               )}
             </div>
 
             {/* Size Selection */}
-            {product.product_sizes && product.product_sizes.length > 0 && (
+            {product.product_sizes && product.product_sizes.length > 0 && storeSettings?.show_product_sizes !== false && (
               <div>
                 <h3 className="font-semibold mb-3">اختر المقاس</h3>
-                <div className="grid grid-cols-3 gap-2">
-                  {product.product_sizes.map((size) => (
-                    <Button
-                      key={size.id}
-                      variant={selectedSize === size.size ? "default" : "outline"}
-                      onClick={() => setSelectedSize(size.size)}
-                      className="h-12"
-                    >
-                      <div className="text-center">
-                        <div className="font-medium">{size.size}</div>
-                        <div className="text-xs">{size.price} ج.م</div>
-                      </div>
-                    </Button>
-                  ))}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {product.product_sizes.map((size) => {
+                    const originalPrice = size.price;
+                    const discountedPrice = hasDiscount ? calculateDiscountedPrice(originalPrice) : originalPrice;
+                    
+                    return (
+                      <Button
+                        key={size.id}
+                        variant={selectedSize === size.size ? "default" : "outline"}
+                        onClick={() => setSelectedSize(size.size)}
+                        className="h-16 p-2"
+                      >
+                        <div className="text-center w-full">
+                          <div className="font-medium text-sm">{size.size}</div>
+                          {storeSettings?.show_product_prices !== false && (
+                            <div className="mt-1">
+                              {hasDiscount ? (
+                                <div className="flex flex-col items-center gap-1">
+                                  <span className="text-xs font-bold text-green-600">
+                                    {discountedPrice.toFixed(0)} ج.م
+                                  </span>
+                                  <span className="text-xs text-gray-500 line-through">
+                                    {originalPrice} ج.م
+                                  </span>
+                                </div>
+                              ) : (
+                                <span className="text-xs font-bold">
+                                  {originalPrice} ج.م
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </Button>
+                    );
+                  })}
                 </div>
               </div>
             )}
 
-            {/* Price */}
-            {selectedSizeData && (
-              <div className="text-3xl font-bold text-primary">
-                {selectedSizeData.price} ج.م
+            {/* Price Display */}
+            {storeSettings?.show_product_prices !== false && selectedSizeData && (
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="font-semibold mb-2">السعر</h3>
+                {hasDiscount ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3">
+                      <span className="text-3xl font-bold text-green-600">
+                        {calculateDiscountedPrice(selectedSizeData.price).toFixed(0)} ج.م
+                      </span>
+                      <span className="text-xl text-gray-500 line-through">
+                        {selectedSizeData.price} ج.م
+                      </span>
+                    </div>
+                    <div className="text-sm text-green-600 font-medium">
+                      وفّر {(selectedSizeData.price - calculateDiscountedPrice(selectedSizeData.price)).toFixed(0)} ج.م
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-3xl font-bold text-primary">
+                    {selectedSizeData.price} ج.م
+                  </div>
+                )}
               </div>
             )}
 
@@ -180,7 +259,7 @@ const ProductPage = () => {
                 >
                   -
                 </Button>
-                <span className="flex-1 text-center">{quantity}</span>
+                <span className="flex-1 text-center font-medium">{quantity}</span>
                 <Button
                   variant="outline"
                   size="icon"
@@ -194,10 +273,10 @@ const ProductPage = () => {
             {/* Add to Cart */}
             <div className="space-y-3">
               <Button
-                className="w-full"
+                className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
                 size="lg"
                 onClick={handleAddToCart}
-                disabled={cartLoading || !selectedSize}
+                disabled={cartLoading || (product.product_sizes && product.product_sizes.length > 0 && !selectedSize)}
               >
                 {cartLoading ? (
                   <>
