@@ -27,12 +27,14 @@ export interface Order {
   dateCreated: string;
 }
 
-export type OrderStatus = "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled";
+export type OrderStatus = "pending" | "confirmed" | "processing" | "sentToPrinter" | "readyForDelivery" | "shipped" | "delivered" | "cancelled";
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   pending: "قيد المراجعة",
   confirmed: "تم التأكيد", 
   processing: "قيد التحضير",
+  sentToPrinter: "تم الإرسال للمطبعة",
+  readyForDelivery: "تحت التسليم",
   shipped: "تم الشحن",
   delivered: "تم التوصيل",
   cancelled: "ملغي"
@@ -42,6 +44,8 @@ export const ORDER_STATUS_ORDER: OrderStatus[] = [
   "pending",
   "confirmed", 
   "processing",
+  "sentToPrinter",
+  "readyForDelivery",
   "shipped",
   "delivered"
 ];

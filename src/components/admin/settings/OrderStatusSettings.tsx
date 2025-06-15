@@ -7,9 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
-import { GripVertical, Plus, Trash2, Save } from 'lucide-react';
+import { GripVertical, Save } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { OrderStatus, OrderStatusConfig, ORDER_STATUS_LABELS } from '@/types';
 
@@ -24,9 +23,11 @@ const OrderStatusSettings = () => {
       { status: 'pending', label: 'قيد المراجعة', order: 1, enabled: true },
       { status: 'confirmed', label: 'تم التأكيد', order: 2, enabled: true },
       { status: 'processing', label: 'قيد التحضير', order: 3, enabled: true },
-      { status: 'shipped', label: 'تم الشحن', order: 4, enabled: true },
-      { status: 'delivered', label: 'تم التوصيل', order: 5, enabled: true },
-      { status: 'cancelled', label: 'ملغي', order: 6, enabled: true }
+      { status: 'sentToPrinter', label: 'تم الإرسال للمطبعة', order: 4, enabled: true },
+      { status: 'readyForDelivery', label: 'تحت التسليم', order: 5, enabled: true },
+      { status: 'shipped', label: 'تم الشحن', order: 6, enabled: true },
+      { status: 'delivered', label: 'تم التوصيل', order: 7, enabled: true },
+      { status: 'cancelled', label: 'ملغي', order: 8, enabled: true }
     ];
     
     setStatusConfigs(defaultConfigs);
@@ -84,7 +85,9 @@ const OrderStatusSettings = () => {
       case 'pending': return 'bg-yellow-500';
       case 'confirmed': return 'bg-blue-500';
       case 'processing': return 'bg-orange-500';
-      case 'shipped': return 'bg-purple-500';
+      case 'sentToPrinter': return 'bg-purple-500';
+      case 'readyForDelivery': return 'bg-orange-600';
+      case 'shipped': return 'bg-indigo-500';
       case 'delivered': return 'bg-green-500';
       case 'cancelled': return 'bg-red-500';
       default: return 'bg-gray-500';
