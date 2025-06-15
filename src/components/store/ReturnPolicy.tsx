@@ -1,9 +1,81 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, XCircle, Calendar, Truck, DollarSign, Package } from 'lucide-react';
+import { CheckCircle, XCircle, Calendar, Truck, DollarSign, Package, Phone, Mail } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 const ReturnPolicy = () => {
+  // Fetch store settings to get custom return policy if available
+  const { data: storeSettings } = useQuery({
+    queryKey: ['store-settings-return-policy'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('store_settings')
+        .select('return_policy, store_name, contact_phone, contact_email')
+        .eq('is_active', true)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        throw error;
+      }
+
+      return data;
+    }
+  });
+
+  // Use custom return policy if available, otherwise use default
+  const returnPolicyContent = storeSettings?.return_policy;
+  const storeName = storeSettings?.store_name || '#بتاع_هدايا_الأصلي';
+
+  if (returnPolicyContent) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-4xl" dir="rtl">
+        <Card className="shadow-lg">
+          <CardHeader className="text-center bg-gradient-to-r from-primary/10 to-secondary/10">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <Package className="h-6 w-6 text-primary" />
+              <CardTitle className="text-2xl font-bold text-primary">
+                سياسة الاستبدال والاسترجاع
+              </CardTitle>
+            </div>
+            <p className="text-muted-foreground">
+              في {storeName}، رضاك عن تجربتك معنا هو أولويتنا
+            </p>
+          </CardHeader>
+          
+          <CardContent className="p-6">
+            <div className="prose prose-lg max-w-none text-right" dir="rtl">
+              <div dangerouslySetInnerHTML={{ __html: returnPolicyContent.replace(/\n/g, '<br />') }} />
+            </div>
+            
+            {/* Contact Info */}
+            <div className="text-center pt-6 border-t mt-6">
+              <p className="text-sm text-muted-foreground mb-4">
+                لأي استفسارات إضافية حول سياسة الاسترجاع، يرجى التواصل معنا
+              </p>
+              <div className="flex justify-center gap-6">
+                {storeSettings?.contact_phone && (
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-primary" />
+                    <span className="text-sm">{storeSettings.contact_phone}</span>
+                  </div>
+                )}
+                {storeSettings?.contact_email && (
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-primary" />
+                    <span className="text-sm">{storeSettings.contact_email}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Default return policy content
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl" dir="rtl">
       <Card className="shadow-lg">
@@ -15,7 +87,7 @@ const ReturnPolicy = () => {
             </CardTitle>
           </div>
           <p className="text-muted-foreground">
-            في #بتاع_هدايا_الأصلي، رضاك عن تجربتك معنا هو أولويتنا
+            في {storeName}، رضاك عن تجربتك معنا هو أولويتنا
           </p>
         </CardHeader>
         
@@ -118,9 +190,23 @@ const ReturnPolicy = () => {
 
           {/* Contact Info */}
           <div className="text-center pt-6 border-t">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground mb-4">
               لأي استفسارات إضافية حول سياسة الاسترجاع، يرجى التواصل معنا
             </p>
+            <div className="flex justify-center gap-6">
+              {storeSettings?.contact_phone && (
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-primary" />
+                  <span className="text-sm">{storeSettings.contact_phone}</span>
+                </div>
+              )}
+              {storeSettings?.contact_email && (
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-primary" />
+                  <span className="text-sm">{storeSettings.contact_email}</span>
+                </div>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Loader2, Plus, Trash2 } from 'lucide-react';
+import { Loader2, Plus, Trash2, FileText } from 'lucide-react';
 
 interface ShippingRate {
   id?: string;
@@ -32,7 +31,11 @@ const AdminSettings = () => {
     contact_phone: '',
     contact_email: '',
     address: '',
-    about_us: ''
+    about_us: '',
+    return_policy: '',
+    terms_conditions: '',
+    privacy_policy: '',
+    shipping_policy: ''
   });
 
   const [shippingRates, setShippingRates] = useState<ShippingRate[]>([]);
@@ -105,7 +108,11 @@ const AdminSettings = () => {
         contact_phone: storeSettings.contact_phone || '',
         contact_email: storeSettings.contact_email || '',
         address: storeSettings.address || '',
-        about_us: storeSettings.about_us || ''
+        about_us: storeSettings.about_us || '',
+        return_policy: storeSettings.return_policy || '',
+        terms_conditions: storeSettings.terms_conditions || '',
+        privacy_policy: storeSettings.privacy_policy || '',
+        shipping_policy: storeSettings.shipping_policy || ''
       });
     }
   }, [storeSettings]);
@@ -139,6 +146,7 @@ const AdminSettings = () => {
       toast.success('تم حفظ الإعدادات بنجاح');
       queryClient.invalidateQueries({ queryKey: ['store-settings-admin'] });
       queryClient.invalidateQueries({ queryKey: ['store-settings'] });
+      queryClient.invalidateQueries({ queryKey: ['store-settings-return-policy'] });
     },
     onError: (error) => {
       console.error('Error saving settings:', error);
@@ -194,9 +202,11 @@ const AdminSettings = () => {
       </div>
 
       <Tabs defaultValue="general" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="general">الإعدادات العامة</TabsTrigger>
+          <TabsTrigger value="policies">السياسات</TabsTrigger>
           <TabsTrigger value="shipping">إعدادات الشحن</TabsTrigger>
+          <TabsTrigger value="appearance">المظهر</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general">
@@ -226,32 +236,6 @@ const AdminSettings = () => {
                       placeholder="info@store.com"
                     />
                   </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="logo_url">رابط صورة اللوجو</Label>
-                  <Input
-                    id="logo_url"
-                    value={formData.logo_url}
-                    onChange={(e) => handleInputChange('logo_url', e.target.value)}
-                    placeholder="https://example.com/logo.png أو https://example.com/logo.gif"
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    يمكنك استخدام رابط صورة ثابتة أو متحركة (GIF)
-                  </p>
-                  {formData.logo_url && (
-                    <div className="mt-2">
-                      <p className="text-sm text-muted-foreground mb-2">معاينة اللوجو:</p>
-                      <img 
-                        src={formData.logo_url} 
-                        alt="معاينة اللوجو" 
-                        className="h-16 w-auto object-contain border rounded"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                        }}
-                      />
-                    </div>
-                  )}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -288,11 +272,136 @@ const AdminSettings = () => {
               </CardContent>
             </Card>
 
+            <Button 
+              type="submit" 
+              className="w-full"
+              disabled={updateSettingsMutation.isPending}
+            >
+              {updateSettingsMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin ml-2" />
+                  جاري الحفظ...
+                </>
+              ) : (
+                'حفظ الإعدادات'
+              )}
+            </Button>
+          </form>
+        </TabsContent>
+
+        <TabsContent value="policies">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>الألوان والتصميم</CardTitle>
+                <div className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  <CardTitle>السياسات والشروط</CardTitle>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  يمكنك تخصيص السياسات المختلفة لمتجرك هنا
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="return_policy">سياسة الاستبدال والاسترجاع</Label>
+                  <Textarea
+                    id="return_policy"
+                    value={formData.return_policy}
+                    onChange={(e) => handleInputChange('return_policy', e.target.value)}
+                    placeholder="اكتب سياسة الاستبدال والاسترجاع الخاصة بمتجرك..."
+                    rows={8}
+                    className="min-h-[200px]"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    إذا تركت هذا الحقل فارغاً، سيتم استخدام السياسة الافتراضية
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="shipping_policy">سياسة الشحن والتوصيل</Label>
+                  <Textarea
+                    id="shipping_policy"
+                    value={formData.shipping_policy}
+                    onChange={(e) => handleInputChange('shipping_policy', e.target.value)}
+                    placeholder="اكتب سياسة الشحن والتوصيل..."
+                    rows={6}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="terms_conditions">الشروط والأحكام</Label>
+                  <Textarea
+                    id="terms_conditions"
+                    value={formData.terms_conditions}
+                    onChange={(e) => handleInputChange('terms_conditions', e.target.value)}
+                    placeholder="اكتب الشروط والأحكام..."
+                    rows={6}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="privacy_policy">سياسة الخصوصية</Label>
+                  <Textarea
+                    id="privacy_policy"
+                    value={formData.privacy_policy}
+                    onChange={(e) => handleInputChange('privacy_policy', e.target.value)}
+                    placeholder="اكتب سياسة الخصوصية..."
+                    rows={6}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Button 
+              type="submit" 
+              className="w-full"
+              disabled={updateSettingsMutation.isPending}
+            >
+              {updateSettingsMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin ml-2" />
+                  جاري الحفظ...
+                </>
+              ) : (
+                'حفظ السياسات'
+              )}
+            </Button>
+          </form>
+        </TabsContent>
+
+        <TabsContent value="appearance">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>المظهر والتصميم</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="logo_url">رابط صورة اللوجو</Label>
+                  <Input
+                    id="logo_url"
+                    value={formData.logo_url}
+                    onChange={(e) => handleInputChange('logo_url', e.target.value)}
+                    placeholder="https://example.com/logo.png أو https://example.com/logo.gif"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    يمكنك استخدام رابط صورة ثابتة أو متحركة (GIF)
+                  </p>
+                  {formData.logo_url && (
+                    <div className="mt-2">
+                      <p className="text-sm text-muted-foreground mb-2">معاينة اللوجو:</p>
+                      <img 
+                        src={formData.logo_url} 
+                        alt="معاينة اللوجو" 
+                        className="h-16 w-auto object-contain border rounded"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="primary_color">اللون الأساسي</Label>
@@ -343,7 +452,7 @@ const AdminSettings = () => {
                   جاري الحفظ...
                 </>
               ) : (
-                'حفظ الإعدادات'
+                'حفظ إعدادات المظهر'
               )}
             </Button>
           </form>

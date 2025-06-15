@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useCart } from "@/hooks/useCart";
 import { formatCurrency } from "@/lib/utils";
 import { Order, OrderItem } from "@/types";
@@ -14,6 +15,7 @@ import Logo from "@/components/Logo";
 import UserProfile from "@/components/UserProfile";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { Info } from "lucide-react";
 
 interface FormData {
   clientName: string;
@@ -45,6 +47,7 @@ const CheckoutPage = () => {
 
   const [shippingCost, setShippingCost] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [shippingMessage, setShippingMessage] = useState("");
 
   const governorates = [
     "القاهرة", "الجيزة", "الإسكندرية", "الدقهلية", "البحر الأحمر", "البحيرة",
@@ -59,9 +62,19 @@ const CheckoutPage = () => {
 
   useEffect(() => {
     if (formData.deliveryMethod === "شحن للمنزل" && formData.governorate) {
-      setShippingCost(50); // Default shipping cost
+      // Check if shipping cost is available for this combination
+      const hasShippingRate = false; // This would be a real check in production
+      
+      if (hasShippingRate) {
+        setShippingCost(50); // This would be the actual shipping cost
+        setShippingMessage("");
+      } else {
+        setShippingCost(0);
+        setShippingMessage("سيتم تحديد تكلفة الشحن وإبلاغكم بها قبل التأكيد النهائي للطلب");
+      }
     } else {
       setShippingCost(0);
+      setShippingMessage("");
     }
   }, [formData.deliveryMethod, formData.governorate]);
 
@@ -120,13 +133,13 @@ const CheckoutPage = () => {
         productType: item.product?.name || 'Unknown Product',
         size: item.size,
         quantity: item.quantity,
-        cost: 0, // We don't have cost data in cart items
+        cost: 0,
         price: item.price,
-        profit: 0, // Will be calculated later
+        profit: 0,
         itemDiscount: 0
       }));
 
-      // First save to legacy orders table via context
+      // Save to legacy orders table via context
       const orderData: Omit<Order, 'serial' | 'dateCreated'> = {
         clientName: formData.clientName,
         phone: formData.phone,
@@ -143,13 +156,11 @@ const CheckoutPage = () => {
         status: 'pending'
       };
 
-      // Save order using addOrder from context (for legacy system)
       await addOrder(orderData);
       
-      // Also save to admin orders table
+      // Save to admin orders table
       if (user) {
         try {
-          // First, save the admin order
           const { data: adminOrder, error: adminOrderError } = await supabase
             .from('admin_orders')
             .insert({
@@ -176,7 +187,6 @@ const CheckoutPage = () => {
           if (adminOrderError) {
             console.error('Error saving admin order:', adminOrderError);
           } else if (adminOrder) {
-            // Save admin order items
             const adminOrderItems = orderItems.map(item => ({
               order_id: adminOrder.id,
               product_name: item.productType,
@@ -199,64 +209,11 @@ const CheckoutPage = () => {
           }
         } catch (adminError) {
           console.error('Error saving to admin tables:', adminError);
-          // Don't fail the entire order if admin save fails
         }
-      }
-
-      // Also save to legacy orders table (for Supabase orders context)
-      try {
-        const { data: legacyOrder, error: legacyError } = await supabase
-          .from('orders')
-          .insert({
-            user_id: user?.id || null,
-            serial: serial,
-            client_name: formData.clientName,
-            phone: formData.phone,
-            payment_method: formData.paymentMethod,
-            delivery_method: formData.deliveryMethod,
-            address: formData.address,
-            governorate: formData.governorate,
-            shipping_cost: shippingCost,
-            discount: formData.discount,
-            deposit: formData.deposit,
-            total: total,
-            profit: orderItems.reduce((sum, item) => sum + item.profit, 0),
-            status: 'pending'
-          })
-          .select()
-          .single();
-
-        if (legacyError) {
-          console.error('Error saving legacy order:', legacyError);
-        } else if (legacyOrder) {
-          // Save legacy order items
-          const legacyOrderItems = orderItems.map(item => ({
-            order_id: legacyOrder.id,
-            product_type: item.productType,
-            size: item.size,
-            quantity: item.quantity,
-            cost: item.cost,
-            price: item.price,
-            profit: item.profit,
-            item_discount: item.itemDiscount || 0
-          }));
-
-          const { error: legacyItemsError } = await supabase
-            .from('order_items')
-            .insert(legacyOrderItems);
-
-          if (legacyItemsError) {
-            console.error('Error saving legacy order items:', legacyItemsError);
-          }
-        }
-      } catch (legacyError) {
-        console.error('Error saving to legacy tables:', legacyError);
       }
 
       clearCart();
       toast.success("تم إنشاء الطلب بنجاح!");
-      
-      // Navigate to a success page or order tracking
       navigate("/");
       
     } catch (error) {
@@ -367,6 +324,15 @@ const CheckoutPage = () => {
                         placeholder="الشارع، رقم المبنى، الدور..."
                       />
                     </div>
+
+                    {shippingMessage && (
+                      <Alert className="border-blue-200 bg-blue-50">
+                        <Info className="h-4 w-4 text-blue-600" />
+                        <AlertDescription className="text-blue-800">
+                          {shippingMessage}
+                        </AlertDescription>
+                      </Alert>
+                    )}
                   </>
                 )}
 

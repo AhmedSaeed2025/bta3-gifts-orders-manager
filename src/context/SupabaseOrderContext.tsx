@@ -48,6 +48,8 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
         return;
       }
 
+      console.log('Loaded orders data:', ordersData);
+
       const formattedOrders = ordersData?.map(order => ({
         serial: order.serial,
         paymentMethod: order.payment_method,
@@ -74,6 +76,7 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
         dateCreated: order.date_created
       })) || [];
 
+      console.log('Formatted orders:', formattedOrders);
       setOrders(formattedOrders);
     } catch (error) {
       console.error('Error loading orders:', error);
@@ -97,8 +100,27 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
 
     loadData();
 
+    // Listen to real-time changes
+    const channel = supabase
+      .channel('orders-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders',
+          filter: `user_id=eq.${user?.id}`
+        },
+        (payload) => {
+          console.log('Real-time order change:', payload);
+          loadData(); // Reload orders when changes occur
+        }
+      )
+      .subscribe();
+
     return () => {
       mounted = false;
+      supabase.removeChannel(channel);
     };
   }, [user]);
 
@@ -199,7 +221,7 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
 
       console.log('Order items inserted successfully');
       toast.success("تم إضافة الطلب بنجاح");
-      await loadOrders();
+      await loadOrders(); // Reload to get the updated list
     } catch (error) {
       console.error('Error adding order:', error);
       toast.error("حدث خطأ في إضافة الطلب");
@@ -213,6 +235,8 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
     }
 
     try {
+      console.log('Updating order:', serial, updatedOrder);
+      
       // First get the order ID from the serial
       const { data: orderData, error: fetchError } = await supabase
         .from('orders')
@@ -238,7 +262,8 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
           deposit: updatedOrder.deposit,
           total: updatedOrder.total,
           profit: updatedOrder.profit,
-          status: updatedOrder.status
+          status: updatedOrder.status,
+          updated_at: new Date().toISOString()
         })
         .eq('serial', serial)
         .eq('user_id', user.id);
@@ -271,8 +296,9 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
 
       if (itemsError) throw itemsError;
 
+      console.log('Order updated successfully');
       toast.success("تم تحديث الطلب بنجاح");
-      await loadOrders();
+      await loadOrders(); // Reload to get the updated list
     } catch (error) {
       console.error('Error updating order:', error);
       toast.error("حدث خطأ في تحديث الطلب");
@@ -310,7 +336,7 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
 
       console.log('Order deleted successfully');
       toast.success("تم حذف الطلب بنجاح");
-      await loadOrders();
+      await loadOrders(); // Reload to get the updated list
     } catch (error) {
       console.error('Error deleting order:', error);
       toast.error("حدث خطأ في حذف الطلب");
@@ -325,16 +351,22 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
 
     try {
       const orderToUpdate = orders[index];
+      console.log('Updating order status:', orderToUpdate.serial, 'to', status);
+      
       const { error } = await supabase
         .from('orders')
-        .update({ status })
+        .update({ 
+          status,
+          updated_at: new Date().toISOString()
+        })
         .eq('serial', orderToUpdate.serial)
         .eq('user_id', user.id);
 
       if (error) throw error;
 
+      console.log('Order status updated successfully');
       toast.success("تم تحديث حالة الطلب بنجاح");
-      await loadOrders();
+      await loadOrders(); // Reload to get the updated list
     } catch (error) {
       console.error('Error updating order status:', error);
       toast.error("حدث خطأ في تحديث حالة الطلب");
