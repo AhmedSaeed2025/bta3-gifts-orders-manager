@@ -25,7 +25,7 @@ const ProductPage = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('store_settings')
-        .select('show_product_prices, show_product_sizes')
+        .select('show_product_prices, show_product_sizes, primary_color, secondary_color, accent_color, text_color')
         .eq('is_active', true)
         .single();
       
@@ -58,34 +58,31 @@ const ProductPage = () => {
     enabled: !!id
   });
 
-  // Apply custom colors to CSS variables
+  // Apply custom colors to CSS variables - moved to useEffect to fix hooks issue
   React.useEffect(() => {
-    const loadStoreColors = async () => {
-      const { data: colorSettings } = await supabase
-        .from('store_settings')
-        .select('primary_color, secondary_color, accent_color, text_color')
-        .eq('is_active', true)
-        .single();
-
-      if (colorSettings) {
-        const root = document.documentElement;
-        if (colorSettings.primary_color) {
-          root.style.setProperty('--primary-color', colorSettings.primary_color);
-        }
-        if (colorSettings.secondary_color) {
-          root.style.setProperty('--secondary-color', colorSettings.secondary_color);
-        }
-        if (colorSettings.accent_color) {
-          root.style.setProperty('--accent-color', colorSettings.accent_color);
-        }
-        if (colorSettings.text_color) {
-          root.style.setProperty('--text-color', colorSettings.text_color);
-        }
+    if (storeSettings) {
+      const root = document.documentElement;
+      if (storeSettings.primary_color) {
+        root.style.setProperty('--primary-color', storeSettings.primary_color);
       }
-    };
+      if (storeSettings.secondary_color) {
+        root.style.setProperty('--secondary-color', storeSettings.secondary_color);
+      }
+      if (storeSettings.accent_color) {
+        root.style.setProperty('--accent-color', storeSettings.accent_color);
+      }
+      if (storeSettings.text_color) {
+        root.style.setProperty('--text-color', storeSettings.text_color);
+      }
+    }
+  }, [storeSettings]);
 
-    loadStoreColors();
-  }, []);
+  // Auto-select first size if only one size available
+  React.useEffect(() => {
+    if (product?.product_sizes && product.product_sizes.length === 1 && !selectedSize) {
+      setSelectedSize(product.product_sizes[0].size);
+    }
+  }, [product?.product_sizes, selectedSize]);
 
   if (isLoading) {
     return (
@@ -171,17 +168,10 @@ const ProductPage = () => {
     }
   };
 
-  // Auto-select first size if only one size available
-  React.useEffect(() => {
-    if (product?.product_sizes && product.product_sizes.length === 1 && !selectedSize) {
-      setSelectedSize(product.product_sizes[0].size);
-    }
-  }, [product?.product_sizes, selectedSize]);
-
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
-        {/* Breadcrumb */}
+        {/* Back to Store Button */}
         <div className="flex items-center gap-2 mb-6">
           <Link to="/" className="flex items-center gap-2 text-muted-foreground hover:text-primary">
             <ArrowLeft className="h-4 w-4" />
@@ -364,6 +354,14 @@ const ProductPage = () => {
               <Link to="/cart">
                 <Button variant="outline" className="w-full" size="lg">
                   عرض السلة
+                </Button>
+              </Link>
+              
+              {/* Return to Store Button */}
+              <Link to="/">
+                <Button variant="secondary" className="w-full" size="lg">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  العودة للمتجر
                 </Button>
               </Link>
             </div>

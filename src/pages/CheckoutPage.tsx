@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -279,7 +278,9 @@ const CheckoutPage = () => {
 
       await clearCart();
       toast.success("تم إنشاء الطلب بنجاح!");
-      navigate("/");
+      
+      // Navigate to order confirmation page instead of home
+      navigate(`/order-confirmation/${serial}`);
       
     } catch (error) {
       console.error("Error creating order:", error);
