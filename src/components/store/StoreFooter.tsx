@@ -13,29 +13,29 @@ const StoreFooter = ({ storeSettings }: StoreFooterProps) => {
   
   // Social media links array
   const socialLinks = [
-    { url: storeSettings?.facebook_url, icon: Facebook, label: 'فيسبوك', color: 'text-blue-600' },
-    { url: storeSettings?.instagram_url, icon: Instagram, label: 'انستجرام', color: 'text-pink-600' },
-    { url: storeSettings?.twitter_url, icon: Twitter, label: 'تويتر', color: 'text-blue-400' },
-    { url: storeSettings?.youtube_url, icon: Youtube, label: 'يوتيوب', color: 'text-red-600' },
-    { url: storeSettings?.linkedin_url, icon: Linkedin, label: 'لينكد إن', color: 'text-blue-700' },
+    { url: storeSettings?.facebook_url, icon: Facebook, label: 'فيسبوك', color: 'text-blue-600 hover:text-blue-700' },
+    { url: storeSettings?.instagram_url, icon: Instagram, label: 'انستجرام', color: 'text-pink-600 hover:text-pink-700' },
+    { url: storeSettings?.twitter_url, icon: Twitter, label: 'تويتر', color: 'text-blue-400 hover:text-blue-500' },
+    { url: storeSettings?.youtube_url, icon: Youtube, label: 'يوتيوب', color: 'text-red-600 hover:text-red-700' },
+    { url: storeSettings?.linkedin_url, icon: Linkedin, label: 'لينكد إن', color: 'text-blue-700 hover:text-blue-800' },
   ].filter(link => link.url); // Only show links that have URLs
 
   return (
-    <footer className={`border-t mt-8 md:mt-16 ${isMobile ? 'mobile-professional-footer' : 'bg-muted/50'}`}>
-      <div className={`container mx-auto px-3 md:px-4 py-6 md:py-12 ${isMobile ? 'max-w-full' : ''}`}>
-        <div className={`grid gap-6 md:gap-8 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4'}`}>
+    <footer className={`border-t mt-8 md:mt-16 bg-gradient-to-br from-gray-900 to-gray-800 text-white ${isMobile ? 'mobile-professional-footer' : ''}`}>
+      <div className={`container mx-auto px-3 md:px-4 py-8 md:py-16 ${isMobile ? 'max-w-full' : ''}`}>
+        <div className={`grid gap-8 md:gap-12 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4'}`}>
           {/* Store Info */}
-          <div className={isMobile ? 'text-center' : ''}>
-            <h3 className={`font-bold mb-3 md:mb-4 ${isMobile ? 'mobile-professional-subheading' : 'text-lg'}`}>
+          <div className={`${isMobile ? 'text-center' : ''} lg:col-span-2`}>
+            <h3 className={`font-bold mb-4 text-white ${isMobile ? 'text-lg' : 'text-2xl'}`}>
               {storeSettings?.store_name || 'متجري الإلكتروني'}
             </h3>
-            <p className={`mb-3 md:mb-4 ${isMobile ? 'mobile-professional-body-text leading-relaxed' : 'text-muted-foreground'}`}>
+            <p className={`mb-6 text-gray-300 leading-relaxed ${isMobile ? 'text-sm' : 'text-base'}`}>
               {storeSettings?.about_us || 'متجرك الموثوق للتسوق الإلكتروني'}
             </p>
             
             {/* Social Media Links */}
             {socialLinks.length > 0 && (
-              <div className={`flex gap-3 flex-wrap ${isMobile ? 'justify-center' : ''}`}>
+              <div className={`flex gap-4 flex-wrap ${isMobile ? 'justify-center' : ''} mb-6`}>
                 {socialLinks.map((social, index) => {
                   const IconComponent = social.icon;
                   return (
@@ -44,7 +44,7 @@ const StoreFooter = ({ storeSettings }: StoreFooterProps) => {
                       href={social.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={`${social.color} hover:opacity-75 transition-opacity`}
+                      className={`${social.color} transition-all duration-300 hover:scale-110 bg-white/10 hover:bg-white/20 p-3 rounded-full`}
                       aria-label={social.label}
                     >
                       <IconComponent className={isMobile ? "h-5 w-5" : "h-6 w-6"} />
@@ -58,7 +58,7 @@ const StoreFooter = ({ storeSettings }: StoreFooterProps) => {
                     href={storeSettings.tiktok_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-black hover:opacity-75 transition-opacity"
+                    className="hover:scale-110 transition-all duration-300 bg-white/10 hover:bg-white/20 p-3 rounded-full"
                     aria-label="تيك توك"
                   >
                     <div className={`bg-black rounded flex items-center justify-center ${isMobile ? 'h-5 w-5' : 'h-6 w-6'}`}>
@@ -72,7 +72,7 @@ const StoreFooter = ({ storeSettings }: StoreFooterProps) => {
                     href={storeSettings.snapchat_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-yellow-400 hover:opacity-75 transition-opacity"
+                    className="hover:scale-110 transition-all duration-300 bg-white/10 hover:bg-white/20 p-3 rounded-full"
                     aria-label="سناب شات"
                   >
                     <div className={`bg-yellow-400 rounded flex items-center justify-center ${isMobile ? 'h-5 w-5' : 'h-6 w-6'}`}>
@@ -88,25 +88,25 @@ const StoreFooter = ({ storeSettings }: StoreFooterProps) => {
           {!isMobile && (
             <>
               <div>
-                <h3 className="font-bold text-lg mb-4">روابط سريعة</h3>
-                <ul className="space-y-2">
+                <h3 className="font-bold text-lg mb-4 text-white">روابط سريعة</h3>
+                <ul className="space-y-3">
                   <li>
-                    <Link to="/" className="text-muted-foreground hover:text-primary">
+                    <Link to="/" className="text-gray-300 hover:text-white transition-colors duration-300">
                       الرئيسية
                     </Link>
                   </li>
                   <li>
-                    <Link to="/products" className="text-muted-foreground hover:text-primary">
+                    <Link to="/products" className="text-gray-300 hover:text-white transition-colors duration-300">
                       المنتجات
                     </Link>
                   </li>
                   <li>
-                    <Link to="/about" className="text-muted-foreground hover:text-primary">
+                    <Link to="/about" className="text-gray-300 hover:text-white transition-colors duration-300">
                       من نحن
                     </Link>
                   </li>
                   <li>
-                    <Link to="/contact" className="text-muted-foreground hover:text-primary">
+                    <Link to="/contact" className="text-gray-300 hover:text-white transition-colors duration-300">
                       اتصل بنا
                     </Link>
                   </li>
@@ -115,25 +115,25 @@ const StoreFooter = ({ storeSettings }: StoreFooterProps) => {
 
               {/* Customer Service */}
               <div>
-                <h3 className="font-bold text-lg mb-4">خدمة العملاء</h3>
-                <ul className="space-y-2">
+                <h3 className="font-bold text-lg mb-4 text-white">خدمة العملاء</h3>
+                <ul className="space-y-3">
                   <li>
-                    <Link to="/track" className="text-muted-foreground hover:text-primary">
+                    <Link to="/track" className="text-gray-300 hover:text-white transition-colors duration-300">
                       تتبع الطلب
                     </Link>
                   </li>
                   <li>
-                    <Link to="/return-policy" className="text-muted-foreground hover:text-primary">
+                    <Link to="/return-policy" className="text-gray-300 hover:text-white transition-colors duration-300">
                       سياسة الاسترجاع والاستبدال
                     </Link>
                   </li>
                   <li>
-                    <Link to="/shipping" className="text-muted-foreground hover:text-primary">
+                    <Link to="/shipping" className="text-gray-300 hover:text-white transition-colors duration-300">
                       سياسة الشحن
                     </Link>
                   </li>
                   <li>
-                    <Link to="/terms" className="text-muted-foreground hover:text-primary">
+                    <Link to="/terms" className="text-gray-300 hover:text-white transition-colors duration-300">
                       الشروط والأحكام
                     </Link>
                   </li>
@@ -144,24 +144,24 @@ const StoreFooter = ({ storeSettings }: StoreFooterProps) => {
 
           {/* Contact Info */}
           <div className={isMobile ? 'text-center' : ''}>
-            <h3 className={`font-bold mb-3 md:mb-4 ${isMobile ? 'mobile-professional-subheading' : 'text-lg'}`}>معلومات التواصل</h3>
-            <div className={`space-y-2 md:space-y-3 ${isMobile ? '' : ''}`}>
+            <h3 className={`font-bold mb-4 text-white ${isMobile ? 'text-lg' : 'text-lg'}`}>معلومات التواصل</h3>
+            <div className={`space-y-3 ${isMobile ? '' : ''}`}>
               {storeSettings?.contact_phone && (
-                <div className={`flex items-center gap-2 ${isMobile ? 'justify-center mobile-professional-text' : ''}`}>
-                  <Phone className={`text-muted-foreground ${isMobile ? 'h-4 w-4' : 'h-4 w-4'}`} />
-                  <span className="text-muted-foreground">{storeSettings.contact_phone}</span>
+                <div className={`flex items-center gap-3 ${isMobile ? 'justify-center text-sm' : ''}`}>
+                  <Phone className={`text-gray-300 ${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
+                  <span className="text-gray-300">{storeSettings.contact_phone}</span>
                 </div>
               )}
               {storeSettings?.contact_email && (
-                <div className={`flex items-center gap-2 ${isMobile ? 'justify-center mobile-professional-text' : ''}`}>
-                  <Mail className={`text-muted-foreground ${isMobile ? 'h-4 w-4' : 'h-4 w-4'}`} />
-                  <span className="text-muted-foreground">{storeSettings.contact_email}</span>
+                <div className={`flex items-center gap-3 ${isMobile ? 'justify-center text-sm' : ''}`}>
+                  <Mail className={`text-gray-300 ${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
+                  <span className="text-gray-300">{storeSettings.contact_email}</span>
                 </div>
               )}
               {storeSettings?.address && (
-                <div className={`flex items-center gap-2 ${isMobile ? 'justify-center mobile-professional-text' : ''}`}>
-                  <MapPin className={`text-muted-foreground ${isMobile ? 'h-4 w-4' : 'h-4 w-4'}`} />
-                  <span className="text-muted-foreground">{storeSettings.address}</span>
+                <div className={`flex items-center gap-3 ${isMobile ? 'justify-center text-sm' : ''}`}>
+                  <MapPin className={`text-gray-300 ${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
+                  <span className="text-gray-300">{storeSettings.address}</span>
                 </div>
               )}
             </div>
@@ -170,26 +170,27 @@ const StoreFooter = ({ storeSettings }: StoreFooterProps) => {
 
         {/* Mobile Quick Links */}
         {isMobile && (
-          <div className="mt-6 pt-4 border-t mobile-professional-border">
-            <div className="grid grid-cols-2 gap-3 text-center mobile-professional-small-text">
-              <Link to="/track" className="mobile-professional-text hover:text-primary">
+          <div className="mt-8 pt-6 border-t border-gray-600">
+            <div className="grid grid-cols-2 gap-4 text-center text-sm">
+              <Link to="/track" className="text-gray-300 hover:text-white transition-colors">
                 تتبع الطلب
               </Link>
-              <Link to="/return-policy" className="mobile-professional-text hover:text-primary">
+              <Link to="/return-policy" className="text-gray-300 hover:text-white transition-colors">
                 سياسة الاسترجاع
               </Link>
-              <Link to="/shipping" className="mobile-professional-text hover:text-primary">
+              <Link to="/shipping" className="text-gray-300 hover:text-white transition-colors">
                 سياسة الشحن
               </Link>
-              <Link to="/terms" className="mobile-professional-text hover:text-primary">
+              <Link to="/terms" className="text-gray-300 hover:text-white transition-colors">
                 الشروط والأحكام
               </Link>
             </div>
           </div>
         )}
 
-        <div className={`border-t pt-4 md:pt-8 mt-4 md:mt-8 text-center text-muted-foreground ${isMobile ? 'mobile-professional-border mobile-professional-small-text' : ''}`}>
+        <div className={`border-t border-gray-600 pt-6 mt-8 text-center text-gray-400 ${isMobile ? 'text-sm' : ''}`}>
           <p>&copy; 2024 {storeSettings?.store_name || 'متجري الإلكتروني'}. جميع الحقوق محفوظة.</p>
+          <p className="mt-2 text-xs">تم التطوير بواسطة فريق التطوير المحترف</p>
         </div>
       </div>
     </footer>

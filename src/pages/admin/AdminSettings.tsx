@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Loader2, Settings, Palette, Truck, CreditCard, FileText, Save } from 'lucide-react';
+import { Loader2, Settings, Palette, Truck, CreditCard, FileText, Save, Star } from 'lucide-react';
 import { Facebook } from 'lucide-react';
 
 // Import the new component modules
@@ -16,6 +15,7 @@ import ShippingSettings from '@/components/admin/settings/ShippingSettings';
 import PaymentSettings from '@/components/admin/settings/PaymentSettings';
 import PolicySettings from '@/components/admin/settings/PolicySettings';
 import SocialMediaSettings from '@/components/admin/settings/SocialMediaSettings';
+import CustomerReviewsSettings from '@/components/admin/settings/CustomerReviewsSettings';
 
 interface ShippingRate {
   id?: string;
@@ -321,7 +321,7 @@ const AdminSettings = () => {
       </div>
 
       <Tabs defaultValue="general" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="general" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             عام
@@ -341,6 +341,10 @@ const AdminSettings = () => {
           <TabsTrigger value="social" className="flex items-center gap-2">
             <Facebook className="h-4 w-4" />
             السوشيال ميديا
+          </TabsTrigger>
+          <TabsTrigger value="reviews" className="flex items-center gap-2">
+            <Star className="h-4 w-4" />
+            آراء العملاء
           </TabsTrigger>
           <TabsTrigger value="policies" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
@@ -391,6 +395,13 @@ const AdminSettings = () => {
           <SocialMediaSettings 
             formData={formData}
             onInputChange={handleInputChange}
+          />
+        </TabsContent>
+
+        <TabsContent value="reviews">
+          <CustomerReviewsSettings 
+            formData={formData}
+            onToggleChange={handleToggleChange}
           />
         </TabsContent>
 

@@ -227,6 +227,42 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_reviews: {
+        Row: {
+          created_at: string | null
+          customer_name: string | null
+          id: string
+          image_url: string
+          is_active: boolean | null
+          rating: number | null
+          review_text: string | null
+          sort_order: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          customer_name?: string | null
+          id?: string
+          image_url: string
+          is_active?: boolean | null
+          rating?: number | null
+          review_text?: string | null
+          sort_order?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          customer_name?: string | null
+          id?: string
+          image_url?: string
+          is_active?: boolean | null
+          rating?: number | null
+          review_text?: string | null
+          sort_order?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           cost: number
@@ -536,6 +572,9 @@ export type Database = {
           cookie_policy: string | null
           created_at: string
           credit_cards: boolean | null
+          customer_review_images: string[] | null
+          customer_reviews_enabled: boolean | null
+          default_language: string | null
           default_shipping_cost: number | null
           enable_dark_mode: boolean | null
           estimated_delivery_time: string | null
@@ -557,8 +596,10 @@ export type Database = {
           primary_color: string | null
           privacy_policy: string | null
           return_policy: string | null
+          rtl_enabled: boolean | null
           secondary_color: string | null
           shipping_policy: string | null
+          show_back_to_top: boolean | null
           show_out_of_stock: boolean | null
           show_prices: boolean | null
           show_product_prices: boolean | null
@@ -591,6 +632,9 @@ export type Database = {
           cookie_policy?: string | null
           created_at?: string
           credit_cards?: boolean | null
+          customer_review_images?: string[] | null
+          customer_reviews_enabled?: boolean | null
+          default_language?: string | null
           default_shipping_cost?: number | null
           enable_dark_mode?: boolean | null
           estimated_delivery_time?: string | null
@@ -612,8 +656,10 @@ export type Database = {
           primary_color?: string | null
           privacy_policy?: string | null
           return_policy?: string | null
+          rtl_enabled?: boolean | null
           secondary_color?: string | null
           shipping_policy?: string | null
+          show_back_to_top?: boolean | null
           show_out_of_stock?: boolean | null
           show_prices?: boolean | null
           show_product_prices?: boolean | null
@@ -646,6 +692,9 @@ export type Database = {
           cookie_policy?: string | null
           created_at?: string
           credit_cards?: boolean | null
+          customer_review_images?: string[] | null
+          customer_reviews_enabled?: boolean | null
+          default_language?: string | null
           default_shipping_cost?: number | null
           enable_dark_mode?: boolean | null
           estimated_delivery_time?: string | null
@@ -667,8 +716,10 @@ export type Database = {
           primary_color?: string | null
           privacy_policy?: string | null
           return_policy?: string | null
+          rtl_enabled?: boolean | null
           secondary_color?: string | null
           shipping_policy?: string | null
+          show_back_to_top?: boolean | null
           show_out_of_stock?: boolean | null
           show_prices?: boolean | null
           show_product_prices?: boolean | null
