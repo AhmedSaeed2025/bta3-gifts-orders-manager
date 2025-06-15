@@ -2,12 +2,15 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Facebook, Instagram, Twitter, Youtube, Linkedin, Phone, Mail, MapPin } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface StoreFooterProps {
   storeSettings: any;
 }
 
 const StoreFooter = ({ storeSettings }: StoreFooterProps) => {
+  const isMobile = useIsMobile();
+  
   // Social media links array
   const socialLinks = [
     { url: storeSettings?.facebook_url, icon: Facebook, label: 'فيسبوك', color: 'text-blue-600' },
@@ -18,21 +21,21 @@ const StoreFooter = ({ storeSettings }: StoreFooterProps) => {
   ].filter(link => link.url); // Only show links that have URLs
 
   return (
-    <footer className="bg-muted/50 border-t mt-16">
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+    <footer className={`border-t mt-8 md:mt-16 ${isMobile ? 'mobile-warm-bg mobile-warm-border' : 'bg-muted/50'}`}>
+      <div className={`container mx-auto px-2 md:px-4 py-6 md:py-12 ${isMobile ? 'max-w-full' : ''}`}>
+        <div className={`grid gap-6 md:gap-8 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4'}`}>
           {/* Store Info */}
-          <div>
-            <h3 className="font-bold text-lg mb-4">
+          <div className={isMobile ? 'text-center' : ''}>
+            <h3 className={`font-bold mb-3 md:mb-4 ${isMobile ? 'text-base mobile-warm-text' : 'text-lg'}`}>
               {storeSettings?.store_name || 'متجري الإلكتروني'}
             </h3>
-            <p className="text-muted-foreground mb-4">
+            <p className={`text-muted-foreground mb-3 md:mb-4 ${isMobile ? 'text-sm mobile-warm-text leading-relaxed' : ''}`}>
               {storeSettings?.about_us || 'متجرك الموثوق للتسوق الإلكتروني'}
             </p>
             
             {/* Social Media Links */}
             {socialLinks.length > 0 && (
-              <div className="flex gap-3 flex-wrap">
+              <div className={`flex gap-3 flex-wrap ${isMobile ? 'justify-center' : ''}`}>
                 {socialLinks.map((social, index) => {
                   const IconComponent = social.icon;
                   return (
@@ -44,7 +47,7 @@ const StoreFooter = ({ storeSettings }: StoreFooterProps) => {
                       className={`${social.color} hover:opacity-75 transition-opacity`}
                       aria-label={social.label}
                     >
-                      <IconComponent className="h-6 w-6" />
+                      <IconComponent className={isMobile ? "h-5 w-5" : "h-6 w-6"} />
                     </a>
                   );
                 })}
@@ -58,8 +61,8 @@ const StoreFooter = ({ storeSettings }: StoreFooterProps) => {
                     className="text-black hover:opacity-75 transition-opacity"
                     aria-label="تيك توك"
                   >
-                    <div className="h-6 w-6 bg-black rounded flex items-center justify-center">
-                      <span className="text-white text-sm font-bold">T</span>
+                    <div className={`bg-black rounded flex items-center justify-center ${isMobile ? 'h-5 w-5' : 'h-6 w-6'}`}>
+                      <span className={`text-white font-bold ${isMobile ? 'text-xs' : 'text-sm'}`}>T</span>
                     </div>
                   </a>
                 )}
@@ -72,8 +75,8 @@ const StoreFooter = ({ storeSettings }: StoreFooterProps) => {
                     className="text-yellow-400 hover:opacity-75 transition-opacity"
                     aria-label="سناب شات"
                   >
-                    <div className="h-6 w-6 bg-yellow-400 rounded flex items-center justify-center">
-                      <span className="text-white text-sm font-bold">S</span>
+                    <div className={`bg-yellow-400 rounded flex items-center justify-center ${isMobile ? 'h-5 w-5' : 'h-6 w-6'}`}>
+                      <span className={`text-white font-bold ${isMobile ? 'text-xs' : 'text-sm'}`}>S</span>
                     </div>
                   </a>
                 )}
@@ -81,79 +84,83 @@ const StoreFooter = ({ storeSettings }: StoreFooterProps) => {
             )}
           </div>
 
-          {/* Quick Links */}
-          <div>
-            <h3 className="font-bold text-lg mb-4">روابط سريعة</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link to="/" className="text-muted-foreground hover:text-primary">
-                  الرئيسية
-                </Link>
-              </li>
-              <li>
-                <Link to="/products" className="text-muted-foreground hover:text-primary">
-                  المنتجات
-                </Link>
-              </li>
-              <li>
-                <Link to="/about" className="text-muted-foreground hover:text-primary">
-                  من نحن
-                </Link>
-              </li>
-              <li>
-                <Link to="/contact" className="text-muted-foreground hover:text-primary">
-                  اتصل بنا
-                </Link>
-              </li>
-            </ul>
-          </div>
+          {/* Quick Links - مبسط للموبايل */}
+          {!isMobile && (
+            <>
+              <div>
+                <h3 className="font-bold text-lg mb-4">روابط سريعة</h3>
+                <ul className="space-y-2">
+                  <li>
+                    <Link to="/" className="text-muted-foreground hover:text-primary">
+                      الرئيسية
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/products" className="text-muted-foreground hover:text-primary">
+                      المنتجات
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/about" className="text-muted-foreground hover:text-primary">
+                      من نحن
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/contact" className="text-muted-foreground hover:text-primary">
+                      اتصل بنا
+                    </Link>
+                  </li>
+                </ul>
+              </div>
 
-          {/* Customer Service */}
-          <div>
-            <h3 className="font-bold text-lg mb-4">خدمة العملاء</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link to="/track" className="text-muted-foreground hover:text-primary">
-                  تتبع الطلب
-                </Link>
-              </li>
-              <li>
-                <Link to="/return-policy" className="text-muted-foreground hover:text-primary">
-                  سياسة الاسترجاع والاستبدال
-                </Link>
-              </li>
-              <li>
-                <Link to="/shipping" className="text-muted-foreground hover:text-primary">
-                  سياسة الشحن
-                </Link>
-              </li>
-              <li>
-                <Link to="/terms" className="text-muted-foreground hover:text-primary">
-                  الشروط والأحكام
-                </Link>
-              </li>
-            </ul>
-          </div>
+              {/* Customer Service */}
+              <div>
+                <h3 className="font-bold text-lg mb-4">خدمة العملاء</h3>
+                <ul className="space-y-2">
+                  <li>
+                    <Link to="/track" className="text-muted-foreground hover:text-primary">
+                      تتبع الطلب
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/return-policy" className="text-muted-foreground hover:text-primary">
+                      سياسة الاسترجاع والاستبدال
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/shipping" className="text-muted-foreground hover:text-primary">
+                      سياسة الشحن
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/terms" className="text-muted-foreground hover:text-primary">
+                      الشروط والأحكام
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+            </>
+          )}
 
           {/* Contact Info */}
-          <div>
-            <h3 className="font-bold text-lg mb-4">معلومات التواصل</h3>
-            <div className="space-y-3">
+          <div className={isMobile ? 'text-center' : ''}>
+            <h3 className={`font-bold mb-3 md:mb-4 ${isMobile ? 'text-base mobile-warm-text' : 'text-lg'}`}>معلومات التواصل</h3>
+            <div className={`space-y-2 md:space-y-3 ${isMobile ? 'text-sm' : ''}`}>
               {storeSettings?.contact_phone && (
-                <div className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
+                <div className={`flex items-center gap-2 ${isMobile ? 'justify-center mobile-warm-text' : ''}`}>
+                  <Phone className={`text-muted-foreground ${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
                   <span className="text-muted-foreground">{storeSettings.contact_phone}</span>
                 </div>
               )}
               {storeSettings?.contact_email && (
-                <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
+                <div className={`flex items-center gap-2 ${isMobile ? 'justify-center mobile-warm-text' : ''}`}>
+                  <Mail className={`text-muted-foreground ${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
                   <span className="text-muted-foreground">{storeSettings.contact_email}</span>
                 </div>
               )}
               {storeSettings?.address && (
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                <div className={`flex items-center gap-2 ${isMobile ? 'justify-center mobile-warm-text' : ''}`}>
+                  <MapPin className={`text-muted-foreground ${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
                   <span className="text-muted-foreground">{storeSettings.address}</span>
                 </div>
               )}
@@ -161,7 +168,27 @@ const StoreFooter = ({ storeSettings }: StoreFooterProps) => {
           </div>
         </div>
 
-        <div className="border-t pt-8 mt-8 text-center text-muted-foreground">
+        {/* Mobile Quick Links */}
+        {isMobile && (
+          <div className="mt-6 pt-4 border-t mobile-warm-border">
+            <div className="grid grid-cols-2 gap-3 text-center text-sm">
+              <Link to="/track" className="mobile-warm-text hover:text-primary">
+                تتبع الطلب
+              </Link>
+              <Link to="/return-policy" className="mobile-warm-text hover:text-primary">
+                سياسة الاسترجاع
+              </Link>
+              <Link to="/shipping" className="mobile-warm-text hover:text-primary">
+                سياسة الشحن
+              </Link>
+              <Link to="/terms" className="mobile-warm-text hover:text-primary">
+                الشروط والأحكام
+              </Link>
+            </div>
+          </div>
+        )}
+
+        <div className={`border-t pt-4 md:pt-8 mt-4 md:mt-8 text-center text-muted-foreground ${isMobile ? 'mobile-warm-border text-xs mobile-warm-text' : ''}`}>
           <p>&copy; 2024 {storeSettings?.store_name || 'متجري الإلكتروني'}. جميع الحقوق محفوظة.</p>
         </div>
       </div>
