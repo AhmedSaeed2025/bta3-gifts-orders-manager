@@ -21,21 +21,21 @@ const StoreFooter = ({ storeSettings }: StoreFooterProps) => {
   ].filter(link => link.url); // Only show links that have URLs
 
   return (
-    <footer className={`border-t mt-8 md:mt-16 bg-gradient-to-br from-gray-900 to-gray-800 text-white ${isMobile ? 'mobile-professional-footer' : ''}`}>
-      <div className={`container mx-auto px-3 md:px-4 py-8 md:py-16 ${isMobile ? 'max-w-full' : ''}`}>
-        <div className={`grid gap-8 md:gap-12 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4'}`}>
+    <footer className="border-t mt-16 bg-gray-50">
+      <div className="container mx-auto px-4 py-12">
+        <div className={`grid gap-8 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4'}`}>
           {/* Store Info */}
           <div className={`${isMobile ? 'text-center' : ''} lg:col-span-2`}>
-            <h3 className={`font-bold mb-4 text-white ${isMobile ? 'text-lg' : 'text-2xl'}`}>
+            <h3 className={`font-bold mb-4 text-gray-900 ${isMobile ? 'text-lg' : 'text-xl'}`}>
               {storeSettings?.store_name || 'متجري الإلكتروني'}
             </h3>
-            <p className={`mb-6 text-gray-300 leading-relaxed ${isMobile ? 'text-sm' : 'text-base'}`}>
+            <p className={`mb-6 text-gray-600 ${isMobile ? 'text-sm' : 'text-base'}`}>
               {storeSettings?.about_us || 'متجرك الموثوق للتسوق الإلكتروني'}
             </p>
             
             {/* Social Media Links */}
             {socialLinks.length > 0 && (
-              <div className={`flex gap-4 flex-wrap ${isMobile ? 'justify-center' : ''} mb-6`}>
+              <div className={`flex gap-4 ${isMobile ? 'justify-center' : ''} mb-6`}>
                 {socialLinks.map((social, index) => {
                   const IconComponent = social.icon;
                   return (
@@ -44,153 +44,74 @@ const StoreFooter = ({ storeSettings }: StoreFooterProps) => {
                       href={social.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={`${social.color} transition-all duration-300 hover:scale-110 bg-white/10 hover:bg-white/20 p-3 rounded-full`}
+                      className={`${social.color} transition-colors`}
                       aria-label={social.label}
                     >
                       <IconComponent className={isMobile ? "h-5 w-5" : "h-6 w-6"} />
                     </a>
                   );
                 })}
-                
-                {/* Custom icons for TikTok and Snapchat */}
-                {storeSettings?.tiktok_url && (
-                  <a
-                    href={storeSettings.tiktok_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:scale-110 transition-all duration-300 bg-white/10 hover:bg-white/20 p-3 rounded-full"
-                    aria-label="تيك توك"
-                  >
-                    <div className={`bg-black rounded flex items-center justify-center ${isMobile ? 'h-5 w-5' : 'h-6 w-6'}`}>
-                      <span className={`text-white font-bold ${isMobile ? 'text-xs' : 'text-sm'}`}>T</span>
-                    </div>
-                  </a>
-                )}
-                
-                {storeSettings?.snapchat_url && (
-                  <a
-                    href={storeSettings.snapchat_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:scale-110 transition-all duration-300 bg-white/10 hover:bg-white/20 p-3 rounded-full"
-                    aria-label="سناب شات"
-                  >
-                    <div className={`bg-yellow-400 rounded flex items-center justify-center ${isMobile ? 'h-5 w-5' : 'h-6 w-6'}`}>
-                      <span className={`text-white font-bold ${isMobile ? 'text-xs' : 'text-sm'}`}>S</span>
-                    </div>
-                  </a>
-                )}
               </div>
             )}
           </div>
 
-          {/* Quick Links - مخفي على الموبايل */}
+          {/* Quick Links */}
           {!isMobile && (
-            <>
-              <div>
-                <h3 className="font-bold text-lg mb-4 text-white">روابط سريعة</h3>
-                <ul className="space-y-3">
-                  <li>
-                    <Link to="/" className="text-gray-300 hover:text-white transition-colors duration-300">
-                      الرئيسية
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/products" className="text-gray-300 hover:text-white transition-colors duration-300">
-                      المنتجات
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/about" className="text-gray-300 hover:text-white transition-colors duration-300">
-                      من نحن
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/contact" className="text-gray-300 hover:text-white transition-colors duration-300">
-                      اتصل بنا
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-
-              {/* Customer Service */}
-              <div>
-                <h3 className="font-bold text-lg mb-4 text-white">خدمة العملاء</h3>
-                <ul className="space-y-3">
-                  <li>
-                    <Link to="/track" className="text-gray-300 hover:text-white transition-colors duration-300">
-                      تتبع الطلب
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/return-policy" className="text-gray-300 hover:text-white transition-colors duration-300">
-                      سياسة الاسترجاع والاستبدال
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/shipping" className="text-gray-300 hover:text-white transition-colors duration-300">
-                      سياسة الشحن
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/terms" className="text-gray-300 hover:text-white transition-colors duration-300">
-                      الشروط والأحكام
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-            </>
+            <div>
+              <h3 className="font-bold text-lg mb-4 text-gray-900">روابط سريعة</h3>
+              <ul className="space-y-3">
+                <li>
+                  <Link to="/" className="text-gray-600 hover:text-gray-900 transition-colors">
+                    الرئيسية
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/products" className="text-gray-600 hover:text-gray-900 transition-colors">
+                    المنتجات
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/about" className="text-gray-600 hover:text-gray-900 transition-colors">
+                    من نحن
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/contact" className="text-gray-600 hover:text-gray-900 transition-colors">
+                    اتصل بنا
+                  </Link>
+                </li>
+              </ul>
+            </div>
           )}
 
           {/* Contact Info */}
           <div className={isMobile ? 'text-center' : ''}>
-            <h3 className={`font-bold mb-4 text-white ${isMobile ? 'text-lg' : 'text-lg'}`}>معلومات التواصل</h3>
-            <div className={`space-y-3 ${isMobile ? '' : ''}`}>
+            <h3 className={`font-bold mb-4 text-gray-900 ${isMobile ? 'text-lg' : 'text-lg'}`}>معلومات التواصل</h3>
+            <div className="space-y-3">
               {storeSettings?.contact_phone && (
                 <div className={`flex items-center gap-3 ${isMobile ? 'justify-center text-sm' : ''}`}>
-                  <Phone className={`text-gray-300 ${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
-                  <span className="text-gray-300">{storeSettings.contact_phone}</span>
+                  <Phone className={`text-gray-600 ${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
+                  <span className="text-gray-600">{storeSettings.contact_phone}</span>
                 </div>
               )}
               {storeSettings?.contact_email && (
                 <div className={`flex items-center gap-3 ${isMobile ? 'justify-center text-sm' : ''}`}>
-                  <Mail className={`text-gray-300 ${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
-                  <span className="text-gray-300">{storeSettings.contact_email}</span>
+                  <Mail className={`text-gray-600 ${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
+                  <span className="text-gray-600">{storeSettings.contact_email}</span>
                 </div>
               )}
               {storeSettings?.address && (
                 <div className={`flex items-center gap-3 ${isMobile ? 'justify-center text-sm' : ''}`}>
-                  <MapPin className={`text-gray-300 ${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
-                  <span className="text-gray-300">{storeSettings.address}</span>
+                  <MapPin className={`text-gray-600 ${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
+                  <span className="text-gray-600">{storeSettings.address}</span>
                 </div>
               )}
             </div>
           </div>
         </div>
 
-        {/* Mobile Quick Links */}
-        {isMobile && (
-          <div className="mt-8 pt-6 border-t border-gray-600">
-            <div className="grid grid-cols-2 gap-4 text-center text-sm">
-              <Link to="/track" className="text-gray-300 hover:text-white transition-colors">
-                تتبع الطلب
-              </Link>
-              <Link to="/return-policy" className="text-gray-300 hover:text-white transition-colors">
-                سياسة الاسترجاع
-              </Link>
-              <Link to="/shipping" className="text-gray-300 hover:text-white transition-colors">
-                سياسة الشحن
-              </Link>
-              <Link to="/terms" className="text-gray-300 hover:text-white transition-colors">
-                الشروط والأحكام
-              </Link>
-            </div>
-          </div>
-        )}
-
-        <div className={`border-t border-gray-600 pt-6 mt-8 text-center text-gray-400 ${isMobile ? 'text-sm' : ''}`}>
+        <div className={`border-t border-gray-200 pt-6 mt-8 text-center text-gray-500 ${isMobile ? 'text-sm' : ''}`}>
           <p>&copy; 2024 {storeSettings?.store_name || 'متجري الإلكتروني'}. جميع الحقوق محفوظة.</p>
-          <p className="mt-2 text-xs">تم التطوير بواسطة فريق التطوير المحترف</p>
         </div>
       </div>
     </footer>
