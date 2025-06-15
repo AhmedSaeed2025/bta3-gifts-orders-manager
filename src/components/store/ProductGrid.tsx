@@ -11,6 +11,7 @@ interface Product {
   name: string;
   description?: string;
   featured: boolean;
+  category_id?: string;
   product_sizes: Array<{
     size: string;
     price: number;
