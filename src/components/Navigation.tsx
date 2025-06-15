@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-// فقط استخدم Store من أيقونات لوسيد
 import { Store } from 'lucide-react';
 
 const Navigation = () => {
@@ -49,36 +48,6 @@ const Navigation = () => {
             المتجر
           </Button>
         </Link>
-
-        {/* يظهر زر لوحة التحكم وبرنامج الحسابات للأدمن فقط */}
-        {user && userRole === 'admin' && (
-          <>
-            <Link to="/admin/dashboard">
-              <Button
-                variant={
-                  location.pathname.startsWith('/admin') ? 'default' : 'ghost'
-                }
-                size="sm"
-                className="rounded-full"
-              >
-                {/* استخدم text فقط دون ايقونات أخرى */}
-                لوحة التحكم
-              </Button>
-            </Link>
-
-            <Link to="/legacy-admin">
-              <Button
-                variant={
-                  location.pathname === '/legacy-admin' ? 'default' : 'ghost'
-                }
-                size="sm"
-                className="rounded-full"
-              >
-                برنامج الحسابات
-              </Button>
-            </Link>
-          </>
-        )}
 
         {/* لو لم يكن هناك مستخدم (غير مسجل دخول) */}
         {!user && (

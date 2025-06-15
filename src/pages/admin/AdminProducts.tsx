@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { Plus, Edit, Trash2, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, EyeOff, Loader2, Image, Video, Tag } from 'lucide-react';
 
 const AdminProducts = () => {
   const { user } = useAuth();
@@ -89,6 +90,9 @@ const AdminProducts = () => {
     category_id: '',
     featured: false,
     is_active: true,
+    image_url: '',
+    video_url: '',
+    discount_percentage: 0,
     sizes: [{ size: '', price: 0, cost: 0 }]
   });
 
@@ -154,7 +158,10 @@ const AdminProducts = () => {
             description: data.description,
             category_id: data.category_id || null,
             featured: data.featured,
-            is_active: data.is_active
+            is_active: data.is_active,
+            image_url: data.image_url,
+            video_url: data.video_url,
+            discount_percentage: data.discount_percentage
           })
           .eq('id', productId);
         
@@ -172,7 +179,10 @@ const AdminProducts = () => {
             description: data.description,
             category_id: data.category_id || null,
             featured: data.featured,
-            is_active: data.is_active
+            is_active: data.is_active,
+            image_url: data.image_url,
+            video_url: data.video_url,
+            discount_percentage: data.discount_percentage
           })
           .select()
           .single();
@@ -212,6 +222,9 @@ const AdminProducts = () => {
         category_id: '',
         featured: false,
         is_active: true,
+        image_url: '',
+        video_url: '',
+        discount_percentage: 0,
         sizes: [{ size: '', price: 0, cost: 0 }]
       });
       toast.success(editingProduct ? 'تم تحديث المنتج' : 'تم إضافة المنتج');
@@ -226,6 +239,9 @@ const AdminProducts = () => {
       category_id: product.category_id || '',
       featured: product.featured,
       is_active: product.is_active,
+      image_url: product.image_url || '',
+      video_url: product.video_url || '',
+      discount_percentage: product.discount_percentage || 0,
       sizes: product.product_sizes?.length > 0 
         ? product.product_sizes.map((s: any) => ({
             size: s.size,
@@ -301,11 +317,11 @@ const AdminProducts = () => {
                 إضافة منتج
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{editingProduct ? 'تعديل منتج' : 'إضافة منتج جديد'}</DialogTitle>
               </DialogHeader>
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>اسم المنتج</Label>
@@ -345,7 +361,32 @@ const AdminProducts = () => {
                   />
                 </div>
 
-                <div className="flex items-center justify-between">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <Image className="h-4 w-4" />
+                      رابط الصورة
+                    </Label>
+                    <Input
+                      value={productForm.image_url}
+                      onChange={(e) => setProductForm(prev => ({ ...prev, image_url: e.target.value }))}
+                      placeholder="https://example.com/image.jpg"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <Video className="h-4 w-4" />
+                      رابط الفيديو
+                    </Label>
+                    <Input
+                      value={productForm.video_url}
+                      onChange={(e) => setProductForm(prev => ({ ...prev, video_url: e.target.value }))}
+                      placeholder="https://youtube.com/watch?v=..."
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
                   <div className="flex items-center space-x-2">
                     <Switch
                       checked={productForm.featured}
@@ -358,11 +399,25 @@ const AdminProducts = () => {
                       checked={productForm.is_active}
                       onCheckedChange={(checked) => setProductForm(prev => ({ ...prev, is_active: checked }))}
                     />
-                    <Label>نشط على الموقع</Label>
+                    <Label>ظاهر في المتجر</Label>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <Tag className="h-4 w-4" />
+                      نسبة الخصم %
+                    </Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={productForm.discount_percentage}
+                      onChange={(e) => setProductForm(prev => ({ ...prev, discount_percentage: parseFloat(e.target.value) || 0 }))}
+                      placeholder="0"
+                    />
                   </div>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <Label>المقاسات والأسعار</Label>
                     <Button type="button" variant="outline" size="sm" onClick={handleAddSize}>
@@ -371,7 +426,7 @@ const AdminProducts = () => {
                   </div>
                   
                   {productForm.sizes.map((size, index) => (
-                    <div key={index} className="grid grid-cols-4 gap-2 items-end">
+                    <div key={index} className="grid grid-cols-5 gap-2 items-end">
                       <div className="space-y-1">
                         <Label className="text-xs">المقاس</Label>
                         <Input
@@ -389,11 +444,20 @@ const AdminProducts = () => {
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs">سعر البيع</Label>
+                        <Label className="text-xs">السعر الأصلي</Label>
                         <Input
                           type="number"
                           value={size.price}
                           onChange={(e) => handleSizeChange(index, 'price', parseFloat(e.target.value) || 0)}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">السعر بعد الخصم</Label>
+                        <Input
+                          type="number"
+                          value={size.price * (1 - productForm.discount_percentage / 100)}
+                          readOnly
+                          className="bg-gray-50"
                         />
                       </div>
                       <Button
@@ -465,13 +529,32 @@ const AdminProducts = () => {
             <div className="space-y-4">
               {products.map((product) => (
                 <div key={product.id} className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-start gap-4">
+                    {/* Product Image */}
+                    {product.image_url && (
+                      <div className="relative">
+                        <img 
+                          src={product.image_url} 
+                          alt={product.name}
+                          className="w-20 h-20 object-cover rounded"
+                        />
+                        {product.discount_percentage > 0 && (
+                          <Badge className="absolute -top-2 -right-2 bg-red-500">
+                            -{product.discount_percentage}%
+                          </Badge>
+                        )}
+                      </div>
+                    )}
+                    
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         <h3 className="font-semibold">{product.name}</h3>
                         {product.featured && <Badge variant="secondary">مميز</Badge>}
                         {product.categories && (
                           <Badge variant="outline">{product.categories.name}</Badge>
+                        )}
+                        {product.discount_percentage > 0 && (
+                          <Badge className="bg-red-500">خصم {product.discount_percentage}%</Badge>
                         )}
                       </div>
                       
@@ -480,14 +563,31 @@ const AdminProducts = () => {
                       )}
                       
                       {product.product_sizes?.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {product.product_sizes.map((size: any, index: number) => (
-                            <Badge key={index} variant="outline" className="text-xs">
-                              {size.size}: {size.price} ج.م
-                            </Badge>
-                          ))}
+                        <div className="flex flex-wrap gap-2 mb-2">
+                          {product.product_sizes.map((size: any, index: number) => {
+                            const discountedPrice = size.price * (1 - (product.discount_percentage || 0) / 100);
+                            return (
+                              <Badge key={index} variant="outline" className="text-xs">
+                                {size.size}: 
+                                {product.discount_percentage > 0 ? (
+                                  <>
+                                    <span className="line-through text-red-500 ml-1">{size.price}</span>
+                                    <span className="text-green-600 mr-1">{discountedPrice.toFixed(2)}</span>
+                                  </>
+                                ) : (
+                                  <span className="mr-1">{size.price}</span>
+                                )}
+                                ج.م
+                              </Badge>
+                            );
+                          })}
                         </div>
                       )}
+
+                      <div className="flex gap-2 text-xs text-muted-foreground">
+                        {product.image_url && <span>🖼️ صورة</span>}
+                        {product.video_url && <span>🎥 فيديو</span>}
+                      </div>
                     </div>
 
                     <div className="flex items-center gap-2">

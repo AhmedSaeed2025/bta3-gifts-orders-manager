@@ -1,12 +1,14 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Search, User, Heart, LogOut } from 'lucide-react';
+import { ShoppingCart, Search, User, Heart, LogOut, Store, Settings, Calculator } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,6 +25,22 @@ const StoreHeader = ({ storeSettings }: StoreHeaderProps) => {
   const { cartItems } = useCart();
   const { user, signOut } = useAuth();
   const cartItemsCount = cartItems?.length || 0;
+
+  // التأكد من إذا كان المستخدم أدمن
+  const { data: userRole } = useQuery({
+    queryKey: ['user-role', user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single();
+      if (error) return null;
+      return data?.role;
+    },
+    enabled: !!user,
+  });
 
   const handleSignOut = async () => {
     try {
@@ -100,11 +118,39 @@ const StoreHeader = ({ storeSettings }: StoreHeaderProps) => {
                     <User className="h-5 w-5" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuItem disabled>
                     مرحباً، {user.user_metadata?.full_name || user.email}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
+                  
+                  <Link to="/">
+                    <DropdownMenuItem>
+                      <Store className="h-4 w-4 mr-2" />
+                      المتجر
+                    </DropdownMenuItem>
+                  </Link>
+                  
+                  {/* يظهر للأدمن فقط */}
+                  {userRole === 'admin' && (
+                    <>
+                      <Link to="/admin/dashboard">
+                        <DropdownMenuItem>
+                          <Settings className="h-4 w-4 mr-2" />
+                          لوحة التحكم
+                        </DropdownMenuItem>
+                      </Link>
+                      
+                      <Link to="/legacy-admin">
+                        <DropdownMenuItem>
+                          <Calculator className="h-4 w-4 mr-2" />
+                          برنامج الحسابات
+                        </DropdownMenuItem>
+                      </Link>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
+                  
                   <DropdownMenuItem onClick={handleSignOut}>
                     <LogOut className="h-4 w-4 mr-2" />
                     تسجيل الخروج
