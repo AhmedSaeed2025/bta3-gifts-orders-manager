@@ -136,7 +136,7 @@ const StorePage = () => {
         </section>
         
         {/* Customer Reviews Section */}
-        <CustomerReviews />
+        <CustomerReviews storeSettings={storeSettings} />
         
         {/* Social Media Section */}
         <SocialMediaSection storeSettings={storeSettings} />
