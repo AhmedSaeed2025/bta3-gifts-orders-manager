@@ -6,8 +6,8 @@ import StoreHeader from '@/components/store/StoreHeader';
 import ProductGrid from '@/components/store/ProductGrid';
 import StoreFooter from '@/components/store/StoreFooter';
 import HeroSection from '@/components/store/HeroSection';
-import SocialMediaSection from '@/components/store/SocialMediaSection';
 import CustomerReviews from '@/components/store/CustomerReviews';
+import SocialMediaSection from '@/components/store/SocialMediaSection';
 import BackToTop from '@/components/store/BackToTop';
 import { Loader2, ShoppingBag } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -34,6 +34,9 @@ const StorePage = () => {
         secondary_color: '#059669',
         show_product_prices: true,
         show_product_sizes: true,
+        hero_banner_url: null,
+        customer_reviews_enabled: true,
+        show_back_to_top: true
       };
     }
   });
@@ -63,49 +66,33 @@ const StorePage = () => {
 
   if (storeLoading || productsLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/5">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-white">
         <div className="text-center">
-          <div className="relative">
-            <Loader2 className="h-16 w-16 animate-spin text-primary mx-auto mb-6" />
-            <div className="absolute inset-0 h-16 w-16 border-4 border-primary/20 rounded-full mx-auto animate-pulse"></div>
-          </div>
-          <p className="text-xl font-semibold text-gray-700 mb-2">جاري تحميل المتجر...</p>
-          <p className="text-gray-500">من فضلك انتظر قليلاً</p>
+          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-gray-600">جاري تحميل المتجر...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
       <StoreHeader storeSettings={storeSettings} />
       
-      <main className="relative">
+      <main>
         {/* Hero Section */}
         <HeroSection storeSettings={storeSettings} />
         
         {/* Products Section */}
-        <section className={`relative ${isMobile ? 'py-8 px-3' : 'py-16 px-4'}`}>
-          {/* Background Pattern */}
-          <div className="absolute inset-0 opacity-5">
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-secondary/10"></div>
-            <div className="absolute inset-0" style={{
-              backgroundImage: `radial-gradient(circle at 1px 1px, rgba(0,0,0,0.1) 1px, transparent 0)`,
-              backgroundSize: '20px 20px'
-            }}></div>
-          </div>
-          
-          <div className="container mx-auto relative z-10">
-            <div className="text-center mb-12">
-              <div className="inline-flex items-center justify-center p-2 bg-primary/10 rounded-full mb-4">
-                <ShoppingBag className="h-8 w-8 text-primary" />
-              </div>
-              <h2 className={`font-bold text-gray-900 mb-4 ${isMobile ? 'text-2xl' : 'text-4xl'}`}>
+        <section className={`${isMobile ? 'py-6 px-3' : 'py-12 px-4'}`}>
+          <div className="container mx-auto">
+            <div className="text-center mb-8 md:mb-12">
+              <h2 className={`font-bold text-gray-900 mb-4 ${isMobile ? 'text-xl' : 'text-3xl'}`}>
                 منتجاتنا المميزة
               </h2>
-              <div className="w-24 h-1 bg-gradient-to-r from-primary to-secondary mx-auto mb-4 rounded-full"></div>
-              <p className={`text-gray-600 max-w-2xl mx-auto ${isMobile ? 'text-base' : 'text-lg'}`}>
-                اكتشف مجموعتنا الحصرية من أفضل المنتجات بجودة عالية وأسعار تنافسية
+              <div className="w-24 h-1 bg-gradient-to-r from-primary to-secondary mx-auto mb-4"></div>
+              <p className={`text-gray-600 max-w-2xl mx-auto ${isMobile ? 'text-sm' : 'text-lg'}`}>
+                اختر من بين مجموعتنا الواسعة من المنتجات عالية الجودة
               </p>
             </div>
             
@@ -115,26 +102,25 @@ const StorePage = () => {
             />
 
             {products && products.length === 0 && !productsLoading && (
-              <div className="text-center py-20">
+              <div className="text-center py-16">
                 <div className="max-w-md mx-auto">
-                  <div className="relative mb-8">
-                    <div className="bg-gradient-to-br from-primary/10 to-secondary/10 rounded-full w-32 h-32 flex items-center justify-center mx-auto mb-6 relative overflow-hidden">
-                      <ShoppingBag className="h-16 w-16 text-primary/60" />
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12 animate-pulse"></div>
+                  <div className="mb-6">
+                    <div className="bg-gray-100 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-4">
+                      <ShoppingBag className="h-12 w-12 text-gray-400" />
                     </div>
                   </div>
-                  <h3 className={`font-bold text-gray-900 mb-4 ${isMobile ? 'text-xl' : 'text-2xl'}`}>
-                    قريباً.. منتجات رائعة في الطريق إليكم
+                  <h3 className={`font-semibold text-gray-900 mb-3 ${isMobile ? 'text-lg' : 'text-xl'}`}>
+                    لا توجد منتجات متاحة حالياً
                   </h3>
-                  <p className={`text-gray-600 leading-relaxed ${isMobile ? 'text-sm' : 'text-base'}`}>
-                    نحن نعمل بجد لإضافة أفضل المنتجات لمتجرنا. تابعونا على وسائل التواصل الاجتماعي لمعرفة آخر التحديثات والعروض الحصرية
+                  <p className={`text-gray-600 ${isMobile ? 'text-sm' : 'text-base'}`}>
+                    سيتم إضافة منتجات جديدة قريباً. تابعونا لمعرفة آخر التحديثات
                   </p>
                 </div>
               </div>
             )}
           </div>
         </section>
-        
+
         {/* Customer Reviews Section */}
         <CustomerReviews storeSettings={storeSettings} />
         
@@ -143,7 +129,9 @@ const StorePage = () => {
       </main>
       
       <StoreFooter storeSettings={storeSettings} />
-      <BackToTop />
+      
+      {/* Back to Top Button */}
+      {storeSettings?.show_back_to_top && <BackToTop />}
     </div>
   );
 };

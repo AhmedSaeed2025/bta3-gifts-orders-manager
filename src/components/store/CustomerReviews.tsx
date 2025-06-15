@@ -48,7 +48,7 @@ const CustomerReviews = ({ storeSettings }: CustomerReviewsProps) => {
         </div>
 
         <div className="relative overflow-hidden">
-          <div className="flex animate-scroll-horizontal space-x-reverse space-x-6 rtl:space-x-reverse">
+          <div className="flex animate-scroll-horizontal space-x-6">
             {[...reviews, ...reviews].map((review, index) => (
               <div
                 key={`${review.id}-${index}`}
@@ -56,22 +56,16 @@ const CustomerReviews = ({ storeSettings }: CustomerReviewsProps) => {
                   isMobile ? 'w-72' : 'w-80'
                 }`}
               >
-                <div className="flex items-center mb-4 rtl:space-x-reverse">
-                  <div className="relative w-12 h-12 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 ml-4">
-                    <img
-                      src={review.image_url}
-                      alt={review.customer_name || 'عميل مجهول'}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(review.customer_name || 'عميل')}&background=10B981&color=fff&size=48`;
-                      }}
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900 text-right">{review.customer_name || 'عميل مجهول'}</h4>
-                    <div className="flex items-center justify-end">
+                <div className="flex items-center mb-4">
+                  <img
+                    src={review.image_url}
+                    alt={review.customer_name || 'عميل مجهول'}
+                    className="w-12 h-12 rounded-full object-cover mr-4"
+                    loading="lazy"
+                  />
+                  <div>
+                    <h4 className="font-semibold text-gray-900">{review.customer_name || 'عميل مجهول'}</h4>
+                    <div className="flex items-center">
                       {Array.from({ length: review.rating || 5 }).map((_, i) => (
                         <Star key={i} className="w-4 h-4 text-yellow-400 fill-current" />
                       ))}
@@ -79,7 +73,7 @@ const CustomerReviews = ({ storeSettings }: CustomerReviewsProps) => {
                   </div>
                 </div>
                 {review.review_text && (
-                  <p className="text-gray-600 text-sm leading-relaxed text-right">
+                  <p className="text-gray-600 text-sm leading-relaxed">
                     "{review.review_text}"
                   </p>
                 )}
