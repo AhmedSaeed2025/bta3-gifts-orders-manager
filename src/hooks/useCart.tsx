@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -38,17 +37,22 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   // Load cart items
   const loadCartItems = async () => {
+    console.log('Loading cart items...');
+    
     if (!user) {
       // Handle guest cart from localStorage
       const guestCart = localStorage.getItem('guest_cart');
       if (guestCart) {
-        setCartItems(JSON.parse(guestCart));
+        const items = JSON.parse(guestCart);
+        console.log('Loaded guest cart items:', items);
+        setCartItems(items);
       }
       return;
     }
 
     try {
       setLoading(true);
+      console.log('Loading cart for user:', user.id);
       
       // Get user's cart
       let { data: cart } = await supabase
@@ -59,16 +63,23 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
       if (!cart) {
         // Create cart if doesn't exist
-        const { data: newCart } = await supabase
+        console.log('Creating new cart for user');
+        const { data: newCart, error: createError } = await supabase
           .from('carts')
           .insert({ user_id: user.id })
           .select('id')
           .single();
+        
+        if (createError) {
+          console.error('Error creating cart:', createError);
+          return;
+        }
         cart = newCart;
       }
 
       if (cart) {
-        const { data: items } = await supabase
+        console.log('Loading cart items for cart:', cart.id);
+        const { data: items, error } = await supabase
           .from('cart_items')
           .select(`
             *,
@@ -79,6 +90,12 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           `)
           .eq('cart_id', cart.id);
 
+        if (error) {
+          console.error('Error loading cart items:', error);
+          return;
+        }
+
+        console.log('Loaded cart items:', items);
         setCartItems(items || []);
       }
     } catch (error) {
@@ -95,16 +112,17 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const addToCart = async (productId: string, size: string, quantity: number, price: number) => {
     try {
       setLoading(true);
+      console.log('Adding to cart:', { productId, size, quantity, price });
 
       if (!user) {
         // Handle guest cart
         const guestCart = JSON.parse(localStorage.getItem('guest_cart') || '[]');
-        const existingItem = guestCart.find((item: any) => 
+        const existingItemIndex = guestCart.findIndex((item: any) => 
           item.product_id === productId && item.size === size
         );
 
-        if (existingItem) {
-          existingItem.quantity += quantity;
+        if (existingItemIndex > -1) {
+          guestCart[existingItemIndex].quantity += quantity;
         } else {
           guestCart.push({
             id: Date.now().toString(),
@@ -117,7 +135,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
         localStorage.setItem('guest_cart', JSON.stringify(guestCart));
         setCartItems(guestCart);
-        toast.success('تم إضافة المنتج للسلة');
+        console.log('Added to guest cart:', guestCart);
         return;
       }
 
@@ -129,15 +147,22 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         .single();
 
       if (!cart) {
-        const { data: newCart } = await supabase
+        const { data: newCart, error: createError } = await supabase
           .from('carts')
           .insert({ user_id: user.id })
           .select('id')
           .single();
+        
+        if (createError) {
+          console.error('Error creating cart:', createError);
+          throw createError;
+        }
         cart = newCart;
       }
 
-      if (!cart) return;
+      if (!cart) {
+        throw new Error('Unable to create or get cart');
+      }
 
       // Check if item already exists
       const { data: existingItem } = await supabase
@@ -150,13 +175,18 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
       if (existingItem) {
         // Update quantity
-        await supabase
+        const { error: updateError } = await supabase
           .from('cart_items')
           .update({ quantity: existingItem.quantity + quantity })
           .eq('id', existingItem.id);
+
+        if (updateError) {
+          console.error('Error updating cart item:', updateError);
+          throw updateError;
+        }
       } else {
         // Add new item
-        await supabase
+        const { error: insertError } = await supabase
           .from('cart_items')
           .insert({
             cart_id: cart.id,
@@ -165,13 +195,18 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             quantity,
             price
           });
+
+        if (insertError) {
+          console.error('Error inserting cart item:', insertError);
+          throw insertError;
+        }
       }
 
       await loadCartItems();
-      toast.success('تم إضافة المنتج للسلة');
+      console.log('Successfully added to cart');
     } catch (error) {
       console.error('Error adding to cart:', error);
-      toast.error('حدث خطأ في إضافة المنتج');
+      throw error;
     } finally {
       setLoading(false);
     }

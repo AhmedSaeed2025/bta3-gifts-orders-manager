@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { useCart } from '@/hooks/useCart';
 import { Loader2, ArrowLeft, Heart, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
+import ProductImageGallery from '@/components/product/ProductImageGallery';
 
 const ProductPage = () => {
   const { id } = useParams();
@@ -64,9 +65,6 @@ const ProductPage = () => {
     );
   }
 
-  const primaryImage = product.product_images?.find(img => img.is_primary);
-  const mainImage = primaryImage?.image_url || product.product_images?.[0]?.image_url;
-
   const selectedSizeData = product.product_sizes?.find(size => size.size === selectedSize);
 
   const handleAddToCart = async () => {
@@ -80,7 +78,13 @@ const ProductPage = () => {
       return;
     }
 
-    await addToCart(product.id, selectedSize, quantity, selectedSizeData.price);
+    try {
+      await addToCart(product.id, selectedSize, quantity, selectedSizeData.price);
+      toast.success('تم إضافة المنتج إلى السلة بنجاح');
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      toast.error('حدث خطأ في إضافة المنتج للسلة');
+    }
   };
 
   return (
@@ -102,35 +106,12 @@ const ProductPage = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Product Images */}
-          <div className="space-y-4">
-            <div className="aspect-square bg-muted rounded-lg overflow-hidden">
-              {mainImage ? (
-                <img
-                  src={mainImage}
-                  alt={product.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <span className="text-muted-foreground">لا توجد صورة</span>
-                </div>
-              )}
-            </div>
-            
-            {/* Thumbnail Images */}
-            {product.product_images && product.product_images.length > 1 && (
-              <div className="grid grid-cols-4 gap-2">
-                {product.product_images.map((image, index) => (
-                  <div key={index} className="aspect-square bg-muted rounded-md overflow-hidden">
-                    <img
-                      src={image.image_url}
-                      alt={image.alt_text || `${product.name} ${index + 1}`}
-                      className="w-full h-full object-cover cursor-pointer hover:opacity-80"
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
+          <div>
+            <ProductImageGallery
+              images={product.product_images || []}
+              videoUrl={product.video_url}
+              productName={product.name}
+            />
           </div>
 
           {/* Product Details */}

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { useForm } from 'react-hook-form';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CheckoutForm {
   fullName: string;
@@ -59,12 +59,65 @@ const CheckoutPage = () => {
   const onSubmit = async (data: CheckoutForm) => {
     setSubmitting(true);
     try {
-      // هنا سيتم إضافة منطق إنشاء الطلب في المستقبل
-      console.log('Order data:', { ...data, cartItems, total });
-      
-      // مؤقتاً نظهر رسالة نجاح ونمسح السلة
-      toast.success('تم إرسال طلبك بنجاح! سنتواصل معك قريباً');
+      console.log('Creating order with data:', { ...data, cartItems, total });
+
+      // Create the order in database
+      const orderData = {
+        user_id: user?.id || null,
+        client_name: data.fullName,
+        phone: data.phone,
+        address: data.address,
+        governorate: data.governorate,
+        payment_method: 'نقدي عند الاستلام',
+        delivery_method: 'شحن للمنزل',
+        shipping_cost: 30,
+        discount: 0,
+        deposit: 0,
+        total: total + 30, // Add shipping cost
+        profit: 0, // Will be calculated based on product costs
+        status: 'pending'
+      };
+
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert(orderData)
+        .select()
+        .single();
+
+      if (orderError) {
+        console.error('Error creating order:', orderError);
+        throw orderError;
+      }
+
+      console.log('Order created successfully:', order);
+
+      // Create order items
+      const orderItems = cartItems.map(item => ({
+        order_id: order.id,
+        product_type: item.product?.name || 'منتج',
+        size: item.size,
+        quantity: item.quantity,
+        price: item.price,
+        cost: 0, // Default cost, should be updated from product data
+        profit: item.price, // Simplified profit calculation
+        item_discount: 0
+      }));
+
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItems);
+
+      if (itemsError) {
+        console.error('Error creating order items:', itemsError);
+        throw itemsError;
+      }
+
+      console.log('Order items created successfully');
+
+      // Clear the cart
       await clearCart();
+      
+      toast.success(`تم إنشاء طلبك بنجاح! رقم الطلب: ${order.serial}`);
       navigate('/');
     } catch (error) {
       console.error('Error submitting order:', error);
@@ -74,7 +127,7 @@ const CheckoutPage = () => {
     }
   };
 
-  const shippingCost = 30; // رسوم شحن ثابتة مؤقتاً
+  const shippingCost = 30; // رسوم شحن ثابتة
   const finalTotal = total + shippingCost;
 
   return (
