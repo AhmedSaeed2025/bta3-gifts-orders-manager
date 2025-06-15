@@ -84,6 +84,25 @@ const AdminSettings = () => {
     shipping_cost: 0
   });
 
+  const { data: storeSettings, isLoading } = useQuery({
+    queryKey: ['store-settings-admin'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('store_settings')
+        .select('*')
+        .eq('user_id', user!.id)
+        .eq('is_active', true)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        throw error;
+      }
+
+      return data;
+    },
+    enabled: !!user
+  });
+
   // Fetch products for shipping rate configuration
   const { data: products } = useQuery({
     queryKey: ['products-for-shipping'],
