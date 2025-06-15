@@ -110,6 +110,21 @@ const StoreFooter = ({ storeSettings }: StoreFooterProps) => {
                     </div>
                   </a>
                 )}
+
+                {/* WhatsApp Chat */}
+                {storeSettings?.whatsapp_chat_url && (
+                  <a
+                    href={storeSettings.whatsapp_chat_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:scale-110 transition-all duration-300 bg-white/10 hover:bg-white/20 p-3 rounded-full"
+                    aria-label="واتساب للتواصل"
+                  >
+                    <div className={`bg-green-600 rounded flex items-center justify-center ${isMobile ? 'h-5 w-5' : 'h-6 w-6'}`}>
+                      <span className={`text-white font-bold ${isMobile ? 'text-xs' : 'text-sm'}`}>WA</span>
+                    </div>
+                  </a>
+                )}
               </div>
             )}
           </div>

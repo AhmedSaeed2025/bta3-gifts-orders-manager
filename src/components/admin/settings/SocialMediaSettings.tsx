@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Facebook, Instagram, Twitter, Youtube, Linkedin, MessageCircle, Send } from 'lucide-react';
+import { Facebook, Instagram, Twitter, Youtube, Linkedin, MessageCircle, Send, Phone } from 'lucide-react';
 
 interface SocialMediaSettingsProps {
   formData: any;
@@ -117,6 +117,19 @@ const SocialMediaSettings = ({ formData, onInputChange }: SocialMediaSettingsPro
                 value={formData.snapchat_url || ''}
                 onChange={(e) => onInputChange('snapchat_url', e.target.value)}
                 placeholder="https://snapchat.com/add/yourpage"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="whatsapp_chat_url" className="flex items-center gap-2">
+                <Phone className="h-4 w-4 text-green-600" />
+                رابط الواتساب للتواصل المباشر
+              </Label>
+              <Input
+                id="whatsapp_chat_url"
+                value={formData.whatsapp_chat_url || ''}
+                onChange={(e) => onInputChange('whatsapp_chat_url', e.target.value)}
+                placeholder="https://wa.me/201234567890"
               />
             </div>
 

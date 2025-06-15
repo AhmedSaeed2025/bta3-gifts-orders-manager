@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -81,6 +80,7 @@ export interface AdminSettingsFormData {
   tiktok_url: string;
   snapchat_url: string;
   whatsapp_catalog_url: string;
+  whatsapp_chat_url: string;
   telegram_url: string;
 }
 
@@ -160,6 +160,7 @@ const defaultFormData: AdminSettingsFormData = {
   tiktok_url: '',
   snapchat_url: '',
   whatsapp_catalog_url: '',
+  whatsapp_chat_url: '',
   telegram_url: ''
 };
 
@@ -212,8 +213,6 @@ export const useAdminSettings = () => {
         show_product_sizes: storeSettings.show_product_sizes !== false,
         show_out_of_stock: storeSettings.show_out_of_stock || false,
         enable_dark_mode: storeSettings.enable_dark_mode !== false,
-        
-        // Banner fields
         enable_banners: storeSettings.enable_banners !== false,
         hero_banner_link: storeSettings.hero_banner_link || '',
         promo_banner_1_url: storeSettings.promo_banner_1_url || '',
@@ -226,7 +225,6 @@ export const useAdminSettings = () => {
         side_banner_2_link: storeSettings.side_banner_2_link || '',
         footer_banner_url: storeSettings.footer_banner_url || '',
         footer_banner_link: storeSettings.footer_banner_link || '',
-        
         free_shipping_enabled: storeSettings.free_shipping_enabled || false,
         default_shipping_cost: storeSettings.default_shipping_cost?.toString() || '0',
         free_shipping_threshold: storeSettings.free_shipping_threshold?.toString() || '',
@@ -258,6 +256,7 @@ export const useAdminSettings = () => {
         tiktok_url: (storeSettings as any).tiktok_url || '',
         snapchat_url: (storeSettings as any).snapchat_url || '',
         whatsapp_catalog_url: (storeSettings as any).whatsapp_catalog_url || '',
+        whatsapp_chat_url: (storeSettings as any).whatsapp_chat_url || '',
         telegram_url: (storeSettings as any).telegram_url || ''
       });
     }
