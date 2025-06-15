@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -284,34 +285,41 @@ export const useAdminSettings = () => {
 
   const updateSettingsMutation = useMutation({
     mutationFn: async (data: AdminSettingsFormData) => {
-      // Convert string values to numbers where needed
-      const processedData = {
-        ...data,
-        default_shipping_cost: data.default_shipping_cost ? parseFloat(data.default_shipping_cost) : 0,
-        free_shipping_threshold: data.free_shipping_threshold ? parseFloat(data.free_shipping_threshold) : null,
-      };
+      try {
+        // Convert string values to numbers where needed, with proper validation
+        const processedData = {
+          ...data,
+          default_shipping_cost: data.default_shipping_cost ? 
+            (isNaN(parseFloat(data.default_shipping_cost)) ? 0 : parseFloat(data.default_shipping_cost)) : 0,
+          free_shipping_threshold: data.free_shipping_threshold ? 
+            (isNaN(parseFloat(data.free_shipping_threshold)) ? null : parseFloat(data.free_shipping_threshold)) : null,
+        };
 
-      if (storeSettings) {
-        // Update existing settings
-        const { error } = await supabase
-          .from('store_settings')
-          .update({
-            ...processedData,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', storeSettings.id);
+        if (storeSettings) {
+          // Update existing settings
+          const { error } = await supabase
+            .from('store_settings')
+            .update({
+              ...processedData,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', storeSettings.id);
 
-        if (error) throw error;
-      } else {
-        // Create new settings
-        const { error } = await supabase
-          .from('store_settings')
-          .insert({
-            user_id: user!.id,
-            ...processedData
-          });
+          if (error) throw error;
+        } else {
+          // Create new settings
+          const { error } = await supabase
+            .from('store_settings')
+            .insert({
+              user_id: user!.id,
+              ...processedData
+            });
 
-        if (error) throw error;
+          if (error) throw error;
+        }
+      } catch (error) {
+        console.error('Error saving settings:', error);
+        throw error;
       }
     },
     onSuccess: () => {
@@ -335,8 +343,10 @@ export const useAdminSettings = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
     updateSettingsMutation.mutate(formData);
   };
 

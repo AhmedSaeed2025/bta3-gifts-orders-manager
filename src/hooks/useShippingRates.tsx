@@ -32,6 +32,7 @@ export const useShippingRates = () => {
         }
       } catch (error) {
         console.error('Error loading shipping rates:', error);
+        toast.error('حدث خطأ في تحميل أسعار الشحن');
       }
     }
   }, [user]);
@@ -43,52 +44,87 @@ export const useShippingRates = () => {
         localStorage.setItem(`shipping_rates_${user.id}`, JSON.stringify(shippingRates));
       } catch (error) {
         console.error('Error saving shipping rates:', error);
+        toast.error('حدث خطأ في حفظ أسعار الشحن');
       }
     }
   }, [shippingRates, user]);
 
   const addShippingRate = () => {
-    if (!newShippingRate.product_type || !newShippingRate.product_size || !newShippingRate.governorate) {
-      toast.error('يرجى ملء جميع الحقول المطلوبة');
-      return;
+    try {
+      if (!newShippingRate.product_type || !newShippingRate.product_size || !newShippingRate.governorate) {
+        toast.error('يرجى ملء جميع الحقول المطلوبة');
+        return;
+      }
+
+      // Validate shipping cost
+      const cost = Number(newShippingRate.shipping_cost);
+      if (isNaN(cost) || cost < 0) {
+        toast.error('يرجى إدخال تكلفة شحن صحيحة');
+        return;
+      }
+
+      // Check for duplicates
+      const exists = shippingRates.some(rate => 
+        rate.product_type === newShippingRate.product_type &&
+        rate.product_size === newShippingRate.product_size &&
+        rate.governorate === newShippingRate.governorate
+      );
+
+      if (exists) {
+        toast.error('هذه التكلفة موجودة بالفعل للمنتج والمقاس والمحافظة المحددة');
+        return;
+      }
+
+      const rateWithId = { 
+        ...newShippingRate, 
+        id: Date.now().toString(),
+        shipping_cost: cost
+      };
+
+      setShippingRates(prev => [...prev, rateWithId]);
+      setNewShippingRate({
+        product_type: '',
+        product_size: '',
+        governorate: '',
+        shipping_cost: 0
+      });
+      toast.success('تم إضافة تكلفة الشحن بنجاح');
+    } catch (error) {
+      console.error('Error adding shipping rate:', error);
+      toast.error('حدث خطأ في إضافة تكلفة الشحن');
     }
-
-    // Check for duplicates
-    const exists = shippingRates.some(rate => 
-      rate.product_type === newShippingRate.product_type &&
-      rate.product_size === newShippingRate.product_size &&
-      rate.governorate === newShippingRate.governorate
-    );
-
-    if (exists) {
-      toast.error('هذه التكلفة موجودة بالفعل للمنتج والمقاس والمحافظة المحددة');
-      return;
-    }
-
-    const rateWithId = { 
-      ...newShippingRate, 
-      id: Date.now().toString(),
-      shipping_cost: Number(newShippingRate.shipping_cost) 
-    };
-
-    setShippingRates(prev => [...prev, rateWithId]);
-    setNewShippingRate({
-      product_type: '',
-      product_size: '',
-      governorate: '',
-      shipping_cost: 0
-    });
-    toast.success('تم إضافة تكلفة الشحن بنجاح');
   };
 
   const removeShippingRate = (index: number) => {
-    setShippingRates(prev => prev.filter((_, i) => i !== index));
-    toast.success('تم حذف تكلفة الشحن بنجاح');
+    try {
+      setShippingRates(prev => prev.filter((_, i) => i !== index));
+      toast.success('تم حذف تكلفة الشحن بنجاح');
+    } catch (error) {
+      console.error('Error removing shipping rate:', error);
+      toast.error('حدث خطأ في حذف تكلفة الشحن');
+    }
   };
 
   const updateShippingRate = (index: number, updatedRate: ShippingRate) => {
-    setShippingRates(prev => prev.map((rate, i) => i === index ? updatedRate : rate));
-    toast.success('تم تحديث تكلفة الشحن بنجاح');
+    try {
+      // Validate shipping cost
+      const cost = Number(updatedRate.shipping_cost);
+      if (isNaN(cost) || cost < 0) {
+        toast.error('يرجى إدخال تكلفة شحن صحيحة');
+        return;
+      }
+
+      const finalRate = {
+        ...updatedRate,
+        shipping_cost: cost
+      };
+
+      setShippingRates(prev => prev.map((rate, i) => i === index ? finalRate : rate));
+      toast.success('تم تحديث تكلفة الشحن بنجاح');
+    } catch (error) {
+      console.error('Error updating shipping rate:', error);
+      toast.error('حدث خطأ في تحديث تكلفة الشحن');
+    }
   };
 
   return {
