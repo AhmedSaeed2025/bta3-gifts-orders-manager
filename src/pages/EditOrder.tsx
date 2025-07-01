@@ -13,7 +13,7 @@ import { toast } from "sonner";
 
 const EditOrder = () => {
   const { serial } = useParams<{ serial: string }>();
-  const { orders, loading } = useSupabaseOrders();
+  const { orders, loading, getOrderBySerial } = useSupabaseOrders();
   const navigate = useNavigate();
   const [order, setOrder] = useState<Order | undefined>();
   const [orderNotFound, setOrderNotFound] = useState(false);
@@ -25,11 +25,12 @@ const EditOrder = () => {
       return;
     }
 
-    if (!loading && orders.length > 0) {
+    if (!loading) {
       console.log("EditOrder: Looking for order with serial:", serial);
       console.log("EditOrder: Available orders:", orders.map(o => o.serial));
       
-      const foundOrder = orders.find(o => o.serial === serial);
+      // Use the context method to get order by serial
+      const foundOrder = getOrderBySerial(serial);
       console.log("EditOrder: Found order:", foundOrder);
       
       if (foundOrder) {
@@ -41,7 +42,7 @@ const EditOrder = () => {
         toast.error(`الطلب رقم ${serial} غير موجود`);
       }
     }
-  }, [serial, orders, loading, navigate]);
+  }, [serial, orders, loading, navigate, getOrderBySerial]);
   
   useEffect(() => {
     if (orderNotFound && !loading) {

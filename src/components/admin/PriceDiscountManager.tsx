@@ -32,7 +32,7 @@ const PriceDiscountManager = () => {
 
   const handlePriceChange = (field: string, value: number) => {
     if (field === 'originalPrice') {
-      const discountAmount = priceData.discountedPrice > 0 ? priceData.originalPrice - priceData.discountedPrice : 0;
+      const discountAmount = priceData.discountedPrice > 0 ? value - priceData.discountedPrice : 0;
       const discountPercentage = value > 0 ? (discountAmount / value) * 100 : 0;
       setPriceData(prev => ({
         ...prev,
@@ -65,21 +65,29 @@ const PriceDiscountManager = () => {
       const product = products.find(p => p.id === editingProduct);
       if (!product) return;
 
+      // Update the specific size price
       const updatedSizes = product.sizes.map(size => {
         if (size.size === editingSize) {
           return {
             ...size,
-            price: priceData.discountedPrice > 0 ? priceData.discountedPrice : priceData.originalPrice
+            price: priceData.discountedPrice > 0 && priceData.discountPercentage > 0 
+              ? priceData.discountedPrice 
+              : priceData.originalPrice
           };
         }
         return size;
       });
 
-      await updateProduct(editingProduct, {
+      // Create updated product with new sizes and discount percentage
+      const updatedProduct = {
         ...product,
         sizes: updatedSizes,
-        discount_percentage: priceData.discountPercentage
-      });
+        discount_percentage: priceData.discountPercentage > 0 ? priceData.discountPercentage : undefined
+      };
+
+      console.log('Updating product with:', updatedProduct);
+
+      await updateProduct(editingProduct, updatedProduct);
 
       toast.success('تم تحديث السعر بنجاح');
       setEditingProduct(null);

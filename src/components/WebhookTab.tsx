@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -42,15 +41,21 @@ const WebhookTab = () => {
     if (user) {
       loadWebhookConfig();
       loadWebhookLogs();
+    } else {
+      setLoading(false);
     }
   }, [user]);
 
   const loadWebhookConfig = async () => {
+    if (!user) return;
+    
     try {
+      console.log('Loading webhook config for user:', user.id);
+      
       const { data, error } = await supabase
         .from('webhook_configs')
         .select('*')
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .single();
 
       if (error && error.code !== 'PGRST116') {
@@ -58,20 +63,23 @@ const WebhookTab = () => {
         return;
       }
 
+      console.log('Loaded webhook config:', data);
       setWebhookConfig(data);
     } catch (error) {
       console.error('Error loading webhook config:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
   const loadWebhookLogs = async () => {
+    if (!user) return;
+    
     try {
+      console.log('Loading webhook logs for user:', user.id);
+      
       const { data, error } = await supabase
         .from('webhook_logs')
         .select('id, order_serial, response_status, response_message, created_at')
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(10);
 
@@ -80,9 +88,12 @@ const WebhookTab = () => {
         return;
       }
 
+      console.log('Loaded webhook logs:', data);
       setLogs(data || []);
     } catch (error) {
       console.error('Error loading webhook logs:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -176,6 +187,14 @@ const WebhookTab = () => {
     return (
       <div className="flex justify-center items-center p-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gift-primary"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="text-center p-8">
+        <p className="text-gray-600">يجب تسجيل الدخول لاستخدام هذه الميزة</p>
       </div>
     );
   }
@@ -290,12 +309,12 @@ const WebhookTab = () => {
                 <pre className={`${isMobile ? 'text-xs' : 'text-sm'} overflow-x-auto`}>
 {`{
   "webhook_key": "${webhookConfig.webhook_key}",
-  "paymentMethod": "cash", // cash, installment, bank_transfer
+  "paymentMethod": "cash",
   "clientName": "اسم العميل",
   "phone": "01xxxxxxxxx",
-  "deliveryMethod": "delivery", // delivery, pickup
-  "address": "عنوان التسليم (اختياري)",
-  "governorate": "المحافظة (اختياري)",
+  "deliveryMethod": "delivery",
+  "address": "عنوان التسليم",
+  "governorate": "المحافظة",
   "shippingCost": 50,
   "deposit": 100,
   "items": [
