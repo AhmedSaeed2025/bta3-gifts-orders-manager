@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -33,7 +32,14 @@ const ProductPage = () => {
         console.error('Error fetching store settings:', error);
       }
       
-      return data || { show_product_prices: true, show_product_sizes: true };
+      return data || { 
+        show_product_prices: true, 
+        show_product_sizes: true,
+        primary_color: '#10B981',
+        secondary_color: '#059669',
+        accent_color: '#F59E0B',
+        text_color: '#1F2937'
+      };
     }
   });
 
