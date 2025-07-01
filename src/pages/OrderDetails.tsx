@@ -10,17 +10,23 @@ import UserProfile from "@/components/UserProfile";
 import { ArrowRight } from "lucide-react";
 
 const OrderDetails = () => {
-  const { serial } = useParams<{ serial: string }>();
+  const { serial, id } = useParams<{ serial?: string; id?: string }>();
   const { getOrderBySerial, loading } = useSupabaseOrders();
   const navigate = useNavigate();
   
-  const order = serial ? getOrderBySerial(serial) : undefined;
+  // Use either serial or id parameter
+  const orderSerial = serial || id;
+  const order = orderSerial ? getOrderBySerial(orderSerial) : undefined;
+  
+  console.log("OrderDetails: params", { serial, id, orderSerial });
+  console.log("OrderDetails: found order", order);
   
   useEffect(() => {
-    if (!loading && !order) {
+    if (!loading && !order && orderSerial) {
+      console.log("OrderDetails: Order not found, redirecting to home");
       navigate("/");
     }
-  }, [order, navigate, loading]);
+  }, [order, navigate, loading, orderSerial]);
   
   if (loading) {
     return (
@@ -38,6 +44,9 @@ const OrderDetails = () => {
       <div className="min-h-screen bg-gift-accent dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center p-8">
           <h2 className="text-xl font-bold mb-4">الطلب غير موجود</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            الطلب رقم {orderSerial} غير موجود أو تم حذفه
+          </p>
           <Button onClick={() => navigate("/")} variant="outline">العودة للرئيسية</Button>
         </div>
       </div>
