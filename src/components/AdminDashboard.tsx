@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,7 +29,7 @@ const AdminDashboard = () => {
     const totalOrders = orders.length;
     const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
     const pendingOrders = orders.filter(order => order.status === 'pending').length;
-    const completedOrders = orders.filter(order => order.status === 'completed').length;
+    const completedOrders = orders.filter(order => order.status === 'delivered').length;
 
     return {
       totalOrders,
@@ -112,7 +111,7 @@ const AdminDashboard = () => {
 
       {/* Main Dashboard Tabs */}
       <Tabs defaultValue="orders" className="space-y-4">
-        <TabsList className={`grid w-full ${isMobile ? 'grid-cols-3' : 'grid-cols-5'} ${isMobile ? 'h-auto' : ''}`}>
+        <TabsList className={`grid w-full ${isMobile ? 'grid-cols-3' : 'grid-cols-4'} ${isMobile ? 'h-auto' : ''}`}>
           <TabsTrigger value="orders" className={`flex items-center gap-2 ${isMobile ? 'flex-col p-2 text-xs' : ''}`}>
             <ShoppingBag className={isMobile ? "h-4 w-4" : "h-4 w-4"} />
             <span>الطلبات</span>
@@ -126,16 +125,10 @@ const AdminDashboard = () => {
             <span>الحسابات</span>
           </TabsTrigger>
           {!isMobile && (
-            <>
-              <TabsTrigger value="customers" className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                <span>العملاء</span>
-              </TabsTrigger>
-              <TabsTrigger value="settings" className="flex items-center gap-2">
-                <Settings className="h-4 w-4" />
-                <span>الإعدادات</span>
-              </TabsTrigger>
-            </>
+            <TabsTrigger value="customers" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              <span>العملاء</span>
+            </TabsTrigger>
           )}
         </TabsList>
 
@@ -153,10 +146,6 @@ const AdminDashboard = () => {
 
         <TabsContent value="customers">
           <CustomersTab />
-        </TabsContent>
-
-        <TabsContent value="settings">
-          <SettingsTab />
         </TabsContent>
       </Tabs>
     </div>
