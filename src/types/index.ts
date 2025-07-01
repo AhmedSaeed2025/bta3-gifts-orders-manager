@@ -1,4 +1,3 @@
-
 export interface OrderItem {
   productType: string;
   size: string;
@@ -82,6 +81,7 @@ export interface Product {
   id: string;
   name: string;
   sizes: ProductSize[];
+  discount_percentage?: number;
 }
 
 export interface ProductSize {

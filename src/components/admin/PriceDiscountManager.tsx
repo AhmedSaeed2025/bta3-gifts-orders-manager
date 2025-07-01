@@ -20,9 +20,9 @@ const PriceDiscountManager = () => {
     discountPercentage: 0
   });
 
-  const handleEditPrice = (productId: string, sizeId: string, currentPrice: number) => {
+  const handleEditPrice = (productId: string, size: string, currentPrice: number) => {
     setEditingProduct(productId);
-    setEditingSize(sizeId);
+    setEditingSize(size);
     setPriceData({
       originalPrice: currentPrice,
       discountedPrice: currentPrice,
@@ -66,7 +66,7 @@ const PriceDiscountManager = () => {
       if (!product) return;
 
       const updatedSizes = product.sizes.map(size => {
-        if (size.id === editingSize) {
+        if (size.size === editingSize) {
           return {
             ...size,
             price: priceData.discountedPrice > 0 ? priceData.discountedPrice : priceData.originalPrice
@@ -111,7 +111,7 @@ const PriceDiscountManager = () => {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <h3 className="font-semibold">{product.name}</h3>
-                    {product.discount_percentage > 0 && (
+                    {product.discount_percentage && product.discount_percentage > 0 && (
                       <Badge variant="secondary" className="bg-red-100 text-red-800">
                         <Percent className="h-3 w-3 mr-1" />
                         خصم {product.discount_percentage}%
@@ -120,8 +120,8 @@ const PriceDiscountManager = () => {
                   </div>
                   
                   <div className="grid gap-3">
-                    {product.sizes.map(size => (
-                      <div key={size.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    {product.sizes.map((size, index) => (
+                      <div key={`${product.id}-${size.size}-${index}`} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                         <div className="flex items-center gap-3">
                           <span className="font-medium">{size.size}</span>
                           <span className="text-sm text-gray-600">
@@ -129,7 +129,7 @@ const PriceDiscountManager = () => {
                           </span>
                         </div>
                         
-                        {editingProduct === product.id && editingSize === size.id ? (
+                        {editingProduct === product.id && editingSize === size.size ? (
                           <div className="flex items-center gap-2">
                             <div className="grid grid-cols-3 gap-2 text-sm">
                               <div>
@@ -176,7 +176,7 @@ const PriceDiscountManager = () => {
                           <div className="flex items-center gap-3">
                             <div className="text-right">
                               <div className="font-semibold">{formatCurrency(size.price)}</div>
-                              {product.discount_percentage > 0 && (
+                              {product.discount_percentage && product.discount_percentage > 0 && (
                                 <div className="text-sm text-gray-500">
                                   الربح: {formatCurrency(size.price - size.cost)}
                                 </div>
@@ -185,7 +185,7 @@ const PriceDiscountManager = () => {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => handleEditPrice(product.id, size.id, size.price)}
+                              onClick={() => handleEditPrice(product.id, size.size, size.price)}
                               className="h-8 w-8 p-0"
                             >
                               <Edit className="h-4 w-4" />
