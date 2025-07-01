@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +11,7 @@ import ItemAddForm from "./order/ItemAddForm";
 import ItemsTable from "./order/ItemsTable";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { toast } from "sonner";
 
 interface OrderFormProps {
   editingOrder?: Order;
@@ -133,6 +135,7 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
   
   const addItem = () => {
     if (!currentItem.productType || !currentItem.size || currentItem.quantity < 1) {
+      toast.error("يرجى إكمال بيانات المنتج");
       return;
     }
     
@@ -163,7 +166,12 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
     e.preventDefault();
     
     if (items.length === 0) {
-      alert("يجب إضافة منتج واحد على الأقل");
+      toast.error("يجب إضافة منتج واحد على الأقل");
+      return;
+    }
+    
+    if (!customerData.clientName || !customerData.phone) {
+      toast.error("يرجى إكمال بيانات العميل");
       return;
     }
     
@@ -183,9 +191,11 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
 
       if (editingOrder) {
         await updateOrder(editingOrder.serial, orderData);
+        toast.success("تم تحديث الطلب بنجاح");
         navigate("/");
       } else {
         await addOrder(orderData);
+        toast.success("تم إضافة الطلب بنجاح");
         
         // Reset form
         setCustomerData({
@@ -202,6 +212,7 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
       }
     } catch (error) {
       console.error('Error submitting order:', error);
+      toast.error("حدث خطأ في حفظ الطلب");
     } finally {
       setIsSubmitting(false);
     }

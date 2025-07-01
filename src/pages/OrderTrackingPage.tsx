@@ -8,13 +8,15 @@ import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/lib/utils';
-import { Search, Package, Clock, CheckCircle, XCircle, Truck } from 'lucide-react';
+import { Search, Package, Clock, CheckCircle, XCircle, Truck, ArrowLeft, Store } from 'lucide-react';
 import { ORDER_STATUS_LABELS } from '@/types';
 import Logo from '@/components/Logo';
+import { useNavigate } from 'react-router-dom';
 
 const OrderTrackingPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchType, setSearchType] = useState<'serial' | 'phone'>('serial');
+  const navigate = useNavigate();
 
   const { data: orders, isLoading, refetch } = useQuery({
     queryKey: ['track-orders', searchQuery],
@@ -94,8 +96,17 @@ const OrderTrackingPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-center mb-8">
+        {/* Header with Logo and Back to Store Button */}
+        <div className="flex justify-between items-center mb-8">
           <Logo />
+          <Button
+            onClick={() => navigate('/store')}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <Store className="h-4 w-4" />
+            الرجوع للمتجر
+          </Button>
         </div>
 
         <Card className="max-w-4xl mx-auto">
@@ -215,6 +226,12 @@ const OrderTrackingPage = () => {
                           <div className="flex justify-between items-center text-sm text-gray-600">
                             <span>مصاريف الشحن:</span>
                             <span>{formatCurrency(order.shipping_cost)}</span>
+                          </div>
+                        )}
+                        {order.deposit > 0 && (
+                          <div className="flex justify-between items-center text-sm text-green-600">
+                            <span>العربون المدفوع:</span>
+                            <span>{formatCurrency(order.deposit)}</span>
                           </div>
                         )}
                       </div>
