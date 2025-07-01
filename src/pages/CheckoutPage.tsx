@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,7 @@ import Logo from "@/components/Logo";
 import UserProfile from "@/components/UserProfile";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Info, Upload, X } from "lucide-react";
+import { Info, Upload, X, MessageCircle, ShoppingCart } from "lucide-react";
 
 interface FormData {
   clientName: string;
@@ -58,6 +59,16 @@ const CheckoutPage = () => {
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const total = subtotal + shippingCost;
+
+  // Auto-fill user data if logged in
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        clientName: user.user_metadata?.full_name || "",
+      }));
+    }
+  }, [user]);
 
   useEffect(() => {
     if (formData.deliveryMethod === "شحن للمنزل" && formData.governorate) {
@@ -112,6 +123,42 @@ const CheckoutPage = () => {
     }
   };
 
+  const generateWhatsAppMessage = (serial: string) => {
+    let message = `🛍️ *طلب جديد - رقم ${serial}*\n\n`;
+    message += `👤 *بيانات العميل:*\n`;
+    message += `الاسم: ${formData.clientName}\n`;
+    message += `الهاتف: ${formData.phone}\n`;
+    
+    if (formData.deliveryMethod === "شحن للمنزل") {
+      message += `العنوان: ${formData.address}\n`;
+      message += `المحافظة: ${formData.governorate}\n`;
+    }
+    
+    message += `طريقة الدفع: ${formData.paymentMethod}\n`;
+    message += `طريقة الاستلام: ${formData.deliveryMethod}\n\n`;
+    
+    message += `🛒 *تفاصيل الطلب:*\n`;
+    cartItems.forEach((item, index) => {
+      message += `${index + 1}. ${item.product?.name || 'منتج'}\n`;
+      message += `   المقاس: ${item.size}\n`;
+      message += `   الكمية: ${item.quantity}\n`;
+      message += `   السعر: ${formatCurrency(item.price * item.quantity)}\n\n`;
+    });
+    
+    message += `💰 *الملخص المالي:*\n`;
+    message += `المجموع الفرعي: ${formatCurrency(subtotal)}\n`;
+    if (shippingCost > 0) {
+      message += `مصاريف الشحن: ${formatCurrency(shippingCost)}\n`;
+    }
+    message += `*المجموع الكلي: ${formatCurrency(total)}*\n`;
+    
+    if (formData.notes) {
+      message += `\n📝 *ملاحظات:*\n${formData.notes}`;
+    }
+    
+    return encodeURIComponent(message);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -130,11 +177,6 @@ const CheckoutPage = () => {
       return;
     }
 
-    if (!user) {
-      toast.error("يجب تسجيل الدخول أولاً");
-      return;
-    }
-
     setIsSubmitting(true);
 
     try {
@@ -147,7 +189,7 @@ const CheckoutPage = () => {
       if (formData.attachedImage) {
         try {
           const fileExt = formData.attachedImage.name.split('.').pop();
-          const fileName = `${user.id}/${serial}-${Date.now()}.${fileExt}`;
+          const fileName = `${user?.id || 'guest'}/${serial}-${Date.now()}.${fileExt}`;
           
           const { data: uploadData, error: uploadError } = await supabase.storage
             .from('order-attachments')
@@ -170,7 +212,7 @@ const CheckoutPage = () => {
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .insert({
-          user_id: user.id,
+          user_id: user?.id || null, // Allow null for guest users
           serial,
           payment_method: formData.paymentMethod,
           client_name: formData.clientName,
@@ -224,10 +266,11 @@ const CheckoutPage = () => {
 
       // Save to admin orders table with notes and image
       try {
+        console.log('Inserting into admin_orders table...');
         const { data: adminOrder, error: adminOrderError } = await supabase
           .from('admin_orders')
           .insert({
-            user_id: user.id,
+            user_id: user?.id || null, // Allow null for guest users
             serial: serial,
             customer_name: formData.clientName,
             customer_phone: formData.phone,
@@ -250,7 +293,7 @@ const CheckoutPage = () => {
           .single();
 
         if (adminOrderError) {
-          console.error('Error saving admin order:', adminOrderError);
+          console.error('Error inserting admin order:', adminOrderError);
         } else if (adminOrder) {
           const adminOrderItems = cartItems.map(item => ({
             order_id: adminOrder.id,
@@ -269,7 +312,7 @@ const CheckoutPage = () => {
             .insert(adminOrderItems);
 
           if (adminItemsError) {
-            console.error('Error saving admin order items:', adminItemsError);
+            console.error('Error inserting admin order items:', adminItemsError);
           }
         }
       } catch (adminError) {
@@ -279,7 +322,7 @@ const CheckoutPage = () => {
       await clearCart();
       toast.success("تم إنشاء الطلب بنجاح!");
       
-      // Navigate to order confirmation page instead of home
+      // Navigate to order confirmation page
       navigate(`/order-confirmation/${serial}`);
       
     } catch (error) {
@@ -290,11 +333,44 @@ const CheckoutPage = () => {
     }
   };
 
+  const handleWhatsAppOrder = async () => {
+    if (!formData.clientName || !formData.phone || !formData.paymentMethod || !formData.deliveryMethod) {
+      toast.error("يرجى ملء جميع الحقول المطلوبة قبل إرسال الطلب");
+      return;
+    }
+
+    if (formData.deliveryMethod === "شحن للمنزل" && (!formData.address || !formData.governorate)) {
+      toast.error("يرجى ملء عنوان الشحن والمحافظة");
+      return;
+    }
+
+    if (cartItems.length === 0) {
+      toast.error("السلة فارغة");
+      return;
+    }
+
+    try {
+      const serial = await generateSerial();
+      const whatsappMessage = generateWhatsAppMessage(serial);
+      const whatsappUrl = `https://wa.me/201113977005?text=${whatsappMessage}`;
+      
+      // Open WhatsApp in new tab
+      window.open(whatsappUrl, '_blank');
+      
+      toast.success("تم تحضير الطلب للإرسال عبر الواتساب");
+    } catch (error) {
+      console.error("Error generating WhatsApp message:", error);
+      toast.error("حدث خطأ في تحضير رسالة الواتساب");
+    }
+  };
+
   if (cartItems.length === 0) {
     return (
       <div className="min-h-screen bg-gift-accent dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center p-8">
-          <h2 className="text-xl font-bold mb-4">السلة فارغة</h2>
+          <ShoppingCart className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+          <h2 className="text-2xl font-bold mb-4">السلة فارغة</h2>
+          <p className="text-muted-foreground mb-6">أضف منتجات إلى السلة للمتابعة</p>
           <Button onClick={() => navigate("/")} variant="outline">العودة للتسوق</Button>
         </div>
       </div>
@@ -453,13 +529,25 @@ const CheckoutPage = () => {
                   </div>
                 </div>
 
-                <Button 
-                  type="submit" 
-                  className="w-full" 
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? "جاري إنشاء الطلب..." : "تأكيد الطلب"}
-                </Button>
+                <div className="space-y-3">
+                  <Button 
+                    type="submit" 
+                    className="w-full" 
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? "جاري إنشاء الطلب..." : "تأكيد الطلب"}
+                  </Button>
+                  
+                  <Button 
+                    type="button"
+                    variant="outline"
+                    className="w-full flex items-center gap-2 text-green-600 border-green-600 hover:bg-green-50"
+                    onClick={handleWhatsAppOrder}
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    إرسال الطلب عبر الواتساب
+                  </Button>
+                </div>
               </form>
             </CardContent>
           </Card>

@@ -29,8 +29,10 @@ const ImprovedAccountStatement = () => {
   const availableYears = useMemo(() => {
     const years = new Set<string>();
     safeTransactions.forEach(transaction => {
-      const year = new Date(transaction.created_at).getFullYear().toString();
-      years.add(year);
+      if (transaction.created_at) {
+        const year = new Date(transaction.created_at).getFullYear().toString();
+        years.add(year);
+      }
     });
     return Array.from(years).sort().reverse();
   }, [safeTransactions]);
@@ -38,6 +40,8 @@ const ImprovedAccountStatement = () => {
   // Filter transactions
   const filteredTransactions = useMemo(() => {
     return safeTransactions.filter(transaction => {
+      if (!transaction.created_at) return false;
+      
       const transactionDate = new Date(transaction.created_at);
       const transactionYear = transactionDate.getFullYear().toString();
       const transactionMonth = (transactionDate.getMonth() + 1).toString().padStart(2, '0');
@@ -45,13 +49,13 @@ const ImprovedAccountStatement = () => {
       if (filterYear !== "all" && transactionYear !== filterYear) return false;
       if (filterMonth !== "all" && transactionMonth !== filterMonth) return false;
       if (filterType !== "all" && transaction.transaction_type !== filterType) return false;
-      if (searchTerm && !transaction.description.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+      if (searchTerm && transaction.description && !transaction.description.toLowerCase().includes(searchTerm.toLowerCase())) return false;
       
       return true;
     });
   }, [safeTransactions, filterMonth, filterYear, filterType, searchTerm]);
 
-  // Calculate enhanced financial summary
+  // Calculate enhanced financial summary with proper deposit and payment handling
   const financialSummary = useMemo(() => {
     let totalRevenue = 0;
     let totalCosts = 0;
@@ -62,6 +66,7 @@ const ImprovedAccountStatement = () => {
     let totalCostPayments = 0;
     let totalExpenses = 0;
     let totalOtherIncome = 0;
+    let totalOrderPayments = 0; // Track payments made towards orders
 
     // Calculate from orders
     safeOrders.forEach(order => {
@@ -76,32 +81,41 @@ const ImprovedAccountStatement = () => {
 
     // Calculate from transactions
     safeTransactions.forEach(transaction => {
+      const amount = Number(transaction.amount) || 0;
+      
       switch (transaction.transaction_type) {
         case 'order_collection':
-          totalCollections += transaction.amount;
+          totalCollections += amount;
+          totalOrderPayments += amount; // These are payments towards orders
           break;
         case 'shipping_payment':
-          totalShippingPayments += transaction.amount;
+          totalShippingPayments += amount;
           break;
         case 'cost_payment':
-          totalCostPayments += transaction.amount;
+          totalCostPayments += amount;
           break;
         case 'expense':
-          totalExpenses += transaction.amount;
+          totalExpenses += amount;
           break;
         case 'other_income':
-          totalOtherIncome += transaction.amount;
+          totalOtherIncome += amount;
           break;
       }
     });
 
-    // Enhanced profit calculation including additional income and expenses
+    // Enhanced profit calculation
+    // Deposits and order payments should not be counted as profit since they are already part of the order total
     const netProfit = totalRevenue - totalCosts - totalShipping + totalOtherIncome - totalExpenses;
-    const cashFlow = totalCollections + totalDeposits + totalOtherIncome - totalShippingPayments - totalCostPayments - totalExpenses;
+    
+    // Cash flow = money in - money out (excluding deposits as they're already part of order total)
+    const cashFlow = totalCollections + totalOtherIncome - totalShippingPayments - totalCostPayments - totalExpenses;
 
     // Calculate remaining amounts
-    const remainingCosts = totalCosts - totalCostPayments;
-    const remainingShipping = totalShipping - totalShippingPayments;
+    const remainingCosts = Math.max(0, totalCosts - totalCostPayments);
+    const remainingShipping = Math.max(0, totalShipping - totalShippingPayments);
+    
+    // Outstanding collections = Total revenue - deposits - payments received
+    const outstandingCollections = Math.max(0, totalRevenue - totalDeposits - totalOrderPayments);
 
     return {
       totalRevenue,
@@ -116,7 +130,8 @@ const ImprovedAccountStatement = () => {
       remainingCosts,
       remainingShipping,
       totalExpenses,
-      totalOtherIncome
+      totalOtherIncome,
+      outstandingCollections
     };
   }, [safeOrders, safeTransactions]);
 
