@@ -13,11 +13,10 @@ import { toast } from "sonner";
 
 const EditOrder = () => {
   const { serial } = useParams<{ serial: string }>();
-  const { getOrderBySerial, loading } = useSupabaseOrders();
+  const { orders, loading } = useSupabaseOrders();
   const navigate = useNavigate();
   const [order, setOrder] = useState<Order | undefined>();
   const [orderNotFound, setOrderNotFound] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
   
   useEffect(() => {
     if (!serial) {
@@ -26,9 +25,11 @@ const EditOrder = () => {
       return;
     }
 
-    if (!loading && !isInitialized) {
+    if (!loading && orders.length > 0) {
       console.log("EditOrder: Looking for order with serial:", serial);
-      const foundOrder = getOrderBySerial(serial);
+      console.log("EditOrder: Available orders:", orders.map(o => o.serial));
+      
+      const foundOrder = orders.find(o => o.serial === serial);
       console.log("EditOrder: Found order:", foundOrder);
       
       if (foundOrder) {
@@ -39,12 +40,11 @@ const EditOrder = () => {
         setOrderNotFound(true);
         toast.error(`الطلب رقم ${serial} غير موجود`);
       }
-      setIsInitialized(true);
     }
-  }, [serial, getOrderBySerial, loading, navigate, isInitialized]);
+  }, [serial, orders, loading, navigate]);
   
   useEffect(() => {
-    if (orderNotFound && isInitialized && !order) {
+    if (orderNotFound && !loading) {
       console.log("EditOrder: Redirecting to home because order not found");
       const timer = setTimeout(() => {
         navigate("/");
@@ -52,9 +52,9 @@ const EditOrder = () => {
       
       return () => clearTimeout(timer);
     }
-  }, [orderNotFound, isInitialized, order, navigate]);
+  }, [orderNotFound, loading, navigate]);
   
-  if (loading || !isInitialized) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gift-accent dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center p-8">
@@ -112,14 +112,7 @@ const EditOrder = () => {
           </Button>
         </div>
         
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg md:text-xl">تعديل الطلب - {order.serial}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <OrderForm editingOrder={order} />
-          </CardContent>
-        </Card>
+        <OrderForm editingOrder={order} />
       </div>
     </div>
   );

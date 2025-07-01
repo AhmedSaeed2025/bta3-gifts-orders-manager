@@ -1,10 +1,12 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/lib/utils';
 import { Printer, Download } from 'lucide-react';
 import { useReactToPrint } from 'react-to-print';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 interface AdminOrderItem {
   id: string;
@@ -40,6 +42,14 @@ interface AdminOrder {
   admin_order_items: AdminOrderItem[];
 }
 
+interface Transaction {
+  id: string;
+  amount: number;
+  transaction_type: string;
+  description: string;
+  created_at: string;
+}
+
 interface AdminOrderInvoiceProps {
   order: AdminOrder;
   onClose: () => void;
@@ -47,6 +57,35 @@ interface AdminOrderInvoiceProps {
 
 const AdminOrderInvoice: React.FC<AdminOrderInvoiceProps> = ({ order, onClose }) => {
   const invoiceRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
+  const [payments, setPayments] = useState<Transaction[]>([]);
+
+  useEffect(() => {
+    loadPayments();
+  }, [order.serial]);
+
+  const loadPayments = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('order_serial', order.serial)
+        .eq('user_id', user.id)
+        .eq('transaction_type', 'payment')
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Error loading payments:', error);
+        return;
+      }
+
+      setPayments(data || []);
+    } catch (error) {
+      console.error('Error loading payments:', error);
+    }
+  };
 
   const handlePrint = useReactToPrint({
     content: () => invoiceRef.current,
@@ -78,6 +117,8 @@ const AdminOrderInvoice: React.FC<AdminOrderInvoiceProps> = ({ order, onClose })
   };
 
   const subtotal = order.admin_order_items.reduce((sum, item) => sum + item.total_price, 0);
+  const totalPaid = order.deposit + payments.reduce((sum, payment) => sum + payment.amount, 0);
+  const remainingAmount = order.total_amount - totalPaid;
 
   return (
     <div className="space-y-4">
@@ -195,9 +236,9 @@ const AdminOrderInvoice: React.FC<AdminOrderInvoiceProps> = ({ order, onClose })
           </table>
         </div>
 
-        {/* Totals */}
+        {/* Totals with Payment History */}
         <div className="flex justify-end">
-          <div className="w-64">
+          <div className="w-80">
             <div className="space-y-2 border-t border-gray-300 pt-4">
               <div className="flex justify-between">
                 <span>المجموع الفرعي:</span>
@@ -213,15 +254,41 @@ const AdminOrderInvoice: React.FC<AdminOrderInvoiceProps> = ({ order, onClose })
                   <span>-{formatCurrency(order.discount)}</span>
                 </div>
               )}
-              {order.deposit > 0 && (
-                <div className="flex justify-between text-blue-600">
-                  <span>العربون المدفوع:</span>
-                  <span>-{formatCurrency(order.deposit)}</span>
-                </div>
-              )}
+              
               <div className="flex justify-between font-bold text-lg border-t border-gray-300 pt-2">
                 <span>المبلغ الإجمالي:</span>
                 <span>{formatCurrency(order.total_amount)}</span>
+              </div>
+
+              {/* Payment History */}
+              <div className="border-t border-gray-300 pt-2 mt-4">
+                <h4 className="font-semibold mb-2 text-gray-800">تاريخ المدفوعات:</h4>
+                {order.deposit > 0 && (
+                  <div className="flex justify-between text-blue-600 text-sm">
+                    <span>العربون المدفوع:</span>
+                    <span>-{formatCurrency(order.deposit)}</span>
+                  </div>
+                )}
+                {payments.map((payment) => (
+                  <div key={payment.id} className="flex justify-between text-green-600 text-sm">
+                    <span>دفعة ({new Date(payment.created_at).toLocaleDateString('ar-EG')}):</span>
+                    <span>-{formatCurrency(payment.amount)}</span>
+                  </div>
+                ))}
+                
+                {totalPaid > 0 && (
+                  <div className="flex justify-between font-semibold text-green-600 border-t border-gray-200 pt-2 mt-2">
+                    <span>إجمالي المدفوع:</span>
+                    <span>-{formatCurrency(totalPaid)}</span>
+                  </div>
+                )}
+                
+                <div className="flex justify-between font-bold text-lg border-t border-gray-300 pt-2 mt-2">
+                  <span>المبلغ المتبقي:</span>
+                  <span className={remainingAmount > 0 ? 'text-red-600' : 'text-green-600'}>
+                    {formatCurrency(Math.max(0, remainingAmount))}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
