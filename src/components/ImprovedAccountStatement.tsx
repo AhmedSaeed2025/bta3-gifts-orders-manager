@@ -88,6 +88,10 @@ const ImprovedAccountStatement = () => {
           totalCollections += amount;
           totalOrderPayments += amount; // These are payments towards orders
           break;
+        case 'deposit':
+          totalDeposits += amount;
+          totalCollections += amount; // Deposits count as collections too
+          break;
         case 'shipping_payment':
           totalShippingPayments += amount;
           break;

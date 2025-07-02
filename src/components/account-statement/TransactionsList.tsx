@@ -13,7 +13,8 @@ import {
   Minus,
   Plus,
   Activity,
-  Receipt
+  Receipt,
+  Banknote
 } from "lucide-react";
 import {
   ResponsiveTable,
@@ -50,6 +51,8 @@ const TransactionsList = ({ transactions, onDeleteTransaction }: TransactionsLis
     switch (type) {
       case 'order_collection':
         return <DollarSign className="h-4 w-4" />;
+      case 'deposit':
+        return <Banknote className="h-4 w-4" />;
       case 'shipping_payment':
         return <Truck className="h-4 w-4" />;
       case 'cost_payment':
@@ -67,6 +70,8 @@ const TransactionsList = ({ transactions, onDeleteTransaction }: TransactionsLis
     switch (type) {
       case 'order_collection':
         return 'تحصيل طلب';
+      case 'deposit':
+        return 'سداد عربون';
       case 'shipping_payment':
         return 'دفع شحن';
       case 'cost_payment':
@@ -84,6 +89,8 @@ const TransactionsList = ({ transactions, onDeleteTransaction }: TransactionsLis
     switch (type) {
       case 'order_collection':
         return 'bg-green-100 text-green-800 border-green-300';
+      case 'deposit':
+        return 'bg-emerald-100 text-emerald-800 border-emerald-300';
       case 'shipping_payment':
         return 'bg-blue-100 text-blue-800 border-blue-300';
       case 'cost_payment':
