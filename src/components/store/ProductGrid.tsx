@@ -68,7 +68,7 @@ const ProductGrid = ({ products, isLoading }: ProductGridProps) => {
       await addToCart(product.id, selectedSize, 1, selectedPrice);
       
       // Navigate to order page
-      navigate('/order');
+      navigate('/checkout');
     } catch (error) {
       console.error('Error processing order:', error);
       toast.error("حدث خطأ في معالجة الطلب");
