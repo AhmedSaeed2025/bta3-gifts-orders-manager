@@ -77,7 +77,7 @@ const ProfitReport = () => {
       });
     });
 
-    const netProfit = totalSales - totalCost - totalShipping;
+    const netProfit = totalSales - totalCost;
     const avgOrderValue = filteredOrders.length > 0 ? totalSales / filteredOrders.length : 0;
 
     return {
@@ -133,7 +133,7 @@ const ProfitReport = () => {
         مبيعات: monthlySales,
         شحن: monthlyShipping,
         خصومات: monthlyDiscounts,
-        أرباح: monthlySales - monthlyCost - monthlyShipping
+        أرباح: monthlySales - monthlyCost
       };
     });
   }, [monthlyReport]);
@@ -151,7 +151,7 @@ const ProfitReport = () => {
           totalSales: productData.totalSales,
           totalShipping: productData.totalShipping || 0,
           totalDiscounts: productData.totalDiscounts || 0,
-          netProfit: productData.totalSales - productData.totalCost - (productData.totalShipping || 0)
+          netProfit: productData.totalSales - productData.totalCost
         });
       });
     });

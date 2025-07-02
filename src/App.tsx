@@ -97,14 +97,18 @@ function App() {
                                 {/* Legacy Admin Route - برنامج الحسابات */}
                                 <Route path="/legacy-admin" element={<IndexLayout />} />
                                 
-                                {/* Order Management - Fixed Routes */}
-                                <Route path="/order" element={<OrderPage />} />
-                                <Route path="/order/:serial" element={<OrderDetails />} />
-                                <Route path="/order/:serial/edit" element={<EditOrder />} />
-                                
-                                {/* Additional Order Routes for compatibility */}
-                                <Route path="/orders/:serial" element={<OrderDetails />} />
-                                <Route path="/orders/:serial/edit" element={<EditOrder />} />
+                {/* Order Management - Fixed Routes */}
+                <Route path="/order" element={<OrderPage />} />
+                <Route path="/order/:serial" element={<OrderDetails />} />
+                <Route path="/order/:serial/edit" element={<EditOrder />} />
+                
+                {/* Additional Order Routes for compatibility */}
+                <Route path="/orders/:serial" element={<OrderDetails />} />
+                <Route path="/orders/:serial/edit" element={<EditOrder />} />
+                
+                {/* Edit Order Routes - New format */}
+                <Route path="/edit-order/:serial" element={<EditOrder />} />
+                <Route path="/view-order/:serial" element={<OrderDetails />} />
                                 
                                 {/* Catch all */}
                                 <Route path="*" element={<NotFound />} />
