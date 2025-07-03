@@ -118,8 +118,19 @@ const ProductsManagementAdvanced = () => {
 
     const formattedProducts = data?.map(product => ({
       ...product,
-      sizes: product.product_sizes || [],
-      images: product.product_images || []
+      sizes: (product.product_sizes || []).map((size: any) => ({
+        id: size.id,
+        size: size.size,
+        cost: Number(size.cost),
+        price: Number(size.price)
+      })),
+      images: (product.product_images || []).map((image: any) => ({
+        id: image.id,
+        image_url: image.image_url,
+        alt_text: image.alt_text,
+        is_primary: image.is_primary,
+        sort_order: image.sort_order
+      }))
     })) || [];
 
     setProducts(formattedProducts);
@@ -161,6 +172,7 @@ const ProductsManagementAdvanced = () => {
   };
 
   const handleEditProduct = (product: Product) => {
+    console.log('Editing product:', product);
     setEditingProduct(product);
     setFormData({
       name: product.name,
@@ -173,12 +185,19 @@ const ProductsManagementAdvanced = () => {
       discount_percentage: product.discount_percentage || 0,
       sort_order: product.sort_order || 0
     });
-    setSizes(product.sizes);
-    setImages(product.images);
+    setSizes(product.sizes || []);
+    setImages(product.images || []);
+    console.log('Set sizes:', product.sizes || []);
+    console.log('Set images:', product.images || []);
     setShowProductForm(true);
   };
 
   const handleSaveProduct = async () => {
+    console.log('Saving product, editingProduct:', editingProduct);
+    console.log('Form data:', formData);
+    console.log('Sizes:', sizes);
+    console.log('Images:', images);
+    
     if (!user || !formData.name.trim()) {
       toast.error("اسم المنتج مطلوب");
       return;
@@ -200,7 +219,8 @@ const ProductsManagementAdvanced = () => {
             discount_percentage: formData.discount_percentage || null,
             sort_order: formData.sort_order || null
           })
-          .eq('id', editingProduct.id);
+          .eq('id', editingProduct.id)
+          .eq('user_id', user.id);
 
         if (productError) throw productError;
 
