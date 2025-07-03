@@ -24,6 +24,7 @@ import ProfitReport from "@/components/ProfitReport";
 import ImprovedAccountStatement from "@/components/ImprovedAccountStatement";
 import InvoiceTab from "@/components/InvoiceTab";
 import ProductsTab from "@/components/ProductsTab";
+import ProductsManagementAdvanced from "@/components/ProductsManagementAdvanced";
 import WebhookTab from "@/components/WebhookTab";
 
 const IndexTabs = () => {
@@ -174,7 +175,7 @@ const IndexTabs = () => {
         </TabsContent>
         
         <TabsContent value="products" className={isMobile ? 'mobile-warm-card rounded-lg' : ''}>
-          <ProductsTab />
+          <ProductsManagementAdvanced />
         </TabsContent>
         
         <TabsContent value="webhook" className={isMobile ? 'mobile-warm-card rounded-lg' : ''}>

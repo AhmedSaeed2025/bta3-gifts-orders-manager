@@ -108,8 +108,9 @@ const ImprovedAccountStatement = () => {
     });
 
     // Enhanced profit calculation
+    // Profit = Revenue - Costs (excluding shipping as it's handled by external company)
     // Deposits and order payments should not be counted as profit since they are already part of the order total
-    const netProfit = totalRevenue - totalCosts - totalShipping + totalOtherIncome - totalExpenses;
+    const netProfit = totalRevenue - totalCosts + totalOtherIncome - totalExpenses;
     
     // Cash flow = money in - money out (excluding deposits as they're already part of order total)
     const cashFlow = totalCollections + totalOtherIncome - totalShippingPayments - totalCostPayments - totalExpenses;
