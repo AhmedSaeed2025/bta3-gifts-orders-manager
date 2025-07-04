@@ -4,6 +4,9 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
+// Export Order type for use in other components
+export type { Order };
+
 interface OrderContextType {
   orders: Order[];
   addOrder: (order: Omit<Order, "serial" | "dateCreated">) => Promise<void>;
@@ -11,6 +14,7 @@ interface OrderContextType {
   deleteOrder: (index: number) => Promise<void>;
   updateOrderStatus: (index: number, status: OrderStatus) => Promise<void>;
   getOrderBySerial: (serial: string) => Order | undefined;
+  refreshOrders: () => Promise<void>;
   loading: boolean;
 }
 
@@ -489,6 +493,10 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
     return orders.find(order => order.serial === serial);
   };
 
+  const refreshOrders = async () => {
+    await loadOrders();
+  };
+
   return (
     <OrderContext.Provider value={{ 
       orders, 
@@ -497,6 +505,7 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
       deleteOrder, 
       updateOrderStatus, 
       getOrderBySerial,
+      refreshOrders,
       loading
     }}>
       {children}

@@ -955,10 +955,11 @@ const OrdersTable = () => {
       <PaymentDialog
         isOpen={paymentDialog.isOpen}
         onClose={() => setPaymentDialog(prev => ({ ...prev, isOpen: false }))}
-        onConfirm={handlePaymentConfirm}
         order={paymentDialog.order}
-        title="سداد جزئي أو كامل للطلب"
-        defaultAmount={paymentDialog.order ? (paymentDialog.order.total - (paymentDialog.order.deposit || 0)) : 0}
+        onPaymentAdded={() => {
+          setPaymentDialog(prev => ({ ...prev, isOpen: false }));
+          window.location.reload(); // Refresh to show updated data
+        }}
       />
 
       {/* Custom Amount Dialog */}

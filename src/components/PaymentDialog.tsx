@@ -64,7 +64,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
           deposit: newDeposit,
           updated_at: new Date().toISOString()
         })
-        .eq('id', order.id)
+        .eq('serial', order.serial)
         .eq('user_id', user.id);
 
       if (orderError) throw orderError;
