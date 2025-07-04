@@ -1,213 +1,191 @@
+
 import React, { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { CreditCard, DollarSign } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatCurrency } from "@/lib/utils";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { Order } from "@/context/SupabaseOrderContext";
 
 interface PaymentDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (amount: number, paymentMethod: string, notes: string) => void;
-  order: any;
-  title: string;
-  defaultAmount: number;
+  order: Order | null;
+  onPaymentAdded: () => void;
 }
 
 const PaymentDialog: React.FC<PaymentDialogProps> = ({
   isOpen,
   onClose,
-  onConfirm,
   order,
-  title,
-  defaultAmount
+  onPaymentAdded
 }) => {
-  const [amount, setAmount] = useState(defaultAmount);
-  const [paymentMethod, setPaymentMethod] = useState("");
-  const [notes, setNotes] = useState("");
+  const { user } = useAuth();
+  const [amount, setAmount] = useState("");
+  const [paymentType, setPaymentType] = useState<string>("deposit");
+  const [description, setDescription] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const remainingAmount = order ? (order.total - (order.deposit || 0)) : 0;
+  if (!order) return null;
 
-  const handleConfirm = () => {
-    if (amount <= 0) {
+  // حساب المبلغ المتبقي للسداد
+  const remainingAmount = order.total - (order.deposit || 0);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!user || !amount || parseFloat(amount) <= 0) {
+      toast.error("يرجى إدخال مبلغ صحيح");
       return;
     }
-    onConfirm(amount, paymentMethod, notes);
-    setAmount(defaultAmount);
-    setPaymentMethod("");
-    setNotes("");
-    onClose();
-  };
 
-  const handleAmountChange = (value: string) => {
-    const numValue = parseFloat(value) || 0;
-    setAmount(numValue);
-  };
+    const paymentAmount = parseFloat(amount);
+    
+    // التحقق من أن المبلغ المدخل لا يتجاوز المتبقي
+    if (paymentAmount > remainingAmount) {
+      toast.error(`المبلغ المدخل أكبر من المتبقي (${formatCurrency(remainingAmount)})`);
+      return;
+    }
 
-  const handleQuickAmount = (percentage: number) => {
-    const quickAmount = Math.round(remainingAmount * (percentage / 100));
-    setAmount(quickAmount);
+    setLoading(true);
+
+    try {
+      // تحديث العربون في الطلب
+      const newDeposit = (order.deposit || 0) + paymentAmount;
+      
+      const { error: orderError } = await supabase
+        .from('orders')
+        .update({ 
+          deposit: newDeposit,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', order.id)
+        .eq('user_id', user.id);
+
+      if (orderError) throw orderError;
+
+      // إضافة معاملة في كشف الحساب
+      const { error: transactionError } = await supabase
+        .from('transactions')
+        .insert({
+          user_id: user.id,
+          order_serial: order.serial,
+          transaction_type: paymentType,
+          amount: paymentAmount,
+          description: description || `سداد جزئي للطلب ${order.serial}`
+        });
+
+      if (transactionError) throw transactionError;
+
+      toast.success("تم تسجيل السداد بنجاح");
+      
+      // إعادة تعيين النموذج
+      setAmount("");
+      setDescription("");
+      onPaymentAdded();
+      onClose();
+      
+    } catch (error) {
+      console.error("Error recording payment:", error);
+      toast.error("حدث خطأ في تسجيل السداد");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md mx-auto" dir="rtl">
+      <DialogContent className="sm:max-w-md" dir="rtl">
         <DialogHeader>
-          <DialogTitle className="text-lg font-bold text-center flex items-center gap-2 justify-center">
-            <CreditCard className="h-5 w-5" />
-            {title}
-          </DialogTitle>
+          <DialogTitle>تسجيل سداد للطلب {order.serial}</DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-4">
-          {/* Order Info */}
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="bg-gray-50 p-3 rounded-lg">
-            <div className="text-sm space-y-1">
-              <div className="flex justify-between">
-                <span className="text-gray-600">رقم الطلب:</span>
-                <span className="font-medium">{order?.serial}</span>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="font-medium">إجمالي الطلب:</span>
+                <div className="text-lg font-bold text-blue-600">
+                  {formatCurrency(order.total)}
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">العميل:</span>
-                <span className="font-medium">{order?.clientName}</span>
+              <div>
+                <span className="font-medium">المدفوع حالياً:</span>
+                <div className="text-lg font-bold text-green-600">
+                  {formatCurrency(order.deposit || 0)}
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">إجمالي الطلب:</span>
-                <span className="font-bold text-green-600">{formatCurrency(order?.total || 0)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">المدفوع سابقاً:</span>
-                <span className="font-medium">{formatCurrency(order?.deposit || 0)}</span>
-              </div>
-              <div className="flex justify-between border-t pt-2">
-                <span className="text-gray-600">المتبقي:</span>
-                <span className="font-bold text-red-600">{formatCurrency(remainingAmount)}</span>
+            </div>
+            <div className="mt-2 pt-2 border-t">
+              <span className="font-medium">المتبقي للسداد:</span>
+              <div className="text-xl font-bold text-red-600">
+                {formatCurrency(remainingAmount)}
               </div>
             </div>
           </div>
 
-          {/* Quick Amount Buttons */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium">اختيار سريع:</Label>
-            <div className="grid grid-cols-4 gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => handleQuickAmount(25)}
-                className="text-xs"
-              >
-                25%
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => handleQuickAmount(50)}
-                className="text-xs"
-              >
-                50%
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => handleQuickAmount(75)}
-                className="text-xs"
-              >
-                75%
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setAmount(remainingAmount)}
-                className="text-xs"
-              >
-                100%
-              </Button>
-            </div>
-          </div>
-
-          {/* Amount Input */}
-          <div className="space-y-2">
-            <Label htmlFor="amount" className="text-sm font-medium">
-              المبلغ المدفوع *
-            </Label>
-            <div className="relative">
-              <Input
-                id="amount"
-                type="number"
-                value={amount}
-                onChange={(e) => handleAmountChange(e.target.value)}
-                placeholder="أدخل المبلغ"
-                className="pr-10"
-                min="0"
-                max={remainingAmount}
-              />
-              <DollarSign className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            </div>
-            <div className="text-xs text-gray-500">
-              الحد الأقصى: {formatCurrency(remainingAmount)}
-            </div>
-          </div>
-
-          {/* Payment Method */}
-          <div className="space-y-2">
-            <Label htmlFor="paymentMethod" className="text-sm font-medium">
-              طريقة الدفع *
-            </Label>
-            <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+            <Label htmlFor="paymentType">نوع السداد</Label>
+            <Select value={paymentType} onValueChange={setPaymentType}>
               <SelectTrigger>
-                <SelectValue placeholder="اختر طريقة الدفع" />
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="نقدي">نقدي</SelectItem>
-                <SelectItem value="تحويل بنكي">تحويل بنكي</SelectItem>
-                <SelectItem value="فودافون كاش">فودافون كاش</SelectItem>
-                <SelectItem value="أورانج موني">أورانج موني</SelectItem>
-                <SelectItem value="إتصالات فليكس">إتصالات فليكس</SelectItem>
-                <SelectItem value="كارت ائتماني">كارت ائتماني</SelectItem>
-                <SelectItem value="شيك">شيك</SelectItem>
+                <SelectItem value="deposit">عربون</SelectItem>
+                <SelectItem value="order_collection">تحصيل طلب</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          {/* Notes */}
           <div className="space-y-2">
-            <Label htmlFor="notes" className="text-sm font-medium">
-              ملاحظات (اختياري)
-            </Label>
-            <Textarea
-              id="notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="أدخل ملاحظات إضافية..."
-              className="min-h-[60px] resize-none"
+            <Label htmlFor="amount">مبلغ السداد</Label>
+            <Input
+              id="amount"
+              type="number"
+              step="0.01"
+              min="0.01"
+              max={remainingAmount}
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="0.00"
+              required
             />
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-3 pt-2">
-            <Button
-              onClick={handleConfirm}
-              disabled={amount <= 0 || !paymentMethod || amount > remainingAmount}
-              className="flex-1 bg-green-600 hover:bg-green-700"
-            >
-              تأكيد السداد
-            </Button>
-            <Button
-              onClick={onClose}
-              variant="outline"
+          <div className="space-y-2">
+            <Label htmlFor="description">وصف السداد (اختياري)</Label>
+            <Textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="تفاصيل إضافية عن السداد..."
+              rows={2}
+            />
+          </div>
+
+          <div className="flex gap-3 pt-4">
+            <Button 
+              type="submit" 
+              disabled={loading}
               className="flex-1"
+            >
+              {loading ? "جاري التسجيل..." : "تسجيل السداد"}
+            </Button>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onClose}
+              disabled={loading}
             >
               إلغاء
             </Button>
           </div>
-        </div>
+        </form>
       </DialogContent>
     </Dialog>
   );

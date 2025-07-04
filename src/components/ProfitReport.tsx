@@ -1,4 +1,3 @@
-
 import React, { useMemo, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSupabaseOrders } from "@/context/SupabaseOrderContext";
@@ -43,7 +42,7 @@ const ProfitReport = () => {
   
   const monthlyReport = useMemo(() => generateMonthlyReport(filteredOrders), [filteredOrders]);
   
-  // Enhanced summary calculation
+  // حساب محسّن للملخص مع استثناء الشحن من الأرباح
   const summaryData = useMemo(() => {
     if (!filteredOrders || filteredOrders.length === 0) {
       return {
@@ -67,17 +66,17 @@ const ProfitReport = () => {
     filteredOrders.forEach(order => {
       totalSales += order.total;
       totalShipping += order.shippingCost || 0;
-      totalDiscounts += order.discount || 0; // Order-level discount
+      totalDiscounts += order.discount || 0;
       
-      // Calculate from items
+      // حساب من الأصناف
       order.items?.forEach(item => {
         totalCost += item.cost * item.quantity;
-        totalDiscounts += (item.itemDiscount || 0) * item.quantity; // Item-level discounts
+        totalDiscounts += (item.itemDiscount || 0) * item.quantity;
         totalItems += item.quantity;
       });
     });
 
-    // Profit = Sales - Cost (excluding shipping as it's handled by external company)
+    // الربح = المبيعات - التكلفة (استثناء الشحن لأنه يدار من شركة خارجية)
     const netProfit = totalSales - totalCost;
     const avgOrderValue = filteredOrders.length > 0 ? totalSales / filteredOrders.length : 0;
 
@@ -93,7 +92,6 @@ const ProfitReport = () => {
     };
   }, [filteredOrders]);
 
-  // Get available years and products for filters
   const availableYears = useMemo(() => {
     const years = new Set<string>();
     safeOrders.forEach(order => {
@@ -113,7 +111,6 @@ const ProfitReport = () => {
     return Array.from(products).sort();
   }, [safeOrders]);
 
-  // Enhanced chart data
   const chartData = useMemo(() => {
     return Object.entries(monthlyReport).map(([month, products]) => {
       let monthlyCost = 0;
@@ -134,12 +131,11 @@ const ProfitReport = () => {
         مبيعات: monthlySales,
         شحن: monthlyShipping,
         خصومات: monthlyDiscounts,
-        أرباح: monthlySales - monthlyCost - monthlyShipping
+        أرباح: monthlySales - monthlyCost // استثناء الشحن من الربح
       };
     });
   }, [monthlyReport]);
 
-  // Enhanced table data
   const tableData = useMemo(() => {
     const data: any[] = [];
     Object.entries(monthlyReport).forEach(([month, products]) => {
@@ -152,7 +148,7 @@ const ProfitReport = () => {
           totalSales: productData.totalSales,
           totalShipping: productData.totalShipping || 0,
           totalDiscounts: productData.totalDiscounts || 0,
-          netProfit: productData.totalSales - productData.totalCost - (productData.totalShipping || 0)
+          netProfit: productData.totalSales - productData.totalCost // استثناء الشحن من الربح
         });
       });
     });

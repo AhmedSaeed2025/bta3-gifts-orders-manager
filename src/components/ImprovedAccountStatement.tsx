@@ -55,7 +55,7 @@ const ImprovedAccountStatement = () => {
     });
   }, [safeTransactions, filterMonth, filterYear, filterType, searchTerm]);
 
-  // Calculate enhanced financial summary with proper deposit and payment handling
+  // حساب محسن للملخص المالي مع استثناء الشحن من الأرباح
   const financialSummary = useMemo(() => {
     let totalRevenue = 0;
     let totalCosts = 0;
@@ -66,31 +66,30 @@ const ImprovedAccountStatement = () => {
     let totalCostPayments = 0;
     let totalExpenses = 0;
     let totalOtherIncome = 0;
-    let totalOrderPayments = 0; // Track payments made towards orders
+    let totalOrderPayments = 0;
 
-    // Calculate from orders
+    // حساب من الطلبات
     safeOrders.forEach(order => {
       totalRevenue += order.total;
-      totalDeposits += order.deposit || 0;
       totalShipping += order.shippingCost || 0;
       
-      // Calculate actual costs from items
+      // حساب التكاليف الفعلية من الأصناف
       const orderCosts = order.items?.reduce((sum, item) => sum + (item.cost * item.quantity), 0) || 0;
       totalCosts += orderCosts;
     });
 
-    // Calculate from transactions
+    // حساب من المعاملات
     safeTransactions.forEach(transaction => {
       const amount = Number(transaction.amount) || 0;
       
       switch (transaction.transaction_type) {
         case 'order_collection':
           totalCollections += amount;
-          totalOrderPayments += amount; // These are payments towards orders
+          totalOrderPayments += amount;
           break;
         case 'deposit':
+          totalCollections += amount; // العربون يعتبر تحصيل
           totalDeposits += amount;
-          totalCollections += amount; // Deposits count as collections too
           break;
         case 'shipping_payment':
           totalShippingPayments += amount;
@@ -107,20 +106,18 @@ const ImprovedAccountStatement = () => {
       }
     });
 
-    // Enhanced profit calculation
-    // Profit = Revenue - Costs (excluding shipping as it's handled by external company)
-    // Deposits and order payments should not be counted as profit since they are already part of the order total
+    // الربح الصافي = الإيرادات - التكاليف (استثناء الشحن لأنه يذهب لشركة خارجية)
     const netProfit = totalRevenue - totalCosts + totalOtherIncome - totalExpenses;
     
-    // Cash flow = money in - money out (excluding deposits as they're already part of order total)
+    // التدفق النقدي = النقود الواردة - النقود الصادرة
     const cashFlow = totalCollections + totalOtherIncome - totalShippingPayments - totalCostPayments - totalExpenses;
 
-    // Calculate remaining amounts
+    // المتبقي من التكاليف والشحن
     const remainingCosts = Math.max(0, totalCosts - totalCostPayments);
     const remainingShipping = Math.max(0, totalShipping - totalShippingPayments);
     
-    // Outstanding collections = Total revenue - deposits - payments received
-    const outstandingCollections = Math.max(0, totalRevenue - totalDeposits - totalOrderPayments);
+    // المبالغ الغير محصلة = إجمالي الإيرادات - المقبوض (العربون + السداد)
+    const outstandingCollections = Math.max(0, totalRevenue - totalCollections);
 
     return {
       totalRevenue,

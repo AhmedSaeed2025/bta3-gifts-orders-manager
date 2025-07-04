@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Trash, Pencil, Plus, Package, Image, Star, Eye, ShoppingCart, Upload, Save, X, ArrowUp, ArrowDown } from "lucide-react";
+import { Trash, Pencil, Plus, Package, Image, Star, Eye, ShoppingCart, Upload, Save, X, ArrowUp, ArrowDown, RefreshCw } from "lucide-react";
 
 interface Product {
   id: string;
@@ -172,7 +172,6 @@ const ProductsManagementAdvanced = () => {
   };
 
   const handleEditProduct = (product: Product) => {
-    console.log('Editing product:', product);
     setEditingProduct(product);
     setFormData({
       name: product.name,
@@ -187,17 +186,10 @@ const ProductsManagementAdvanced = () => {
     });
     setSizes(product.sizes || []);
     setImages(product.images || []);
-    console.log('Set sizes:', product.sizes || []);
-    console.log('Set images:', product.images || []);
     setShowProductForm(true);
   };
 
   const handleSaveProduct = async () => {
-    console.log('Saving product, editingProduct:', editingProduct);
-    console.log('Form data:', formData);
-    console.log('Sizes:', sizes);
-    console.log('Images:', images);
-    
     if (!user || !formData.name.trim()) {
       toast.error("اسم المنتج مطلوب");
       return;
@@ -205,7 +197,7 @@ const ProductsManagementAdvanced = () => {
 
     try {
       if (editingProduct) {
-        // Update existing product
+        // تحديث منتج موجود
         const { error: productError } = await supabase
           .from('products')
           .update({
@@ -224,7 +216,7 @@ const ProductsManagementAdvanced = () => {
 
         if (productError) throw productError;
 
-        // Update sizes
+        // تحديث المقاسات
         await supabase
           .from('product_sizes')
           .delete()
@@ -245,7 +237,7 @@ const ProductsManagementAdvanced = () => {
           if (sizesError) throw sizesError;
         }
 
-        // Update images
+        // تحديث الصور
         await supabase
           .from('product_images')
           .delete()
@@ -267,9 +259,9 @@ const ProductsManagementAdvanced = () => {
           if (imagesError) throw imagesError;
         }
 
-        toast.success("تم تحديث المنتج بنجاح");
+        toast.success("تم تحديث المنتج بنجاح وسيظهر في المتجر");
       } else {
-        // Create new product
+        // إنشاء منتج جديد
         const { data: productData, error: productError } = await supabase
           .from('products')
           .insert({
@@ -289,7 +281,7 @@ const ProductsManagementAdvanced = () => {
 
         if (productError) throw productError;
 
-        // Add sizes
+        // إضافة المقاسات
         if (sizes.length > 0) {
           const sizesData = sizes.map(size => ({
             product_id: productData.id,
@@ -305,7 +297,7 @@ const ProductsManagementAdvanced = () => {
           if (sizesError) throw sizesError;
         }
 
-        // Add images
+        // إضافة الصور
         if (images.length > 0) {
           const imagesData = images.map((image, index) => ({
             product_id: productData.id,
@@ -322,7 +314,7 @@ const ProductsManagementAdvanced = () => {
           if (imagesError) throw imagesError;
         }
 
-        toast.success("تم إضافة المنتج بنجاح");
+        toast.success("تم إضافة المنتج بنجاح وسيظهر في المتجر");
       }
 
       resetForm();
@@ -343,7 +335,7 @@ const ProductsManagementAdvanced = () => {
 
       if (error) throw error;
 
-      toast.success("تم حذف المنتج بنجاح");
+      toast.success("تم حذف المنتج من المتجر");
       await loadProducts();
     } catch (error) {
       console.error('Error deleting product:', error);
@@ -401,7 +393,7 @@ const ProductsManagementAdvanced = () => {
         .eq('id', targetProduct.id);
 
       await loadProducts();
-      toast.success("تم تغيير ترتيب المنتج");
+      toast.success("تم تغيير ترتيب المنتج في المتجر");
     } catch (error) {
       console.error('Error moving product:', error);
       toast.error("حدث خطأ في تغيير الترتيب");
@@ -436,18 +428,29 @@ const ProductsManagementAdvanced = () => {
                   إدارة المنتجات المتقدمة
                 </CardTitle>
                 <p className={`text-slate-600 dark:text-slate-400 mt-1 ${isMobile ? "text-sm" : "text-base"}`}>
-                  إدارة شاملة ومتطورة للمنتجات والتصنيفات
+                  إدارة شاملة للمنتجات مربوطة بالمتجر الإلكتروني
                 </p>
               </div>
             </div>
             
-            <Button 
-              onClick={() => setShowProductForm(true)}
-              className="bg-purple-600 hover:bg-purple-700"
-            >
-              <Plus className="h-4 w-4 ml-2" />
-              إضافة منتج جديد
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                onClick={loadData}
+                variant="outline"
+                size={isMobile ? "sm" : "default"}
+              >
+                <RefreshCw className="h-4 w-4 ml-2" />
+                تحديث
+              </Button>
+              <Button 
+                onClick={() => setShowProductForm(true)}
+                className="bg-purple-600 hover:bg-purple-700"
+                size={isMobile ? "sm" : "default"}
+              >
+                <Plus className="h-4 w-4 ml-2" />
+                إضافة منتج جديد
+              </Button>
+            </div>
           </div>
         </CardHeader>
       </Card>
@@ -455,7 +458,7 @@ const ProductsManagementAdvanced = () => {
       {/* Products Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {products.map((product, index) => (
-          <Card key={product.id} className="overflow-hidden">
+          <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow">
             <div className="aspect-video bg-gray-100 dark:bg-gray-800 relative">
               {product.image_url ? (
                 <img 
@@ -477,7 +480,13 @@ const ProductsManagementAdvanced = () => {
                   </Badge>
                 )}
                 {!product.is_active && (
-                  <Badge variant="secondary">غير نشط</Badge>
+                  <Badge variant="secondary">مخفي من المتجر</Badge>
+                )}
+                {product.is_active && (
+                  <Badge className="bg-green-500 text-white">
+                    <Eye className="h-3 w-3 ml-1" />
+                    ظاهر في المتجر
+                  </Badge>
                 )}
               </div>
 
@@ -530,6 +539,28 @@ const ProductsManagementAdvanced = () => {
                 )}
               </div>
 
+              {/* عرض المقاسات والأسعار */}
+              {product.sizes.length > 0 && (
+                <div className="mb-3">
+                  <p className="text-xs text-gray-500 mb-1">المقاسات والأسعار:</p>
+                  <div className="grid grid-cols-2 gap-1 text-xs">
+                    {product.sizes.slice(0, 4).map((size, idx) => (
+                      <div key={idx} className="bg-gray-50 p-1 rounded">
+                        <span className="font-medium">{size.size}</span>
+                        <span className="text-green-600 mr-1">
+                          {formatCurrency(size.price)}
+                        </span>
+                      </div>
+                    ))}
+                    {product.sizes.length > 4 && (
+                      <div className="text-gray-500 text-center col-span-2">
+                        +{product.sizes.length - 4} مقاس آخر
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <div className="flex gap-2">
                 <Button
                   size="sm"
@@ -552,7 +583,7 @@ const ProductsManagementAdvanced = () => {
                     <AlertDialogHeader>
                       <AlertDialogTitle>تأكيد حذف المنتج</AlertDialogTitle>
                       <AlertDialogDescription>
-                        هل أنت متأكد من حذف هذا المنتج؟ سيتم حذف جميع المقاسات والصور المرتبطة به.
+                        هل أنت متأكد من حذف هذا المنتج؟ سيتم إزالته من المتجر وحذف جميع المقاسات والصور المرتبطة به.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -561,7 +592,7 @@ const ProductsManagementAdvanced = () => {
                         onClick={() => handleDeleteProduct(product.id)}
                         className="bg-red-500 hover:bg-red-600"
                       >
-                        حذف
+                        حذف من المتجر
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
@@ -576,9 +607,9 @@ const ProductsManagementAdvanced = () => {
         <Card>
           <CardContent className="text-center py-12">
             <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">لا توجد منتجات</h3>
+            <h3 className="text-lg font-semibold mb-2">لا توجد منتجات في المتجر</h3>
             <p className="text-gray-600 dark:text-gray-400 mb-4">
-              ابدأ بإضافة منتجك الأول
+              ابدأ بإضافة منتجك الأول للمتجر الإلكتروني
             </p>
             <Button onClick={() => setShowProductForm(true)}>
               <Plus className="h-4 w-4 ml-2" />
@@ -594,7 +625,7 @@ const ProductsManagementAdvanced = () => {
           <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>
-                {editingProduct ? "تعديل المنتج" : "إضافة منتج جديد"}
+                {editingProduct ? "تعديل المنتج في المتجر" : "إضافة منتج جديد للمتجر"}
               </CardTitle>
               <Button
                 variant="ghost"
@@ -641,12 +672,12 @@ const ProductsManagementAdvanced = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">الوصف</Label>
+                <Label htmlFor="description">وصف المنتج</Label>
                 <Textarea
                   id="description"
                   value={formData.description}
                   onChange={(e) => setFormData({...formData, description: e.target.value})}
-                  placeholder="أدخل وصف المنتج"
+                  placeholder="أدخل وصف المنتج (يظهر في المتجر)"
                   className="min-h-[100px]"
                 />
               </div>
@@ -681,7 +712,7 @@ const ProductsManagementAdvanced = () => {
                     checked={formData.is_active}
                     onCheckedChange={(checked) => setFormData({...formData, is_active: checked})}
                   />
-                  <Label htmlFor="is_active">نشط</Label>
+                  <Label htmlFor="is_active">ظاهر في المتجر</Label>
                 </div>
                 
                 <div className="flex items-center space-x-2">
@@ -690,7 +721,7 @@ const ProductsManagementAdvanced = () => {
                     checked={formData.featured}
                     onCheckedChange={(checked) => setFormData({...formData, featured: checked})}
                   />
-                  <Label htmlFor="featured">مميز</Label>
+                  <Label htmlFor="featured">منتج مميز</Label>
                 </div>
                 
                 <div className="space-y-2">
@@ -738,7 +769,7 @@ const ProductsManagementAdvanced = () => {
                       />
                       <Input
                         type="number"
-                        placeholder="التكلفة"
+                        placeholder="تكلفة الإنتاج"
                         value={size.cost}
                         onChange={(e) => updateSize(index, 'cost', Number(e.target.value))}
                       />
@@ -770,7 +801,7 @@ const ProductsManagementAdvanced = () => {
               {/* Images Section */}
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold">صور المنتج</h3>
+                  <h3 className="text-lg font-semibold">صور المنتج الإضافية</h3>
                   <Button onClick={addImage} size="sm">
                     <Plus className="h-4 w-4 ml-1" />
                     إضافة صورة
@@ -813,7 +844,7 @@ const ProductsManagementAdvanced = () => {
               <div className="flex gap-3 pt-4 border-t">
                 <Button onClick={handleSaveProduct} className="flex-1">
                   <Save className="h-4 w-4 ml-2" />
-                  {editingProduct ? "تحديث المنتج" : "حفظ المنتج"}
+                  {editingProduct ? "تحديث في المتجر" : "إضافة للمتجر"}
                 </Button>
                 <Button variant="outline" onClick={resetForm}>
                   إلغاء
