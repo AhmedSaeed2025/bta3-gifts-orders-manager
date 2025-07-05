@@ -18,6 +18,7 @@ import { OrderItem, OrderStatus } from "@/types";
 interface AddOrderDialogProps {
   isOpen: boolean;
   onClose: () => void;
+  onOrderAdded?: () => void;
 }
 
 interface OrderItemWithDetails extends OrderItem {
@@ -25,7 +26,7 @@ interface OrderItemWithDetails extends OrderItem {
   categoryName?: string;
 }
 
-const AddOrderDialog: React.FC<AddOrderDialogProps> = ({ isOpen, onClose }) => {
+const AddOrderDialog: React.FC<AddOrderDialogProps> = ({ isOpen, onClose, onOrderAdded }) => {
   const { addOrder } = useSupabaseOrders();
   const { products } = useProducts();
 
@@ -61,7 +62,7 @@ const AddOrderDialog: React.FC<AddOrderDialogProps> = ({ isOpen, onClose }) => {
   const availableProducts = useMemo(() => {
     if (!selectedCategory) return [];
     return products.filter(product => 
-      product.categoryId === selectedCategory && product.isVisible
+      product.categoryId === selectedCategory && product.isVisible !== false
     );
   }, [products, selectedCategory]);
 
@@ -197,6 +198,12 @@ const AddOrderDialog: React.FC<AddOrderDialogProps> = ({ isOpen, onClose }) => {
         status: "pending"
       });
       setOrderItems([]);
+      
+      // Call onOrderAdded if provided
+      if (onOrderAdded) {
+        onOrderAdded();
+      }
+      
       onClose();
     } catch (error) {
       console.error("Error adding order:", error);

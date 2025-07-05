@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 interface ProductContextType {
   products: Product[];
   addProduct: (product: Omit<Product, "id">) => Promise<void>;
-  updateProduct: (id: string, product: Product) => Promise<void>;
+  updateProduct: (id: string, product: Omit<Product, "id">) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
   loading: boolean;
 }
@@ -49,6 +49,8 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
       const formattedProducts = productsData?.map(product => ({
         id: product.id,
         name: product.name,
+        categoryId: product.category_id,
+        isVisible: product.is_active !== false,
         sizes: product.product_sizes?.map((size: any) => ({
           size: size.size,
           cost: Number(size.cost),
@@ -98,7 +100,9 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
         .from('products')
         .insert({
           user_id: user.id,
-          name: newProduct.name
+          name: newProduct.name,
+          category_id: newProduct.categoryId,
+          is_active: newProduct.isVisible
         })
         .select()
         .single();
@@ -138,7 +142,7 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
     }
   };
 
-  const updateProduct = async (id: string, updatedProduct: Product) => {
+  const updateProduct = async (id: string, updatedProduct: Omit<Product, "id">) => {
     if (!user) {
       toast.error("يجب تسجيل الدخول أولاً");
       return;
@@ -147,10 +151,14 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
     try {
       console.log('Updating product:', id, updatedProduct);
       
-      // Update product name
+      // Update product name and properties
       const { error: productError } = await supabase
         .from('products')
-        .update({ name: updatedProduct.name })
+        .update({ 
+          name: updatedProduct.name,
+          category_id: updatedProduct.categoryId,
+          is_active: updatedProduct.isVisible
+        })
         .eq('id', id)
         .eq('user_id', user.id);
 

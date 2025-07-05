@@ -80,8 +80,9 @@ export interface MonthlyReport {
 export interface Product {
   id: string;
   name: string;
+  categoryId?: string;
   sizes: ProductSize[];
-  discount_percentage?: number;
+  isVisible: boolean;
 }
 
 export interface ProductSize {
