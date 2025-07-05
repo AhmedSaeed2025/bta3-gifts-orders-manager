@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Trash2 } from "lucide-react";
 import { useSupabaseOrders } from "@/context/SupabaseOrderContext";
+import { useProducts } from "@/context/ProductContext";
 import { formatCurrency } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -29,6 +31,7 @@ interface AddOrderDialogProps {
 
 const AddOrderDialog: React.FC<AddOrderDialogProps> = ({ isOpen, onClose, onOrderAdded }) => {
   const { addOrder } = useSupabaseOrders();
+  const { products } = useProducts();
   
   const [loading, setLoading] = useState(false);
   const [orderData, setOrderData] = useState({
@@ -43,34 +46,60 @@ const AddOrderDialog: React.FC<AddOrderDialogProps> = ({ isOpen, onClose, onOrde
     deposit: 0
   });
   
-  const [items, setItems] = useState<OrderItem[]>([
-    {
-      productType: "",
-      size: "",
-      quantity: 1,
-      cost: 0,
-      price: 0,
-      profit: 0,
-      itemDiscount: 0
-    }
-  ]);
+  const [items, setItems] = useState<OrderItem[]>([]);
+  const [currentItem, setCurrentItem] = useState({
+    productType: "",
+    size: "",
+    quantity: 1,
+    itemDiscount: 0
+  });
+
+  // Get available sizes for selected product
+  const getAvailableSizes = (productName: string) => {
+    const product = products.find(p => p.name === productName);
+    return product ? product.sizes : [];
+  };
+
+  // Get cost and price for selected product and size
+  const getProductPricing = (productName: string, size: string) => {
+    const product = products.find(p => p.name === productName);
+    if (!product) return { cost: 0, price: 0 };
+    
+    const sizeInfo = product.sizes.find(s => s.size === size);
+    return sizeInfo ? { cost: sizeInfo.cost, price: sizeInfo.price } : { cost: 0, price: 0 };
+  };
 
   const addItem = () => {
-    setItems([...items, {
+    if (!currentItem.productType || !currentItem.size || currentItem.quantity < 1) {
+      toast.error("يرجى اختيار المنتج والمقاس والكمية");
+      return;
+    }
+
+    const pricing = getProductPricing(currentItem.productType, currentItem.size);
+    const discountedPrice = pricing.price - (currentItem.itemDiscount || 0);
+    const profit = (discountedPrice - pricing.cost) * currentItem.quantity;
+
+    const newItem: OrderItem = {
+      productType: currentItem.productType,
+      size: currentItem.size,
+      quantity: currentItem.quantity,
+      cost: pricing.cost,
+      price: pricing.price,
+      profit: profit,
+      itemDiscount: currentItem.itemDiscount || 0
+    };
+
+    setItems([...items, newItem]);
+    setCurrentItem({
       productType: "",
       size: "",
       quantity: 1,
-      cost: 0,
-      price: 0,
-      profit: 0,
       itemDiscount: 0
-    }]);
+    });
   };
 
   const removeItem = (index: number) => {
-    if (items.length > 1) {
-      setItems(items.filter((_, i) => i !== index));
-    }
+    setItems(items.filter((_, i) => i !== index));
   };
 
   const updateItem = (index: number, field: string, value: any) => {
@@ -78,14 +107,10 @@ const AddOrderDialog: React.FC<AddOrderDialogProps> = ({ isOpen, onClose, onOrde
       if (i === index) {
         const updatedItem = { ...item, [field]: value };
         
-        // Auto-calculate profit when cost or price changes
-        if (field === 'cost' || field === 'price' || field === 'quantity' || field === 'itemDiscount') {
-          const cost = field === 'cost' ? parseFloat(value) : updatedItem.cost;
-          const price = field === 'price' ? parseFloat(value) : updatedItem.price;
-          const quantity = field === 'quantity' ? parseInt(value) : updatedItem.quantity;
-          const discount = field === 'itemDiscount' ? parseFloat(value) : (updatedItem.itemDiscount || 0);
-          
-          updatedItem.profit = ((price - discount) - cost) * quantity;
+        // Recalculate profit when quantity or discount changes
+        if (field === 'quantity' || field === 'itemDiscount') {
+          const discountedPrice = updatedItem.price - (updatedItem.itemDiscount || 0);
+          updatedItem.profit = (discountedPrice - updatedItem.cost) * updatedItem.quantity;
         }
         
         return updatedItem;
@@ -113,8 +138,8 @@ const AddOrderDialog: React.FC<AddOrderDialogProps> = ({ isOpen, onClose, onOrde
       return;
     }
     
-    if (items.some(item => !item.productType.trim() || !item.size.trim())) {
-      toast.error("يرجى إدخال جميع بيانات الأصناف");
+    if (items.length === 0) {
+      toast.error("يرجى إضافة منتج واحد على الأقل");
       return;
     }
     
@@ -144,15 +169,13 @@ const AddOrderDialog: React.FC<AddOrderDialogProps> = ({ isOpen, onClose, onOrde
         deposit: 0
       });
       
-      setItems([{
+      setItems([]);
+      setCurrentItem({
         productType: "",
         size: "",
         quantity: 1,
-        cost: 0,
-        price: 0,
-        profit: 0,
         itemDiscount: 0
-      }]);
+      });
       
       onOrderAdded();
       onClose();
@@ -217,22 +240,125 @@ const AddOrderDialog: React.FC<AddOrderDialogProps> = ({ isOpen, onClose, onOrde
             </CardContent>
           </Card>
 
-          {/* Order Items */}
+          {/* Add Items */}
           <Card>
             <CardContent className="p-4 space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="font-semibold text-lg">أصناف الطلب</h3>
-                <Button type="button" onClick={addItem} size="sm">
-                  <Plus className="h-4 w-4 ml-2" />
-                  إضافة صنف
-                </Button>
+              <h3 className="font-semibold text-lg">إضافة منتج</h3>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div>
+                  <Label>المنتج</Label>
+                  <Select 
+                    value={currentItem.productType} 
+                    onValueChange={(value) => setCurrentItem({...currentItem, productType: value, size: ""})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="اختر المنتج" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {products.map((product) => (
+                        <SelectItem key={product.id} value={product.name}>
+                          {product.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label>المقاس</Label>
+                  <Select 
+                    value={currentItem.size} 
+                    onValueChange={(value) => setCurrentItem({...currentItem, size: value})}
+                    disabled={!currentItem.productType}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="اختر المقاس" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getAvailableSizes(currentItem.productType).map((size) => (
+                        <SelectItem key={size.size} value={size.size}>
+                          {size.size} - {formatCurrency(size.price)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label>الكمية</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={currentItem.quantity}
+                    onChange={(e) => setCurrentItem({...currentItem, quantity: parseInt(e.target.value) || 1})}
+                  />
+                </div>
+                
+                <div>
+                  <Label>خصم المنتج</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={currentItem.itemDiscount}
+                    onChange={(e) => setCurrentItem({...currentItem, itemDiscount: parseFloat(e.target.value) || 0})}
+                  />
+                </div>
+                
+                <div className="flex items-end">
+                  <Button type="button" onClick={addItem} className="w-full">
+                    <Plus className="h-4 w-4 mr-2" />
+                    إضافة
+                  </Button>
+                </div>
               </div>
-              
-              {items.map((item, index) => (
-                <div key={index} className="border rounded-lg p-4 space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium">الصنف {index + 1}</span>
-                    {items.length > 1 && (
+            </CardContent>
+          </Card>
+
+          {/* Items List */}
+          {items.length > 0 && (
+            <Card>
+              <CardContent className="p-4">
+                <h3 className="font-semibold text-lg mb-4">المنتجات المضافة</h3>
+                <div className="space-y-2">
+                  {items.map((item, index) => (
+                    <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                      <div className="flex-1 grid grid-cols-2 md:grid-cols-6 gap-4 items-center">
+                        <div>
+                          <span className="text-sm font-medium">{item.productType}</span>
+                        </div>
+                        <div>
+                          <span className="text-sm">{item.size}</span>
+                        </div>
+                        <div>
+                          <Input
+                            type="number"
+                            min="1"
+                            value={item.quantity}
+                            onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 1)}
+                            className="h-8 text-sm"
+                          />
+                        </div>
+                        <div>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={item.itemDiscount || 0}
+                            onChange={(e) => updateItem(index, 'itemDiscount', parseFloat(e.target.value) || 0)}
+                            className="h-8 text-sm"
+                            placeholder="خصم"
+                          />
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium">
+                            {formatCurrency((item.price - (item.itemDiscount || 0)) * item.quantity)}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-sm text-green-600 font-medium">
+                            {formatCurrency(item.profit)}
+                          </span>
+                        </div>
+                      </div>
                       <Button
                         type="button"
                         variant="destructive"
@@ -241,75 +367,12 @@ const AddOrderDialog: React.FC<AddOrderDialogProps> = ({ isOpen, onClose, onOrde
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
-                    )}
-                  </div>
-                  
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div>
-                      <Label>نوع المنتج *</Label>
-                      <Input
-                        value={item.productType}
-                        onChange={(e) => updateItem(index, 'productType', e.target.value)}
-                        required
-                      />
                     </div>
-                    <div>
-                      <Label>المقاس *</Label>
-                      <Input
-                        value={item.size}
-                        onChange={(e) => updateItem(index, 'size', e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label>الكمية</Label>
-                      <Input
-                        type="number"
-                        min="1"
-                        value={item.quantity}
-                        onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 1)}
-                      />
-                    </div>
-                    <div>
-                      <Label>التكلفة</Label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        value={item.cost}
-                        onChange={(e) => updateItem(index, 'cost', parseFloat(e.target.value) || 0)}
-                      />
-                    </div>
-                    <div>
-                      <Label>السعر</Label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        value={item.price}
-                        onChange={(e) => updateItem(index, 'price', parseFloat(e.target.value) || 0)}
-                      />
-                    </div>
-                    <div>
-                      <Label>خصم الصنف</Label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        value={item.itemDiscount || 0}
-                        onChange={(e) => updateItem(index, 'itemDiscount', parseFloat(e.target.value) || 0)}
-                      />
-                    </div>
-                    <div>
-                      <Label>الربح</Label>
-                      <Input
-                        value={formatCurrency(item.profit)}
-                        disabled
-                        className="bg-gray-50"
-                      />
-                    </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Order Details */}
           <Card>
@@ -384,7 +447,7 @@ const AddOrderDialog: React.FC<AddOrderDialogProps> = ({ isOpen, onClose, onOrde
           </Card>
 
           <div className="flex gap-3 pt-4">
-            <Button type="submit" disabled={loading} className="flex-1">
+            <Button type="submit" disabled={loading || items.length === 0} className="flex-1">
               {loading ? "جاري الحفظ..." : "حفظ الطلب"}
             </Button>
             <Button type="button" variant="outline" onClick={onClose} disabled={loading}>

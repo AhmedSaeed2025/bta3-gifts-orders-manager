@@ -55,9 +55,13 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
     setLoading(true);
 
     try {
+      console.log('Starting payment process for order:', order.serial);
+      
       // تحديث العربون في الطلب
       const newDeposit = (order.deposit || 0) + paymentAmount;
-      
+      console.log('New deposit amount:', newDeposit);
+
+      // تحديث في جدول orders الرئيسي
       const { error: orderError } = await supabase
         .from('orders')
         .update({ 
@@ -67,7 +71,25 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
         .eq('serial', order.serial)
         .eq('user_id', user.id);
 
-      if (orderError) throw orderError;
+      if (orderError) {
+        console.error('Error updating orders table:', orderError);
+        throw orderError;
+      }
+
+      // تحديث في جدول admin_orders أيضاً
+      const { error: adminOrderError } = await supabase
+        .from('admin_orders')
+        .update({ 
+          deposit: newDeposit,
+          updated_at: new Date().toISOString()
+        })
+        .eq('serial', order.serial)
+        .eq('user_id', user.id);
+
+      if (adminOrderError) {
+        console.error('Error updating admin_orders table:', adminOrderError);
+        // لا نتوقف هنا، قد لا يكون الطلب موجود في admin_orders
+      }
 
       // إضافة معاملة في كشف الحساب
       const { error: transactionError } = await supabase
@@ -80,8 +102,12 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
           description: description || `سداد جزئي للطلب ${order.serial}`
         });
 
-      if (transactionError) throw transactionError;
+      if (transactionError) {
+        console.error('Error creating transaction:', transactionError);
+        throw transactionError;
+      }
 
+      console.log('Payment processed successfully');
       toast.success("تم تسجيل السداد بنجاح");
       
       // إعادة تعيين النموذج
@@ -92,14 +118,21 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
       
     } catch (error) {
       console.error("Error recording payment:", error);
-      toast.error("حدث خطأ في تسجيل السداد");
+      toast.error("حدث خطأ في تسجيل السداد. تحقق من صحة البيانات.");
     } finally {
       setLoading(false);
     }
   };
 
+  const handleClose = () => {
+    setAmount("");
+    setDescription("");
+    setPaymentType("deposit");
+    onClose();
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md" dir="rtl">
         <DialogHeader>
           <DialogTitle>تسجيل سداد للطلب {order.serial}</DialogTitle>
@@ -155,6 +188,9 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
               placeholder="0.00"
               required
             />
+            <div className="text-xs text-gray-500">
+              الحد الأقصى: {formatCurrency(remainingAmount)}
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -171,7 +207,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
           <div className="flex gap-3 pt-4">
             <Button 
               type="submit" 
-              disabled={loading}
+              disabled={loading || !amount || parseFloat(amount) <= 0}
               className="flex-1"
             >
               {loading ? "جاري التسجيل..." : "تسجيل السداد"}
@@ -179,7 +215,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
             <Button 
               type="button" 
               variant="outline" 
-              onClick={onClose}
+              onClick={handleClose}
               disabled={loading}
             >
               إلغاء
