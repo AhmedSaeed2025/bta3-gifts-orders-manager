@@ -33,6 +33,14 @@ const AddOrderDialog: React.FC<AddOrderDialogProps> = ({ isOpen, onClose, onOrde
   const { addOrder } = useSupabaseOrders();
   const { products } = useProducts();
   
+  // Mock categories for now
+  const categories = [
+    { id: "1", name: "ملابس رجالية" },
+    { id: "2", name: "ملابس نسائية" },
+    { id: "3", name: "أحذية" },
+    { id: "4", name: "إكسسوارات" }
+  ];
+  
   const [loading, setLoading] = useState(false);
   const [orderData, setOrderData] = useState({
     clientName: "",
@@ -48,11 +56,18 @@ const AddOrderDialog: React.FC<AddOrderDialogProps> = ({ isOpen, onClose, onOrde
   
   const [items, setItems] = useState<OrderItem[]>([]);
   const [currentItem, setCurrentItem] = useState({
+    categoryId: "",
     productType: "",
     size: "",
     quantity: 1,
     itemDiscount: 0
   });
+
+  // Get products for selected category
+  const getProductsForCategory = (categoryId: string) => {
+    // For now, return all products since we don't have category mapping yet
+    return products;
+  };
 
   // Get available sizes for selected product
   const getAvailableSizes = (productName: string) => {
@@ -70,8 +85,8 @@ const AddOrderDialog: React.FC<AddOrderDialogProps> = ({ isOpen, onClose, onOrde
   };
 
   const addItem = () => {
-    if (!currentItem.productType || !currentItem.size || currentItem.quantity < 1) {
-      toast.error("يرجى اختيار المنتج والمقاس والكمية");
+    if (!currentItem.categoryId || !currentItem.productType || !currentItem.size || currentItem.quantity < 1) {
+      toast.error("يرجى اختيار الفئة والمنتج والمقاس والكمية");
       return;
     }
 
@@ -91,6 +106,7 @@ const AddOrderDialog: React.FC<AddOrderDialogProps> = ({ isOpen, onClose, onOrde
 
     setItems([...items, newItem]);
     setCurrentItem({
+      categoryId: "",
       productType: "",
       size: "",
       quantity: 1,
@@ -171,6 +187,7 @@ const AddOrderDialog: React.FC<AddOrderDialogProps> = ({ isOpen, onClose, onOrde
       
       setItems([]);
       setCurrentItem({
+        categoryId: "",
         productType: "",
         size: "",
         quantity: 1,
@@ -244,18 +261,38 @@ const AddOrderDialog: React.FC<AddOrderDialogProps> = ({ isOpen, onClose, onOrde
           <Card>
             <CardContent className="p-4 space-y-4">
               <h3 className="font-semibold text-lg">إضافة منتج</h3>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+                <div>
+                  <Label>الفئة</Label>
+                  <Select 
+                    value={currentItem.categoryId} 
+                    onValueChange={(value) => setCurrentItem({...currentItem, categoryId: value, productType: "", size: ""})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="اختر الفئة" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
                 <div>
                   <Label>المنتج</Label>
                   <Select 
                     value={currentItem.productType} 
                     onValueChange={(value) => setCurrentItem({...currentItem, productType: value, size: ""})}
+                    disabled={!currentItem.categoryId}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="اختر المنتج" />
                     </SelectTrigger>
                     <SelectContent>
-                      {products.map((product) => (
+                      {getProductsForCategory(currentItem.categoryId).map((product) => (
                         <SelectItem key={product.id} value={product.name}>
                           {product.name}
                         </SelectItem>

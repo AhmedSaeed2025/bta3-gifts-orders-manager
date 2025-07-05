@@ -43,15 +43,19 @@ const ProductsManagementByCategory = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
+  const [isEditCategoryOpen, setIsEditCategoryOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   
   const [newCategory, setNewCategory] = useState({ name: "", description: "" });
+  const [editCategory, setEditCategory] = useState({ name: "", description: "" });
   const [newProduct, setNewProduct] = useState({
     name: "",
     categoryId: "",
     sizes: [{ size: "", cost: 0, price: 0 }]
   });
 
+  // Category operations
   const handleAddCategory = () => {
     if (!newCategory.name.trim()) {
       toast.error("يرجى إدخال اسم الفئة");
@@ -70,6 +74,38 @@ const ProductsManagementByCategory = () => {
     toast.success("تم إضافة الفئة بنجاح");
   };
 
+  const handleEditCategory = (category: Category) => {
+    setEditingCategory(category);
+    setEditCategory({ name: category.name, description: category.description || "" });
+    setIsEditCategoryOpen(true);
+  };
+
+  const handleUpdateCategory = () => {
+    if (!editCategory.name.trim() || !editingCategory) {
+      toast.error("يرجى إدخال اسم الفئة");
+      return;
+    }
+
+    setCategories(categories.map(cat => 
+      cat.id === editingCategory.id 
+        ? { ...cat, name: editCategory.name, description: editCategory.description }
+        : cat
+    ));
+    
+    setEditingCategory(null);
+    setEditCategory({ name: "", description: "" });
+    setIsEditCategoryOpen(false);
+    toast.success("تم تحديث الفئة بنجاح");
+  };
+
+  const handleDeleteCategory = (categoryId: string) => {
+    if (window.confirm("هل أنت متأكد من حذف هذه الفئة؟")) {
+      setCategories(categories.filter(cat => cat.id !== categoryId));
+      toast.success("تم حذف الفئة بنجاح");
+    }
+  };
+
+  // Product operations
   const handleAddProduct = async () => {
     if (!newProduct.name.trim() || newProduct.sizes.some(s => !s.size.trim())) {
       toast.error("يرجى إكمال جميع بيانات المنتج");
@@ -114,6 +150,7 @@ const ProductsManagementByCategory = () => {
     }
   };
 
+  // Size operations
   const addSizeToNewProduct = () => {
     setNewProduct({
       ...newProduct,
@@ -137,11 +174,46 @@ const ProductsManagementByCategory = () => {
     }
   };
 
+  const addSizeToEditingProduct = () => {
+    if (editingProduct) {
+      setEditingProduct({
+        ...editingProduct,
+        sizes: [...editingProduct.sizes, { size: "", cost: 0, price: 0 }]
+      });
+    }
+  };
+
+  const updateEditingProductSize = (index: number, field: string, value: any) => {
+    if (editingProduct) {
+      const updatedSizes = editingProduct.sizes.map((size, i) => 
+        i === index ? { ...size, [field]: value } : size
+      );
+      setEditingProduct({ ...editingProduct, sizes: updatedSizes });
+    }
+  };
+
+  const removeEditingProductSize = (index: number) => {
+    if (editingProduct && editingProduct.sizes.length > 1) {
+      setEditingProduct({
+        ...editingProduct,
+        sizes: editingProduct.sizes.filter((_, i) => i !== index)
+      });
+    }
+  };
+
   const getProductsByCategory = (categoryId: string) => {
     return products.filter(product => 
-      // في المرحلة الحالية، سنعتبر جميع المنتجات بدون فئة محددة
       categoryId === "all"
     );
+  };
+
+  const openEditProduct = (product: any) => {
+    setEditingProduct({
+      id: product.id,
+      name: product.name,
+      categoryId: product.categoryId || "",
+      sizes: product.sizes || [{ size: "", cost: 0, price: 0 }]
+    });
   };
 
   if (loading) {
@@ -161,7 +233,7 @@ const ProductsManagementByCategory = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">إدارة المنتجات</h2>
+        <h2 className="text-2xl font-bold">إدارة المنتجات والفئات</h2>
         <div className="flex gap-2">
           <Dialog open={isAddCategoryOpen} onOpenChange={setIsAddCategoryOpen}>
             <DialogTrigger asChild>
@@ -292,9 +364,33 @@ const ProductsManagementByCategory = () => {
             onClick={() => setSelectedCategory(selectedCategory === category.id ? null : category.id)}
           >
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Package className="h-5 w-5" />
-                {category.name}
+              <CardTitle className="text-lg flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Package className="h-5 w-5" />
+                  {category.name}
+                </div>
+                <div className="flex gap-1">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditCategory(category);
+                    }}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteCategory(category.id);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -349,7 +445,7 @@ const ProductsManagementByCategory = () => {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => setEditingProduct(product)}
+                        onClick={() => openEditProduct(product)}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -390,6 +486,36 @@ const ProductsManagementByCategory = () => {
         </Card>
       )}
 
+      {/* Edit Category Dialog */}
+      <Dialog open={isEditCategoryOpen} onOpenChange={setIsEditCategoryOpen}>
+        <DialogContent dir="rtl">
+          <DialogHeader>
+            <DialogTitle>تعديل الفئة</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="editCategoryName">اسم الفئة</Label>
+              <Input
+                id="editCategoryName"
+                value={editCategory.name}
+                onChange={(e) => setEditCategory({...editCategory, name: e.target.value})}
+              />
+            </div>
+            <div>
+              <Label htmlFor="editCategoryDesc">وصف الفئة</Label>
+              <Textarea
+                id="editCategoryDesc"
+                value={editCategory.description}
+                onChange={(e) => setEditCategory({...editCategory, description: e.target.value})}
+              />
+            </div>
+            <Button onClick={handleUpdateCategory} className="w-full">
+              تحديث الفئة
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Edit Product Dialog */}
       {editingProduct && (
         <Dialog open={!!editingProduct} onOpenChange={() => setEditingProduct(null)}>
@@ -411,17 +537,25 @@ const ProductsManagementByCategory = () => {
                 <Label>المقاسات والأسعار</Label>
                 {editingProduct.sizes.map((size, index) => (
                   <div key={index} className="border rounded-lg p-4 space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">المقاس {index + 1}</span>
+                      {editingProduct.sizes.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => removeEditingProductSize(index)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
                     <div className="grid grid-cols-3 gap-4">
                       <div>
                         <Label>المقاس</Label>
                         <Input
                           value={size.size}
-                          onChange={(e) => {
-                            const updatedSizes = editingProduct.sizes.map((s, i) => 
-                              i === index ? { ...s, size: e.target.value } : s
-                            );
-                            setEditingProduct({...editingProduct, sizes: updatedSizes});
-                          }}
+                          onChange={(e) => updateEditingProductSize(index, 'size', e.target.value)}
                         />
                       </div>
                       <div>
@@ -430,12 +564,7 @@ const ProductsManagementByCategory = () => {
                           type="number"
                           step="0.01"
                           value={size.cost}
-                          onChange={(e) => {
-                            const updatedSizes = editingProduct.sizes.map((s, i) => 
-                              i === index ? { ...s, cost: parseFloat(e.target.value) || 0 } : s
-                            );
-                            setEditingProduct({...editingProduct, sizes: updatedSizes});
-                          }}
+                          onChange={(e) => updateEditingProductSize(index, 'cost', parseFloat(e.target.value) || 0)}
                         />
                       </div>
                       <div>
@@ -444,17 +573,16 @@ const ProductsManagementByCategory = () => {
                           type="number"
                           step="0.01"
                           value={size.price}
-                          onChange={(e) => {
-                            const updatedSizes = editingProduct.sizes.map((s, i) => 
-                              i === index ? { ...s, price: parseFloat(e.target.value) || 0 } : s
-                            );
-                            setEditingProduct({...editingProduct, sizes: updatedSizes});
-                          }}
+                          onChange={(e) => updateEditingProductSize(index, 'price', parseFloat(e.target.value) || 0)}
                         />
                       </div>
                     </div>
                   </div>
                 ))}
+                <Button type="button" onClick={addSizeToEditingProduct} variant="outline" className="w-full">
+                  <Plus className="h-4 w-4 mr-2" />
+                  إضافة مقاس آخر
+                </Button>
               </div>
 
               <Button onClick={handleEditProduct} className="w-full">

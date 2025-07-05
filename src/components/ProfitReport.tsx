@@ -1,219 +1,151 @@
-import React, { useMemo, useRef, useState } from "react";
+
+import React, { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSupabaseOrders } from "@/context/SupabaseOrderContext";
-import { formatCurrency, generateMonthlyReport, exportProfitReportToExcel } from "@/lib/utils";
-import { jsPDF } from "jspdf";
-import html2canvas from "html2canvas";
-import { toast } from "sonner";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { FileText } from "lucide-react";
-import ProfitSummaryCards from "./reports/ProfitSummaryCards";
+import { formatCurrency } from "@/lib/utils";
 import ProfitFilters from "./reports/ProfitFilters";
+import ProfitSummaryCards from "./reports/ProfitSummaryCards";
 import ProfitChart from "./reports/ProfitChart";
 import ProfitTable from "./reports/ProfitTable";
 
 const ProfitReport = () => {
   const { orders, loading } = useSupabaseOrders();
-  const reportRef = useRef<HTMLDivElement>(null);
-  const isMobile = useIsMobile();
-  const [filterMonth, setFilterMonth] = useState<string>("all");
-  const [filterYear, setFilterYear] = useState<string>("all");
-  const [filterProduct, setFilterProduct] = useState<string>("all");
-  
-  const safeOrders = Array.isArray(orders) ? orders : [];
-  
-  // Filter orders based on selected filters
-  const filteredOrders = useMemo(() => {
-    return safeOrders.filter(order => {
-      const orderDate = new Date(order.dateCreated);
+  const [filterMonth, setFilterMonth] = useState("all");
+  const [filterYear, setFilterYear] = useState("all");
+  const [filterProduct, setFilterProduct] = useState("all");
+
+  // Calculate profit data excluding deposits and shipping costs
+  const profitData = useMemo(() => {
+    if (!orders || orders.length === 0) return [];
+    
+    return orders.map(order => {
+      const orderItems = order.items || [];
+      let totalCost = 0;
+      let totalSales = 0; // Only product sales, excluding shipping
+      let totalDiscounts = order.discount || 0;
+      
+      orderItems.forEach(item => {
+        const itemSales = (item.price - (item.itemDiscount || 0)) * item.quantity;
+        const itemCost = item.cost * item.quantity;
+        
+        totalSales += itemSales;
+        totalCost += itemCost;
+      });
+      
+      // Net profit = Sales - Cost - Discounts (excluding shipping and deposits)
+      const netProfit = totalSales - totalCost - totalDiscounts;
+      
+      return {
+        ...order,
+        calculatedProfit: netProfit,
+        productSales: totalSales,
+        productCosts: totalCost,
+        totalDiscounts: totalDiscounts
+      };
+    });
+  }, [orders]);
+
+  // Filter data
+  const filteredData = useMemo(() => {
+    return profitData.filter(order => {
+      const orderDate = new Date(order.date_created);
       const orderYear = orderDate.getFullYear().toString();
       const orderMonth = (orderDate.getMonth() + 1).toString().padStart(2, '0');
       
-      if (filterYear !== "all" && orderYear !== filterYear) return false;
-      if (filterMonth !== "all" && orderMonth !== filterMonth) return false;
+      const yearMatch = filterYear === "all" || orderYear === filterYear;
+      const monthMatch = filterMonth === "all" || orderMonth === filterMonth;
+      
+      let productMatch = true;
       if (filterProduct !== "all") {
-        const hasProduct = order.items?.some(item => item.productType === filterProduct);
-        if (!hasProduct) return false;
+        productMatch = order.items?.some(item => item.productType === filterProduct) || false;
       }
       
-      return true;
+      return yearMatch && monthMatch && productMatch;
     });
-  }, [safeOrders, filterMonth, filterYear, filterProduct]);
-  
-  const monthlyReport = useMemo(() => generateMonthlyReport(filteredOrders), [filteredOrders]);
-  
-  // حساب محسّن للملخص مع استثناء الشحن من الأرباح
-  const summaryData = useMemo(() => {
-    if (!filteredOrders || filteredOrders.length === 0) {
-      return {
-        totalCost: 0,
-        totalSales: 0,
-        totalShipping: 0,
-        totalDiscounts: 0,
-        netProfit: 0,
-        totalItems: 0,
-        totalOrders: 0,
-        avgOrderValue: 0
-      };
-    }
+  }, [profitData, filterMonth, filterYear, filterProduct]);
 
-    let totalCost = 0;
-    let totalSales = 0;
-    let totalShipping = 0;
-    let totalDiscounts = 0;
-    let totalItems = 0;
-
-    filteredOrders.forEach(order => {
-      totalSales += order.total;
-      totalShipping += order.shippingCost || 0;
-      totalDiscounts += order.discount || 0;
-      
-      // حساب من الأصناف
-      order.items?.forEach(item => {
-        totalCost += item.cost * item.quantity;
-        totalDiscounts += (item.itemDiscount || 0) * item.quantity;
-        totalItems += item.quantity;
-      });
-    });
-
-    // الربح = المبيعات - التكلفة (استثناء الشحن لأنه يدار من شركة خارجية)
-    const netProfit = totalSales - totalCost;
-    const avgOrderValue = filteredOrders.length > 0 ? totalSales / filteredOrders.length : 0;
+  // Calculate summary
+  const summary = useMemo(() => {
+    const totalCost = filteredData.reduce((sum, order) => sum + order.productCosts, 0);
+    const totalSales = filteredData.reduce((sum, order) => sum + order.productSales, 0);
+    const totalDiscounts = filteredData.reduce((sum, order) => sum + order.totalDiscounts, 0);
+    const netProfit = filteredData.reduce((sum, order) => sum + order.calculatedProfit, 0);
+    const totalItems = filteredData.reduce((sum, order) => 
+      sum + (order.items?.reduce((itemSum, item) => itemSum + item.quantity, 0) || 0), 0
+    );
+    const totalOrders = filteredData.length;
+    const avgOrderValue = totalOrders > 0 ? totalSales / totalOrders : 0;
 
     return {
       totalCost,
       totalSales,
-      totalShipping,
+      totalShipping: 0, // Excluded from profit calculations
       totalDiscounts,
       netProfit,
       totalItems,
-      totalOrders: filteredOrders.length,
+      totalOrders,
       avgOrderValue
     };
-  }, [filteredOrders]);
+  }, [filteredData]);
 
-  const availableYears = useMemo(() => {
-    const years = new Set<string>();
-    safeOrders.forEach(order => {
-      const year = new Date(order.dateCreated).getFullYear().toString();
-      years.add(year);
-    });
-    return Array.from(years).sort();
-  }, [safeOrders]);
-
-  const availableProducts = useMemo(() => {
-    const products = new Set<string>();
-    safeOrders.forEach(order => {
-      order.items?.forEach(item => {
-        products.add(item.productType);
-      });
-    });
-    return Array.from(products).sort();
-  }, [safeOrders]);
-
+  // Prepare chart data
   const chartData = useMemo(() => {
-    return Object.entries(monthlyReport).map(([month, products]) => {
-      let monthlyCost = 0;
-      let monthlySales = 0;
-      let monthlyShipping = 0;
-      let monthlyDiscounts = 0;
-      
-      Object.values(products).forEach(data => {
-        monthlyCost += data.totalCost;
-        monthlySales += data.totalSales;
-        monthlyShipping += data.totalShipping || 0;
-        monthlyDiscounts += data.totalDiscounts || 0;
-      });
-      
-      return {
-        name: month,
-        تكاليف: monthlyCost,
-        مبيعات: monthlySales,
-        شحن: monthlyShipping,
-        خصومات: monthlyDiscounts,
-        أرباح: monthlySales - monthlyCost // استثناء الشحن من الربح
-      };
-    });
-  }, [monthlyReport]);
-
-  const tableData = useMemo(() => {
-    const data: any[] = [];
-    Object.entries(monthlyReport).forEach(([month, products]) => {
-      Object.entries(products).forEach(([productType, productData]) => {
-        data.push({
-          month,
-          productType,
-          quantity: productData.quantity,
-          totalCost: productData.totalCost,
-          totalSales: productData.totalSales,
-          totalShipping: productData.totalShipping || 0,
-          totalDiscounts: productData.totalDiscounts || 0,
-          netProfit: productData.totalSales - productData.totalCost // استثناء الشحن من الربح
-        });
-      });
-    });
-    return data;
-  }, [monthlyReport]);
-
-  const handleExcelExport = () => {
-    exportProfitReportToExcel(tableData, "تقرير_الأرباح_المفصل");
-    toast.success("تم تصدير ملف Excel بنجاح");
-  };
-
-  const handlePDFExport = async () => {
-    if (!reportRef.current) return;
+    const monthlyData = {};
     
-    try {
-      toast.info("جاري إنشاء ملف PDF...");
+    filteredData.forEach(order => {
+      const date = new Date(order.date_created);
+      const monthKey = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
       
-      reportRef.current.classList.add('pdf-export');
-      
-      const canvas = await html2canvas(reportRef.current, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: "#ffffff",
-        width: reportRef.current.scrollWidth,
-        height: reportRef.current.scrollHeight,
-        windowWidth: 1200,
-        windowHeight: 800
-      });
-      
-      reportRef.current.classList.remove('pdf-export');
-      
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: 'landscape',
-        unit: 'mm',
-        format: 'a4',
-      });
-      
-      const imgWidth = 297;
-      const pageHeight = 210;
-      const imgHeight = canvas.height * imgWidth / canvas.width;
-      
-      let heightLeft = imgHeight;
-      let position = 0;
-
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
+      if (!monthlyData[monthKey]) {
+        monthlyData[monthKey] = {
+          name: monthKey,
+          تكاليف: 0,
+          مبيعات: 0,
+          خصومات: 0,
+          أرباح: 0
+        };
       }
       
-      pdf.save(`تقرير_الأرباح_${new Date().toLocaleDateString('ar-EG')}.pdf`);
-      toast.success("تم إنشاء ملف PDF بنجاح");
-    } catch (error) {
-      console.error("PDF export error:", error);
-      toast.error("حدث خطأ أثناء إنشاء ملف PDF");
-    }
-  };
+      monthlyData[monthKey].تكاليف += order.productCosts;
+      monthlyData[monthKey].مبيعات += order.productSales;
+      monthlyData[monthKey].خصومات += order.totalDiscounts;
+      monthlyData[monthKey].أرباح += order.calculatedProfit;
+    });
+    
+    return Object.values(monthlyData);
+  }, [filteredData]);
 
-  const clearFilters = () => {
+  // Prepare table data
+  const tableData = useMemo(() => {
+    return filteredData.map(order => ({
+      month: new Date(order.date_created).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long' }),
+      productType: order.items?.map(item => item.productType).join(', ') || '',
+      quantity: order.items?.reduce((sum, item) => sum + item.quantity, 0) || 0,
+      totalCost: order.productCosts,
+      totalSales: order.productSales,
+      totalShipping: 0, // Excluded
+      totalDiscounts: order.totalDiscounts,
+      netProfit: order.calculatedProfit
+    }));
+  }, [filteredData]);
+
+  // Get available years and products
+  const availableYears = useMemo(() => {
+    const years = [...new Set(orders.map(order => 
+      new Date(order.date_created).getFullYear().toString()
+    ))];
+    return years.sort().reverse();
+  }, [orders]);
+
+  const availableProducts = useMemo(() => {
+    const products = new Set();
+    orders.forEach(order => {
+      order.items?.forEach(item => products.add(item.productType));
+    });
+    return Array.from(products).sort();
+  }, [orders]);
+
+  const handleClearFilters = () => {
     setFilterMonth("all");
     setFilterYear("all");
     setFilterProduct("all");
@@ -221,18 +153,11 @@ const ProfitReport = () => {
 
   if (loading) {
     return (
-      <Card className="animate-pulse shadow-xl">
-        <CardContent className="flex items-center justify-center py-16">
-          <div className="text-center space-y-6">
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-green-500 border-t-transparent mx-auto"></div>
-            <div className="space-y-2">
-              <p className={`text-slate-600 dark:text-slate-400 font-medium ${isMobile ? "text-lg" : "text-xl"}`}>
-                جاري تحميل تقرير الأرباح...
-              </p>
-              <p className={`text-slate-500 dark:text-slate-500 ${isMobile ? "text-sm" : "text-base"}`}>
-                يرجى الانتظار قليلاً
-              </p>
-            </div>
+      <Card>
+        <CardContent className="flex items-center justify-center py-8">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-2 text-gray-600">جاري تحميل تقرير الأرباح...</p>
           </div>
         </CardContent>
       </Card>
@@ -240,27 +165,14 @@ const ProfitReport = () => {
   }
 
   return (
-    <div className="rtl space-y-6" style={{ direction: 'rtl' }}>
-      {/* Header Section */}
-      <Card className="bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 dark:from-green-900/20 dark:via-emerald-900/20 dark:to-teal-900/20 border-l-4 border-l-green-500 shadow-xl">
-        <CardHeader className={`${isMobile ? "pb-4" : "pb-6"}`}>
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl shadow-lg">
-              <FileText className={`${isMobile ? "h-5 w-5" : "h-6 w-6"} text-white`} />
-            </div>
-            <div>
-              <CardTitle className={`font-bold text-slate-800 dark:text-white ${isMobile ? "text-xl" : "text-3xl"}`}>
-                تقرير الأرباح والتكاليف المتطور
-              </CardTitle>
-              <p className={`text-slate-600 dark:text-slate-400 mt-1 ${isMobile ? "text-sm" : "text-lg"}`}>
-                تحليل شامل ومفصل للأرباح والمبيعات والتكاليف والخصومات
-              </p>
-            </div>
-          </div>
-        </CardHeader>
-      </Card>
+    <div className="space-y-6" dir="rtl">
+      <div>
+        <h2 className="text-2xl font-bold mb-2">تقرير الأرباح</h2>
+        <p className="text-gray-600 text-sm">
+          * تم استبعاد العربون وتكاليف الشحن من حسابات الأرباح
+        </p>
+      </div>
 
-      {/* Filters Section */}
       <ProfitFilters
         filterMonth={filterMonth}
         setFilterMonth={setFilterMonth}
@@ -270,23 +182,16 @@ const ProfitReport = () => {
         setFilterProduct={setFilterProduct}
         availableYears={availableYears}
         availableProducts={availableProducts}
-        onClearFilters={clearFilters}
-        onExportExcel={handleExcelExport}
-        onExportPDF={handlePDFExport}
+        onClearFilters={handleClearFilters}
+        onExportExcel={() => {}}
+        onExportPDF={() => {}}
       />
 
-      <div ref={reportRef} className="space-y-6">
-        {/* Summary Cards */}
-        <ProfitSummaryCards summary={summaryData} />
+      <ProfitSummaryCards summary={summary} />
 
-        {/* Chart Section */}
-        {chartData.length > 0 && (
-          <ProfitChart chartData={chartData} />
-        )}
-        
-        {/* Detailed Table */}
-        <ProfitTable data={tableData} />
-      </div>
+      <ProfitChart chartData={chartData} />
+
+      <ProfitTable data={tableData} />
     </div>
   );
 };

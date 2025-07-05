@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,17 +47,17 @@ const AdminDashboard = () => {
     color?: string;
   }) => (
     <Card className="hover:shadow-lg transition-all duration-200">
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className={`text-sm font-medium text-muted-foreground ${isMobile ? 'text-xs' : ''}`}>
+      <CardContent className={`${isMobile ? 'p-3' : 'p-4'}`}>
+        <div className={`flex items-center ${isMobile ? 'flex-col text-center space-y-2' : 'justify-between'}`}>
+          <div className={isMobile ? 'order-2' : ''}>
+            <p className={`text-sm font-medium text-muted-foreground ${isMobile ? 'text-xs text-center' : ''}`}>
               {title}
             </p>
-            <p className={`font-bold ${color} ${isMobile ? 'text-lg' : 'text-2xl'}`}>
+            <p className={`font-bold ${color} ${isMobile ? 'text-base' : 'text-2xl'}`}>
               {value}
             </p>
           </div>
-          <Icon className={`${color} ${isMobile ? 'h-6 w-6' : 'h-8 w-8'}`} />
+          <Icon className={`${color} ${isMobile ? 'h-8 w-8 order-1' : 'h-8 w-8'}`} />
         </div>
       </CardContent>
     </Card>
@@ -71,18 +72,18 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="container mx-auto p-4 space-y-6" dir="rtl">
+    <div className={`container mx-auto space-y-6 ${isMobile ? 'p-2' : 'p-4'}`} dir="rtl">
       <div className="mb-6">
-        <h1 className={`font-bold text-gift-primary ${isMobile ? 'text-xl' : 'text-3xl'}`}>
+        <h1 className={`font-bold text-gift-primary ${isMobile ? 'text-lg' : 'text-3xl'}`}>
           لوحة التحكم
         </h1>
-        <p className={`text-muted-foreground ${isMobile ? 'text-sm' : 'text-base'}`}>
+        <p className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-base'}`}>
           إدارة متجرك وطلباتك
         </p>
       </div>
 
       {/* Dashboard Stats */}
-      <div className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-4'}`}>
+      <div className={`grid gap-3 ${isMobile ? 'grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-4'}`}>
         <StatCard
           title="إجمالي الطلبات"
           value={stats.totalOrders}
@@ -111,16 +112,43 @@ const AdminDashboard = () => {
 
       {/* Main Dashboard Tabs */}
       <Tabs defaultValue="orders" className="space-y-4">
-        <TabsList className={`grid w-full ${isMobile ? 'grid-cols-3' : 'grid-cols-4'} ${isMobile ? 'h-auto' : ''}`}>
-          <TabsTrigger value="orders" className={`flex items-center gap-2 ${isMobile ? 'flex-col p-2 text-xs' : ''}`}>
+        <TabsList 
+          className={`grid w-full ${
+            isMobile 
+              ? 'grid-cols-2 h-auto gap-1 p-1' 
+              : 'grid-cols-4'
+          }`}
+        >
+          <TabsTrigger 
+            value="orders" 
+            className={`flex items-center gap-2 ${
+              isMobile 
+                ? 'flex-col p-2 text-xs h-auto' 
+                : ''
+            }`}
+          >
             <ShoppingBag className={isMobile ? "h-4 w-4" : "h-4 w-4"} />
             <span>الطلبات</span>
           </TabsTrigger>
-          <TabsTrigger value="products" className={`flex items-center gap-2 ${isMobile ? 'flex-col p-2 text-xs' : ''}`}>
+          <TabsTrigger 
+            value="products" 
+            className={`flex items-center gap-2 ${
+              isMobile 
+                ? 'flex-col p-2 text-xs h-auto' 
+                : ''
+            }`}
+          >
             <Package className={isMobile ? "h-4 w-4" : "h-4 w-4"} />
             <span>المنتجات</span>
           </TabsTrigger>
-          <TabsTrigger value="accounting" className={`flex items-center gap-2 ${isMobile ? 'flex-col p-2 text-xs' : ''}`}>
+          <TabsTrigger 
+            value="accounting" 
+            className={`flex items-center gap-2 ${
+              isMobile 
+                ? 'flex-col p-2 text-xs h-auto' 
+                : ''
+            }`}
+          >
             <BarChart3 className={isMobile ? "h-4 w-4" : "h-4 w-4"} />
             <span>الحسابات</span>
           </TabsTrigger>
@@ -131,6 +159,19 @@ const AdminDashboard = () => {
             </TabsTrigger>
           )}
         </TabsList>
+
+        {/* Mobile: Show customers tab in a separate row */}
+        {isMobile && (
+          <TabsList className="grid w-full grid-cols-1 h-auto gap-1 p-1">
+            <TabsTrigger 
+              value="customers" 
+              className="flex items-center gap-2 flex-col p-2 text-xs h-auto"
+            >
+              <Users className="h-4 w-4" />
+              <span>العملاء</span>
+            </TabsTrigger>
+          </TabsList>
+        )}
 
         <TabsContent value="orders">
           <OrdersTab />
