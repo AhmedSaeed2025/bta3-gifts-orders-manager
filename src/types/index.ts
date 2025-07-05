@@ -1,3 +1,4 @@
+
 export interface OrderItem {
   productType: string;
   size: string;
@@ -83,6 +84,7 @@ export interface Product {
   categoryId?: string;
   sizes: ProductSize[];
   isVisible: boolean;
+  discount_percentage?: number;
 }
 
 export interface ProductSize {
