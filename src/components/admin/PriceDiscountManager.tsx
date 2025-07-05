@@ -57,8 +57,7 @@ const PriceDiscountManager = () => {
                     max="100"
                     value={product.discount_percentage || 0}
                     onChange={(e) => handleDiscountChange(product.id, parseFloat(e.target.value) || 0)}
-                    className="w-20 text-xs md:text-sm"
-                    size="sm"
+                    className="w-20 text-xs md:text-sm h-8"
                   />
                 </div>
               </div>
