@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Package, FolderPlus } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Edit, Trash2, Package, FolderPlus, Eye, EyeOff } from "lucide-react";
 import { useProducts } from "@/context/ProductContext";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/utils";
@@ -16,6 +17,7 @@ interface Category {
   id: string;
   name: string;
   description?: string;
+  isVisible: boolean;
 }
 
 interface ProductSize {
@@ -29,15 +31,16 @@ interface Product {
   name: string;
   categoryId?: string;
   sizes: ProductSize[];
+  isVisible: boolean;
 }
 
 const ProductsManagementByCategory = () => {
   const { products, addProduct, updateProduct, deleteProduct, loading } = useProducts();
   const [categories, setCategories] = useState<Category[]>([
-    { id: "1", name: "ملابس رجالية", description: "ملابس للرجال" },
-    { id: "2", name: "ملابس نسائية", description: "ملابس للنساء" },
-    { id: "3", name: "أحذية", description: "أحذية متنوعة" },
-    { id: "4", name: "إكسسوارات", description: "إكسسوارات مختلفة" }
+    { id: "1", name: "ملابس رجالية", description: "ملابس للرجال", isVisible: true },
+    { id: "2", name: "ملابس نسائية", description: "ملابس للنساء", isVisible: true },
+    { id: "3", name: "أحذية", description: "أحذية متنوعة", isVisible: true },
+    { id: "4", name: "إكسسوارات", description: "إكسسوارات مختلفة", isVisible: true }
   ]);
   
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -47,12 +50,13 @@ const ProductsManagementByCategory = () => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   
-  const [newCategory, setNewCategory] = useState({ name: "", description: "" });
-  const [editCategory, setEditCategory] = useState({ name: "", description: "" });
+  const [newCategory, setNewCategory] = useState({ name: "", description: "", isVisible: true });
+  const [editCategory, setEditCategory] = useState({ name: "", description: "", isVisible: true });
   const [newProduct, setNewProduct] = useState({
     name: "",
     categoryId: "",
-    sizes: [{ size: "", cost: 0, price: 0 }]
+    sizes: [{ size: "", cost: 0, price: 0 }],
+    isVisible: true
   });
 
   // Category operations
@@ -65,18 +69,23 @@ const ProductsManagementByCategory = () => {
     const category: Category = {
       id: Date.now().toString(),
       name: newCategory.name,
-      description: newCategory.description
+      description: newCategory.description,
+      isVisible: newCategory.isVisible
     };
 
     setCategories([...categories, category]);
-    setNewCategory({ name: "", description: "" });
+    setNewCategory({ name: "", description: "", isVisible: true });
     setIsAddCategoryOpen(false);
     toast.success("تم إضافة الفئة بنجاح");
   };
 
   const handleEditCategory = (category: Category) => {
     setEditingCategory(category);
-    setEditCategory({ name: category.name, description: category.description || "" });
+    setEditCategory({ 
+      name: category.name, 
+      description: category.description || "", 
+      isVisible: category.isVisible 
+    });
     setIsEditCategoryOpen(true);
   };
 
@@ -88,12 +97,12 @@ const ProductsManagementByCategory = () => {
 
     setCategories(categories.map(cat => 
       cat.id === editingCategory.id 
-        ? { ...cat, name: editCategory.name, description: editCategory.description }
+        ? { ...cat, name: editCategory.name, description: editCategory.description, isVisible: editCategory.isVisible }
         : cat
     ));
     
     setEditingCategory(null);
-    setEditCategory({ name: "", description: "" });
+    setEditCategory({ name: "", description: "", isVisible: true });
     setIsEditCategoryOpen(false);
     toast.success("تم تحديث الفئة بنجاح");
   };
@@ -103,6 +112,12 @@ const ProductsManagementByCategory = () => {
       setCategories(categories.filter(cat => cat.id !== categoryId));
       toast.success("تم حذف الفئة بنجاح");
     }
+  };
+
+  const toggleCategoryVisibility = (categoryId: string) => {
+    setCategories(categories.map(cat => 
+      cat.id === categoryId ? { ...cat, isVisible: !cat.isVisible } : cat
+    ));
   };
 
   // Product operations
@@ -115,13 +130,16 @@ const ProductsManagementByCategory = () => {
     try {
       await addProduct({
         name: newProduct.name,
-        sizes: newProduct.sizes
+        sizes: newProduct.sizes,
+        categoryId: newProduct.categoryId,
+        isVisible: newProduct.isVisible
       });
       
       setNewProduct({
         name: "",
         categoryId: "",
-        sizes: [{ size: "", cost: 0, price: 0 }]
+        sizes: [{ size: "", cost: 0, price: 0 }],
+        isVisible: true
       });
       setIsAddProductOpen(false);
     } catch (error) {
@@ -146,6 +164,17 @@ const ProductsManagementByCategory = () => {
         await deleteProduct(productId);
       } catch (error) {
         console.error("Error deleting product:", error);
+      }
+    }
+  };
+
+  const toggleProductVisibility = async (productId: string) => {
+    const product = products.find(p => p.id === productId);
+    if (product) {
+      try {
+        await updateProduct(productId, { ...product, isVisible: !product.isVisible });
+      } catch (error) {
+        console.error("Error updating product visibility:", error);
       }
     }
   };
@@ -203,7 +232,7 @@ const ProductsManagementByCategory = () => {
 
   const getProductsByCategory = (categoryId: string) => {
     return products.filter(product => 
-      categoryId === "all"
+      categoryId === "all" || product.categoryId === categoryId
     );
   };
 
@@ -212,7 +241,8 @@ const ProductsManagementByCategory = () => {
       id: product.id,
       name: product.name,
       categoryId: product.categoryId || "",
-      sizes: product.sizes || [{ size: "", cost: 0, price: 0 }]
+      sizes: product.sizes || [{ size: "", cost: 0, price: 0 }],
+      isVisible: product.isVisible ?? true
     });
   };
 
@@ -263,6 +293,13 @@ const ProductsManagementByCategory = () => {
                     onChange={(e) => setNewCategory({...newCategory, description: e.target.value})}
                   />
                 </div>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    checked={newCategory.isVisible}
+                    onCheckedChange={(checked) => setNewCategory({...newCategory, isVisible: checked})}
+                  />
+                  <Label>ظاهرة في المتجر</Label>
+                </div>
                 <Button onClick={handleAddCategory} className="w-full">
                   إضافة الفئة
                 </Button>
@@ -289,6 +326,30 @@ const ProductsManagementByCategory = () => {
                     value={newProduct.name}
                     onChange={(e) => setNewProduct({...newProduct, name: e.target.value})}
                   />
+                </div>
+
+                <div>
+                  <Label htmlFor="categorySelect">الفئة</Label>
+                  <Select value={newProduct.categoryId} onValueChange={(value) => setNewProduct({...newProduct, categoryId: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="اختر الفئة" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    checked={newProduct.isVisible}
+                    onCheckedChange={(checked) => setNewProduct({...newProduct, isVisible: checked})}
+                  />
+                  <Label>ظاهر في المتجر</Label>
                 </div>
 
                 <div>
@@ -360,7 +421,7 @@ const ProductsManagementByCategory = () => {
             key={category.id} 
             className={`cursor-pointer transition-colors ${
               selectedCategory === category.id ? 'bg-primary/10 border-primary' : ''
-            }`}
+            } ${!category.isVisible ? 'opacity-60' : ''}`}
             onClick={() => setSelectedCategory(selectedCategory === category.id ? null : category.id)}
           >
             <CardHeader className="pb-2">
@@ -368,8 +429,19 @@ const ProductsManagementByCategory = () => {
                 <div className="flex items-center gap-2">
                   <Package className="h-5 w-5" />
                   {category.name}
+                  {!category.isVisible && <EyeOff className="h-4 w-4 text-gray-400" />}
                 </div>
                 <div className="flex gap-1">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleCategoryVisibility(category.id);
+                    }}
+                  >
+                    {category.isVisible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                  </Button>
                   <Button
                     size="sm"
                     variant="ghost"
@@ -438,10 +510,20 @@ const ProductsManagementByCategory = () => {
           <CardContent>
             <div className="space-y-4">
               {(selectedCategory === "all" ? products : getProductsByCategory(selectedCategory || "")).map((product) => (
-                <div key={product.id} className="border rounded-lg p-4">
+                <div key={product.id} className={`border rounded-lg p-4 ${!product.isVisible ? 'opacity-60' : ''}`}>
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-semibold text-lg">{product.name}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-lg">{product.name}</h3>
+                      {!product.isVisible && <EyeOff className="h-4 w-4 text-gray-400" />}
+                    </div>
                     <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => toggleProductVisibility(product.id)}
+                      >
+                        {product.isVisible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                      </Button>
                       <Button
                         size="sm"
                         variant="outline"
@@ -509,6 +591,13 @@ const ProductsManagementByCategory = () => {
                 onChange={(e) => setEditCategory({...editCategory, description: e.target.value})}
               />
             </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                checked={editCategory.isVisible}
+                onCheckedChange={(checked) => setEditCategory({...editCategory, isVisible: checked})}
+              />
+              <Label>ظاهرة في المتجر</Label>
+            </div>
             <Button onClick={handleUpdateCategory} className="w-full">
               تحديث الفئة
             </Button>
@@ -531,6 +620,30 @@ const ProductsManagementByCategory = () => {
                   value={editingProduct.name}
                   onChange={(e) => setEditingProduct({...editingProduct, name: e.target.value})}
                 />
+              </div>
+
+              <div>
+                <Label htmlFor="editCategorySelect">الفئة</Label>
+                <Select value={editingProduct.categoryId} onValueChange={(value) => setEditingProduct({...editingProduct, categoryId: value})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="اختر الفئة" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={editingProduct.isVisible}
+                  onCheckedChange={(checked) => setEditingProduct({...editingProduct, isVisible: checked})}
+                />
+                <Label>ظاهر في المتجر</Label>
               </div>
 
               <div>

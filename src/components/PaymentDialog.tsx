@@ -73,6 +73,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
 
       if (orderError) {
         console.error('Error updating orders table:', orderError);
+        toast.error(`خطأ في تحديث الطلب: ${orderError.message}`);
         throw orderError;
       }
 
@@ -104,6 +105,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
 
       if (transactionError) {
         console.error('Error creating transaction:', transactionError);
+        toast.error(`خطأ في تسجيل المعاملة: ${transactionError.message}`);
         throw transactionError;
       }
 
@@ -116,9 +118,9 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
       onPaymentAdded();
       onClose();
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error recording payment:", error);
-      toast.error("حدث خطأ في تسجيل السداد. تحقق من صحة البيانات.");
+      toast.error(`حدث خطأ في تسجيل السداد: ${error.message || 'خطأ غير محدد'}`);
     } finally {
       setLoading(false);
     }

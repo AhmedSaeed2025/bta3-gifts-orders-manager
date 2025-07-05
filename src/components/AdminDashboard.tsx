@@ -48,16 +48,16 @@ const AdminDashboard = () => {
   }) => (
     <Card className="hover:shadow-lg transition-all duration-200">
       <CardContent className={`${isMobile ? 'p-3' : 'p-4'}`}>
-        <div className={`flex items-center ${isMobile ? 'flex-col text-center space-y-2' : 'justify-between'}`}>
+        <div className={`flex items-center ${isMobile ? 'flex-col text-center space-y-1' : 'justify-between'}`}>
           <div className={isMobile ? 'order-2' : ''}>
             <p className={`text-sm font-medium text-muted-foreground ${isMobile ? 'text-xs text-center' : ''}`}>
               {title}
             </p>
-            <p className={`font-bold ${color} ${isMobile ? 'text-base' : 'text-2xl'}`}>
+            <p className={`font-bold ${color} ${isMobile ? 'text-sm' : 'text-2xl'}`}>
               {value}
             </p>
           </div>
-          <Icon className={`${color} ${isMobile ? 'h-8 w-8 order-1' : 'h-8 w-8'}`} />
+          <Icon className={`${color} ${isMobile ? 'h-6 w-6 order-1' : 'h-8 w-8'}`} />
         </div>
       </CardContent>
     </Card>
@@ -72,8 +72,8 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className={`container mx-auto space-y-6 ${isMobile ? 'p-2' : 'p-4'}`} dir="rtl">
-      <div className="mb-6">
+    <div className={`container mx-auto space-y-4 ${isMobile ? 'p-2' : 'p-4'}`} dir="rtl">
+      <div className="mb-4">
         <h1 className={`font-bold text-gift-primary ${isMobile ? 'text-lg' : 'text-3xl'}`}>
           لوحة التحكم
         </h1>
@@ -83,7 +83,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Dashboard Stats */}
-      <div className={`grid gap-3 ${isMobile ? 'grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-4'}`}>
+      <div className={`grid gap-2 ${isMobile ? 'grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-4'}`}>
         <StatCard
           title="إجمالي الطلبات"
           value={stats.totalOrders}
@@ -121,57 +121,49 @@ const AdminDashboard = () => {
         >
           <TabsTrigger 
             value="orders" 
-            className={`flex items-center gap-2 ${
+            className={`flex items-center gap-1 ${
               isMobile 
-                ? 'flex-col p-2 text-xs h-auto' 
-                : ''
+                ? 'flex-col p-2 text-xs h-12 min-w-0' 
+                : 'gap-2'
             }`}
           >
-            <ShoppingBag className={isMobile ? "h-4 w-4" : "h-4 w-4"} />
-            <span>الطلبات</span>
+            <ShoppingBag className={isMobile ? "h-3 w-3" : "h-4 w-4"} />
+            <span className={isMobile ? 'text-xs leading-tight' : ''}>الطلبات</span>
           </TabsTrigger>
           <TabsTrigger 
             value="products" 
-            className={`flex items-center gap-2 ${
+            className={`flex items-center gap-1 ${
               isMobile 
-                ? 'flex-col p-2 text-xs h-auto' 
-                : ''
+                ? 'flex-col p-2 text-xs h-12 min-w-0' 
+                : 'gap-2'
             }`}
           >
-            <Package className={isMobile ? "h-4 w-4" : "h-4 w-4"} />
-            <span>المنتجات</span>
+            <Package className={isMobile ? "h-3 w-3" : "h-4 w-4"} />
+            <span className={isMobile ? 'text-xs leading-tight' : ''}>المنتجات</span>
           </TabsTrigger>
           <TabsTrigger 
             value="accounting" 
-            className={`flex items-center gap-2 ${
+            className={`flex items-center gap-1 ${
               isMobile 
-                ? 'flex-col p-2 text-xs h-auto' 
-                : ''
+                ? 'flex-col p-2 text-xs h-12 min-w-0' 
+                : 'gap-2'
             }`}
           >
-            <BarChart3 className={isMobile ? "h-4 w-4" : "h-4 w-4"} />
-            <span>الحسابات</span>
+            <BarChart3 className={isMobile ? "h-3 w-3" : "h-4 w-4"} />
+            <span className={isMobile ? 'text-xs leading-tight' : ''}>الحسابات</span>
           </TabsTrigger>
-          {!isMobile && (
-            <TabsTrigger value="customers" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              <span>العملاء</span>
-            </TabsTrigger>
-          )}
+          <TabsTrigger 
+            value="customers" 
+            className={`flex items-center gap-1 ${
+              isMobile 
+                ? 'flex-col p-2 text-xs h-12 min-w-0' 
+                : 'gap-2'
+            }`}
+          >
+            <Users className={isMobile ? "h-3 w-3" : "h-4 w-4"} />
+            <span className={isMobile ? 'text-xs leading-tight' : ''}>العملاء</span>
+          </TabsTrigger>
         </TabsList>
-
-        {/* Mobile: Show customers tab in a separate row */}
-        {isMobile && (
-          <TabsList className="grid w-full grid-cols-1 h-auto gap-1 p-1">
-            <TabsTrigger 
-              value="customers" 
-              className="flex items-center gap-2 flex-col p-2 text-xs h-auto"
-            >
-              <Users className="h-4 w-4" />
-              <span>العملاء</span>
-            </TabsTrigger>
-          </TabsList>
-        )}
 
         <TabsContent value="orders">
           <OrdersTab />

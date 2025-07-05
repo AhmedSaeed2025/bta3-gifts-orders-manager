@@ -7,7 +7,7 @@ import { useSupabaseOrders } from "@/context/SupabaseOrderContext";
 import Logo from "@/components/Logo";
 import Invoice from "@/components/Invoice";
 import UserProfile from "@/components/UserProfile";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Calculator } from "lucide-react";
 
 const OrderDetails = () => {
   const { serial, id } = useParams<{ serial?: string; id?: string }>();
@@ -61,7 +61,7 @@ const OrderDetails = () => {
           <UserProfile />
         </div>
         
-        <div className="mb-4">
+        <div className="mb-4 flex flex-wrap gap-2">
           <Button 
             onClick={() => navigate("/")}
             variant="outline"
@@ -69,6 +69,15 @@ const OrderDetails = () => {
           >
             <ArrowRight size={16} />
             العودة للرئيسية
+          </Button>
+          
+          <Button 
+            onClick={() => navigate("/legacy-admin")}
+            variant="outline"
+            className="flex items-center gap-2 text-xs md:text-sm h-8 md:h-10"
+          >
+            <Calculator size={16} />
+            برنامج الحسابات
           </Button>
         </div>
         

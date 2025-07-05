@@ -53,31 +53,47 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
 
       console.log('Loaded orders data:', ordersData);
 
-      const formattedOrders = ordersData?.map(order => ({
-        serial: order.serial,
-        paymentMethod: order.payment_method,
-        clientName: order.client_name,
-        phone: order.phone,
-        deliveryMethod: order.delivery_method,
-        address: order.address || "",
-        governorate: order.governorate || "",
-        items: order.order_items?.map((item: any) => ({
-          productType: item.product_type,
-          size: item.size,
-          quantity: item.quantity,
-          cost: Number(item.cost),
-          price: Number(item.price),
-          profit: Number(item.profit),
-          itemDiscount: Number(item.item_discount || 0)
-        })) || [],
-        shippingCost: Number(order.shipping_cost),
-        discount: Number(order.discount || 0),
-        deposit: Number(order.deposit),
-        total: Number(order.total),
-        profit: Number(order.profit),
-        status: order.status as OrderStatus,
-        dateCreated: order.date_created
-      })) || [];
+      const formattedOrders = ordersData?.map(order => {
+        // Calculate correct profit: (Price - ItemDiscount - Cost) * Quantity for all items
+        // Exclude deposits and shipping from profit calculation
+        let calculatedProfit = 0;
+        
+        if (order.order_items) {
+          calculatedProfit = order.order_items.reduce((sum: number, item: any) => {
+            const itemProfit = ((Number(item.price) - Number(item.item_discount || 0)) - Number(item.cost)) * Number(item.quantity);
+            return sum + itemProfit;
+          }, 0);
+          
+          // Subtract order-level discount from profit
+          calculatedProfit -= Number(order.discount || 0);
+        }
+        
+        return {
+          serial: order.serial,
+          paymentMethod: order.payment_method,
+          clientName: order.client_name,
+          phone: order.phone,
+          deliveryMethod: order.delivery_method,
+          address: order.address || "",
+          governorate: order.governorate || "",
+          items: order.order_items?.map((item: any) => ({
+            productType: item.product_type,
+            size: item.size,
+            quantity: item.quantity,
+            cost: Number(item.cost),
+            price: Number(item.price),
+            profit: ((Number(item.price) - Number(item.item_discount || 0)) - Number(item.cost)) * Number(item.quantity),
+            itemDiscount: Number(item.item_discount || 0)
+          })) || [],
+          shippingCost: Number(order.shipping_cost),
+          discount: Number(order.discount || 0),
+          deposit: Number(order.deposit),
+          total: Number(order.total),
+          profit: calculatedProfit, // Use calculated profit excluding deposits and shipping
+          status: order.status as OrderStatus,
+          dateCreated: order.date_created
+        };
+      }) || [];
 
       console.log('Formatted orders:', formattedOrders);
       setOrders(formattedOrders);
@@ -170,6 +186,13 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
       const serial = await generateSerialNumber();
       console.log('Generated serial for new order:', serial);
       
+      // Calculate correct profit: exclude deposits, shipping, and include discounts properly
+      const itemsProfit = newOrder.items.reduce((sum, item) => {
+        return sum + ((item.price - item.itemDiscount) - item.cost) * item.quantity;
+      }, 0);
+      
+      const finalProfit = itemsProfit - newOrder.discount; // Subtract order discount but not shipping or deposit
+      
       // Insert order into the main orders table
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
@@ -187,7 +210,7 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
           discount: newOrder.discount || 0,
           deposit: newOrder.deposit,
           total: newOrder.total,
-          profit: newOrder.profit,
+          profit: finalProfit, // Use calculated profit
           status: newOrder.status
         })
         .select()
@@ -208,7 +231,7 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
         quantity: item.quantity,
         cost: item.cost,
         price: item.price,
-        profit: item.profit,
+        profit: ((item.price - item.itemDiscount) - item.cost) * item.quantity,
         item_discount: item.itemDiscount || 0
       }));
 
@@ -242,7 +265,7 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
             discount: newOrder.discount || 0,
             deposit: newOrder.deposit,
             total_amount: newOrder.total,
-            profit: newOrder.profit,
+            profit: finalProfit, // Use calculated profit
             status: newOrder.status,
             order_date: new Date().toISOString()
           })
@@ -301,6 +324,13 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
     try {
       console.log('Updating order:', serial, updatedOrder);
       
+      // Calculate correct profit
+      const itemsProfit = updatedOrder.items.reduce((sum, item) => {
+        return sum + ((item.price - item.itemDiscount) - item.cost) * item.quantity;
+      }, 0);
+      
+      const finalProfit = itemsProfit - updatedOrder.discount;
+      
       // First get the order ID from the serial
       const { data: orderData, error: fetchError } = await supabase
         .from('orders')
@@ -325,7 +355,7 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
           discount: updatedOrder.discount,
           deposit: updatedOrder.deposit,
           total: updatedOrder.total,
-          profit: updatedOrder.profit,
+          profit: finalProfit,
           status: updatedOrder.status,
           updated_at: new Date().toISOString()
         })
@@ -350,7 +380,7 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
         quantity: item.quantity,
         cost: item.cost,
         price: item.price,
-        profit: item.profit,
+        profit: ((item.price - item.itemDiscount) - item.cost) * item.quantity,
         item_discount: item.itemDiscount || 0
       }));
 
@@ -374,7 +404,7 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
           discount: updatedOrder.discount,
           deposit: updatedOrder.deposit,
           total_amount: updatedOrder.total,
-          profit: updatedOrder.profit,
+          profit: finalProfit,
           status: updatedOrder.status,
           updated_at: new Date().toISOString()
         })
