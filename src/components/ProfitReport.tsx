@@ -48,7 +48,7 @@ const ProfitReport = () => {
   // Filter data
   const filteredData = useMemo(() => {
     return profitData.filter(order => {
-      const orderDate = new Date(order.date_created);
+      const orderDate = new Date(order.dateCreated);
       const orderYear = orderDate.getFullYear().toString();
       const orderMonth = (orderDate.getMonth() + 1).toString().padStart(2, '0');
       
@@ -90,10 +90,17 @@ const ProfitReport = () => {
 
   // Prepare chart data
   const chartData = useMemo(() => {
-    const monthlyData = {};
+    const monthlyData: Record<string, {
+      name: string;
+      تكاليف: number;
+      مبيعات: number;
+      شحن: number;
+      خصومات: number;
+      أرباح: number;
+    }> = {};
     
     filteredData.forEach(order => {
-      const date = new Date(order.date_created);
+      const date = new Date(order.dateCreated);
       const monthKey = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
       
       if (!monthlyData[monthKey]) {
@@ -101,6 +108,7 @@ const ProfitReport = () => {
           name: monthKey,
           تكاليف: 0,
           مبيعات: 0,
+          شحن: 0,
           خصومات: 0,
           أرباح: 0
         };
@@ -118,7 +126,7 @@ const ProfitReport = () => {
   // Prepare table data
   const tableData = useMemo(() => {
     return filteredData.map(order => ({
-      month: new Date(order.date_created).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long' }),
+      month: new Date(order.dateCreated).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long' }),
       productType: order.items?.map(item => item.productType).join(', ') || '',
       quantity: order.items?.reduce((sum, item) => sum + item.quantity, 0) || 0,
       totalCost: order.productCosts,
@@ -131,14 +139,14 @@ const ProfitReport = () => {
 
   // Get available years and products
   const availableYears = useMemo(() => {
-    const years = [...new Set(orders.map(order => 
-      new Date(order.date_created).getFullYear().toString()
+    const years: string[] = [...new Set(orders.map(order => 
+      new Date(order.dateCreated).getFullYear().toString()
     ))];
     return years.sort().reverse();
   }, [orders]);
 
   const availableProducts = useMemo(() => {
-    const products = new Set();
+    const products = new Set<string>();
     orders.forEach(order => {
       order.items?.forEach(item => products.add(item.productType));
     });
