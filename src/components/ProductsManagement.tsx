@@ -43,7 +43,11 @@ const ProductsManagement = () => {
     if (editMode === "product" && editId) {
       const product = products.find(p => p.id === editId);
       if (product) {
-        await updateProduct(editId, { ...product, name: productName });
+        await updateProduct(editId, { 
+          ...product, 
+          name: productName,
+          discount_percentage: product.discount_percentage || 0
+        });
         setEditMode(null);
         setEditId(null);
       }

@@ -243,9 +243,9 @@ const AdminOrders = () => {
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-green-600">
-              {formatCurrency(orders.reduce((sum, o) => sum + (o.total_amount + (o.deposit || 0)), 0))}
+              {formatCurrency(orders.reduce((sum, o) => sum + o.total_amount, 0))}
             </div>
-            <p className="text-sm text-muted-foreground">إجمالي المبيعات</p>
+            <p className="text-sm text-muted-foreground">إجمالي المبيعات (بعد الخصم)</p>
           </CardContent>
         </Card>
         <Card>
@@ -291,7 +291,16 @@ const AdminOrders = () => {
                       <TableCell>{order.customer_name}</TableCell>
                       <TableCell>{order.customer_phone}</TableCell>
                       <TableCell>{order.payment_method}</TableCell>
-                      <TableCell>{formatCurrency(order.total_amount + (order.deposit || 0))}</TableCell>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{formatCurrency(order.total_amount)}</div>
+                          {order.deposit && order.deposit > 0 && (
+                            <div className="text-xs text-muted-foreground">
+                              عربون: {formatCurrency(order.deposit)}
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell>
                         <Select 
                           value={order.status} 
