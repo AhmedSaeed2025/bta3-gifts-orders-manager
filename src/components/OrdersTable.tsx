@@ -11,7 +11,6 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import CustomAmountDialog from "./CustomAmountDialog";
-import PaymentDialog from "./PaymentDialog";
 import { 
   Edit, 
   Eye, 
@@ -31,13 +30,12 @@ import {
   User,
   Phone,
   MapPin,
-  FileText,
-  Banknote
+  FileText
 } from "lucide-react";
 import { useTransactions } from "@/context/TransactionContext";
 
 const OrdersTable = () => {
-  const { orders, loading, deleteOrder, updateOrderStatus, updateOrder } = useSupabaseOrders();
+  const { orders, loading, deleteOrder, updateOrderStatus } = useSupabaseOrders();
   const { addTransaction, deleteTransaction, getTransactionsByOrderSerial } = useTransactions();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
@@ -59,15 +57,6 @@ const OrdersTable = () => {
     type: 'collection',
     order: null,
     defaultAmount: 0
-  });
-
-  // Payment dialog states
-  const [paymentDialog, setPaymentDialog] = useState<{
-    isOpen: boolean;
-    order: any;
-  }>({
-    isOpen: false,
-    order: null
   });
 
   const safeOrders = Array.isArray(orders) ? orders : [];
@@ -189,40 +178,6 @@ const OrdersTable = () => {
       order,
       defaultAmount
     });
-  };
-
-  // Open payment dialog for order deposits
-  const openPaymentDialog = (order: any) => {
-    setPaymentDialog({
-      isOpen: true,
-      order
-    });
-  };
-
-  const handlePaymentConfirm = async (amount: number, paymentMethod: string, notes: string) => {
-    const { order } = paymentDialog;
-    
-    try {
-      // Add transaction record
-      await addTransaction({
-        transaction_type: 'deposit',
-        amount: amount,
-        description: `سداد عربون طلب رقم ${order.serial} - العميل: ${order.clientName} - طريقة الدفع: ${paymentMethod}${notes ? ` - ${notes}` : ''}`,
-        order_serial: order.serial
-      });
-
-      // Update order with new deposit amount
-      const newDeposit = (order.deposit || 0) + amount;
-      await updateOrder(order.serial, {
-        ...order,
-        deposit: newDeposit
-      });
-
-      toast.success("تم تسجيل السداد بنجاح");
-    } catch (error) {
-      console.error('Error recording payment:', error);
-      toast.error("حدث خطأ في تسجيل السداد");
-    }
   };
 
   const handleCustomAmountConfirm = async (amount: number) => {
@@ -645,84 +600,74 @@ const OrdersTable = () => {
                       </SelectContent>
                     </Select>
 
-                     {/* Financial Actions */}
-                     <div className="bg-gray-50 rounded-lg p-2">
-                       <p className="text-xs font-medium text-gray-700 mb-2">الإجراءات المالية</p>
-                       <div className="grid grid-cols-4 gap-1.5">
-                         {/* Payment Button */}
-                         <Button
-                           size="sm"
-                           onClick={() => openPaymentDialog(order)}
-                           className="bg-emerald-600 hover:bg-emerald-700 text-white h-6 text-xs px-1"
-                           title="سداد جزئي أو كامل للطلب"
-                         >
-                           <Banknote className="h-3 w-3" />
-                         </Button>
-                         
-                         {!hasTransaction(order.serial, 'order_collection') ? (
-                           <Button
-                             size="sm"
-                             onClick={() => openCustomAmountDialog('collection', order)}
-                             className="bg-green-600 hover:bg-green-700 text-white h-6 text-xs px-1"
-                             title="تحصيل من العميل"
-                           >
-                             <DollarSign className="h-3 w-3" />
-                           </Button>
-                         ) : (
-                           <Button
-                             size="sm"
-                             variant="destructive"
-                             onClick={() => handleCancelTransaction(order.serial, 'order_collection')}
-                             className="h-6 text-xs px-1"
-                             title="إلغاء التحصيل"
-                           >
-                             <X className="h-3 w-3" />
-                           </Button>
-                         )}
-                         
-                         {!hasTransaction(order.serial, 'shipping_payment') ? (
-                           <Button
-                             size="sm"
-                             onClick={() => openCustomAmountDialog('shipping', order)}
-                             className="bg-blue-600 hover:bg-blue-700 text-white h-6 text-xs px-1"
-                             title="دفع شحن"
-                           >
-                             <Truck className="h-3 w-3" />
-                           </Button>
-                         ) : (
-                           <Button
-                             size="sm"
-                             variant="destructive"
-                             onClick={() => handleCancelTransaction(order.serial, 'shipping_payment')}
-                             className="h-6 text-xs px-1"
-                             title="إلغاء الشحن"
-                           >
-                             <X className="h-3 w-3" />
-                           </Button>
-                         )}
-                         
-                         {!hasTransaction(order.serial, 'cost_payment') ? (
-                           <Button
-                             size="sm"
-                             onClick={() => openCustomAmountDialog('cost', order)}
-                             className="bg-orange-600 hover:bg-orange-700 text-white h-6 text-xs px-1"
-                             title="دفع تكلفة"
-                           >
-                             <CreditCard className="h-3 w-3" />
-                           </Button>
-                         ) : (
-                           <Button
-                             size="sm"
-                             variant="destructive"
-                             onClick={() => handleCancelTransaction(order.serial, 'cost_payment')}
-                             className="h-6 text-xs px-1"
-                             title="إلغاء التكلفة"
-                           >
-                             <X className="h-3 w-3" />
-                           </Button>
-                         )}
-                       </div>
-                     </div>
+                    {/* Financial Actions */}
+                    <div className="bg-gray-50 rounded-lg p-2">
+                      <p className="text-xs font-medium text-gray-700 mb-2">الإجراءات المالية</p>
+                      <div className="grid grid-cols-3 gap-1.5">
+                        {!hasTransaction(order.serial, 'order_collection') ? (
+                          <Button
+                            size="sm"
+                            onClick={() => openCustomAmountDialog('collection', order)}
+                            className="bg-green-600 hover:bg-green-700 text-white h-6 text-xs px-1"
+                            title="تحصيل من العميل"
+                          >
+                            <DollarSign className="h-3 w-3" />
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleCancelTransaction(order.serial, 'order_collection')}
+                            className="h-6 text-xs px-1"
+                            title="إلغاء التحصيل"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        )}
+                        
+                        {!hasTransaction(order.serial, 'shipping_payment') ? (
+                          <Button
+                            size="sm"
+                            onClick={() => openCustomAmountDialog('shipping', order)}
+                            className="bg-blue-600 hover:bg-blue-700 text-white h-6 text-xs px-1"
+                            title="دفع شحن"
+                          >
+                            <Truck className="h-3 w-3" />
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleCancelTransaction(order.serial, 'shipping_payment')}
+                            className="h-6 text-xs px-1"
+                            title="إلغاء الشحن"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        )}
+                        
+                        {!hasTransaction(order.serial, 'cost_payment') ? (
+                          <Button
+                            size="sm"
+                            onClick={() => openCustomAmountDialog('cost', order)}
+                            className="bg-orange-600 hover:bg-orange-700 text-white h-6 text-xs px-1"
+                            title="دفع تكلفة"
+                          >
+                            <CreditCard className="h-3 w-3" />
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleCancelTransaction(order.serial, 'cost_payment')}
+                            className="h-6 text-xs px-1"
+                            title="إلغاء التكلفة"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
 
                     {/* Action Buttons */}
                     <div className="flex gap-1.5 pt-2 border-t">
@@ -827,84 +772,74 @@ const OrdersTable = () => {
                             </SelectContent>
                           </Select>
                         </td>
-                         <td className="p-2">
-                           <div className="bg-gray-50 rounded-lg p-1.5 space-y-1">
-                             <div className="grid grid-cols-4 gap-1">
-                               {/* Payment Button */}
-                               <Button
-                                 size="sm"
-                                 onClick={() => openPaymentDialog(order)}
-                                 className="bg-emerald-600 hover:bg-emerald-700 text-white h-6 text-xs px-1"
-                                 title="سداد جزئي أو كامل للطلب"
-                               >
-                                 <Banknote className="h-3 w-3" />
-                               </Button>
-                               
-                               {!hasTransaction(order.serial, 'order_collection') ? (
-                                 <Button
-                                   size="sm"
-                                   onClick={() => openCustomAmountDialog('collection', order)}
-                                   className="bg-green-600 hover:bg-green-700 text-white h-6 text-xs px-1"
-                                   title="تحصيل من العميل"
-                                 >
-                                   <DollarSign className="h-3 w-3" />
-                                 </Button>
-                               ) : (
-                                 <Button
-                                   size="sm"
-                                   variant="destructive"
-                                   onClick={() => handleCancelTransaction(order.serial, 'order_collection')}
-                                   className="h-6 text-xs px-1"
-                                   title="إلغاء التحصيل"
-                                 >
-                                   <X className="h-3 w-3" />
-                                 </Button>
-                               )}
-                               
-                               {!hasTransaction(order.serial, 'shipping_payment') ? (
-                                 <Button
-                                   size="sm"
-                                   onClick={() => openCustomAmountDialog('shipping', order)}
-                                   className="bg-blue-600 hover:bg-blue-700 text-white h-6 text-xs px-1"
-                                   title="دفع شحن"
-                                 >
-                                   <Truck className="h-3 w-3" />
-                                 </Button>
-                               ) : (
-                                 <Button
-                                   size="sm"
-                                   variant="destructive"
-                                   onClick={() => handleCancelTransaction(order.serial, 'shipping_payment')}
-                                   className="h-6 text-xs px-1"
-                                   title="إلغاء الشحن"
-                                 >
-                                   <X className="h-3 w-3" />
-                                 </Button>
-                               )}
-                               
-                               {!hasTransaction(order.serial, 'cost_payment') ? (
-                                 <Button
-                                   size="sm"
-                                   onClick={() => openCustomAmountDialog('cost', order)}
-                                   className="bg-orange-600 hover:bg-orange-700 text-white h-6 text-xs px-1"
-                                   title="دفع تكلفة"
-                                 >
-                                   <CreditCard className="h-3 w-3" />
-                                 </Button>
-                               ) : (
-                                 <Button
-                                   size="sm"
-                                   variant="destructive"
-                                   onClick={() => handleCancelTransaction(order.serial, 'cost_payment')}
-                                   className="h-6 text-xs px-1"
-                                   title="إلغاء التكلفة"
-                                 >
-                                   <X className="h-3 w-3" />
-                                 </Button>
-                               )}
-                             </div>
-                           </div>
-                         </td>
+                        <td className="p-2">
+                          <div className="bg-gray-50 rounded-lg p-1.5 space-y-1">
+                            <div className="grid grid-cols-3 gap-1">
+                              {!hasTransaction(order.serial, 'order_collection') ? (
+                                <Button
+                                  size="sm"
+                                  onClick={() => openCustomAmountDialog('collection', order)}
+                                  className="bg-green-600 hover:bg-green-700 text-white h-6 text-xs px-1"
+                                  title="تحصيل من العميل"
+                                >
+                                  <DollarSign className="h-3 w-3" />
+                                </Button>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => handleCancelTransaction(order.serial, 'order_collection')}
+                                  className="h-6 text-xs px-1"
+                                  title="إلغاء التحصيل"
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              )}
+                              
+                              {!hasTransaction(order.serial, 'shipping_payment') ? (
+                                <Button
+                                  size="sm"
+                                  onClick={() => openCustomAmountDialog('shipping', order)}
+                                  className="bg-blue-600 hover:bg-blue-700 text-white h-6 text-xs px-1"
+                                  title="دفع شحن"
+                                >
+                                  <Truck className="h-3 w-3" />
+                                </Button>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => handleCancelTransaction(order.serial, 'shipping_payment')}
+                                  className="h-6 text-xs px-1"
+                                  title="إلغاء الشحن"
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              )}
+                              
+                              {!hasTransaction(order.serial, 'cost_payment') ? (
+                                <Button
+                                  size="sm"
+                                  onClick={() => openCustomAmountDialog('cost', order)}
+                                  className="bg-orange-600 hover:bg-orange-700 text-white h-6 text-xs px-1"
+                                  title="دفع تكلفة"
+                                >
+                                  <CreditCard className="h-3 w-3" />
+                                </Button>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => handleCancelTransaction(order.serial, 'cost_payment')}
+                                  className="h-6 text-xs px-1"
+                                  title="إلغاء التكلفة"
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </td>
                         <td className="p-2">
                           <div className="flex gap-1">
                             <Button
@@ -950,17 +885,6 @@ const OrdersTable = () => {
           </CardContent>
         </Card>
       )}
-
-      {/* Payment Dialog */}
-      <PaymentDialog
-        isOpen={paymentDialog.isOpen}
-        onClose={() => setPaymentDialog(prev => ({ ...prev, isOpen: false }))}
-        order={paymentDialog.order}
-        onPaymentAdded={() => {
-          setPaymentDialog(prev => ({ ...prev, isOpen: false }));
-          window.location.reload(); // Refresh to show updated data
-        }}
-      />
 
       {/* Custom Amount Dialog */}
       <CustomAmountDialog

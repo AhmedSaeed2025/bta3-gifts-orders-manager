@@ -1,273 +1,313 @@
-
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { formatCurrency } from '@/lib/utils';
-import { Search, Package, Clock, CheckCircle, XCircle, Truck, ArrowLeft, Store } from 'lucide-react';
-import { ORDER_STATUS_LABELS } from '@/types';
-import Logo from '@/components/Logo';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Search, Package, Truck, CheckCircle, Clock, Phone, Mail, MapPin, Loader2, ArrowLeft } from 'lucide-react';
+import { ORDER_STATUS_LABELS } from '@/types';
 
 const OrderTrackingPage = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchType, setSearchType] = useState<'serial' | 'phone'>('serial');
   const navigate = useNavigate();
+  const [serial, setSerial] = useState('');
+  const [searchSerial, setSearchSerial] = useState('');
 
-  const { data: orders, isLoading, refetch } = useQuery({
-    queryKey: ['track-orders', searchQuery],
+  const { data: order, isLoading, error } = useQuery({
+    queryKey: ['order-tracking', searchSerial],
     queryFn: async () => {
-      if (!searchQuery.trim()) return [];
+      if (!searchSerial) return null;
+      
+      // First try to find in admin_orders table
+      const { data: adminOrder, error: adminError } = await supabase
+        .from('admin_orders')
+        .select('*')
+        .eq('serial', searchSerial.toUpperCase())
+        .maybeSingle();
 
-      let query = supabase
+      if (adminOrder) {
+        return {
+          serial: adminOrder.serial,
+          customer_name: adminOrder.customer_name,
+          customer_phone: adminOrder.customer_phone,
+          customer_email: adminOrder.customer_email,
+          shipping_address: adminOrder.shipping_address,
+          governorate: adminOrder.governorate,
+          payment_method: adminOrder.payment_method,
+          delivery_method: adminOrder.delivery_method,
+          total_amount: adminOrder.total_amount,
+          status: adminOrder.status,
+          order_date: adminOrder.order_date,
+          shipping_cost: adminOrder.shipping_cost
+        };
+      }
+
+      // If not found in admin_orders, try orders table
+      const { data: regularOrder, error: regularError } = await supabase
         .from('orders')
-        .select(`
-          *,
-          order_items (*)
-        `);
+        .select('*')
+        .eq('serial', searchSerial.toUpperCase())
+        .maybeSingle();
 
-      if (searchType === 'serial') {
-        query = query.eq('serial', searchQuery.trim());
-      } else {
-        query = query.eq('phone', searchQuery.trim());
+      if (regularOrder) {
+        return {
+          serial: regularOrder.serial,
+          customer_name: regularOrder.client_name,
+          customer_phone: regularOrder.phone,
+          customer_email: regularOrder.email,
+          shipping_address: regularOrder.address,
+          governorate: regularOrder.governorate,
+          payment_method: regularOrder.payment_method,
+          delivery_method: regularOrder.delivery_method,
+          total_amount: regularOrder.total,
+          status: regularOrder.status,
+          order_date: regularOrder.date_created,
+          shipping_cost: regularOrder.shipping_cost
+        };
       }
 
-      const { data, error } = await query.order('date_created', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching orders:', error);
-        throw error;
+      // If not found in either table
+      if (adminError && adminError.code !== 'PGRST116') {
+        throw adminError;
+      }
+      if (regularError && regularError.code !== 'PGRST116') {
+        throw regularError;
       }
 
-      return data || [];
+      return null;
     },
-    enabled: false // Only run when user searches
+    enabled: !!searchSerial
   });
 
   const handleSearch = () => {
-    if (searchQuery.trim()) {
-      refetch();
+    if (serial.trim()) {
+      setSearchSerial(serial.trim());
     }
   };
 
-  const getStatusIcon = (status: string) => {
+  const getStatusInfo = (status: string) => {
     switch (status) {
       case 'pending':
-        return <Clock className="h-4 w-4" />;
+        return { label: 'قيد المراجعة', color: 'bg-yellow-500', icon: Clock };
       case 'confirmed':
-        return <Package className="h-4 w-4" />;
+        return { label: 'تم التأكيد', color: 'bg-blue-500', icon: Package };
       case 'processing':
-        return <Package className="h-4 w-4" />;
+        return { label: 'قيد التحضير', color: 'bg-orange-500', icon: Package };
       case 'shipped':
-        return <Truck className="h-4 w-4" />;
+        return { label: 'تم الشحن', color: 'bg-purple-500', icon: Truck };
       case 'delivered':
-      case 'completed':
-        return <CheckCircle className="h-4 w-4" />;
+        return { label: 'تم التوصيل', color: 'bg-green-500', icon: CheckCircle };
       case 'cancelled':
-        return <XCircle className="h-4 w-4" />;
+        return { label: 'ملغي', color: 'bg-red-500', icon: Clock };
       default:
-        return <Clock className="h-4 w-4" />;
+        return { label: 'غير معروف', color: 'bg-gray-500', icon: Clock };
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'confirmed':
-      case 'processing':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'shipped':
-        return 'bg-purple-100 text-purple-800 border-purple-200';
-      case 'delivered':
-      case 'completed':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'cancelled':
-        return 'bg-red-100 text-red-800 border-red-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
+  const getOrderSteps = (currentStatus: string) => {
+    const steps = [
+      { key: 'pending', label: 'تم استلام الطلب', description: 'تم تسجيل طلبكم بنجاح' },
+      { key: 'confirmed', label: 'تم تأكيد الطلب', description: 'تم مراجعة وتأكيد طلبكم' },
+      { key: 'processing', label: 'قيد التحضير', description: 'جاري تحضير طلبكم للشحن' },
+      { key: 'shipped', label: 'تم الشحن', description: 'تم شحن طلبكم وهو في الطريق إليكم' },
+      { key: 'delivered', label: 'تم التوصيل', description: 'تم توصيل طلبكم بنجاح' }
+    ];
+
+    const statusOrder = ['pending', 'confirmed', 'processing', 'shipped', 'delivered'];
+    const currentIndex = statusOrder.indexOf(currentStatus);
+
+    return steps.map((step, index) => ({
+      ...step,
+      completed: index <= currentIndex,
+      current: index === currentIndex
+    }));
   };
 
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
-        {/* Header with Logo and Back to Store Button */}
-        <div className="flex justify-between items-center mb-8">
-          <Logo />
-          <Button
-            onClick={() => navigate('/store')}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <Store className="h-4 w-4" />
-            الرجوع للمتجر
-          </Button>
-        </div>
-
         <Card className="max-w-4xl mx-auto">
           <CardHeader>
-            <CardTitle className="text-center flex items-center justify-center gap-2">
-              <Search className="h-6 w-6" />
-              تتبع الطلبات
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-3">
+                <Search className="h-6 w-6" />
+                تتبع الطلب
+              </CardTitle>
+              <Button 
+                variant="outline" 
+                onClick={() => navigate(-1)}
+                className="flex items-center gap-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                العودة للخلف
+              </Button>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent>
             {/* Search Form */}
-            <div className="space-y-4">
-              <div className="flex gap-4 justify-center">
-                <Button
-                  variant={searchType === 'serial' ? 'default' : 'outline'}
-                  onClick={() => setSearchType('serial')}
-                  size="sm"
-                >
-                  بحث برقم الطلب
-                </Button>
-                <Button
-                  variant={searchType === 'phone' ? 'default' : 'outline'}
-                  onClick={() => setSearchType('phone')}
-                  size="sm"
-                >
-                  بحث برقم الهاتف
-                </Button>
-              </div>
-
-              <div className="flex gap-2 max-w-md mx-auto">
-                <Input
-                  placeholder={searchType === 'serial' ? "أدخل رقم الطلب (مثل: INV-2401-0001)" : "أدخل رقم الهاتف"}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                />
-                <Button onClick={handleSearch} disabled={isLoading}>
-                  {isLoading ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                  ) : (
-                    <Search className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
+            <div className="flex gap-3 mb-8">
+              <Input
+                placeholder="أدخل رقم الطلب (مثال: INV-2501-0001)"
+                value={serial}
+                onChange={(e) => setSerial(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                className="flex-1"
+              />
+              <Button onClick={handleSearch} disabled={!serial.trim() || isLoading}>
+                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                بحث
+              </Button>
             </div>
 
-            {/* Results */}
-            {orders && orders.length > 0 && (
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-center">
-                  {searchType === 'phone' 
-                    ? `الطلبات المرتبطة برقم الهاتف: ${searchQuery}`
-                    : 'تفاصيل الطلب'
-                  }
-                </h3>
-                
-                {orders.map((order) => (
-                  <Card key={order.id} className="border-l-4 border-l-blue-500">
+            {/* Error Message */}
+            {error && (
+              <div className="text-center py-8">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+                  <h3 className="font-semibold text-red-800 mb-2">خطأ في البحث</h3>
+                  <p className="text-red-600">حدث خطأ أثناء البحث عن الطلب. يرجى المحاولة مرة أخرى.</p>
+                </div>
+              </div>
+            )}
+
+            {/* No Order Found */}
+            {searchSerial && !order && !isLoading && !error && (
+              <div className="text-center py-8">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+                  <Package className="h-12 w-12 text-yellow-600 mx-auto mb-4" />
+                  <h3 className="font-semibold text-yellow-800 mb-2">لم يتم العثور على الطلب</h3>
+                  <p className="text-yellow-600">رقم الطلب "{searchSerial}" غير موجود. تأكد من صحة الرقم وحاول مرة أخرى.</p>
+                </div>
+              </div>
+            )}
+
+            {/* Order Details */}
+            {order && (
+              <div className="space-y-8">
+                {/* Order Info */}
+                <div className="grid md:grid-cols-2 gap-6">
+                  <Card>
                     <CardContent className="p-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div>
-                          <h4 className="font-semibold text-lg mb-2">معلومات الطلب</h4>
-                          <div className="space-y-2 text-sm">
-                            <p><strong>رقم الطلب:</strong> {order.serial}</p>
-                            <p><strong>اسم العميل:</strong> {order.client_name}</p>
-                            <p><strong>رقم الهاتف:</strong> {order.phone}</p>
-                            <p><strong>تاريخ الطلب:</strong> {new Date(order.date_created).toLocaleDateString('ar-EG')}</p>
-                            <p><strong>طريقة الدفع:</strong> {order.payment_method}</p>
-                            <p><strong>طريقة الاستلام:</strong> {order.delivery_method}</p>
-                            {order.address && (
-                              <p><strong>العنوان:</strong> {order.address}, {order.governorate}</p>
-                            )}
-                          </div>
+                      <h3 className="font-semibold mb-4">معلومات الطلب</h3>
+                      <div className="space-y-3">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">رقم الطلب:</span>
+                          <span className="font-medium">{order.serial}</span>
                         </div>
-
-                        <div>
-                          <h4 className="font-semibold text-lg mb-2">حالة الطلب</h4>
-                          <div className="flex flex-col items-start gap-3">
-                            <Badge className={`${getStatusColor(order.status)} flex items-center gap-2 px-3 py-2`}>
-                              {getStatusIcon(order.status)}
-                              {ORDER_STATUS_LABELS[order.status as keyof typeof ORDER_STATUS_LABELS] || order.status}
-                            </Badge>
-                            
-                            <div className="text-sm text-muted-foreground">
-                              <p><strong>آخر تحديث:</strong> {new Date(order.updated_at).toLocaleDateString('ar-EG')}</p>
-                            </div>
-                          </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">تاريخ الطلب:</span>
+                          <span className="font-medium">
+                            {new Date(order.order_date).toLocaleDateString('ar-EG')}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">إجمالي المبلغ:</span>
+                          <span className="font-medium">{order.total_amount} جنيه</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-600">الحالة:</span>
+                          <Badge className={getStatusInfo(order.status).color}>
+                            {getStatusInfo(order.status).label}
+                          </Badge>
                         </div>
                       </div>
-
-                      {/* Order Items */}
-                      <div className="border-t pt-4">
-                        <h4 className="font-semibold mb-3">تفاصيل المنتجات</h4>
-                        <div className="space-y-2">
-                          {order.order_items.map((item: any, index: number) => (
-                            <div key={index} className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded">
-                              <div>
-                                <span className="font-medium">{item.product_type}</span>
-                                <span className="text-sm text-gray-600 mr-2">({item.size})</span>
-                              </div>
-                              <div className="text-left">
-                                <div className="font-medium">{formatCurrency(item.price * item.quantity)}</div>
-                                <div className="text-sm text-gray-600">الكمية: {item.quantity}</div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Order Summary */}
-                      <div className="border-t pt-4 mt-4">
-                        <div className="flex justify-between items-center text-lg font-bold">
-                          <span>المجموع الكلي:</span>
-                          <span>{formatCurrency(order.total)}</span>
-                        </div>
-                        {order.shipping_cost > 0 && (
-                          <div className="flex justify-between items-center text-sm text-gray-600">
-                            <span>مصاريف الشحن:</span>
-                            <span>{formatCurrency(order.shipping_cost)}</span>
-                          </div>
-                        )}
-                        {order.deposit > 0 && (
-                          <div className="flex justify-between items-center text-sm text-green-600">
-                            <span>العربون المدفوع:</span>
-                            <span>{formatCurrency(order.deposit)}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Notes */}
-                      {order.notes && (
-                        <div className="border-t pt-4 mt-4">
-                          <h4 className="font-semibold mb-2">ملاحظات</h4>
-                          <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded">{order.notes}</p>
-                        </div>
-                      )}
                     </CardContent>
                   </Card>
-                ))}
+
+                  <Card>
+                    <CardContent className="p-6">
+                      <h3 className="font-semibold mb-4">معلومات العميل</h3>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3">
+                          <Phone className="h-4 w-4 text-gray-400" />
+                          <span>{order.customer_name}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Phone className="h-4 w-4 text-gray-400" />
+                          <span>{order.customer_phone}</span>
+                        </div>
+                        {order.customer_email && (
+                          <div className="flex items-center gap-3">
+                            <Mail className="h-4 w-4 text-gray-400" />
+                            <span>{order.customer_email}</span>
+                          </div>
+                        )}
+                        {order.shipping_address && (
+                          <div className="flex items-center gap-3">
+                            <MapPin className="h-4 w-4 text-gray-400" />
+                            <span>{order.shipping_address}</span>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Order Timeline */}
+                {order.status !== 'cancelled' && (
+                  <Card>
+                    <CardContent className="p-6">
+                      <h3 className="font-semibold mb-6">تتبع مراحل الطلب</h3>
+                      <div className="space-y-6">
+                        {getOrderSteps(order.status).map((step, index) => {
+                          const Icon = getStatusInfo(step.key).icon;
+                          return (
+                            <div key={step.key} className="flex items-start gap-4">
+                              <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
+                                step.completed 
+                                  ? step.current 
+                                    ? getStatusInfo(step.key).color + ' text-white'
+                                    : 'bg-green-500 text-white'
+                                  : 'bg-gray-200 text-gray-400'
+                              }`}>
+                                <Icon className="h-5 w-5" />
+                              </div>
+                              <div className="flex-1">
+                                <h4 className={`font-medium ${step.completed ? 'text-gray-900' : 'text-gray-400'}`}>
+                                  {step.label}
+                                </h4>
+                                <p className={`text-sm ${step.completed ? 'text-gray-600' : 'text-gray-400'}`}>
+                                  {step.description}
+                                </p>
+                                {step.current && (
+                                  <p className="text-sm text-blue-600 mt-1">المرحلة الحالية</p>
+                                )}
+                              </div>
+                              {step.completed && !step.current && (
+                                <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Cancelled Order */}
+                {order.status === 'cancelled' && (
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="text-center py-6">
+                        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+                          <Package className="h-12 w-12 text-red-600 mx-auto mb-4" />
+                          <h3 className="font-semibold text-red-800 mb-2">تم إلغاء الطلب</h3>
+                          <p className="text-red-600">تم إلغاء هذا الطلب. للاستفسار يرجى التواصل معنا.</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             )}
 
-            {orders && orders.length === 0 && searchQuery && !isLoading && (
+            {/* Instructions */}
+            {!searchSerial && (
               <div className="text-center py-8">
-                <Package className="h-16 w-16 mx-auto text-gray-400 mb-4" />
-                <h3 className="text-lg font-semibold text-gray-600 mb-2">لم يتم العثور على طلبات</h3>
-                <p className="text-gray-500">
-                  {searchType === 'serial' 
-                    ? 'تأكد من صحة رقم الطلب المدخل'
-                    : 'لا توجد طلبات مرتبطة برقم الهاتف المدخل'
-                  }
-                </p>
-              </div>
-            )}
-
-            {!searchQuery && (
-              <div className="text-center py-8">
-                <Search className="h-16 w-16 mx-auto text-gray-400 mb-4" />
-                <h3 className="text-lg font-semibold text-gray-600 mb-2">ابحث عن طلباتك</h3>
-                <p className="text-gray-500">
-                  يمكنك البحث باستخدام رقم الطلب أو رقم الهاتف المسجل
+                <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-600 mb-2">تتبع طلبك</h3>
+                <p className="text-gray-500 max-w-md mx-auto">
+                  أدخل رقم الطلب في الحقل أعلاه لتتبع حالة طلبك ومعرفة المرحلة التي وصل إليها
                 </p>
               </div>
             )}

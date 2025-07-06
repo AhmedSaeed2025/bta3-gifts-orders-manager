@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 interface ProductContextType {
   products: Product[];
   addProduct: (product: Omit<Product, "id">) => Promise<void>;
-  updateProduct: (id: string, product: Omit<Product, "id">) => Promise<void>;
+  updateProduct: (id: string, product: Product) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
   loading: boolean;
 }
@@ -49,9 +49,6 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
       const formattedProducts = productsData?.map(product => ({
         id: product.id,
         name: product.name,
-        categoryId: product.category_id,
-        isVisible: product.is_active !== false,
-        discount_percentage: product.discount_percentage || 0,
         sizes: product.product_sizes?.map((size: any) => ({
           size: size.size,
           cost: Number(size.cost),
@@ -101,10 +98,7 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
         .from('products')
         .insert({
           user_id: user.id,
-          name: newProduct.name,
-          category_id: newProduct.categoryId || null,
-          is_active: newProduct.isVisible,
-          discount_percentage: newProduct.discount_percentage || 0
+          name: newProduct.name
         })
         .select()
         .single();
@@ -117,28 +111,25 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
       console.log('Product inserted successfully:', productData);
 
       // Insert product sizes
-      if (newProduct.sizes && newProduct.sizes.length > 0) {
-        const productSizes = newProduct.sizes.map(size => ({
-          product_id: productData.id,
-          size: size.size,
-          cost: size.cost,
-          price: size.price
-        }));
+      const productSizes = newProduct.sizes.map(size => ({
+        product_id: productData.id,
+        size: size.size,
+        cost: size.cost,
+        price: size.price
+      }));
 
-        console.log('Inserting product sizes:', productSizes);
+      console.log('Inserting product sizes:', productSizes);
 
-        const { error: sizesError } = await supabase
-          .from('product_sizes')
-          .insert(productSizes);
+      const { error: sizesError } = await supabase
+        .from('product_sizes')
+        .insert(productSizes);
 
-        if (sizesError) {
-          console.error('Error inserting product sizes:', sizesError);
-          throw sizesError;
-        }
-
-        console.log('Product sizes inserted successfully');
+      if (sizesError) {
+        console.error('Error inserting product sizes:', sizesError);
+        throw sizesError;
       }
 
+      console.log('Product sizes inserted successfully');
       toast.success("تم إضافة المنتج بنجاح");
       await loadProducts();
     } catch (error) {
@@ -147,7 +138,7 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
     }
   };
 
-  const updateProduct = async (id: string, updatedProduct: Omit<Product, "id">) => {
+  const updateProduct = async (id: string, updatedProduct: Product) => {
     if (!user) {
       toast.error("يجب تسجيل الدخول أولاً");
       return;
@@ -156,15 +147,10 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
     try {
       console.log('Updating product:', id, updatedProduct);
       
-      // Update product name and properties
+      // Update product name
       const { error: productError } = await supabase
         .from('products')
-        .update({ 
-          name: updatedProduct.name,
-          category_id: updatedProduct.categoryId || null,
-          is_active: updatedProduct.isVisible,
-          discount_percentage: updatedProduct.discount_percentage || 0
-        })
+        .update({ name: updatedProduct.name })
         .eq('id', id)
         .eq('user_id', user.id);
 
@@ -185,22 +171,20 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
       }
 
       // Insert new sizes
-      if (updatedProduct.sizes && updatedProduct.sizes.length > 0) {
-        const productSizes = updatedProduct.sizes.map(size => ({
-          product_id: id,
-          size: size.size,
-          cost: size.cost,
-          price: size.price
-        }));
+      const productSizes = updatedProduct.sizes.map(size => ({
+        product_id: id,
+        size: size.size,
+        cost: size.cost,
+        price: size.price
+      }));
 
-        const { error: sizesError } = await supabase
-          .from('product_sizes')
-          .insert(productSizes);
+      const { error: sizesError } = await supabase
+        .from('product_sizes')
+        .insert(productSizes);
 
-        if (sizesError) {
-          console.error('Error inserting new product sizes:', sizesError);
-          throw sizesError;
-        }
+      if (sizesError) {
+        console.error('Error inserting new product sizes:', sizesError);
+        throw sizesError;
       }
 
       console.log('Product updated successfully');

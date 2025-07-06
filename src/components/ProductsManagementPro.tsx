@@ -49,11 +49,7 @@ const ProductsManagementPro = () => {
         setEditId(null);
       }
     } else {
-      await addProduct({ 
-        name: productName, 
-        sizes: [], 
-        isVisible: true 
-      });
+      await addProduct({ name: productName, sizes: [] });
     }
     
     setProductName("");

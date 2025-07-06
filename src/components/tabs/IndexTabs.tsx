@@ -1,90 +1,186 @@
+
 import React from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import OrdersTable from "../OrdersTable";
-import AddOrderDialog from "../AddOrderDialog";
-import SummaryReport from "../SummaryReport";
-import ProfitReport from "../ProfitReport";
-import ImprovedAccountStatement from "../ImprovedAccountStatement";
-import ProductsManagementAdvanced from "../ProductsManagementAdvanced";
-import InvoiceTab from "../InvoiceTab";
-import { Plus, Package, FileText, TrendingUp, Receipt, ShoppingBag, Printer } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useState } from "react";
-import { useSupabaseOrders } from "@/context/SupabaseOrderContext";
+import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from "@/components/ui/tabs";
+import {
+  Plus,
+  List,
+  BarChart3,
+  TrendingUp,
+  Receipt,
+  FileText,
+  Package,
+  Globe,
+} from "lucide-react";
+import OrderForm from "@/components/OrderForm";
+import OrdersTable from "@/components/OrdersTable";
+import SummaryReport from "@/components/SummaryReport";
+import ProfitReport from "@/components/ProfitReport";
+import ImprovedAccountStatement from "@/components/ImprovedAccountStatement";
+import InvoiceTab from "@/components/InvoiceTab";
+import ProductsTab from "@/components/ProductsTab";
+import WebhookTab from "@/components/WebhookTab";
 
 const IndexTabs = () => {
-  const [isAddOrderOpen, setIsAddOrderOpen] = useState(false);
-  const { refreshOrders } = useSupabaseOrders();
-
-  const handleOrderAdded = () => {
-    refreshOrders();
-    setIsAddOrderOpen(false);
-  };
+  const isMobile = useIsMobile();
 
   return (
-    <Tabs defaultValue="orders" className="w-full">
-      <TabsList className="grid w-full grid-cols-6">
-        <TabsTrigger value="orders" className="flex items-center gap-2">
-          <ShoppingBag className="h-4 w-4" />
-          إدارة الطلبات
+    <Tabs defaultValue="addOrder" className="mt-2 md:mt-4" dir="rtl">
+      <TabsList className={`grid w-full ${isMobile ? 'grid-cols-4 gap-1 h-auto p-1 mobile-warm-tabs' : 'grid-cols-8 gap-1 h-10'}`} dir="rtl">
+        <TabsTrigger 
+          value="addOrder" 
+          className={`${isMobile ? 'flex-col text-xs p-2 h-16 mobile-warm-tab-inactive data-[state=active]:mobile-warm-tab-active' : 'text-sm'}`}
+        >
+          {isMobile ? (
+            <>
+              <Plus className="h-4 w-4 mb-1" />
+              <span className="text-xs leading-tight">إضافة</span>
+            </>
+          ) : (
+            "إضافة طلب"
+          )}
         </TabsTrigger>
-        <TabsTrigger value="products" className="flex items-center gap-2">
-          <Package className="h-4 w-4" />
-          إدارة المنتجات
+        <TabsTrigger 
+          value="orders" 
+          className={`${isMobile ? 'flex-col text-xs p-2 h-16 mobile-warm-tab-inactive data-[state=active]:mobile-warm-tab-active' : 'text-sm'}`}
+        >
+          {isMobile ? (
+            <>
+              <List className="h-4 w-4 mb-1" />
+              <span className="text-xs leading-tight">الطلبات</span>
+            </>
+          ) : (
+            "إدارة الطلبات"
+          )}
         </TabsTrigger>
-        <TabsTrigger value="invoice" className="flex items-center gap-2">
-          <Printer className="h-4 w-4" />
-          طباعة الفاتورة
+        <TabsTrigger 
+          value="summary" 
+          className={`${isMobile ? 'flex-col text-xs p-2 h-16 mobile-warm-tab-inactive data-[state=active]:mobile-warm-tab-active' : 'text-sm'}`}
+        >
+          {isMobile ? (
+            <>
+              <BarChart3 className="h-4 w-4 mb-1" />
+              <span className="text-xs leading-tight">تقرير</span>
+            </>
+          ) : (
+            "تقرير الطلبات"
+          )}
         </TabsTrigger>
-        <TabsTrigger value="summary" className="flex items-center gap-2">
-          <FileText className="h-4 w-4" />
-          تقرير شامل
+        <TabsTrigger 
+          value="profitReport" 
+          className={`${isMobile ? 'flex-col text-xs p-2 h-16 mobile-warm-tab-inactive data-[state=active]:mobile-warm-tab-active' : 'text-sm'}`}
+        >
+          {isMobile ? (
+            <>
+              <TrendingUp className="h-4 w-4 mb-1" />
+              <span className="text-xs leading-tight">الأرباح</span>
+            </>
+          ) : (
+            "تقرير الأرباح"
+          )}
         </TabsTrigger>
-        <TabsTrigger value="profit" className="flex items-center gap-2">
-          <TrendingUp className="h-4 w-4" />
-          تقرير الأرباح
-        </TabsTrigger>
-        <TabsTrigger value="account" className="flex items-center gap-2">
-          <Receipt className="h-4 w-4" />
-          كشف الحساب
-        </TabsTrigger>
+        
+        {!isMobile && (
+          <>
+            <TabsTrigger 
+              value="accountStatement" 
+              className="text-sm"
+            >
+              "كشف حساب"
+            </TabsTrigger>
+            <TabsTrigger 
+              value="invoice" 
+              className="text-sm"
+            >
+              "الفاتورة"
+            </TabsTrigger>
+            <TabsTrigger 
+              value="products" 
+              className="text-sm"
+            >
+              "إدارة المنتجات"
+            </TabsTrigger>
+            <TabsTrigger 
+              value="webhook" 
+              className="text-sm"
+            >
+              "Webhook"
+            </TabsTrigger>
+          </>
+        )}
       </TabsList>
-
-      <TabsContent value="orders" className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold">إدارة الطلبات</h2>
-          <Button onClick={() => setIsAddOrderOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            إضافة طلب جديد
-          </Button>
-        </div>
-        <OrdersTable />
-        <AddOrderDialog 
-          isOpen={isAddOrderOpen}
-          onClose={() => setIsAddOrderOpen(false)}
-          onOrderAdded={handleOrderAdded}
-        />
-      </TabsContent>
-
-      <TabsContent value="products">
-        <ProductsManagementAdvanced />
-      </TabsContent>
-
-      <TabsContent value="invoice">
-        <InvoiceTab />
-      </TabsContent>
-
-      <TabsContent value="summary">
-        <SummaryReport />
-      </TabsContent>
-
-      <TabsContent value="profit">
-        <ProfitReport />
-      </TabsContent>
-
-      <TabsContent value="account">
-        <ImprovedAccountStatement />
-      </TabsContent>
+      
+      {isMobile && (
+        <TabsList className="grid w-full grid-cols-4 gap-1 h-auto p-1 mt-2 mobile-warm-tabs" dir="rtl">
+          <TabsTrigger 
+            value="accountStatement" 
+            className="flex-col text-xs p-2 h-16 mobile-warm-tab-inactive data-[state=active]:mobile-warm-tab-active"
+          >
+            <Receipt className="h-4 w-4 mb-1" />
+            <span className="text-xs leading-tight">الحساب</span>
+          </TabsTrigger>
+          <TabsTrigger 
+            value="invoice" 
+            className="flex-col text-xs p-2 h-16 mobile-warm-tab-inactive data-[state=active]:mobile-warm-tab-active"
+          >
+            <FileText className="h-4 w-4 mb-1" />
+            <span className="text-xs leading-tight">الفاتورة</span>
+          </TabsTrigger>
+          <TabsTrigger 
+            value="products" 
+            className="flex-col text-xs p-2 h-16 mobile-warm-tab-inactive data-[state=active]:mobile-warm-tab-active"
+          >
+            <Package className="h-4 w-4 mb-1" />
+            <span className="text-xs leading-tight">المنتجات</span>
+          </TabsTrigger>
+          <TabsTrigger 
+            value="webhook" 
+            className="flex-col text-xs p-2 h-16 mobile-warm-tab-inactive data-[state=active]:mobile-warm-tab-active"
+          >
+            <Globe className="h-4 w-4 mb-1" />
+            <span className="text-xs leading-tight">Webhook</span>
+          </TabsTrigger>
+        </TabsList>
+      )}
+      
+      <div className={`${isMobile ? 'px-1 mt-2' : ''}`}>
+        <TabsContent value="addOrder" className={isMobile ? 'mobile-warm-card rounded-lg' : ''}>
+          <OrderForm />
+        </TabsContent>
+        
+        <TabsContent value="orders" className={isMobile ? 'mobile-warm-card rounded-lg' : ''}>
+          <OrdersTable />
+        </TabsContent>
+        
+        <TabsContent value="summary" className={isMobile ? 'mobile-warm-card rounded-lg' : ''}>
+          <SummaryReport />
+        </TabsContent>
+        
+        <TabsContent value="profitReport" className={isMobile ? 'mobile-warm-card rounded-lg' : ''}>
+          <ProfitReport />
+        </TabsContent>
+        
+        <TabsContent value="accountStatement" className={isMobile ? 'mobile-warm-card rounded-lg' : ''}>
+          <ImprovedAccountStatement />
+        </TabsContent>
+        
+        <TabsContent value="invoice" className={isMobile ? 'mobile-warm-card rounded-lg' : ''}>
+          <InvoiceTab />
+        </TabsContent>
+        
+        <TabsContent value="products" className={isMobile ? 'mobile-warm-card rounded-lg' : ''}>
+          <ProductsTab />
+        </TabsContent>
+        
+        <TabsContent value="webhook" className={isMobile ? 'mobile-warm-card rounded-lg' : ''}>
+          <WebhookTab />
+        </TabsContent>
+      </div>
     </Tabs>
   );
 };

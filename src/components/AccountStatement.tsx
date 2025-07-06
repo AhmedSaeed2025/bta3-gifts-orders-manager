@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -103,7 +104,7 @@ const AccountStatement = () => {
     });
   }, [transactions, filterMonth, filterYear, filterType]);
 
-  // Calculate comprehensive statistics with corrected profit calculation - العربون والدفعات لا تدخل في الربح
+  // Calculate comprehensive statistics with corrected profit calculation
   const accountSummary = React.useMemo(() => {
     const totalRevenue = filteredTransactions
       .filter(t => t.transaction_type === 'order_collection')
@@ -130,14 +131,12 @@ const AccountStatement = () => {
     let totalOrderCosts = 0;
     let totalOrderRevenue = 0;
     let totalShippingCosts = 0;
-    let totalDeposits = 0;
 
     safeOrders.forEach(order => {
       const orderCost = order.items?.reduce((sum, item) => sum + (item.cost * item.quantity), 0) || 0;
       totalOrderCosts += orderCost;
       totalOrderRevenue += order.total;
       totalShippingCosts += order.shippingCost || 0;
-      totalDeposits += order.deposit || 0;
 
       // Check if cost has been paid for this order
       const costPaid = transactions.some(t => 
@@ -149,13 +148,12 @@ const AccountStatement = () => {
       }
     });
 
-    // Fixed net profit calculation: صافي الربح = إجمالي المبيعات - التكاليف المسددة - الشحن المسدد - المصاريف + الإيرادات الإضافية
-    // العربون والدفعات لا تؤثر على الربح لأنها جزء من المبيعات أصلاً
-    const netProfit = totalOrderRevenue - totalCostPaid - totalShippingPaid - totalExpenses + totalOtherIncome;
+    // Fixed net profit calculation: Revenue - Costs - Shipping - Expenses + Other Income (العربون لا يؤثر على الربح)
+    const netProfit = totalRevenue - totalCostPaid - totalShippingPaid - totalExpenses + totalOtherIncome;
     const totalOrders = safeOrders.length;
     const avgOrderValue = totalOrders > 0 ? totalOrderRevenue / totalOrders : 0;
 
-    // Cash flow calculation: التدفق النقدي = التحصيل + الإيرادات الإضافية - التكاليف المسددة - الشحن المسدد - المصاريف
+    // Cash flow calculation
     const cashFlow = totalRevenue + totalOtherIncome - totalCostPaid - totalShippingPaid - totalExpenses;
 
     return {
@@ -171,8 +169,7 @@ const AccountStatement = () => {
       totalShippingCosts,
       totalOrderCosts,
       avgOrderValue,
-      cashFlow,
-      totalDeposits
+      cashFlow
     };
   }, [filteredTransactions, safeOrders, transactions]);
 

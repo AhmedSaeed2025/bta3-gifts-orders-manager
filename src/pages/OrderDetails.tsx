@@ -7,26 +7,20 @@ import { useSupabaseOrders } from "@/context/SupabaseOrderContext";
 import Logo from "@/components/Logo";
 import Invoice from "@/components/Invoice";
 import UserProfile from "@/components/UserProfile";
-import { ArrowRight, Calculator } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 const OrderDetails = () => {
-  const { serial, id } = useParams<{ serial?: string; id?: string }>();
+  const { serial } = useParams<{ serial: string }>();
   const { getOrderBySerial, loading } = useSupabaseOrders();
   const navigate = useNavigate();
   
-  // Use either serial or id parameter
-  const orderSerial = serial || id;
-  const order = orderSerial ? getOrderBySerial(orderSerial) : undefined;
-  
-  console.log("OrderDetails: params", { serial, id, orderSerial });
-  console.log("OrderDetails: found order", order);
+  const order = serial ? getOrderBySerial(serial) : undefined;
   
   useEffect(() => {
-    if (!loading && !order && orderSerial) {
-      console.log("OrderDetails: Order not found, redirecting to home");
+    if (!loading && !order) {
       navigate("/");
     }
-  }, [order, navigate, loading, orderSerial]);
+  }, [order, navigate, loading]);
   
   if (loading) {
     return (
@@ -44,9 +38,6 @@ const OrderDetails = () => {
       <div className="min-h-screen bg-gift-accent dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center p-8">
           <h2 className="text-xl font-bold mb-4">الطلب غير موجود</h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
-            الطلب رقم {orderSerial} غير موجود أو تم حذفه
-          </p>
           <Button onClick={() => navigate("/")} variant="outline">العودة للرئيسية</Button>
         </div>
       </div>
@@ -61,7 +52,7 @@ const OrderDetails = () => {
           <UserProfile />
         </div>
         
-        <div className="mb-4 flex flex-wrap gap-2">
+        <div className="mb-4">
           <Button 
             onClick={() => navigate("/")}
             variant="outline"
@@ -69,15 +60,6 @@ const OrderDetails = () => {
           >
             <ArrowRight size={16} />
             العودة للرئيسية
-          </Button>
-          
-          <Button 
-            onClick={() => navigate("/legacy-admin")}
-            variant="outline"
-            className="flex items-center gap-2 text-xs md:text-sm h-8 md:h-10"
-          >
-            <Calculator size={16} />
-            برنامج الحسابات
           </Button>
         </div>
         

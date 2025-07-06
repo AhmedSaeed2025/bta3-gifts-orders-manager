@@ -29,10 +29,8 @@ const ImprovedAccountStatement = () => {
   const availableYears = useMemo(() => {
     const years = new Set<string>();
     safeTransactions.forEach(transaction => {
-      if (transaction.created_at) {
-        const year = new Date(transaction.created_at).getFullYear().toString();
-        years.add(year);
-      }
+      const year = new Date(transaction.created_at).getFullYear().toString();
+      years.add(year);
     });
     return Array.from(years).sort().reverse();
   }, [safeTransactions]);
@@ -40,8 +38,6 @@ const ImprovedAccountStatement = () => {
   // Filter transactions
   const filteredTransactions = useMemo(() => {
     return safeTransactions.filter(transaction => {
-      if (!transaction.created_at) return false;
-      
       const transactionDate = new Date(transaction.created_at);
       const transactionYear = transactionDate.getFullYear().toString();
       const transactionMonth = (transactionDate.getMonth() + 1).toString().padStart(2, '0');
@@ -49,13 +45,13 @@ const ImprovedAccountStatement = () => {
       if (filterYear !== "all" && transactionYear !== filterYear) return false;
       if (filterMonth !== "all" && transactionMonth !== filterMonth) return false;
       if (filterType !== "all" && transaction.transaction_type !== filterType) return false;
-      if (searchTerm && transaction.description && !transaction.description.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+      if (searchTerm && !transaction.description.toLowerCase().includes(searchTerm.toLowerCase())) return false;
       
       return true;
     });
   }, [safeTransactions, filterMonth, filterYear, filterType, searchTerm]);
 
-  // حساب محسن للملخص المالي مع استثناء الشحن من الأرباح
+  // Calculate enhanced financial summary
   const financialSummary = useMemo(() => {
     let totalRevenue = 0;
     let totalCosts = 0;
@@ -66,58 +62,46 @@ const ImprovedAccountStatement = () => {
     let totalCostPayments = 0;
     let totalExpenses = 0;
     let totalOtherIncome = 0;
-    let totalOrderPayments = 0;
 
-    // حساب من الطلبات
+    // Calculate from orders
     safeOrders.forEach(order => {
       totalRevenue += order.total;
+      totalDeposits += order.deposit || 0;
       totalShipping += order.shippingCost || 0;
       
-      // حساب التكاليف الفعلية من الأصناف
+      // Calculate actual costs from items
       const orderCosts = order.items?.reduce((sum, item) => sum + (item.cost * item.quantity), 0) || 0;
       totalCosts += orderCosts;
     });
 
-    // حساب من المعاملات
+    // Calculate from transactions
     safeTransactions.forEach(transaction => {
-      const amount = Number(transaction.amount) || 0;
-      
       switch (transaction.transaction_type) {
         case 'order_collection':
-          totalCollections += amount;
-          totalOrderPayments += amount;
-          break;
-        case 'deposit':
-          totalCollections += amount; // العربون يعتبر تحصيل
-          totalDeposits += amount;
+          totalCollections += transaction.amount;
           break;
         case 'shipping_payment':
-          totalShippingPayments += amount;
+          totalShippingPayments += transaction.amount;
           break;
         case 'cost_payment':
-          totalCostPayments += amount;
+          totalCostPayments += transaction.amount;
           break;
         case 'expense':
-          totalExpenses += amount;
+          totalExpenses += transaction.amount;
           break;
         case 'other_income':
-          totalOtherIncome += amount;
+          totalOtherIncome += transaction.amount;
           break;
       }
     });
 
-    // الربح الصافي = الإيرادات - التكاليف (استثناء الشحن لأنه يذهب لشركة خارجية)
-    const netProfit = totalRevenue - totalCosts + totalOtherIncome - totalExpenses;
-    
-    // التدفق النقدي = النقود الواردة - النقود الصادرة
-    const cashFlow = totalCollections + totalOtherIncome - totalShippingPayments - totalCostPayments - totalExpenses;
+    // Enhanced profit calculation including additional income and expenses
+    const netProfit = totalRevenue - totalCosts - totalShipping + totalOtherIncome - totalExpenses;
+    const cashFlow = totalCollections + totalDeposits + totalOtherIncome - totalShippingPayments - totalCostPayments - totalExpenses;
 
-    // المتبقي من التكاليف والشحن
-    const remainingCosts = Math.max(0, totalCosts - totalCostPayments);
-    const remainingShipping = Math.max(0, totalShipping - totalShippingPayments);
-    
-    // المبالغ الغير محصلة = إجمالي الإيرادات - المقبوض (العربون + السداد)
-    const outstandingCollections = Math.max(0, totalRevenue - totalCollections);
+    // Calculate remaining amounts
+    const remainingCosts = totalCosts - totalCostPayments;
+    const remainingShipping = totalShipping - totalShippingPayments;
 
     return {
       totalRevenue,
@@ -132,8 +116,7 @@ const ImprovedAccountStatement = () => {
       remainingCosts,
       remainingShipping,
       totalExpenses,
-      totalOtherIncome,
-      outstandingCollections
+      totalOtherIncome
     };
   }, [safeOrders, safeTransactions]);
 

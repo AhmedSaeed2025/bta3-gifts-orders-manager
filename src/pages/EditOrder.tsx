@@ -12,30 +12,23 @@ import { ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 
 const EditOrder = () => {
-  const { serial, id } = useParams<{ serial?: string; id?: string }>();
-  const { orders, loading, getOrderBySerial } = useSupabaseOrders();
+  const { serial } = useParams<{ serial: string }>();
+  const { getOrderBySerial, loading } = useSupabaseOrders();
   const navigate = useNavigate();
   const [order, setOrder] = useState<Order | undefined>();
   const [orderNotFound, setOrderNotFound] = useState(false);
-  
-  // Use either serial or id parameter
-  const orderSerial = serial || id;
-  
-  console.log("EditOrder: params", { serial, id, orderSerial });
+  const [isInitialized, setIsInitialized] = useState(false);
   
   useEffect(() => {
-    if (!orderSerial) {
+    if (!serial) {
       console.log("EditOrder: No serial provided, redirecting to home");
       navigate("/");
       return;
     }
 
-    if (!loading) {
-      console.log("EditOrder: Looking for order with serial:", orderSerial);
-      console.log("EditOrder: Available orders:", orders.map(o => o.serial));
-      
-      // Use the context method to get order by serial
-      const foundOrder = getOrderBySerial(orderSerial);
+    if (!loading && !isInitialized) {
+      console.log("EditOrder: Looking for order with serial:", serial);
+      const foundOrder = getOrderBySerial(serial);
       console.log("EditOrder: Found order:", foundOrder);
       
       if (foundOrder) {
@@ -44,13 +37,14 @@ const EditOrder = () => {
       } else {
         console.log("EditOrder: Order not found");
         setOrderNotFound(true);
-        toast.error(`الطلب رقم ${orderSerial} غير موجود`);
+        toast.error(`الطلب رقم ${serial} غير موجود`);
       }
+      setIsInitialized(true);
     }
-  }, [orderSerial, orders, loading, navigate, getOrderBySerial]);
+  }, [serial, getOrderBySerial, loading, navigate, isInitialized]);
   
   useEffect(() => {
-    if (orderNotFound && !loading) {
+    if (orderNotFound && isInitialized && !order) {
       console.log("EditOrder: Redirecting to home because order not found");
       const timer = setTimeout(() => {
         navigate("/");
@@ -58,9 +52,9 @@ const EditOrder = () => {
       
       return () => clearTimeout(timer);
     }
-  }, [orderNotFound, loading, navigate]);
+  }, [orderNotFound, isInitialized, order, navigate]);
   
-  if (loading) {
+  if (loading || !isInitialized) {
     return (
       <div className="min-h-screen bg-gift-accent dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center p-8">
@@ -77,7 +71,7 @@ const EditOrder = () => {
         <div className="text-center p-8">
           <h2 className="text-xl font-bold mb-4">الطلب غير موجود</h2>
           <p className="text-gray-600 dark:text-gray-400 mb-4">
-            الطلب رقم {orderSerial} غير موجود أو تم حذفه
+            الطلب رقم {serial} غير موجود أو تم حذفه
           </p>
           <p className="text-gray-500 text-sm mb-4">
             سيتم إعادة توجيهك للصفحة الرئيسية خلال ثوانٍ...
@@ -118,7 +112,14 @@ const EditOrder = () => {
           </Button>
         </div>
         
-        <OrderForm editingOrder={order} />
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg md:text-xl">تعديل الطلب - {order.serial}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <OrderForm editingOrder={order} />
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

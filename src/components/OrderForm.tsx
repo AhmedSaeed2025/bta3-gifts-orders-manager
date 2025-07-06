@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +10,6 @@ import ItemAddForm from "./order/ItemAddForm";
 import ItemsTable from "./order/ItemsTable";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { toast } from "sonner";
 
 interface OrderFormProps {
   editingOrder?: Order;
@@ -62,11 +60,11 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
   
   const totalAmount = subtotal + customerData.shippingCost - customerData.deposit;
   
-  // Correct profit calculation: Revenue - Cost (الشحن والعربون لا يؤثران على الربح)
+  // Fixed profit calculation: Revenue - Cost - Shipping (العربون لا يؤثر على الربح)
   const totalProfit = items.reduce((sum, item) => {
     const discountedPrice = item.price - (item.itemDiscount || 0);
     return sum + (discountedPrice - item.cost) * item.quantity;
-  }, 0);
+  }, 0) - customerData.shippingCost;
 
   useEffect(() => {
     if (currentItem.productType && currentItem.size) {
@@ -135,7 +133,6 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
   
   const addItem = () => {
     if (!currentItem.productType || !currentItem.size || currentItem.quantity < 1) {
-      toast.error("يرجى إكمال بيانات المنتج");
       return;
     }
     
@@ -166,12 +163,7 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
     e.preventDefault();
     
     if (items.length === 0) {
-      toast.error("يجب إضافة منتج واحد على الأقل");
-      return;
-    }
-    
-    if (!customerData.clientName || !customerData.phone) {
-      toast.error("يرجى إكمال بيانات العميل");
+      alert("يجب إضافة منتج واحد على الأقل");
       return;
     }
     
@@ -184,18 +176,16 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
         governorate: customerData.governorate || "-",
         items,
         total: totalAmount,
-        profit: totalProfit, // Correct profit calculation
+        profit: totalProfit, // Fixed profit calculation
         status: editingOrder?.status || "pending",
         discount: 0 // Always 0 since we removed global discount
       };
 
       if (editingOrder) {
         await updateOrder(editingOrder.serial, orderData);
-        toast.success("تم تحديث الطلب بنجاح");
         navigate("/");
       } else {
         await addOrder(orderData);
-        toast.success("تم إضافة الطلب بنجاح");
         
         // Reset form
         setCustomerData({
@@ -212,7 +202,6 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
       }
     } catch (error) {
       console.error('Error submitting order:', error);
-      toast.error("حدث خطأ في حفظ الطلب");
     } finally {
       setIsSubmitting(false);
     }

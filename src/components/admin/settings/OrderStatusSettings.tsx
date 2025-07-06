@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { ArrowUp, ArrowDown, Save, Loader2 } from 'lucide-react';
+import { ArrowUp, ArrowDown, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { OrderStatus, OrderStatusConfig } from '@/types';
@@ -21,27 +21,25 @@ const OrderStatusSettings = () => {
   useEffect(() => {
     const loadConfigurations = () => {
       try {
-        if (user) {
-          // Try to load from localStorage first
-          const savedConfigs = localStorage.getItem(`order_status_configs_${user.id}`);
-          
-          if (savedConfigs) {
-            const parsed = JSON.parse(savedConfigs);
-            setStatusConfigs(parsed);
-          } else {
-            // Use default configurations
-            const defaultConfigs: OrderStatusConfig[] = [
-              { status: 'pending', label: 'قيد المراجعة', order: 1, enabled: true },
-              { status: 'confirmed', label: 'تم التأكيد', order: 2, enabled: true },
-              { status: 'processing', label: 'قيد التحضير', order: 3, enabled: true },
-              { status: 'sentToPrinter', label: 'تم الإرسال للمطبعة', order: 4, enabled: true },
-              { status: 'readyForDelivery', label: 'تحت التسليم', order: 5, enabled: true },
-              { status: 'shipped', label: 'تم الشحن', order: 6, enabled: true },
-              { status: 'delivered', label: 'تم التوصيل', order: 7, enabled: true },
-              { status: 'cancelled', label: 'ملغي', order: 8, enabled: true }
-            ];
-            setStatusConfigs(defaultConfigs);
-          }
+        // Try to load from localStorage first
+        const savedConfigs = user ? localStorage.getItem(`order_status_configs_${user.id}`) : null;
+        
+        if (savedConfigs) {
+          const parsed = JSON.parse(savedConfigs);
+          setStatusConfigs(parsed);
+        } else {
+          // Use default configurations
+          const defaultConfigs: OrderStatusConfig[] = [
+            { status: 'pending', label: 'قيد المراجعة', order: 1, enabled: true },
+            { status: 'confirmed', label: 'تم التأكيد', order: 2, enabled: true },
+            { status: 'processing', label: 'قيد التحضير', order: 3, enabled: true },
+            { status: 'sentToPrinter', label: 'تم الإرسال للمطبعة', order: 4, enabled: true },
+            { status: 'readyForDelivery', label: 'تحت التسليم', order: 5, enabled: true },
+            { status: 'shipped', label: 'تم الشحن', order: 6, enabled: true },
+            { status: 'delivered', label: 'تم التوصيل', order: 7, enabled: true },
+            { status: 'cancelled', label: 'ملغي', order: 8, enabled: true }
+          ];
+          setStatusConfigs(defaultConfigs);
         }
       } catch (error) {
         console.error('Error loading status configurations:', error);
@@ -51,7 +49,11 @@ const OrderStatusSettings = () => {
       }
     };
 
-    loadConfigurations();
+    if (user) {
+      loadConfigurations();
+    } else {
+      setLoading(false);
+    }
   }, [user]);
 
   const moveStatusUp = (index: number) => {
@@ -155,17 +157,8 @@ const OrderStatusSettings = () => {
             disabled={saving}
             className="flex items-center gap-2"
           >
-            {saving ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                جاري الحفظ...
-              </>
-            ) : (
-              <>
-                <Save className="h-4 w-4" />
-                حفظ الإعدادات
-              </>
-            )}
+            <Save className="h-4 w-4" />
+            {saving ? 'جاري الحفظ...' : 'حفظ الإعدادات'}
           </Button>
         </div>
       </CardHeader>
