@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,7 +67,6 @@ const ProductsManagement = () => {
     setEditId(product.id);
   };
   
-  // Size form handling
   const handleSubmitSize = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
@@ -170,48 +168,55 @@ const ProductsManagement = () => {
 
   return (
     <Card className="mx-2 md:mx-0">
-      <CardHeader className="pb-4">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-          <CardTitle className="text-lg md:text-xl">إدارة المنتجات والمقاسات</CardTitle>
+      <CardHeader className="pb-4 px-3 md:px-6">
+        <div className="flex flex-col gap-3">
+          <div className="min-w-0">
+            <CardTitle className="text-base md:text-xl truncate">إدارة المنتجات والمقاسات</CardTitle>
+            <p className="text-xs md:text-sm text-muted-foreground mt-1">إضافة وتعديل المنتجات والمقاسات</p>
+          </div>
           
           {user && (
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 justify-start">
               <Button 
                 onClick={syncToSupabase}
                 disabled={syncStatus === 'syncing'}
                 size="sm"
-                className="bg-blue-600 hover:bg-blue-700 text-xs"
+                className="bg-blue-600 hover:bg-blue-700 text-xs px-3 py-1 h-8"
               >
                 {syncStatus === 'syncing' ? (
                   <Loader2 className="h-3 w-3 ml-1 animate-spin" />
                 ) : (
                   <Cloud className="h-3 w-3 ml-1" />
                 )}
-                رفع للسيرفر
+                <span className="hidden sm:inline">رفع للسيرفر</span>
+                <span className="sm:hidden">رفع</span>
               </Button>
               <Button 
                 onClick={syncFromSupabase}
                 disabled={syncStatus === 'syncing'}
                 size="sm"
                 variant="outline"
-                className="text-xs"
+                className="text-xs px-3 py-1 h-8"
               >
                 {syncStatus === 'syncing' ? (
                   <Loader2 className="h-3 w-3 ml-1 animate-spin" />
                 ) : (
                   <CloudDownload className="h-3 w-3 ml-1" />
                 )}
-                تحديث من السيرفر
+                <span className="hidden sm:inline">تحديث من السيرفر</span>
+                <span className="sm:hidden">تحديث</span>
               </Button>
             </div>
           )}
         </div>
       </CardHeader>
       
-      <CardContent className="px-4 md:px-6">
+      <CardContent className="px-3 md:px-6">
         {/* Product Form */}
         <div className="mb-6 border p-3 md:p-4 rounded-md">
-          <h3 className="font-medium mb-3 text-sm md:text-base">{editMode === "product" ? "تعديل منتج" : "إضافة منتج جديد"}</h3>
+          <h3 className="font-medium mb-3 text-sm md:text-base truncate">
+            {editMode === "product" ? "تعديل منتج" : "إضافة منتج جديد"}
+          </h3>
           <form onSubmit={handleSubmitProduct} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="productName" className="text-xs md:text-sm">اسم المنتج</Label>
@@ -226,7 +231,7 @@ const ProductsManagement = () => {
                 />
                 <Button 
                   type="submit" 
-                  className="bg-gift-primary hover:bg-gift-primaryHover text-xs md:text-sm px-3 md:px-4"
+                  className="bg-gift-primary hover:bg-gift-primaryHover text-xs md:text-sm px-3 md:px-4 whitespace-nowrap"
                   size="sm"
                 >
                   {editMode === "product" ? "تعديل" : "إضافة"}
@@ -237,7 +242,7 @@ const ProductsManagement = () => {
                     variant="outline" 
                     onClick={cancelEdit}
                     size="sm"
-                    className="text-xs md:text-sm"
+                    className="text-xs md:text-sm whitespace-nowrap"
                   >
                     إلغاء
                   </Button>
@@ -249,7 +254,9 @@ const ProductsManagement = () => {
         
         {/* Size Form */}
         <div className="mb-6 border p-3 md:p-4 rounded-md">
-          <h3 className="font-medium mb-3 text-sm md:text-base">{editMode === "size" ? "تعديل مقاس" : "إضافة مقاس جديد"}</h3>
+          <h3 className="font-medium mb-3 text-sm md:text-base truncate">
+            {editMode === "size" ? "تعديل مقاس" : "إضافة مقاس جديد"}
+          </h3>
           <form onSubmit={handleSubmitSize} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
@@ -300,7 +307,7 @@ const ProductsManagement = () => {
               <div className="flex gap-2">
                 <Button 
                   type="submit" 
-                  className="bg-gift-primary hover:bg-gift-primaryHover text-xs md:text-sm"
+                  className="bg-gift-primary hover:bg-gift-primaryHover text-xs md:text-sm whitespace-nowrap"
                   size="sm"
                 >
                   {editMode === "size" ? "تعديل المقاس" : "إضافة المقاس"}
@@ -310,7 +317,7 @@ const ProductsManagement = () => {
                   variant="outline" 
                   onClick={cancelEdit}
                   size="sm"
-                  className="text-xs md:text-sm"
+                  className="text-xs md:text-sm whitespace-nowrap"
                 >
                   إلغاء
                 </Button>
@@ -323,13 +330,15 @@ const ProductsManagement = () => {
         <div className="space-y-6 md:space-y-8">
           {products.map((product) => (
             <div key={product.id} className="border rounded-md p-3 md:p-4">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-3">
-                <h3 className="text-base md:text-lg font-medium">{product.name}</h3>
+              <div className="flex flex-col gap-3 mb-3">
+                <div className="min-w-0">
+                  <h3 className="text-base md:text-lg font-medium truncate">{product.name}</h3>
+                </div>
                 <div className="flex flex-wrap gap-1 md:gap-2">
                   <Button 
                     size="sm" 
                     variant="outline" 
-                    className="h-7 md:h-8 text-xs px-2" 
+                    className="h-7 md:h-8 text-xs px-2 whitespace-nowrap" 
                     onClick={() => handleAddSizeToProduct(product.id)}
                   >
                     <Plus className="h-3 w-3 ml-1" /> إضافة مقاس
@@ -337,7 +346,7 @@ const ProductsManagement = () => {
                   <Button 
                     size="sm" 
                     variant="outline" 
-                    className="h-7 md:h-8 text-xs px-2" 
+                    className="h-7 md:h-8 text-xs px-2 whitespace-nowrap" 
                     onClick={() => handleEditProduct(product)}
                   >
                     <Pencil className="h-3 w-3 ml-1" /> تعديل
@@ -347,7 +356,7 @@ const ProductsManagement = () => {
                       <Button 
                         size="sm" 
                         variant="destructive" 
-                        className="h-7 md:h-8 text-xs px-2"
+                        className="h-7 md:h-8 text-xs px-2 whitespace-nowrap"
                       >
                         <Trash className="h-3 w-3 ml-1" /> حذف
                       </Button>

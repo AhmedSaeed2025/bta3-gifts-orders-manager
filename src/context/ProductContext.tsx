@@ -51,6 +51,7 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
         name: product.name,
         categoryId: product.category_id,
         isVisible: product.is_active !== false,
+        discount_percentage: product.discount_percentage || 0,
         sizes: product.product_sizes?.map((size: any) => ({
           size: size.size,
           cost: Number(size.cost),
@@ -101,8 +102,9 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
         .insert({
           user_id: user.id,
           name: newProduct.name,
-          category_id: newProduct.categoryId,
-          is_active: newProduct.isVisible
+          category_id: newProduct.categoryId || null,
+          is_active: newProduct.isVisible,
+          discount_percentage: newProduct.discount_percentage || 0
         })
         .select()
         .single();
@@ -115,25 +117,28 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
       console.log('Product inserted successfully:', productData);
 
       // Insert product sizes
-      const productSizes = newProduct.sizes.map(size => ({
-        product_id: productData.id,
-        size: size.size,
-        cost: size.cost,
-        price: size.price
-      }));
+      if (newProduct.sizes && newProduct.sizes.length > 0) {
+        const productSizes = newProduct.sizes.map(size => ({
+          product_id: productData.id,
+          size: size.size,
+          cost: size.cost,
+          price: size.price
+        }));
 
-      console.log('Inserting product sizes:', productSizes);
+        console.log('Inserting product sizes:', productSizes);
 
-      const { error: sizesError } = await supabase
-        .from('product_sizes')
-        .insert(productSizes);
+        const { error: sizesError } = await supabase
+          .from('product_sizes')
+          .insert(productSizes);
 
-      if (sizesError) {
-        console.error('Error inserting product sizes:', sizesError);
-        throw sizesError;
+        if (sizesError) {
+          console.error('Error inserting product sizes:', sizesError);
+          throw sizesError;
+        }
+
+        console.log('Product sizes inserted successfully');
       }
 
-      console.log('Product sizes inserted successfully');
       toast.success("تم إضافة المنتج بنجاح");
       await loadProducts();
     } catch (error) {
@@ -156,8 +161,9 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
         .from('products')
         .update({ 
           name: updatedProduct.name,
-          category_id: updatedProduct.categoryId,
-          is_active: updatedProduct.isVisible
+          category_id: updatedProduct.categoryId || null,
+          is_active: updatedProduct.isVisible,
+          discount_percentage: updatedProduct.discount_percentage || 0
         })
         .eq('id', id)
         .eq('user_id', user.id);
@@ -179,20 +185,22 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
       }
 
       // Insert new sizes
-      const productSizes = updatedProduct.sizes.map(size => ({
-        product_id: id,
-        size: size.size,
-        cost: size.cost,
-        price: size.price
-      }));
+      if (updatedProduct.sizes && updatedProduct.sizes.length > 0) {
+        const productSizes = updatedProduct.sizes.map(size => ({
+          product_id: id,
+          size: size.size,
+          cost: size.cost,
+          price: size.price
+        }));
 
-      const { error: sizesError } = await supabase
-        .from('product_sizes')
-        .insert(productSizes);
+        const { error: sizesError } = await supabase
+          .from('product_sizes')
+          .insert(productSizes);
 
-      if (sizesError) {
-        console.error('Error inserting new product sizes:', sizesError);
-        throw sizesError;
+        if (sizesError) {
+          console.error('Error inserting new product sizes:', sizesError);
+          throw sizesError;
+        }
       }
 
       console.log('Product updated successfully');
