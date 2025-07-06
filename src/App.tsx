@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ProductProvider } from "@/context/ProductContext";
 import { CategoryProvider } from "@/context/CategoryContext";
+import { CartProvider } from "@/hooks/useCart";
 import Index from "./pages/Index";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminOrders from "./pages/admin/AdminOrders";
@@ -21,27 +22,29 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <ProductProvider>
-        <CategoryProvider>
-          <TooltipProvider>
-            <Toaster />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/store" element={<StorePage />} />
-                <Route path="/order" element={<OrderPage />} />
-                <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
-                <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                <Route path="/admin/orders" element={<AdminOrders />} />
-                <Route path="/admin/products" element={<AdminProducts />} />
-                <Route path="/admin/reports" element={<AdminReports />} />
-                <Route path="/admin/settings" element={<AdminSettings />} />
-                <Route path="/legacy-admin" element={<LegacyAdmin />} />
-              </Routes>
-            </BrowserRouter>
-          </TooltipProvider>
-        </CategoryProvider>
-      </ProductProvider>
+      <CartProvider>
+        <ProductProvider>
+          <CategoryProvider>
+            <TooltipProvider>
+              <Toaster />
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/store" element={<StorePage />} />
+                  <Route path="/order" element={<OrderPage />} />
+                  <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+                  <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                  <Route path="/admin/orders" element={<AdminOrders />} />
+                  <Route path="/admin/products" element={<AdminProducts />} />
+                  <Route path="/admin/reports" element={<AdminReports />} />
+                  <Route path="/admin/settings" element={<AdminSettings />} />
+                  <Route path="/legacy-admin" element={<LegacyAdmin />} />
+                </Routes>
+              </BrowserRouter>
+            </TooltipProvider>
+          </CategoryProvider>
+        </ProductProvider>
+      </CartProvider>
     </AuthProvider>
   </QueryClientProvider>
 );
