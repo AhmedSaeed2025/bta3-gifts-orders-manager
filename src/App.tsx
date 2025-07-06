@@ -12,8 +12,8 @@ import AdminProducts from "./pages/admin/AdminProducts";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminSettings from "./pages/admin/AdminSettings";
 import LegacyAdmin from "./pages/admin/LegacyAdmin";
-import Store from "./pages/Store";
-import OrderForm from "./pages/OrderForm";
+import StorePage from "./pages/StorePage";
+import OrderPage from "./pages/OrderPage";
 import { AuthProvider } from "./hooks/useAuth";
 
 const queryClient = new QueryClient();
@@ -28,8 +28,8 @@ const App = () => (
             <BrowserRouter>
               <Routes>
                 <Route path="/" element={<Index />} />
-                <Route path="/store" element={<Store />} />
-                <Route path="/order" element={<OrderForm />} />
+                <Route path="/store" element={<StorePage />} />
+                <Route path="/order" element={<OrderPage />} />
                 <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
                 <Route path="/admin/orders" element={<AdminOrders />} />
