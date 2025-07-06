@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -42,6 +41,10 @@ const InvoiceTab = () => {
     if (selectedOrder) {
       navigate(`/edit-order/${selectedOrder.serial}`);
     }
+  };
+
+  const handleAccountsProgramClick = () => {
+    navigate("/");
   };
 
   const exportToPDF = async () => {
@@ -158,7 +161,7 @@ const InvoiceTab = () => {
             <Button 
               variant="secondary" 
               size={isMobile ? "sm" : "default"}
-              onClick={() => navigate("/")}
+              onClick={handleAccountsProgramClick}
               className={`${isMobile ? "text-xs h-6" : "text-xs h-7"} flex items-center gap-1`}
             >
               برنامج الحسابات

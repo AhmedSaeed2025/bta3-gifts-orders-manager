@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -53,18 +54,20 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
       .map(s => s.size) || [] 
     : [];
 
+  // المجموع الفرعي = مجموع (السعر - الخصم) × الكمية لكل صنف
   const subtotal = items.reduce((sum, item) => {
     const discountedPrice = item.price - (item.itemDiscount || 0);
     return sum + discountedPrice * item.quantity;
   }, 0);
   
+  // إجمالي التكلفة = مجموع (التكلفة × الكمية) لكل صنف
+  const totalCost = items.reduce((sum, item) => sum + item.cost * item.quantity, 0);
+  
+  // المبلغ الإجمالي = المجموع الفرعي + الشحن - العربون
   const totalAmount = subtotal + customerData.shippingCost - customerData.deposit;
   
-  // Fixed profit calculation: Revenue - Cost - Shipping (العربون لا يؤثر على الربح)
-  const totalProfit = items.reduce((sum, item) => {
-    const discountedPrice = item.price - (item.itemDiscount || 0);
-    return sum + (discountedPrice - item.cost) * item.quantity;
-  }, 0) - customerData.shippingCost;
+  // صافي الربح = المجموع الفرعي - إجمالي التكلفة (الشحن لا يحسب في الربح)
+  const netProfit = subtotal - totalCost;
 
   useEffect(() => {
     if (currentItem.productType && currentItem.size) {
@@ -176,9 +179,9 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
         governorate: customerData.governorate || "-",
         items,
         total: totalAmount,
-        profit: totalProfit, // Fixed profit calculation
+        profit: netProfit, // استخدام صافي الربح المحسوب بشكل صحيح
         status: editingOrder?.status || "pending",
-        discount: 0 // Always 0 since we removed global discount
+        discount: 0
       };
 
       if (editingOrder) {
@@ -243,6 +246,8 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
             totalAmount={totalAmount}
             products={products}
             editMode={!!editingOrder}
+            totalCost={totalCost}
+            netProfit={netProfit}
           />
           
           <Button 
