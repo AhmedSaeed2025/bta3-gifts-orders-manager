@@ -155,6 +155,14 @@ const InvoiceTab = () => {
         <CardTitle className={`${isMobile ? "text-sm" : "text-base"} flex items-center justify-between`}>
           <span>طباعة الفاتورة</span>
           <div className="flex gap-2">
+            <Button 
+              variant="secondary" 
+              size={isMobile ? "sm" : "default"}
+              onClick={() => navigate("/")}
+              className={`${isMobile ? "text-xs h-6" : "text-xs h-7"} flex items-center gap-1`}
+            >
+              برنامج الحسابات
+            </Button>
             {selectedOrder && (
               <>
                 <Button

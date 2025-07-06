@@ -53,14 +53,23 @@ const OrderDetails = () => {
         </div>
         
         <div className="mb-4">
-          <Button 
-            onClick={() => navigate("/")}
-            variant="outline"
-            className="flex items-center gap-2 text-xs md:text-sm h-8 md:h-10"
-          >
-            <ArrowRight size={16} />
-            العودة للرئيسية
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={() => navigate("/")}
+              variant="outline"
+              className="flex items-center gap-2 text-xs md:text-sm h-8 md:h-10"
+            >
+              <ArrowRight size={16} />
+              العودة للرئيسية
+            </Button>
+            <Button 
+              variant="secondary"
+              onClick={() => navigate("/")}
+              className="flex items-center gap-2 text-xs md:text-sm h-8 md:h-10"
+            >
+              برنامج الحسابات
+            </Button>
+          </div>
         </div>
         
         <Card>

@@ -97,10 +97,11 @@ function App() {
                                 {/* Legacy Admin Route - برنامج الحسابات */}
                                 <Route path="/legacy-admin" element={<IndexLayout />} />
                                 
-                                {/* Order Management */}
-                                <Route path="/order" element={<OrderPage />} />
-                                <Route path="/order/:id" element={<OrderDetails />} />
-                                <Route path="/order/:id/edit" element={<EditOrder />} />
+                {/* Order Management */}
+                <Route path="/order" element={<OrderPage />} />
+                <Route path="/order/:id" element={<OrderDetails />} />
+                <Route path="/order/:id/edit" element={<EditOrder />} />
+                <Route path="/edit-order/:serial" element={<EditOrder />} />
                                 
                                 {/* Catch all */}
                                 <Route path="*" element={<NotFound />} />

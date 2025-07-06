@@ -12,7 +12,8 @@ import { ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 
 const EditOrder = () => {
-  const { serial } = useParams<{ serial: string }>();
+  const { serial, id } = useParams<{ serial?: string; id?: string }>();
+  const orderIdentifier = serial || id;
   const { getOrderBySerial, loading } = useSupabaseOrders();
   const navigate = useNavigate();
   const [order, setOrder] = useState<Order | undefined>();
@@ -20,15 +21,15 @@ const EditOrder = () => {
   const [isInitialized, setIsInitialized] = useState(false);
   
   useEffect(() => {
-    if (!serial) {
-      console.log("EditOrder: No serial provided, redirecting to home");
+    if (!orderIdentifier) {
+      console.log("EditOrder: No order identifier provided, redirecting to home");
       navigate("/");
       return;
     }
 
     if (!loading && !isInitialized) {
-      console.log("EditOrder: Looking for order with serial:", serial);
-      const foundOrder = getOrderBySerial(serial);
+      console.log("EditOrder: Looking for order with identifier:", orderIdentifier);
+      const foundOrder = getOrderBySerial(orderIdentifier);
       console.log("EditOrder: Found order:", foundOrder);
       
       if (foundOrder) {
@@ -37,11 +38,11 @@ const EditOrder = () => {
       } else {
         console.log("EditOrder: Order not found");
         setOrderNotFound(true);
-        toast.error(`الطلب رقم ${serial} غير موجود`);
+        toast.error(`الطلب رقم ${orderIdentifier} غير موجود`);
       }
       setIsInitialized(true);
     }
-  }, [serial, getOrderBySerial, loading, navigate, isInitialized]);
+  }, [orderIdentifier, getOrderBySerial, loading, navigate, isInitialized]);
   
   useEffect(() => {
     if (orderNotFound && isInitialized && !order) {
@@ -71,7 +72,7 @@ const EditOrder = () => {
         <div className="text-center p-8">
           <h2 className="text-xl font-bold mb-4">الطلب غير موجود</h2>
           <p className="text-gray-600 dark:text-gray-400 mb-4">
-            الطلب رقم {serial} غير موجود أو تم حذفه
+            الطلب رقم {orderIdentifier} غير موجود أو تم حذفه
           </p>
           <p className="text-gray-500 text-sm mb-4">
             سيتم إعادة توجيهك للصفحة الرئيسية خلال ثوانٍ...
