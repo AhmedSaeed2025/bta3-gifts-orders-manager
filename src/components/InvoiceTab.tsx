@@ -44,7 +44,7 @@ const InvoiceTab = () => {
   };
 
   const handleAccountsProgramClick = () => {
-    navigate("/");
+    navigate("/legacy-admin");
   };
 
   const exportToPDF = async () => {

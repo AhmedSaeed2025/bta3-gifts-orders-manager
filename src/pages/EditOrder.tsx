@@ -22,8 +22,8 @@ const EditOrder = () => {
   
   useEffect(() => {
     if (!orderIdentifier) {
-      console.log("EditOrder: No order identifier provided, redirecting to home");
-      navigate("/");
+      console.log("EditOrder: No order identifier provided, redirecting to legacy admin");
+      navigate("/legacy-admin");
       return;
     }
 
@@ -46,14 +46,18 @@ const EditOrder = () => {
   
   useEffect(() => {
     if (orderNotFound && isInitialized && !order) {
-      console.log("EditOrder: Redirecting to home because order not found");
+      console.log("EditOrder: Redirecting to legacy admin because order not found");
       const timer = setTimeout(() => {
-        navigate("/");
+        navigate("/legacy-admin");
       }, 3000);
       
       return () => clearTimeout(timer);
     }
   }, [orderNotFound, isInitialized, order, navigate]);
+
+  const handleBackToAccounts = () => {
+    navigate("/legacy-admin");
+  };
   
   if (loading || !isInitialized) {
     return (
@@ -75,9 +79,9 @@ const EditOrder = () => {
             الطلب رقم {orderIdentifier} غير موجود أو تم حذفه
           </p>
           <p className="text-gray-500 text-sm mb-4">
-            سيتم إعادة توجيهك للصفحة الرئيسية خلال ثوانٍ...
+            سيتم إعادة توجيهك لبرنامج الحسابات خلال ثوانٍ...
           </p>
-          <Button onClick={() => navigate("/")} variant="outline">العودة للرئيسية</Button>
+          <Button onClick={handleBackToAccounts} variant="outline">العودة لبرنامج الحسابات</Button>
         </div>
       </div>
     );
@@ -105,16 +109,16 @@ const EditOrder = () => {
         <div className="mb-4">
           <div className="flex gap-2">
             <Button 
-              onClick={() => navigate("/")}
+              onClick={handleBackToAccounts}
               variant="outline"
               className="flex items-center gap-2 text-xs md:text-sm h-8 md:h-10"
             >
               <ArrowRight size={16} />
-              العودة للرئيسية
+              العودة لبرنامج الحسابات
             </Button>
             <Button 
               variant="secondary"
-              onClick={() => navigate("/")}
+              onClick={handleBackToAccounts}
               className="flex items-center gap-2 text-xs md:text-sm h-8 md:h-10"
             >
               برنامج الحسابات

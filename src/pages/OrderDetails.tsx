@@ -15,10 +15,14 @@ const OrderDetails = () => {
   const navigate = useNavigate();
   
   const order = serial ? getOrderBySerial(serial) : undefined;
+
+  const handleBackToAccounts = () => {
+    navigate("/legacy-admin");
+  };
   
   useEffect(() => {
     if (!loading && !order) {
-      navigate("/");
+      navigate("/legacy-admin");
     }
   }, [order, navigate, loading]);
   
@@ -38,7 +42,7 @@ const OrderDetails = () => {
       <div className="min-h-screen bg-gift-accent dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center p-8">
           <h2 className="text-xl font-bold mb-4">الطلب غير موجود</h2>
-          <Button onClick={() => navigate("/")} variant="outline">العودة للرئيسية</Button>
+          <Button onClick={handleBackToAccounts} variant="outline">العودة لبرنامج الحسابات</Button>
         </div>
       </div>
     );
@@ -55,16 +59,16 @@ const OrderDetails = () => {
         <div className="mb-4">
           <div className="flex gap-2">
             <Button 
-              onClick={() => navigate("/")}
+              onClick={handleBackToAccounts}
               variant="outline"
               className="flex items-center gap-2 text-xs md:text-sm h-8 md:h-10"
             >
               <ArrowRight size={16} />
-              العودة للرئيسية
+              العودة لبرنامج الحسابات
             </Button>
             <Button 
               variant="secondary"
-              onClick={() => navigate("/")}
+              onClick={handleBackToAccounts}
               className="flex items-center gap-2 text-xs md:text-sm h-8 md:h-10"
             >
               برنامج الحسابات
