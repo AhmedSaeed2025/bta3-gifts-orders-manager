@@ -99,7 +99,7 @@ function App() {
                                 
                 {/* Order Management */}
                 <Route path="/order" element={<OrderPage />} />
-                <Route path="/order/:id" element={<OrderDetails />} />
+                <Route path="/order/:serial" element={<OrderDetails />} />
                 <Route path="/order/:id/edit" element={<EditOrder />} />
                 <Route path="/edit-order/:serial" element={<EditOrder />} />
                                 

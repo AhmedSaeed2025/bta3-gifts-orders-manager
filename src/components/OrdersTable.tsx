@@ -149,6 +149,7 @@ const OrdersTable = () => {
   };
 
   const handleViewOrder = (serial: string) => {
+    console.log('Navigating to order details for serial:', serial);
     navigate(`/order/${serial}`);
   };
 
