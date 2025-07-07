@@ -21,10 +21,11 @@ const OrderDetails = () => {
   };
   
   useEffect(() => {
-    if (!loading && !order) {
+    if (!loading && !order && serial) {
+      console.log("OrderDetails: Order not found, redirecting to legacy admin");
       navigate("/legacy-admin");
     }
-  }, [order, navigate, loading]);
+  }, [order, navigate, loading, serial]);
   
   if (loading) {
     return (
@@ -57,23 +58,14 @@ const OrderDetails = () => {
         </div>
         
         <div className="mb-4">
-          <div className="flex gap-2">
-            <Button 
-              onClick={handleBackToAccounts}
-              variant="outline"
-              className="flex items-center gap-2 text-xs md:text-sm h-8 md:h-10"
-            >
-              <ArrowRight size={16} />
-              العودة لبرنامج الحسابات
-            </Button>
-            <Button 
-              variant="secondary"
-              onClick={handleBackToAccounts}
-              className="flex items-center gap-2 text-xs md:text-sm h-8 md:h-10"
-            >
-              برنامج الحسابات
-            </Button>
-          </div>
+          <Button 
+            onClick={handleBackToAccounts}
+            variant="outline"
+            className="flex items-center gap-2 text-xs md:text-sm h-8 md:h-10"
+          >
+            <ArrowRight size={16} />
+            العودة لبرنامج الحسابات
+          </Button>
         </div>
         
         <Card>

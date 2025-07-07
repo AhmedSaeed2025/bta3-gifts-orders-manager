@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -199,6 +200,32 @@ const AdminOrders = () => {
     setImageDialogOpen(true);
   };
 
+  // Calculate correct totals for display
+  const calculateOrderTotals = () => {
+    const subtotal = orders.reduce((sum, order) => {
+      // Calculate subtotal from items (price - discount) * quantity
+      const orderSubtotal = order.admin_order_items.reduce((itemSum, item) => {
+        const discountedPrice = item.unit_price - (item.item_discount || 0);
+        return itemSum + (discountedPrice * item.quantity);
+      }, 0);
+      return sum + orderSubtotal;
+    }, 0);
+
+    const totalCost = orders.reduce((sum, order) => {
+      // Calculate total cost from items cost * quantity
+      const orderCost = order.admin_order_items.reduce((itemSum, item) => {
+        return itemSum + (item.unit_cost * item.quantity);
+      }, 0);
+      return sum + orderCost;
+    }, 0);
+
+    const netProfit = subtotal - totalCost; // Shipping is not included in profit calculation
+
+    return { subtotal, totalCost, netProfit };
+  };
+
+  const { subtotal: totalSales, totalCost: totalOrderCost, netProfit: totalNetProfit } = calculateOrderTotals();
+
   if (loading) {
     return (
       <div className="p-6 space-y-6">
@@ -243,17 +270,29 @@ const AdminOrders = () => {
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-green-600">
-              {formatCurrency(orders.reduce((sum, o) => sum + o.total_amount, 0))}
+              {formatCurrency(totalSales)}
             </div>
-            <p className="text-sm text-muted-foreground">إجمالي المبيعات</p>
+            <p className="text-sm text-muted-foreground">إجمالي الطلبات</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
-            <div className="text-2xl font-bold text-purple-600">
-              {formatCurrency(orders.reduce((sum, o) => sum + o.profit, 0))}
+            <div className="text-2xl font-bold text-red-600">
+              {formatCurrency(totalOrderCost)}
             </div>
-            <p className="text-sm text-muted-foreground">إجمالي الربح</p>
+            <p className="text-sm text-muted-foreground">إجمالي التكلفة</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Add Net Profit Card */}
+      <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold text-purple-600">
+              {formatCurrency(totalNetProfit)}
+            </div>
+            <p className="text-sm text-muted-foreground">صافي الربح</p>
           </CardContent>
         </Card>
       </div>
