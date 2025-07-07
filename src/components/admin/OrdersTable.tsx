@@ -29,6 +29,7 @@ interface AdminOrder {
   updated_at: string;
   notes?: string;
   attached_image_url?: string;
+  shipping_status?: string;
   admin_order_items: AdminOrderItem[];
 }
 

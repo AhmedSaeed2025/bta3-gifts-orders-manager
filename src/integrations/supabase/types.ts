@@ -83,6 +83,7 @@ export type Database = {
           serial: string
           shipping_address: string | null
           shipping_cost: number | null
+          shipping_status: string | null
           status: string
           total_amount: number
           updated_at: string
@@ -106,6 +107,7 @@ export type Database = {
           serial: string
           shipping_address?: string | null
           shipping_cost?: number | null
+          shipping_status?: string | null
           status?: string
           total_amount: number
           updated_at?: string
@@ -129,6 +131,7 @@ export type Database = {
           serial?: string
           shipping_address?: string | null
           shipping_cost?: number | null
+          shipping_status?: string | null
           status?: string
           total_amount?: number
           updated_at?: string

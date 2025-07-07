@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -47,22 +48,21 @@ const ShippingReport = () => {
 
     try {
       setLoading(true);
-      console.log('Loading shipping orders for user:', user.id);
+      console.log('Loading all admin orders for shipping report');
       
       const { data: ordersData, error } = await supabase
         .from('admin_orders')
         .select('*')
         .eq('user_id', user.id)
-        .in('delivery_method', ['شحن', 'توصيل بالشحن', 'شركة شحن', 'توصيل شحن', 'شحن سريع', 'توصيل للمنزل'])
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error loading shipping orders:', error);
+        console.error('Error loading orders:', error);
         toast.error('خطأ في تحميل طلبات الشحن');
         return;
       }
 
-      console.log('Loaded shipping orders:', ordersData?.length || 0);
+      console.log('Loaded orders:', ordersData?.length || 0);
 
       const shippingOrders = ordersData?.map(order => ({
         id: order.id,
@@ -77,13 +77,13 @@ const ShippingReport = () => {
         order_date: order.order_date,
         delivery_method: order.delivery_method,
         payment_method: order.payment_method,
-        shipping_status: (order as any).shipping_status || 'pending'
+        shipping_status: order.shipping_status || 'pending'
       })) || [];
 
       setOrders(shippingOrders);
       setFilteredOrders(shippingOrders);
     } catch (error) {
-      console.error('Error loading shipping orders:', error);
+      console.error('Error loading orders:', error);
       toast.error('خطأ في تحميل طلبات الشحن');
     } finally {
       setLoading(false);
@@ -351,7 +351,9 @@ const ShippingReport = () => {
                   <TableRow>
                     <TableHead className="text-right text-xs md:text-sm">رقم الطلب</TableHead>
                     <TableHead className="text-right text-xs md:text-sm">العميل</TableHead>
+                    <TableHead className="text-right text-xs md:text-sm">العنوان</TableHead>
                     <TableHead className="text-right text-xs md:text-sm">المحافظة</TableHead>
+                    <TableHead className="text-right text-xs md:text-sm">طريقة التوصيل</TableHead>
                     <TableHead className="text-right text-xs md:text-sm">رسوم الشحن</TableHead>
                     <TableHead className="text-right text-xs md:text-sm">المبلغ الإجمالي</TableHead>
                     <TableHead className="text-right text-xs md:text-sm">حالة الطلب</TableHead>
@@ -370,7 +372,11 @@ const ShippingReport = () => {
                           <div className="text-muted-foreground text-xs">{order.customer_phone}</div>
                         </div>
                       </TableCell>
-                      <TableCell className="text-xs md:text-sm">{order.governorate}</TableCell>
+                      <TableCell className="text-xs md:text-sm max-w-32 truncate" title={order.shipping_address}>
+                        {order.shipping_address || 'غير محدد'}
+                      </TableCell>
+                      <TableCell className="text-xs md:text-sm">{order.governorate || 'غير محدد'}</TableCell>
+                      <TableCell className="text-xs md:text-sm">{order.delivery_method}</TableCell>
                       <TableCell className="text-xs md:text-sm">{formatCurrency(order.shipping_cost)}</TableCell>
                       <TableCell className="text-xs md:text-sm">{formatCurrency(order.total_amount)}</TableCell>
                       <TableCell className="text-xs md:text-sm">
@@ -458,6 +464,7 @@ const ShippingReport = () => {
               <div className="space-y-2">
                 <Label>تفاصيل الشحن</Label>
                 <div className="text-sm text-muted-foreground">
+                  <div>طريقة التوصيل: {selectedOrder.delivery_method}</div>
                   <div>رسوم الشحن: {formatCurrency(selectedOrder.shipping_cost)}</div>
                   <div>المبلغ الإجمالي: {formatCurrency(selectedOrder.total_amount)}</div>
                   <div>طريقة الدفع: {selectedOrder.payment_method}</div>
