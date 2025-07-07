@@ -95,21 +95,21 @@ const OrdersTable = ({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="text-right">رقم الطلب</TableHead>
-            <TableHead className="text-right">اسم العميل</TableHead>
-            <TableHead className="text-right">الهاتف</TableHead>
-            <TableHead className="text-right">طريقة الدفع</TableHead>
-            <TableHead className="text-right">المجموع الفرعي</TableHead>
-            <TableHead className="text-right">التكلفة</TableHead>
-            <TableHead className="text-right">مصاريف الشحن</TableHead>
-            <TableHead className="text-right">العربون</TableHead>
-            <TableHead className="text-right">الصافي</TableHead>
-            <TableHead className="text-right">الربح</TableHead>
-            <TableHead className="text-right">الحالة</TableHead>
-            <TableHead className="text-right">التاريخ</TableHead>
-            <TableHead className="text-center">تفاصيل الطلب</TableHead>
-            <TableHead className="text-center">ملاحظات/صور</TableHead>
-            <TableHead className="text-center">الإجراءات</TableHead>
+            <TableHead className="text-right min-w-[120px]">رقم الطلب</TableHead>
+            <TableHead className="text-right min-w-[150px]">اسم العميل</TableHead>
+            <TableHead className="text-right min-w-[120px]">الهاتف</TableHead>
+            <TableHead className="text-right min-w-[100px]">طريقة الدفع</TableHead>
+            <TableHead className="text-right min-w-[120px] bg-green-50">المجموع الفرعي</TableHead>
+            <TableHead className="text-right min-w-[100px] bg-red-50">التكلفة</TableHead>
+            <TableHead className="text-right min-w-[120px] bg-orange-50">مصاريف الشحن</TableHead>
+            <TableHead className="text-right min-w-[100px] bg-blue-50">العربون</TableHead>
+            <TableHead className="text-right min-w-[100px] bg-purple-50">الصافي</TableHead>
+            <TableHead className="text-right min-w-[100px] bg-emerald-50">الربح</TableHead>
+            <TableHead className="text-right min-w-[120px]">الحالة</TableHead>
+            <TableHead className="text-right min-w-[100px]">التاريخ</TableHead>
+            <TableHead className="text-center min-w-[80px]">تفاصيل</TableHead>
+            <TableHead className="text-center min-w-[100px]">ملاحظات/صور</TableHead>
+            <TableHead className="text-center min-w-[120px]">الإجراءات</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -118,17 +118,39 @@ const OrdersTable = ({
             const orderTotal = orderSubtotal + (order.shipping_cost || 0) - (order.deposit || 0);
             
             return (
-              <TableRow key={order.id}>
+              <TableRow key={order.id} className="hover:bg-gray-50">
                 <TableCell className="font-medium">{order.serial}</TableCell>
-                <TableCell>{order.customer_name}</TableCell>
+                <TableCell>
+                  <div>
+                    <div className="font-medium">{order.customer_name}</div>
+                    <div className="text-xs text-muted-foreground">{order.customer_email}</div>
+                  </div>
+                </TableCell>
                 <TableCell>{order.customer_phone}</TableCell>
-                <TableCell>{order.payment_method}</TableCell>
-                <TableCell className="font-medium text-green-600">{formatCurrency(orderSubtotal)}</TableCell>
-                <TableCell className="font-medium text-red-600">{formatCurrency(orderCost)}</TableCell>
-                <TableCell className="font-medium text-orange-600">{formatCurrency(order.shipping_cost || 0)}</TableCell>
-                <TableCell className="font-medium text-blue-600">{formatCurrency(order.deposit || 0)}</TableCell>
-                <TableCell className="font-medium text-purple-600">{formatCurrency(orderTotal)}</TableCell>
-                <TableCell className="font-medium text-emerald-600">{formatCurrency(orderNetProfit)}</TableCell>
+                <TableCell>
+                  <div className="text-sm">
+                    <div>{order.payment_method}</div>
+                    <div className="text-xs text-muted-foreground">{order.delivery_method}</div>
+                  </div>
+                </TableCell>
+                <TableCell className="font-medium text-green-600 bg-green-50">
+                  {formatCurrency(orderSubtotal)}
+                </TableCell>
+                <TableCell className="font-medium text-red-600 bg-red-50">
+                  {formatCurrency(orderCost)}
+                </TableCell>
+                <TableCell className="font-medium text-orange-600 bg-orange-50">
+                  {formatCurrency(order.shipping_cost || 0)}
+                </TableCell>
+                <TableCell className="font-medium text-blue-600 bg-blue-50">
+                  {formatCurrency(order.deposit || 0)}
+                </TableCell>
+                <TableCell className="font-medium text-purple-600 bg-purple-50">
+                  {formatCurrency(orderTotal)}
+                </TableCell>
+                <TableCell className="font-bold text-emerald-600 bg-emerald-50">
+                  {formatCurrency(orderNetProfit)}
+                </TableCell>
                 <TableCell>
                   <Select 
                     value={order.status} 
@@ -151,7 +173,7 @@ const OrdersTable = ({
                     </SelectContent>
                   </Select>
                 </TableCell>
-                <TableCell>
+                <TableCell className="text-sm">
                   {new Date(order.order_date).toLocaleDateString('ar-EG')}
                 </TableCell>
                 <TableCell>
@@ -165,7 +187,7 @@ const OrdersTable = ({
                   </Button>
                 </TableCell>
                 <TableCell>
-                  <div className="flex items-center gap-2 justify-center">
+                  <div className="flex items-center gap-1 justify-center">
                     {order.notes && (
                       <Button
                         size="sm"
@@ -189,11 +211,12 @@ const OrdersTable = ({
                   </div>
                 </TableCell>
                 <TableCell>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => openInvoiceDialog(order)}
+                      title="طباعة الفاتورة"
                     >
                       <Printer className="h-4 w-4" />
                     </Button>
@@ -201,6 +224,7 @@ const OrdersTable = ({
                       size="sm"
                       variant="destructive"
                       onClick={() => deleteOrder(order.id)}
+                      title="حذف الطلب"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

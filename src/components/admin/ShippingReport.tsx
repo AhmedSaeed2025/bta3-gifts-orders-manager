@@ -212,7 +212,7 @@ const ShippingReport = () => {
     <div className="p-3 md:p-6 space-y-4 md:space-y-6" dir="rtl">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold">تقرير شركة الشحن</h1>
+          <h1 className="text-xl md:text-3xl font-bold">تقرير شركة الشحن</h1>
           <p className="text-muted-foreground text-sm md:text-base">متابعة وإدارة طلبات الشحن</p>
         </div>
         <Button onClick={loadShippingOrders} variant="outline" size={isMobile ? "sm" : "default"}>
@@ -221,102 +221,135 @@ const ShippingReport = () => {
         </Button>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
-        <Card>
+      {/* Statistics Cards - Mobile Optimized */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4">
+        <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200">
           <CardContent className="p-3 md:p-4">
-            <div className="text-lg md:text-2xl font-bold text-blue-600">
-              {totalOrders}
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-xl md:text-2xl font-bold text-blue-600">
+                  {totalOrders}
+                </div>
+                <p className="text-xs md:text-sm text-blue-700">إجمالي الطلبات</p>
+              </div>
+              <Package className="h-6 w-6 text-blue-500" />
             </div>
-            <p className="text-xs md:text-sm text-muted-foreground">إجمالي الطلبات</p>
           </CardContent>
         </Card>
-        <Card>
+        
+        <Card className="bg-gradient-to-r from-green-50 to-green-100 border-green-200">
           <CardContent className="p-3 md:p-4">
-            <div className="text-lg md:text-2xl font-bold text-green-600">
-              {formatCurrency(totalShippingFees)}
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-lg md:text-xl font-bold text-green-600">
+                  {formatCurrency(totalShippingFees)}
+                </div>
+                <p className="text-xs md:text-sm text-green-700">رسوم الشحن</p>
+              </div>
+              <Truck className="h-6 w-6 text-green-500" />
             </div>
-            <p className="text-xs md:text-sm text-muted-foreground">رسوم الشحن</p>
           </CardContent>
         </Card>
-        <Card>
+        
+        <Card className="bg-gradient-to-r from-yellow-50 to-yellow-100 border-yellow-200">
           <CardContent className="p-3 md:p-4">
-            <div className="text-lg md:text-2xl font-bold text-yellow-600">
-              {pendingOrders}
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-xl md:text-2xl font-bold text-yellow-600">
+                  {pendingOrders}
+                </div>
+                <p className="text-xs md:text-sm text-yellow-700">في الانتظار</p>
+              </div>
+              <Calendar className="h-6 w-6 text-yellow-500" />
             </div>
-            <p className="text-xs md:text-sm text-muted-foreground">في الانتظار</p>
           </CardContent>
         </Card>
-        <Card>
+        
+        <Card className="bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200">
           <CardContent className="p-3 md:p-4">
-            <div className="text-lg md:text-2xl font-bold text-blue-600">
-              {collectedOrders}
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-xl md:text-2xl font-bold text-purple-600">
+                  {collectedOrders}
+                </div>
+                <p className="text-xs md:text-sm text-purple-700">تم التحصيل</p>
+              </div>
+              <CheckCircle className="h-6 w-6 text-purple-500" />
             </div>
-            <p className="text-xs md:text-sm text-muted-foreground">تم التحصيل</p>
           </CardContent>
         </Card>
-        <Card>
+        
+        <Card className="bg-gradient-to-r from-emerald-50 to-emerald-100 border-emerald-200">
           <CardContent className="p-3 md:p-4">
-            <div className="text-lg md:text-2xl font-bold text-green-600">
-              {deliveredOrders}
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-xl md:text-2xl font-bold text-emerald-600">
+                  {deliveredOrders}
+                </div>
+                <p className="text-xs md:text-sm text-emerald-700">تم التوصيل</p>
+              </div>
+              <Truck className="h-6 w-6 text-emerald-500" />
             </div>
-            <p className="text-xs md:text-sm text-muted-foreground">تم التوصيل</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Filters */}
+      {/* Mobile-Optimized Filters */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg md:text-xl flex items-center gap-2">
-            <Filter className="h-5 w-5" />
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base md:text-lg flex items-center gap-2">
+            <Filter className="h-4 w-4 md:h-5 md:w-5" />
             الفلاتر
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <Label htmlFor="status-filter" className="text-sm">حالة الطلب</Label>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger id="status-filter" className="w-full">
-                  <SelectValue placeholder="جميع الحالات" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">جميع الحالات</SelectItem>
-                  <SelectItem value="pending">قيد المراجعة</SelectItem>
-                  <SelectItem value="confirmed">مؤكد</SelectItem>
-                  <SelectItem value="processing">قيد التحضير</SelectItem>
-                  <SelectItem value="shipped">تم الشحن</SelectItem>
-                  <SelectItem value="delivered">تم التوصيل</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="shipping-status-filter" className="text-sm">حالة الشحن</Label>
-              <Select value={shippingStatusFilter} onValueChange={setShippingStatusFilter}>
-                <SelectTrigger id="shipping-status-filter" className="w-full">
-                  <SelectValue placeholder="جميع حالات الشحن" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">جميع حالات الشحن</SelectItem>
-                  <SelectItem value="pending">في الانتظار</SelectItem>
-                  <SelectItem value="collected">تم التحصيل</SelectItem>
-                  <SelectItem value="delivered">تم التوصيل</SelectItem>
-                  <SelectItem value="returned">مرتجع</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="date-filter" className="text-sm">التاريخ</Label>
-              <Input
-                id="date-filter"
-                type="date"
-                value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
-                className="w-full"
-              />
-            </div>
-            <div className="flex items-end">
+        <CardContent className="space-y-3">
+          {isMobile ? (
+            // Mobile layout - stacked filters
+            <div className="space-y-3">
+              <div>
+                <Label htmlFor="status-filter" className="text-sm font-medium">حالة الطلب</Label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger id="status-filter" className="w-full mt-1">
+                    <SelectValue placeholder="جميع الحالات" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">جميع الحالات</SelectItem>
+                    <SelectItem value="pending">قيد المراجعة</SelectItem>
+                    <SelectItem value="confirmed">مؤكد</SelectItem>
+                    <SelectItem value="processing">قيد التحضير</SelectItem>
+                    <SelectItem value="shipped">تم الشحن</SelectItem>
+                    <SelectItem value="delivered">تم التوصيل</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="shipping-status-filter" className="text-sm font-medium">حالة الشحن</Label>
+                <Select value={shippingStatusFilter} onValueChange={setShippingStatusFilter}>
+                  <SelectTrigger id="shipping-status-filter" className="w-full mt-1">
+                    <SelectValue placeholder="جميع حالات الشحن" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">جميع حالات الشحن</SelectItem>
+                    <SelectItem value="pending">في الانتظار</SelectItem>
+                    <SelectItem value="collected">تم التحصيل</SelectItem>
+                    <SelectItem value="delivered">تم التوصيل</SelectItem>
+                    <SelectItem value="returned">مرتجع</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="date-filter" className="text-sm font-medium">التاريخ</Label>
+                <Input
+                  id="date-filter"
+                  type="date"
+                  value={dateFilter}
+                  onChange={(e) => setDateFilter(e.target.value)}
+                  className="w-full mt-1"
+                />
+              </div>
+              
               <Button 
                 onClick={() => {
                   setStatusFilter('all');
@@ -325,25 +358,180 @@ const ShippingReport = () => {
                 }} 
                 variant="outline"
                 className="w-full"
+                size="sm"
               >
-                إعادة تعيين
+                إعادة تعيين الفلاتر
               </Button>
             </div>
-          </div>
+          ) : (
+            // Desktop layout - grid
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <Label htmlFor="status-filter" className="text-sm">حالة الطلب</Label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger id="status-filter" className="w-full">
+                    <SelectValue placeholder="جميع الحالات" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">جميع الحالات</SelectItem>
+                    <SelectItem value="pending">قيد المراجعة</SelectItem>
+                    <SelectItem value="confirmed">مؤكد</SelectItem>
+                    <SelectItem value="processing">قيد التحضير</SelectItem>
+                    <SelectItem value="shipped">تم الشحن</SelectItem>
+                    <SelectItem value="delivered">تم التوصيل</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="shipping-status-filter" className="text-sm">حالة الشحن</Label>
+                <Select value={shippingStatusFilter} onValueChange={setShippingStatusFilter}>
+                  <SelectTrigger id="shipping-status-filter" className="w-full">
+                    <SelectValue placeholder="جميع حالات الشحن" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">جميع حالات الشحن</SelectItem>
+                    <SelectItem value="pending">في الانتظار</SelectItem>
+                    <SelectItem value="collected">تم التحصيل</SelectItem>
+                    <SelectItem value="delivered">تم التوصيل</SelectItem>
+                    <SelectItem value="returned">مرتجع</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="date-filter" className="text-sm">التاريخ</Label>
+                <Input
+                  id="date-filter"
+                  type="date"
+                  value={dateFilter}
+                  onChange={(e) => setDateFilter(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+              <div className="flex items-end">
+                <Button 
+                  onClick={() => {
+                    setStatusFilter('all');
+                    setShippingStatusFilter('all');
+                    setDateFilter('');
+                  }} 
+                  variant="outline"
+                  className="w-full"
+                >
+                  إعادة تعيين
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Orders Table */}
+      {/* Mobile-Optimized Orders Display */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg md:text-xl">طلبات الشحن</CardTitle>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base md:text-xl">طلبات الشحن ({filteredOrders.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {filteredOrders.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              لا توجد طلبات شحن
+              <Package className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+              <p>لا توجد طلبات شحن</p>
+            </div>
+          ) : isMobile ? (
+            // Mobile card layout
+            <div className="space-y-3">
+              {filteredOrders.map((order) => (
+                <Card key={order.id} className="border-l-4 border-blue-500">
+                  <CardContent className="p-4">
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-bold text-sm">{order.serial}</h3>
+                          <p className="text-sm text-muted-foreground">{order.customer_name}</p>
+                          <p className="text-xs text-muted-foreground">{order.customer_phone}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-green-600 text-sm">{formatCurrency(order.total_amount)}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(order.order_date).toLocaleDateString('ar-EG')}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                          <span className="text-muted-foreground">العنوان: </span>
+                          <span className="font-medium">{order.shipping_address || 'غير محدد'}</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">المحافظة: </span>
+                          <span className="font-medium">{order.governorate || 'غير محدد'}</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">التوصيل: </span>
+                          <span className="font-medium">{order.delivery_method}</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">الشحن: </span>
+                          <span className="font-medium text-orange-600">{formatCurrency(order.shipping_cost)}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <div className="flex gap-2">
+                          <Select 
+                            value={order.status} 
+                            onValueChange={(value) => updateOrderStatus(order.id, value)}
+                          >
+                            <SelectTrigger className="w-24 md:w-32 h-8">
+                              <SelectValue>
+                                {getOrderStatusBadge(order.status)}
+                              </SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="pending">قيد المراجعة</SelectItem>
+                              <SelectItem value="confirmed">تم التأكيد</SelectItem>
+                              <SelectItem value="processing">قيد التحضير</SelectItem>
+                              <SelectItem value="shipped">تم الشحن</SelectItem>
+                              <SelectItem value="delivered">تم التوصيل</SelectItem>
+                              <SelectItem value="cancelled">ملغي</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Select 
+                            value={order.shipping_status || 'pending'} 
+                            onValueChange={(value) => updateShippingStatus(order.id, value)}
+                          >
+                            <SelectTrigger className="w-24 md:w-32 h-8">
+                              <SelectValue>
+                                {getShippingStatusBadge(order.shipping_status || 'pending')}
+                              </SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="pending">في الانتظار</SelectItem>
+                              <SelectItem value="collected">تم التحصيل</SelectItem>
+                              <SelectItem value="delivered">تم التوصيل</SelectItem>
+                              <SelectItem value="returned">مرتجع</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setSelectedOrder(order);
+                            setUpdateDialogOpen(true);
+                          }}
+                          className="h-8 px-3"
+                        >
+                          تحديث
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           ) : (
+            // Desktop table layout
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
