@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -64,7 +63,7 @@ const ShippingReport = () => {
 
       console.log('Loaded orders:', ordersData?.length || 0);
 
-      const shippingOrders = ordersData?.map(order => ({
+      const shippingOrders: ShippingOrder[] = ordersData?.map(order => ({
         id: order.id,
         serial: order.serial,
         customer_name: order.customer_name,
@@ -77,7 +76,7 @@ const ShippingReport = () => {
         order_date: order.order_date,
         delivery_method: order.delivery_method,
         payment_method: order.payment_method,
-        shipping_status: order.shipping_status || 'pending'
+        shipping_status: (order.shipping_status as 'pending' | 'collected' | 'delivered' | 'returned') || 'pending'
       })) || [];
 
       setOrders(shippingOrders);
