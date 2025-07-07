@@ -149,7 +149,7 @@ const OrdersTable = () => {
   };
 
   const handleViewOrder = (serial: string) => {
-    navigate(`/orders/${serial}`);
+    navigate(`/order/${serial}`);
   };
 
   const handleDeleteOrder = async (orderIndex: number) => {

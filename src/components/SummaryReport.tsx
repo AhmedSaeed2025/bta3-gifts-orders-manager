@@ -117,7 +117,7 @@ const SummaryReport = () => {
   };
 
   const editOrder = (serial: string) => {
-    navigate(`/orders/${serial}`);
+    navigate(`/order/${serial}`);
   };
 
   const clearFilters = () => {
