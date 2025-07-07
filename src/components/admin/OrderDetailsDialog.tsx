@@ -61,7 +61,7 @@ const OrderDetailsDialog = ({ open, onOpenChange, order, calculateOrderDetails }
         </DialogHeader>
         <div className="space-y-6">
           {/* Order Summary Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             <Card>
               <CardContent className="p-4">
                 <div className="text-lg font-bold text-green-600">
@@ -107,7 +107,7 @@ const OrderDetailsDialog = ({ open, onOpenChange, order, calculateOrderDetails }
                 <div className="text-xl font-bold text-emerald-600">
                   {formatCurrency(orderNetProfit)}
                 </div>
-                <p className="text-sm text-muted-foreground">صافي الربح</p>
+                <p className="text-sm text-muted-foreground">قيمة الربح</p>
               </CardContent>
             </Card>
           </div>

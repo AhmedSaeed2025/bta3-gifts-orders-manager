@@ -99,12 +99,13 @@ const OrdersTable = ({
             <TableHead className="text-right min-w-[150px]">اسم العميل</TableHead>
             <TableHead className="text-right min-w-[120px]">الهاتف</TableHead>
             <TableHead className="text-right min-w-[100px]">طريقة الدفع</TableHead>
+            <TableHead className="text-right min-w-[120px]">المحافظة</TableHead>
             <TableHead className="text-right min-w-[120px] bg-green-50">المجموع الفرعي</TableHead>
             <TableHead className="text-right min-w-[100px] bg-red-50">التكلفة</TableHead>
             <TableHead className="text-right min-w-[120px] bg-orange-50">مصاريف الشحن</TableHead>
             <TableHead className="text-right min-w-[100px] bg-blue-50">العربون</TableHead>
             <TableHead className="text-right min-w-[100px] bg-purple-50">الصافي</TableHead>
-            <TableHead className="text-right min-w-[100px] bg-emerald-50">الربح</TableHead>
+            <TableHead className="text-right min-w-[100px] bg-emerald-50">قيمة الربح</TableHead>
             <TableHead className="text-right min-w-[120px]">الحالة</TableHead>
             <TableHead className="text-right min-w-[100px]">التاريخ</TableHead>
             <TableHead className="text-center min-w-[80px]">تفاصيل</TableHead>
@@ -135,6 +136,7 @@ const OrdersTable = ({
                     <div className="text-xs text-muted-foreground">{order.delivery_method}</div>
                   </div>
                 </TableCell>
+                <TableCell>{order.governorate || 'غير محدد'}</TableCell>
                 <TableCell className="font-medium text-green-600 bg-green-50">
                   {formatCurrency(orderSubtotal)}
                 </TableCell>
