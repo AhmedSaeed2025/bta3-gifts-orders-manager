@@ -1,10 +1,10 @@
 
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import IndexLayout from '@/components/layout/IndexLayout';
 
 const Index = () => {
-  // توجيه المستخدم إلى صفحة المتجر بدلاً من برنامج الحسابات
-  return <Navigate to="/store" replace />;
+  // عرض برنامج الحسابات مباشرة في الصفحة الرئيسية
+  return <IndexLayout />;
 };
 
 export default Index;
