@@ -52,7 +52,7 @@ const ShippingReport = () => {
         .from('admin_orders')
         .select('*')
         .eq('user_id', user.id)
-        .in('delivery_method', ['شحن', 'توصيل بالشحن', 'شركة شحن'])
+        .in('delivery_method', ['شحن', 'توصيل بالشحن', 'شركة شحن', 'توصيل شحن'])
         .order('created_at', { ascending: false });
 
       if (error) {

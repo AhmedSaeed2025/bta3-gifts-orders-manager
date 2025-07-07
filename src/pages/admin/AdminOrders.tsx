@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/utils';
-import { Printer, Eye, Edit, Trash2, RefreshCw, Plus, FileText, Image } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import AdminOrderInvoice from '@/components/admin/AdminOrderInvoice';
+import OrderStatsCards from '@/components/admin/OrderStatsCards';
+import OrdersTable from '@/components/admin/OrdersTable';
+import OrderDetailsDialog from '@/components/admin/OrderDetailsDialog';
 import { ORDER_STATUS_LABELS } from '@/types';
 
 interface AdminOrder {
@@ -170,42 +170,6 @@ const AdminOrders = () => {
     }
   };
 
-  const getStatusBadgeColor = (status: string) => {
-    switch (status) {
-      case 'pending': return 'bg-yellow-500 text-white';
-      case 'confirmed': return 'bg-blue-500 text-white';
-      case 'processing': return 'bg-orange-500 text-white';
-      case 'shipped': return 'bg-purple-500 text-white';
-      case 'delivered': return 'bg-green-500 text-white';
-      case 'cancelled': return 'bg-red-500 text-white';
-      default: return 'bg-gray-500 text-white';
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    return ORDER_STATUS_LABELS[status as keyof typeof ORDER_STATUS_LABELS] || status;
-  };
-
-  const openInvoiceDialog = (order: AdminOrder) => {
-    setSelectedOrder(order);
-    setInvoiceDialogOpen(true);
-  };
-
-  const openNotesDialog = (order: AdminOrder) => {
-    setSelectedOrderForNotes(order);
-    setNotesDialogOpen(true);
-  };
-
-  const openImageDialog = (order: AdminOrder) => {
-    setSelectedOrderForImage(order);
-    setImageDialogOpen(true);
-  };
-
-  const openOrderDetailsDialog = (order: AdminOrder) => {
-    setSelectedOrderForDetails(order);
-    setOrderDetailsDialogOpen(true);
-  };
-
   // حساب إجماليات صحيحة - إجمالي الطلبات = المجموع الفرعي (بدون شحن)
   const calculateOrderTotals = () => {
     const subtotal = orders.reduce((sum, order) => {
@@ -250,6 +214,26 @@ const AdminOrders = () => {
     return { orderSubtotal, orderCost, orderNetProfit };
   };
 
+  const openInvoiceDialog = (order: AdminOrder) => {
+    setSelectedOrder(order);
+    setInvoiceDialogOpen(true);
+  };
+
+  const openNotesDialog = (order: AdminOrder) => {
+    setSelectedOrderForNotes(order);
+    setNotesDialogOpen(true);
+  };
+
+  const openImageDialog = (order: AdminOrder) => {
+    setSelectedOrderForImage(order);
+    setImageDialogOpen(true);
+  };
+
+  const openOrderDetailsDialog = (order: AdminOrder) => {
+    setSelectedOrderForDetails(order);
+    setOrderDetailsDialogOpen(true);
+  };
+
   if (loading) {
     return (
       <div className="p-6 space-y-6">
@@ -274,56 +258,15 @@ const AdminOrders = () => {
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-blue-600">
-              {orders.length}
-            </div>
-            <p className="text-sm text-muted-foreground">إجمالي الطلبات</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-yellow-600">
-              {orders.filter(o => o.status === 'pending').length}
-            </div>
-            <p className="text-sm text-muted-foreground">طلبات في الانتظار</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-green-600">
-              {formatCurrency(totalOrders)}
-            </div>
-            <p className="text-sm text-muted-foreground">إجمالي الطلبات</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-red-600">
-              {formatCurrency(totalOrderCost)}
-            </div>
-            <p className="text-sm text-muted-foreground">إجمالي التكلفة</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-orange-600">
-              {formatCurrency(totalShipping)}
-            </div>
-            <p className="text-sm text-muted-foreground">مصاريف الشحن</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-purple-600">
-              {formatCurrency(totalNetProfit)}
-            </div>
-            <p className="text-sm text-muted-foreground">صافي الربح</p>
-          </CardContent>
-        </Card>
-      </div>
+      <OrderStatsCards
+        totalOrders={orders.length}
+        pendingOrders={orders.filter(o => o.status === 'pending').length}
+        totalOrdersValue={totalOrders}
+        totalOrderCost={totalOrderCost}
+        totalShipping={totalShipping}
+        totalDeposit={totalDeposit}
+        totalNetProfit={totalNetProfit}
+      />
 
       {/* Orders Table */}
       <Card>
@@ -331,180 +274,26 @@ const AdminOrders = () => {
           <CardTitle>قائمة الطلبات</CardTitle>
         </CardHeader>
         <CardContent>
-          {orders.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              لا توجد طلبات حتى الآن
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-right">رقم الطلب</TableHead>
-                    <TableHead className="text-right">اسم العميل</TableHead>
-                    <TableHead className="text-right">الهاتف</TableHead>
-                    <TableHead className="text-right">طريقة الدفع</TableHead>
-                    <TableHead className="text-right">المبلغ الإجمالي</TableHead>
-                    <TableHead className="text-right">الحالة</TableHead>
-                    <TableHead className="text-right">التاريخ</TableHead>
-                    <TableHead className="text-center">تفاصيل الطلب</TableHead>
-                    <TableHead className="text-center">ملاحظات/صور</TableHead>
-                    <TableHead className="text-center">الإجراءات</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {orders.map((order) => (
-                    <TableRow key={order.id}>
-                      <TableCell className="font-medium">{order.serial}</TableCell>
-                      <TableCell>{order.customer_name}</TableCell>
-                      <TableCell>{order.customer_phone}</TableCell>
-                      <TableCell>{order.payment_method}</TableCell>
-                      <TableCell>{formatCurrency(order.total_amount)}</TableCell>
-                      <TableCell>
-                        <Select 
-                          value={order.status} 
-                          onValueChange={(value) => updateOrderStatus(order.id, value)}
-                        >
-                          <SelectTrigger className="w-32">
-                            <SelectValue>
-                              <Badge className={getStatusBadgeColor(order.status)}>
-                                {getStatusLabel(order.status)}
-                              </Badge>
-                            </SelectValue>
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="pending">قيد المراجعة</SelectItem>
-                            <SelectItem value="confirmed">تم التأكيد</SelectItem>
-                            <SelectItem value="processing">قيد التحضير</SelectItem>
-                            <SelectItem value="shipped">تم الشحن</SelectItem>
-                            <SelectItem value="delivered">تم التوصيل</SelectItem>
-                            <SelectItem value="cancelled">ملغي</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        {new Date(order.order_date).toLocaleDateString('ar-EG')}
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => openOrderDetailsDialog(order)}
-                          title="عرض تفاصيل الطلب"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2 justify-center">
-                          {order.notes && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => openNotesDialog(order)}
-                              title="عرض الملاحظات"
-                            >
-                              <FileText className="h-4 w-4" />
-                            </Button>
-                          )}
-                          {order.attached_image_url && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => openImageDialog(order)}
-                              title="عرض الصورة المرفقة"
-                            >
-                              <Image className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => openInvoiceDialog(order)}
-                          >
-                            <Printer className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => deleteOrder(order.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
+          <OrdersTable
+            orders={orders}
+            updateOrderStatus={updateOrderStatus}
+            deleteOrder={deleteOrder}
+            openInvoiceDialog={openInvoiceDialog}
+            openOrderDetailsDialog={openOrderDetailsDialog}
+            openNotesDialog={openNotesDialog}
+            openImageDialog={openImageDialog}
+            calculateOrderDetails={calculateOrderDetails}
+          />
         </CardContent>
       </Card>
 
       {/* Order Details Dialog */}
-      <Dialog open={orderDetailsDialogOpen} onOpenChange={setOrderDetailsDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>تفاصيل الطلب - {selectedOrderForDetails?.serial}</DialogTitle>
-          </DialogHeader>
-          {selectedOrderForDetails && (
-            <div className="space-y-4">
-              {(() => {
-                const { orderSubtotal, orderCost, orderNetProfit } = calculateOrderDetails(selectedOrderForDetails);
-                return (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <Card>
-                      <CardContent className="p-4">
-                        <div className="text-lg font-bold text-green-600">
-                          {formatCurrency(orderSubtotal)}
-                        </div>
-                        <p className="text-sm text-muted-foreground">إجمالي الطلب (المجموع الفرعي)</p>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardContent className="p-4">
-                        <div className="text-lg font-bold text-red-600">
-                          {formatCurrency(orderCost)}
-                        </div>
-                        <p className="text-sm text-muted-foreground">التكلفة</p>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardContent className="p-4">
-                        <div className="text-lg font-bold text-orange-600">
-                          {formatCurrency(selectedOrderForDetails.shipping_cost || 0)}
-                        </div>
-                        <p className="text-sm text-muted-foreground">مصاريف الشحن</p>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardContent className="p-4">
-                        <div className="text-lg font-bold text-blue-600">
-                          {formatCurrency(selectedOrderForDetails.deposit || 0)}
-                        </div>
-                        <p className="text-sm text-muted-foreground">العربون</p>
-                      </CardContent>
-                    </Card>
-                    <Card className="sm:col-span-2">
-                      <CardContent className="p-4">
-                        <div className="text-xl font-bold text-purple-600">
-                          {formatCurrency(orderNetProfit)}
-                        </div>
-                        <p className="text-sm text-muted-foreground">صافي الربح</p>
-                      </CardContent>
-                    </Card>
-                  </div>
-                );
-              })()}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <OrderDetailsDialog
+        open={orderDetailsDialogOpen}
+        onOpenChange={setOrderDetailsDialogOpen}
+        order={selectedOrderForDetails}
+        calculateOrderDetails={calculateOrderDetails}
+      />
 
       {/* Invoice Dialog */}
       <Dialog open={invoiceDialogOpen} onOpenChange={setInvoiceDialogOpen}>
