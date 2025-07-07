@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -68,6 +69,7 @@ const AdminOrders = () => {
 
     try {
       setLoading(true);
+      console.log('Loading admin orders...');
       const { data: ordersData, error } = await supabase
         .from('admin_orders')
         .select(`
@@ -83,6 +85,7 @@ const AdminOrders = () => {
         return;
       }
 
+      console.log('Loaded orders:', ordersData?.length || 0);
       setOrders(ordersData || []);
     } catch (error) {
       console.error('Error loading orders:', error);
@@ -215,21 +218,25 @@ const AdminOrders = () => {
   };
 
   const openInvoiceDialog = (order: AdminOrder) => {
+    console.log('Opening invoice dialog for order:', order.serial);
     setSelectedOrder(order);
     setInvoiceDialogOpen(true);
   };
 
   const openNotesDialog = (order: AdminOrder) => {
+    console.log('Opening notes dialog for order:', order.serial);
     setSelectedOrderForNotes(order);
     setNotesDialogOpen(true);
   };
 
   const openImageDialog = (order: AdminOrder) => {
+    console.log('Opening image dialog for order:', order.serial);
     setSelectedOrderForImage(order);
     setImageDialogOpen(true);
   };
 
   const openOrderDetailsDialog = (order: AdminOrder) => {
+    console.log('Opening order details dialog for order:', order.serial);
     setSelectedOrderForDetails(order);
     setOrderDetailsDialogOpen(true);
   };

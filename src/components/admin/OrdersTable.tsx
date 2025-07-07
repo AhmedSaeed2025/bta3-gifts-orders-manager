@@ -123,7 +123,9 @@ const OrdersTable = ({
                 <TableCell>
                   <div>
                     <div className="font-medium">{order.customer_name}</div>
-                    <div className="text-xs text-muted-foreground">{order.customer_email}</div>
+                    {order.customer_email && (
+                      <div className="text-xs text-muted-foreground">{order.customer_email}</div>
+                    )}
                   </div>
                 </TableCell>
                 <TableCell>{order.customer_phone}</TableCell>
