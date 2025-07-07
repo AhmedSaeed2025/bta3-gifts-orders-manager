@@ -7,8 +7,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import Logo from "@/components/Logo";
 import UserProfile from "@/components/UserProfile";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Printer, Eye } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import AdminOrderInvoice from "@/components/admin/AdminOrderInvoice";
 
 interface AdminOrder {
   id: string;
@@ -52,6 +53,7 @@ const OrderDetails = () => {
   const navigate = useNavigate();
   const [order, setOrder] = useState<AdminOrder | undefined>();
   const [loading, setLoading] = useState(true);
+  const [showInvoice, setShowInvoice] = useState(false);
 
   useEffect(() => {
     const loadOrder = async () => {
@@ -63,18 +65,17 @@ const OrderDetails = () => {
 
       try {
         console.log('Loading order with serial:', serial);
-        const { data: orderData, error } = await supabase
+        
+        // First load the order
+        const { data: orderData, error: orderError } = await supabase
           .from('admin_orders')
-          .select(`
-            *,
-            admin_order_items (*)
-          `)
+          .select('*')
           .eq('user_id', user.id)
           .eq('serial', serial)
           .single();
 
-        if (error) {
-          console.error('Error loading order:', error);
+        if (orderError) {
+          console.error('Error loading order:', orderError);
           navigate("/legacy-admin");
           return;
         }
@@ -86,8 +87,29 @@ const OrderDetails = () => {
         }
 
         console.log('Order loaded successfully:', orderData);
-        console.log('Order items count:', orderData.admin_order_items?.length || 0);
-        setOrder(orderData);
+
+        // Then load the order items separately
+        const { data: itemsData, error: itemsError } = await supabase
+          .from('admin_order_items')
+          .select('*')
+          .eq('order_id', orderData.id)
+          .order('created_at', { ascending: true });
+
+        if (itemsError) {
+          console.error('Error loading order items:', itemsError);
+        }
+
+        console.log('Order items loaded:', itemsData);
+        console.log('Items count:', itemsData?.length || 0);
+
+        // Combine order with items
+        const completeOrder = {
+          ...orderData,
+          admin_order_items: itemsData || []
+        };
+
+        console.log('Complete order with items:', completeOrder);
+        setOrder(completeOrder);
       } catch (error) {
         console.error('Error loading order:', error);
         navigate("/legacy-admin");
@@ -101,6 +123,14 @@ const OrderDetails = () => {
 
   const handleBackToAccounts = () => {
     navigate("/legacy-admin");
+  };
+
+  const handleShowInvoice = () => {
+    setShowInvoice(true);
+  };
+
+  const handleCloseInvoice = () => {
+    setShowInvoice(false);
   };
 
   if (loading) {
@@ -125,6 +155,10 @@ const OrderDetails = () => {
     );
   }
 
+  if (showInvoice) {
+    return <AdminOrderInvoice order={order} onClose={handleCloseInvoice} />;
+  }
+
   const calculateOrderDetails = () => {
     if (!order.admin_order_items || order.admin_order_items.length === 0) {
       return { orderSubtotal: 0, orderCost: 0, orderNetProfit: 0, orderTotal: 0 };
@@ -140,7 +174,7 @@ const OrderDetails = () => {
     }, 0);
 
     const orderNetProfit = orderSubtotal - orderCost;
-    const orderTotal = orderSubtotal + (order.shipping_cost || 0) - (order.deposit || 0);
+    const orderTotal = orderSubtotal + (order.shipping_cost || 0) - (order.discount || 0) - (order.deposit || 0);
 
     return { orderSubtotal, orderCost, orderNetProfit, orderTotal };
   };
@@ -155,7 +189,7 @@ const OrderDetails = () => {
           <UserProfile />
         </div>
         
-        <div className="mb-4">
+        <div className="mb-4 flex gap-2">
           <Button 
             onClick={handleBackToAccounts}
             variant="outline"
@@ -163,6 +197,13 @@ const OrderDetails = () => {
           >
             <ArrowRight size={16} />
             العودة لبرنامج الحسابات
+          </Button>
+          <Button 
+            onClick={handleShowInvoice}
+            className="flex items-center gap-2 text-xs md:text-sm h-8 md:h-10"
+          >
+            <Eye size={16} />
+            عرض الفاتورة
           </Button>
         </div>
         
@@ -297,37 +338,45 @@ const OrderDetails = () => {
                     أصناف الطلب ({order.admin_order_items?.length || 0} صنف)
                   </h3>
                   {!order.admin_order_items || order.admin_order_items.length === 0 ? (
-                    <div className="text-center py-8">
-                      <p className="text-gray-500">لا توجد أصناف مسجلة في هذا الطلب</p>
+                    <div className="text-center py-8 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <p className="text-yellow-700 font-medium">لا توجد أصناف مسجلة في هذا الطلب</p>
+                      <p className="text-yellow-600 text-sm mt-1">قد تحتاج إلى إضافة أصناف لهذا الطلب</p>
                     </div>
                   ) : (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b">
-                            <th className="text-right p-2">الصنف</th>
-                            <th className="text-right p-2">المقاس</th>
-                            <th className="text-right p-2">الكمية</th>
-                            <th className="text-right p-2">السعر</th>
-                            <th className="text-right p-2">التكلفة</th>
-                            <th className="text-right p-2">الخصم</th>
-                            <th className="text-right p-2">الإجمالي</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {order.admin_order_items.map((item, index) => (
-                            <tr key={item.id} className="border-b">
-                              <td className="p-2">{item.product_name}</td>
-                              <td className="p-2">{item.product_size}</td>
-                              <td className="p-2">{item.quantity}</td>
-                              <td className="p-2">{formatCurrency(item.unit_price)}</td>
-                              <td className="p-2">{formatCurrency(item.unit_cost)}</td>
-                              <td className="p-2">{formatCurrency(item.item_discount || 0)}</td>
-                              <td className="p-2 font-semibold">{formatCurrency(item.total_price)}</td>
+                    <div className="space-y-4">
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        <p className="text-blue-700 font-medium">تم العثور على {order.admin_order_items.length} صنف في هذا الطلب</p>
+                      </div>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm border border-gray-200 rounded-lg">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="text-right p-3 border-b font-semibold">#</th>
+                              <th className="text-right p-3 border-b font-semibold">الصنف</th>
+                              <th className="text-right p-3 border-b font-semibold">المقاس</th>
+                              <th className="text-right p-3 border-b font-semibold">الكمية</th>
+                              <th className="text-right p-3 border-b font-semibold">السعر</th>
+                              <th className="text-right p-3 border-b font-semibold">التكلفة</th>
+                              <th className="text-right p-3 border-b font-semibold">الخصم</th>
+                              <th className="text-right p-3 border-b font-semibold">الإجمالي</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                          </thead>
+                          <tbody>
+                            {order.admin_order_items.map((item, index) => (
+                              <tr key={item.id} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                                <td className="p-3 border-b text-center font-medium">{index + 1}</td>
+                                <td className="p-3 border-b font-medium">{item.product_name}</td>
+                                <td className="p-3 border-b">{item.product_size}</td>
+                                <td className="p-3 border-b text-center font-medium">{item.quantity}</td>
+                                <td className="p-3 border-b">{formatCurrency(item.unit_price)}</td>
+                                <td className="p-3 border-b">{formatCurrency(item.unit_cost)}</td>
+                                <td className="p-3 border-b text-red-600">{formatCurrency(item.item_discount || 0)}</td>
+                                <td className="p-3 border-b font-bold text-green-600">{formatCurrency(item.total_price)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                   )}
                 </CardContent>
