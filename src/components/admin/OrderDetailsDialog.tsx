@@ -150,35 +150,43 @@ const OrderDetailsDialog = ({ open, onOpenChange, order, calculateOrderDetails }
           {/* Order Items */}
           <Card>
             <CardContent className="p-4">
-              <h3 className="text-lg font-semibold mb-3">أصناف الطلب</h3>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-right p-2">الصنف</th>
-                      <th className="text-right p-2">المقاس</th>
-                      <th className="text-right p-2">الكمية</th>
-                      <th className="text-right p-2">السعر</th>
-                      <th className="text-right p-2">التكلفة</th>
-                      <th className="text-right p-2">الخصم</th>
-                      <th className="text-right p-2">الإجمالي</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {order.admin_order_items.map((item) => (
-                      <tr key={item.id} className="border-b">
-                        <td className="p-2">{item.product_name}</td>
-                        <td className="p-2">{item.product_size}</td>
-                        <td className="p-2">{item.quantity}</td>
-                        <td className="p-2">{formatCurrency(item.unit_price)}</td>
-                        <td className="p-2">{formatCurrency(item.unit_cost)}</td>
-                        <td className="p-2">{formatCurrency(item.item_discount || 0)}</td>
-                        <td className="p-2 font-semibold">{formatCurrency(item.total_price)}</td>
+              <h3 className="text-lg font-semibold mb-3">
+                أصناف الطلب ({order.admin_order_items?.length || 0} صنف)
+              </h3>
+              {!order.admin_order_items || order.admin_order_items.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">لا توجد أصناف مسجلة في هذا الطلب</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-right p-2">الصنف</th>
+                        <th className="text-right p-2">المقاس</th>
+                        <th className="text-right p-2">الكمية</th>
+                        <th className="text-right p-2">السعر</th>
+                        <th className="text-right p-2">التكلفة</th>
+                        <th className="text-right p-2">الخصم</th>
+                        <th className="text-right p-2">الإجمالي</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {order.admin_order_items.map((item, index) => (
+                        <tr key={item.id} className="border-b">
+                          <td className="p-2">{item.product_name}</td>
+                          <td className="p-2">{item.product_size}</td>
+                          <td className="p-2">{item.quantity}</td>
+                          <td className="p-2">{formatCurrency(item.unit_price)}</td>
+                          <td className="p-2">{formatCurrency(item.unit_cost)}</td>
+                          <td className="p-2">{formatCurrency(item.item_discount || 0)}</td>
+                          <td className="p-2 font-semibold">{formatCurrency(item.total_price)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -212,6 +220,22 @@ const OrderDetailsDialog = ({ open, onOpenChange, order, calculateOrderDetails }
               )}
             </CardContent>
           </Card>
+
+          {/* Attached Image */}
+          {order.attached_image_url && (
+            <Card>
+              <CardContent className="p-4">
+                <h3 className="text-lg font-semibold mb-3">الصورة المرفقة</h3>
+                <div className="flex justify-center">
+                  <img
+                    src={order.attached_image_url}
+                    alt="الصورة المرفقة مع الطلب"
+                    className="max-w-full h-auto max-h-64 rounded-lg border"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </DialogContent>
     </Dialog>

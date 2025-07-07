@@ -56,11 +56,13 @@ const OrderDetails = () => {
   useEffect(() => {
     const loadOrder = async () => {
       if (!user || !serial) {
+        console.log('No user or serial, redirecting to legacy-admin');
         navigate("/legacy-admin");
         return;
       }
 
       try {
+        console.log('Loading order with serial:', serial);
         const { data: orderData, error } = await supabase
           .from('admin_orders')
           .select(`
@@ -71,12 +73,20 @@ const OrderDetails = () => {
           .eq('serial', serial)
           .single();
 
-        if (error || !orderData) {
+        if (error) {
           console.error('Error loading order:', error);
           navigate("/legacy-admin");
           return;
         }
 
+        if (!orderData) {
+          console.log('No order data found');
+          navigate("/legacy-admin");
+          return;
+        }
+
+        console.log('Order loaded successfully:', orderData);
+        console.log('Order items count:', orderData.admin_order_items?.length || 0);
         setOrder(orderData);
       } catch (error) {
         console.error('Error loading order:', error);
@@ -116,6 +126,10 @@ const OrderDetails = () => {
   }
 
   const calculateOrderDetails = () => {
+    if (!order.admin_order_items || order.admin_order_items.length === 0) {
+      return { orderSubtotal: 0, orderCost: 0, orderNetProfit: 0, orderTotal: 0 };
+    }
+
     const orderSubtotal = order.admin_order_items.reduce((sum, item) => {
       const discountedPrice = item.unit_price - (item.item_discount || 0);
       return sum + (discountedPrice * item.quantity);
@@ -245,40 +259,95 @@ const OrderDetails = () => {
                 </CardContent>
               </Card>
 
+              {/* Order Details */}
+              <Card>
+                <CardContent className="p-4">
+                  <h3 className="text-lg font-semibold mb-3">تفاصيل الطلب</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground">طريقة الدفع</p>
+                      <p className="font-medium">{order.payment_method}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">طريقة التوصيل</p>
+                      <p className="font-medium">{order.delivery_method}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">حالة الطلب</p>
+                      <p className="font-medium">{order.status}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">تاريخ الطلب</p>
+                      <p className="font-medium">{new Date(order.order_date).toLocaleDateString('ar-EG')}</p>
+                    </div>
+                  </div>
+                  {order.notes && (
+                    <div className="mt-4">
+                      <p className="text-sm text-muted-foreground">ملاحظات</p>
+                      <p className="font-medium mt-1">{order.notes}</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
               {/* Order Items */}
               <Card>
                 <CardContent className="p-4">
-                  <h3 className="text-lg font-semibold mb-3">أصناف الطلب</h3>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b">
-                          <th className="text-right p-2">الصنف</th>
-                          <th className="text-right p-2">المقاس</th>
-                          <th className="text-right p-2">الكمية</th>
-                          <th className="text-right p-2">السعر</th>
-                          <th className="text-right p-2">التكلفة</th>
-                          <th className="text-right p-2">الخصم</th>
-                          <th className="text-right p-2">الإجمالي</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {order.admin_order_items.map((item) => (
-                          <tr key={item.id} className="border-b">
-                            <td className="p-2">{item.product_name}</td>
-                            <td className="p-2">{item.product_size}</td>
-                            <td className="p-2">{item.quantity}</td>
-                            <td className="p-2">{formatCurrency(item.unit_price)}</td>
-                            <td className="p-2">{formatCurrency(item.unit_cost)}</td>
-                            <td className="p-2">{formatCurrency(item.item_discount || 0)}</td>
-                            <td className="p-2 font-semibold">{formatCurrency(item.total_price)}</td>
+                  <h3 className="text-lg font-semibold mb-3">
+                    أصناف الطلب ({order.admin_order_items?.length || 0} صنف)
+                  </h3>
+                  {!order.admin_order_items || order.admin_order_items.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-gray-500">لا توجد أصناف مسجلة في هذا الطلب</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b">
+                            <th className="text-right p-2">الصنف</th>
+                            <th className="text-right p-2">المقاس</th>
+                            <th className="text-right p-2">الكمية</th>
+                            <th className="text-right p-2">السعر</th>
+                            <th className="text-right p-2">التكلفة</th>
+                            <th className="text-right p-2">الخصم</th>
+                            <th className="text-right p-2">الإجمالي</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                        </thead>
+                        <tbody>
+                          {order.admin_order_items.map((item, index) => (
+                            <tr key={item.id} className="border-b">
+                              <td className="p-2">{item.product_name}</td>
+                              <td className="p-2">{item.product_size}</td>
+                              <td className="p-2">{item.quantity}</td>
+                              <td className="p-2">{formatCurrency(item.unit_price)}</td>
+                              <td className="p-2">{formatCurrency(item.unit_cost)}</td>
+                              <td className="p-2">{formatCurrency(item.item_discount || 0)}</td>
+                              <td className="p-2 font-semibold">{formatCurrency(item.total_price)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
+
+              {/* Attached Image */}
+              {order.attached_image_url && (
+                <Card>
+                  <CardContent className="p-4">
+                    <h3 className="text-lg font-semibold mb-3">الصورة المرفقة</h3>
+                    <div className="flex justify-center">
+                      <img
+                        src={order.attached_image_url}
+                        alt="الصورة المرفقة مع الطلب"
+                        className="max-w-full h-auto max-h-96 rounded-lg border"
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </CardContent>
         </Card>
