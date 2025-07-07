@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -60,6 +59,8 @@ const AdminOrders = () => {
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [selectedOrderForNotes, setSelectedOrderForNotes] = useState<AdminOrder | null>(null);
   const [selectedOrderForImage, setSelectedOrderForImage] = useState<AdminOrder | null>(null);
+  const [orderDetailsDialogOpen, setOrderDetailsDialogOpen] = useState(false);
+  const [selectedOrderForDetails, setSelectedOrderForDetails] = useState<AdminOrder | null>(null);
 
   // Load orders from database
   const loadOrders = async () => {
@@ -200,10 +201,15 @@ const AdminOrders = () => {
     setImageDialogOpen(true);
   };
 
-  // Calculate correct totals for display
+  const openOrderDetailsDialog = (order: AdminOrder) => {
+    setSelectedOrderForDetails(order);
+    setOrderDetailsDialogOpen(true);
+  };
+
+  // حساب إجماليات صحيحة - إجمالي الطلبات = المجموع الفرعي (بدون شحن)
   const calculateOrderTotals = () => {
     const subtotal = orders.reduce((sum, order) => {
-      // Calculate subtotal from items (price - discount) * quantity
+      // حساب المجموع الفرعي من الأصناف فقط (السعر - الخصم) * الكمية
       const orderSubtotal = order.admin_order_items.reduce((itemSum, item) => {
         const discountedPrice = item.unit_price - (item.item_discount || 0);
         return itemSum + (discountedPrice * item.quantity);
@@ -212,19 +218,37 @@ const AdminOrders = () => {
     }, 0);
 
     const totalCost = orders.reduce((sum, order) => {
-      // Calculate total cost from items cost * quantity
+      // حساب إجمالي التكلفة من تكلفة الأصناف * الكمية
       const orderCost = order.admin_order_items.reduce((itemSum, item) => {
         return itemSum + (item.unit_cost * item.quantity);
       }, 0);
       return sum + orderCost;
     }, 0);
 
-    const netProfit = subtotal - totalCost; // Shipping is not included in profit calculation
+    const totalShipping = orders.reduce((sum, order) => sum + (order.shipping_cost || 0), 0);
+    const totalDeposit = orders.reduce((sum, order) => sum + (order.deposit || 0), 0);
+    const netProfit = subtotal - totalCost; // الربح الصافي = المجموع الفرعي - التكلفة (بدون شحن)
 
-    return { subtotal, totalCost, netProfit };
+    return { subtotal, totalCost, totalShipping, totalDeposit, netProfit };
   };
 
-  const { subtotal: totalSales, totalCost: totalOrderCost, netProfit: totalNetProfit } = calculateOrderTotals();
+  const { subtotal: totalOrders, totalCost: totalOrderCost, totalShipping, totalDeposit, netProfit: totalNetProfit } = calculateOrderTotals();
+
+  // حساب تفاصيل الطلب الفردي
+  const calculateOrderDetails = (order: AdminOrder) => {
+    const orderSubtotal = order.admin_order_items.reduce((sum, item) => {
+      const discountedPrice = item.unit_price - (item.item_discount || 0);
+      return sum + (discountedPrice * item.quantity);
+    }, 0);
+
+    const orderCost = order.admin_order_items.reduce((sum, item) => {
+      return sum + (item.unit_cost * item.quantity);
+    }, 0);
+
+    const orderNetProfit = orderSubtotal - orderCost;
+
+    return { orderSubtotal, orderCost, orderNetProfit };
+  };
 
   if (loading) {
     return (
@@ -250,7 +274,7 @@ const AdminOrders = () => {
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-blue-600">
@@ -270,7 +294,7 @@ const AdminOrders = () => {
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-green-600">
-              {formatCurrency(totalSales)}
+              {formatCurrency(totalOrders)}
             </div>
             <p className="text-sm text-muted-foreground">إجمالي الطلبات</p>
           </CardContent>
@@ -283,10 +307,14 @@ const AdminOrders = () => {
             <p className="text-sm text-muted-foreground">إجمالي التكلفة</p>
           </CardContent>
         </Card>
-      </div>
-
-      {/* Add Net Profit Card */}
-      <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold text-orange-600">
+              {formatCurrency(totalShipping)}
+            </div>
+            <p className="text-sm text-muted-foreground">مصاريف الشحن</p>
+          </CardContent>
+        </Card>
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-purple-600">
@@ -319,6 +347,7 @@ const AdminOrders = () => {
                     <TableHead className="text-right">المبلغ الإجمالي</TableHead>
                     <TableHead className="text-right">الحالة</TableHead>
                     <TableHead className="text-right">التاريخ</TableHead>
+                    <TableHead className="text-center">تفاصيل الطلب</TableHead>
                     <TableHead className="text-center">ملاحظات/صور</TableHead>
                     <TableHead className="text-center">الإجراءات</TableHead>
                   </TableRow>
@@ -355,6 +384,16 @@ const AdminOrders = () => {
                       </TableCell>
                       <TableCell>
                         {new Date(order.order_date).toLocaleDateString('ar-EG')}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openOrderDetailsDialog(order)}
+                          title="عرض تفاصيل الطلب"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2 justify-center">
@@ -406,6 +445,66 @@ const AdminOrders = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Order Details Dialog */}
+      <Dialog open={orderDetailsDialogOpen} onOpenChange={setOrderDetailsDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>تفاصيل الطلب - {selectedOrderForDetails?.serial}</DialogTitle>
+          </DialogHeader>
+          {selectedOrderForDetails && (
+            <div className="space-y-4">
+              {(() => {
+                const { orderSubtotal, orderCost, orderNetProfit } = calculateOrderDetails(selectedOrderForDetails);
+                return (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="text-lg font-bold text-green-600">
+                          {formatCurrency(orderSubtotal)}
+                        </div>
+                        <p className="text-sm text-muted-foreground">إجمالي الطلب (المجموع الفرعي)</p>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="text-lg font-bold text-red-600">
+                          {formatCurrency(orderCost)}
+                        </div>
+                        <p className="text-sm text-muted-foreground">التكلفة</p>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="text-lg font-bold text-orange-600">
+                          {formatCurrency(selectedOrderForDetails.shipping_cost || 0)}
+                        </div>
+                        <p className="text-sm text-muted-foreground">مصاريف الشحن</p>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="text-lg font-bold text-blue-600">
+                          {formatCurrency(selectedOrderForDetails.deposit || 0)}
+                        </div>
+                        <p className="text-sm text-muted-foreground">العربون</p>
+                      </CardContent>
+                    </Card>
+                    <Card className="sm:col-span-2">
+                      <CardContent className="p-4">
+                        <div className="text-xl font-bold text-purple-600">
+                          {formatCurrency(orderNetProfit)}
+                        </div>
+                        <p className="text-sm text-muted-foreground">صافي الربح</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Invoice Dialog */}
       <Dialog open={invoiceDialogOpen} onOpenChange={setInvoiceDialogOpen}>
