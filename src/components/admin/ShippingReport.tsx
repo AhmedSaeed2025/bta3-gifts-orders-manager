@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,7 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/utils';
-import { Truck, RefreshCw, Package, CheckCircle, AlertCircle, Calendar, Filter } from 'lucide-react';
+import { Truck, RefreshCw, Package, CheckCircle, Calendar, Filter } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ShippingOrder {
@@ -48,11 +47,13 @@ const ShippingReport = () => {
 
     try {
       setLoading(true);
+      console.log('Loading shipping orders for user:', user.id);
+      
       const { data: ordersData, error } = await supabase
         .from('admin_orders')
         .select('*')
         .eq('user_id', user.id)
-        .in('delivery_method', ['شحن', 'توصيل بالشحن', 'شركة شحن', 'توصيل شحن'])
+        .in('delivery_method', ['شحن', 'توصيل بالشحن', 'شركة شحن', 'توصيل شحن', 'شحن سريع', 'توصيل للمنزل'])
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -60,6 +61,8 @@ const ShippingReport = () => {
         toast.error('خطأ في تحميل طلبات الشحن');
         return;
       }
+
+      console.log('Loaded shipping orders:', ordersData?.length || 0);
 
       const shippingOrders = ordersData?.map(order => ({
         id: order.id,

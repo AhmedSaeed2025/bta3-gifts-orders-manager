@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -54,12 +55,13 @@ const OrderDetailsDialog = ({ open, onOpenChange, order, calculateOrderDetails }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>تفاصيل الطلب - {order.serial}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-6">
+          {/* Order Summary Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <Card>
               <CardContent className="p-4">
                 <div className="text-lg font-bold text-green-600">
@@ -109,6 +111,107 @@ const OrderDetailsDialog = ({ open, onOpenChange, order, calculateOrderDetails }
               </CardContent>
             </Card>
           </div>
+
+          {/* Customer Information */}
+          <Card>
+            <CardContent className="p-4">
+              <h3 className="text-lg font-semibold mb-3">معلومات العميل</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">اسم العميل</p>
+                  <p className="font-medium">{order.customer_name}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">رقم الهاتف</p>
+                  <p className="font-medium">{order.customer_phone}</p>
+                </div>
+                {order.customer_email && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">البريد الإلكتروني</p>
+                    <p className="font-medium">{order.customer_email}</p>
+                  </div>
+                )}
+                {order.shipping_address && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">عنوان الشحن</p>
+                    <p className="font-medium">{order.shipping_address}</p>
+                  </div>
+                )}
+                {order.governorate && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">المحافظة</p>
+                    <p className="font-medium">{order.governorate}</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Order Items */}
+          <Card>
+            <CardContent className="p-4">
+              <h3 className="text-lg font-semibold mb-3">أصناف الطلب</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-right p-2">الصنف</th>
+                      <th className="text-right p-2">المقاس</th>
+                      <th className="text-right p-2">الكمية</th>
+                      <th className="text-right p-2">السعر</th>
+                      <th className="text-right p-2">التكلفة</th>
+                      <th className="text-right p-2">الخصم</th>
+                      <th className="text-right p-2">الإجمالي</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {order.admin_order_items.map((item) => (
+                      <tr key={item.id} className="border-b">
+                        <td className="p-2">{item.product_name}</td>
+                        <td className="p-2">{item.product_size}</td>
+                        <td className="p-2">{item.quantity}</td>
+                        <td className="p-2">{formatCurrency(item.unit_price)}</td>
+                        <td className="p-2">{formatCurrency(item.unit_cost)}</td>
+                        <td className="p-2">{formatCurrency(item.item_discount || 0)}</td>
+                        <td className="p-2 font-semibold">{formatCurrency(item.total_price)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Order Details */}
+          <Card>
+            <CardContent className="p-4">
+              <h3 className="text-lg font-semibold mb-3">تفاصيل الطلب</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">طريقة الدفع</p>
+                  <p className="font-medium">{order.payment_method}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">طريقة التوصيل</p>
+                  <p className="font-medium">{order.delivery_method}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">حالة الطلب</p>
+                  <p className="font-medium">{order.status}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">تاريخ الطلب</p>
+                  <p className="font-medium">{new Date(order.order_date).toLocaleDateString('ar-EG')}</p>
+                </div>
+              </div>
+              {order.notes && (
+                <div className="mt-4">
+                  <p className="text-sm text-muted-foreground">ملاحظات</p>
+                  <p className="font-medium mt-1">{order.notes}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </DialogContent>
     </Dialog>
