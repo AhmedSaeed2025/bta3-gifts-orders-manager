@@ -7,6 +7,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { formatCurrency } from '@/lib/utils';
 import { Printer, Eye, Trash2, FileText, Image } from 'lucide-react';
 import { ORDER_STATUS_LABELS } from '@/types';
+import { useIsMobile } from '@/hooks/use-mobile';
+import MobileOrderDetailsDialog from './MobileOrderDetailsDialog';
 
 interface AdminOrder {
   id: string;
@@ -66,6 +68,10 @@ const OrdersTable = ({
   openImageDialog,
   calculateOrderDetails
 }: OrdersTableProps) => {
+  const isMobile = useIsMobile();
+  const [mobileDialogOpen, setMobileDialogOpen] = React.useState(false);
+  const [selectedMobileOrder, setSelectedMobileOrder] = React.useState<AdminOrder | null>(null);
+
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case 'pending': return 'bg-yellow-500 text-white';
@@ -82,6 +88,11 @@ const OrdersTable = ({
     return ORDER_STATUS_LABELS[status as keyof typeof ORDER_STATUS_LABELS] || status;
   };
 
+  const handleMobileOrderView = (order: AdminOrder) => {
+    setSelectedMobileOrder(order);
+    setMobileDialogOpen(true);
+  };
+
   if (orders.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
@@ -90,6 +101,151 @@ const OrdersTable = ({
     );
   }
 
+  // Mobile view - simplified cards
+  if (isMobile) {
+    return (
+      <>
+        <div className="space-y-4">
+          {orders.map((order) => {
+            const { orderSubtotal, orderCost, orderNetProfit } = calculateOrderDetails(order);
+            const orderTotal = orderSubtotal + (order.shipping_cost || 0) - (order.deposit || 0);
+            
+            return (
+              <div key={order.id} className="bg-white border rounded-lg p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-bold text-lg">{order.serial}</div>
+                    <div className="text-sm text-muted-foreground">{order.customer_name}</div>
+                  </div>
+                  <Badge className={getStatusBadgeColor(order.status)}>
+                    {getStatusLabel(order.status)}
+                  </Badge>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <span className="text-muted-foreground">الهاتف:</span>
+                    <div dir="ltr" className="font-medium">{order.customer_phone}</div>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">المحافظة:</span>
+                    <div className="font-medium">{order.governorate || 'غير محدد'}</div>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">المجموع الفرعي:</span>
+                    <div className="font-bold text-green-600">{formatCurrency(orderSubtotal)}</div>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">التكلفة:</span>
+                    <div className="font-bold text-red-600">{formatCurrency(orderCost)}</div>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">الشحن:</span>
+                    <div className="font-bold text-orange-600">{formatCurrency(order.shipping_cost || 0)}</div>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">العربون:</span>
+                    <div className="font-bold text-blue-600">{formatCurrency(order.deposit || 0)}</div>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">الصافي:</span>
+                    <div className="font-bold text-purple-600">{formatCurrency(orderTotal)}</div>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">الربح:</span>
+                    <div className="font-bold text-emerald-600">{formatCurrency(orderNetProfit)}</div>
+                  </div>
+                </div>
+                
+                <div className="text-sm text-muted-foreground">
+                  {new Date(order.order_date).toLocaleDateString('ar-EG')}
+                </div>
+                
+                <div className="flex items-center gap-2 pt-2 border-t">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleMobileOrderView(order)}
+                    className="flex-1"
+                  >
+                    <Eye className="h-4 w-4 ml-2" />
+                    عرض التفاصيل
+                  </Button>
+                  
+                  <Select 
+                    value={order.status} 
+                    onValueChange={(value) => updateOrderStatus(order.id, value)}
+                  >
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">قيد المراجعة</SelectItem>
+                      <SelectItem value="confirmed">تم التأكيد</SelectItem>
+                      <SelectItem value="processing">قيد التحضير</SelectItem>
+                      <SelectItem value="shipped">تم الشحن</SelectItem>
+                      <SelectItem value="delivered">تم التوصيل</SelectItem>
+                      <SelectItem value="cancelled">ملغي</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => openInvoiceDialog(order)}
+                  >
+                    <Printer className="h-4 w-4" />
+                  </Button>
+                  
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => deleteOrder(order.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                {(order.notes || order.attached_image_url) && (
+                  <div className="flex items-center gap-2 pt-2 border-t">
+                    {order.notes && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => openNotesDialog(order)}
+                      >
+                        <FileText className="h-4 w-4 ml-2" />
+                        ملاحظات
+                      </Button>
+                    )}
+                    {order.attached_image_url && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => openImageDialog(order)}
+                      >
+                        <Image className="h-4 w-4 ml-2" />
+                        صورة
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        
+        <MobileOrderDetailsDialog
+          open={mobileDialogOpen}
+          onOpenChange={setMobileDialogOpen}
+          order={selectedMobileOrder}
+          calculateOrderDetails={calculateOrderDetails}
+        />
+      </>
+    );
+  }
+
+  // Desktop view - table format
   return (
     <div className="overflow-x-auto">
       <Table>

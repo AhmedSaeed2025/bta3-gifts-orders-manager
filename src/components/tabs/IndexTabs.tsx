@@ -15,25 +15,38 @@ import {
   Receipt,
   FileText,
   Package,
-  Globe,
   Truck,
+  LayoutDashboard
 } from "lucide-react";
 import OrderForm from "@/components/OrderForm";
 import OrdersTable from "@/components/OrdersTable";
-import SummaryReport from "@/components/SummaryReport";
+import ImprovedSummaryReport from "@/components/admin/ImprovedSummaryReport";
 import ProfitReport from "@/components/ProfitReport";
 import ImprovedAccountStatement from "@/components/ImprovedAccountStatement";
 import InvoiceTab from "@/components/InvoiceTab";
-import ProductsTab from "@/components/ProductsTab";
-import WebhookTab from "@/components/WebhookTab";
-import ShippingReport from "@/components/admin/ShippingReport";
+import ProductsManagementCopy from "@/components/admin/ProductsManagementCopy";
+import ImprovedShippingReport from "@/components/admin/ImprovedShippingReport";
+import AdminDashboard from "@/components/admin/AdminDashboard";
 
 const IndexTabs = () => {
   const isMobile = useIsMobile();
 
   return (
-    <Tabs defaultValue="addOrder" className="mt-2 md:mt-4" dir="rtl">
-      <TabsList className={`grid w-full ${isMobile ? 'grid-cols-4 gap-1 h-auto p-1 mobile-warm-tabs' : 'grid-cols-9 gap-1 h-10'}`} dir="rtl">
+    <Tabs defaultValue="dashboard" className="mt-2 md:mt-4" dir="rtl">
+      <TabsList className={`grid w-full ${isMobile ? 'grid-cols-4 gap-1 h-auto p-1 mobile-warm-tabs' : 'grid-cols-8 gap-1 h-10'}`} dir="rtl">
+        <TabsTrigger 
+          value="dashboard" 
+          className={`${isMobile ? 'flex-col text-xs p-2 h-16 mobile-warm-tab-inactive data-[state=active]:mobile-warm-tab-active' : 'text-sm'}`}
+        >
+          {isMobile ? (
+            <>
+              <LayoutDashboard className="h-4 w-4 mb-1" />
+              <span className="text-xs leading-tight">الرئيسية</span>
+            </>
+          ) : (
+            "لوحة التحكم"
+          )}
+        </TabsTrigger>
         <TabsTrigger 
           value="addOrder" 
           className={`${isMobile ? 'flex-col text-xs p-2 h-16 mobile-warm-tab-inactive data-[state=active]:mobile-warm-tab-active' : 'text-sm'}`}
@@ -73,22 +86,15 @@ const IndexTabs = () => {
             "تقرير الطلبات"
           )}
         </TabsTrigger>
-        <TabsTrigger 
-          value="profitReport" 
-          className={`${isMobile ? 'flex-col text-xs p-2 h-16 mobile-warm-tab-inactive data-[state=active]:mobile-warm-tab-active' : 'text-sm'}`}
-        >
-          {isMobile ? (
-            <>
-              <TrendingUp className="h-4 w-4 mb-1" />
-              <span className="text-xs leading-tight">الأرباح</span>
-            </>
-          ) : (
-            "تقرير الأرباح"
-          )}
-        </TabsTrigger>
         
         {!isMobile && (
           <>
+            <TabsTrigger 
+              value="profitReport" 
+              className="text-sm"
+            >
+              "تقرير الأرباح"
+            </TabsTrigger>
             <TabsTrigger 
               value="shipping" 
               className="text-sm"
@@ -113,12 +119,6 @@ const IndexTabs = () => {
             >
               "إدارة المنتجات"
             </TabsTrigger>
-            <TabsTrigger 
-              value="webhook" 
-              className="text-sm"
-            >
-              "Webhook"
-            </TabsTrigger>
           </>
         )}
       </TabsList>
@@ -126,6 +126,13 @@ const IndexTabs = () => {
       {isMobile && (
         <>
           <TabsList className="grid w-full grid-cols-4 gap-1 h-auto p-1 mt-2 mobile-warm-tabs" dir="rtl">
+            <TabsTrigger 
+              value="profitReport" 
+              className="flex-col text-xs p-2 h-16 mobile-warm-tab-inactive data-[state=active]:mobile-warm-tab-active"
+            >
+              <TrendingUp className="h-4 w-4 mb-1" />
+              <span className="text-xs leading-tight">الأرباح</span>
+            </TabsTrigger>
             <TabsTrigger 
               value="shipping" 
               className="flex-col text-xs p-2 h-16 mobile-warm-tab-inactive data-[state=active]:mobile-warm-tab-active"
@@ -147,6 +154,8 @@ const IndexTabs = () => {
               <FileText className="h-4 w-4 mb-1" />
               <span className="text-xs leading-tight">الفاتورة</span>
             </TabsTrigger>
+          </TabsList>
+          <TabsList className="grid w-full grid-cols-1 gap-1 h-auto p-1 mt-2 mobile-warm-tabs" dir="rtl">
             <TabsTrigger 
               value="products" 
               className="flex-col text-xs p-2 h-16 mobile-warm-tab-inactive data-[state=active]:mobile-warm-tab-active"
@@ -155,19 +164,14 @@ const IndexTabs = () => {
               <span className="text-xs leading-tight">المنتجات</span>
             </TabsTrigger>
           </TabsList>
-          <TabsList className="grid w-full grid-cols-1 gap-1 h-auto p-1 mt-2 mobile-warm-tabs" dir="rtl">
-            <TabsTrigger 
-              value="webhook" 
-              className="flex-col text-xs p-2 h-16 mobile-warm-tab-inactive data-[state=active]:mobile-warm-tab-active"
-            >
-              <Globe className="h-4 w-4 mb-1" />
-              <span className="text-xs leading-tight">Webhook</span>
-            </TabsTrigger>
-          </TabsList>
         </>
       )}
       
       <div className={`${isMobile ? 'px-1 mt-2' : ''}`}>
+        <TabsContent value="dashboard" className={isMobile ? 'mobile-warm-card rounded-lg' : ''}>
+          <AdminDashboard />
+        </TabsContent>
+        
         <TabsContent value="addOrder" className={isMobile ? 'mobile-warm-card rounded-lg' : ''}>
           <OrderForm />
         </TabsContent>
@@ -177,7 +181,7 @@ const IndexTabs = () => {
         </TabsContent>
         
         <TabsContent value="summary" className={isMobile ? 'mobile-warm-card rounded-lg' : ''}>
-          <SummaryReport />
+          <ImprovedSummaryReport />
         </TabsContent>
         
         <TabsContent value="profitReport" className={isMobile ? 'mobile-warm-card rounded-lg' : ''}>
@@ -185,7 +189,7 @@ const IndexTabs = () => {
         </TabsContent>
         
         <TabsContent value="shipping" className={isMobile ? 'mobile-warm-card rounded-lg' : ''}>
-          <ShippingReport />
+          <ImprovedShippingReport />
         </TabsContent>
         
         <TabsContent value="accountStatement" className={isMobile ? 'mobile-warm-card rounded-lg' : ''}>
@@ -197,11 +201,7 @@ const IndexTabs = () => {
         </TabsContent>
         
         <TabsContent value="products" className={isMobile ? 'mobile-warm-card rounded-lg' : ''}>
-          <ProductsTab />
-        </TabsContent>
-        
-        <TabsContent value="webhook" className={isMobile ? 'mobile-warm-card rounded-lg' : ''}>
-          <WebhookTab />
+          <ProductsManagementCopy />
         </TabsContent>
       </div>
     </Tabs>
