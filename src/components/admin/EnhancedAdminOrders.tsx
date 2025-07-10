@@ -120,8 +120,8 @@ const EnhancedAdminOrders = () => {
     confirmed: orders.filter(o => o.status === 'confirmed').length,
     shipped: orders.filter(o => o.status === 'shipped').length,
     delivered: orders.filter(o => o.status === 'delivered').length,
-    totalRevenue: orders.reduce((sum, order) => sum + parseFloat(order.total_amount.toString()), 0),
-    totalProfit: orders.reduce((sum, order) => sum + parseFloat((order.profit || 0).toString()), 0)
+    totalRevenue: orders.reduce((sum, order) => sum + Number(order.total_amount), 0),
+    totalProfit: orders.reduce((sum, order) => sum + Number(order.profit || 0), 0)
   };
 
   return (
@@ -321,7 +321,7 @@ const EnhancedAdminOrders = () => {
                         <div className="flex items-center gap-1">
                           <DollarSign className="h-4 w-4 text-muted-foreground" />
                           <span className="font-bold text-green-600">
-                            {formatCurrency(parseFloat(order.total_amount.toString()))}
+                            {formatCurrency(Number(order.total_amount))}
                           </span>
                         </div>
                       </div>
@@ -344,8 +344,8 @@ const EnhancedAdminOrders = () => {
                       {/* Payment Info */}
                       {order.deposit > 0 && (
                         <div className="text-xs text-blue-600">
-                          <strong>المبلغ المسدد:</strong> {formatCurrency(parseFloat(order.deposit.toString()))} • 
-                          <strong> المتبقي:</strong> {formatCurrency(parseFloat(order.total_amount.toString()) - parseFloat(order.deposit.toString()))}
+                          <strong>المبلغ المسدد:</strong> {formatCurrency(Number(order.deposit))} • 
+                          <strong> المتبقي:</strong> {formatCurrency(Number(order.total_amount) - Number(order.deposit))}
                         </div>
                       )}
                     </div>
