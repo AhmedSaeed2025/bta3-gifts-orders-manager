@@ -32,11 +32,16 @@ const egyptianGovernorates = [
 ];
 
 const EnhancedCheckout = () => {
-  const { cartItems, clearCart, getTotalPrice } = useCart();
+  const { cartItems, clearCart } = useCart();
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderSubmitted, setOrderSubmitted] = useState(false);
   const [orderSerial, setOrderSerial] = useState('');
+
+  // Calculate total price
+  const getTotalPrice = () => {
+    return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+  };
 
   const [customerData, setCustomerData] = useState({
     customer_name: user?.user_metadata?.full_name || '',
@@ -120,7 +125,9 @@ const EnhancedCheckout = () => {
       // Create order items
       let totalProfit = 0;
       const orderItems = cartItems.map(item => {
-        const itemProfit = (item.price - (item.product?.product_sizes?.[0]?.cost || 0)) * item.quantity;
+        // Use a default cost if product_sizes is not available
+        const defaultCost = 0;
+        const itemProfit = (item.price - defaultCost) * item.quantity;
         totalProfit += itemProfit;
         
         return {
@@ -128,7 +135,7 @@ const EnhancedCheckout = () => {
           product_name: item.product?.name || 'منتج',
           product_size: item.size,
           quantity: item.quantity,
-          unit_cost: item.product?.product_sizes?.[0]?.cost || 0,
+          unit_cost: defaultCost,
           unit_price: item.price,
           item_discount: 0,
           total_price: item.price * item.quantity,
