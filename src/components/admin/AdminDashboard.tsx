@@ -359,10 +359,13 @@ const AdminDashboard = () => {
                 <XAxis dataKey="date" />
                 <YAxis />
                 <Tooltip 
-                  formatter={(value, name) => [
-                    name === 'sales' ? formatCurrency(value) : value,
-                    name === 'sales' ? 'المبيعات' : name === 'orders' ? 'الطلبات' : 'الربح'
-                  ]}
+                  formatter={(value, name) => {
+                    const numValue = typeof value === 'number' ? value : Number(value) || 0;
+                    return [
+                      name === 'sales' ? formatCurrency(numValue) : numValue,
+                      name === 'sales' ? 'المبيعات' : name === 'orders' ? 'الطلبات' : 'الربح'
+                    ];
+                  }}
                 />
                 <Area type="monotone" dataKey="sales" stackId="1" stroke="#10B981" fill="#10B981" fillOpacity={0.6} />
                 <Area type="monotone" dataKey="profit" stackId="2" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.6} />

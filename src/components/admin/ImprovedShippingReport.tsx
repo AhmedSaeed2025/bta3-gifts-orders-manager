@@ -82,7 +82,7 @@ const ImprovedShippingReport = () => {
       shipped: 0,
       delivered: 0,
       totalShippingRevenue: 0,
-      governorateStats: new Map(),
+      governorateStats: new Map<string, { orders: number; shippingRevenue: number; pending: number; delivered: number }>(),
       avgShippingCost: 0
     };
 
@@ -133,7 +133,7 @@ const ImprovedShippingReport = () => {
 
   // Get unique governorates for filter
   const availableGovernorates = useMemo(() => {
-    const govs = new Set();
+    const govs = new Set<string>();
     orders.forEach(order => {
       if (order.governorate) govs.add(order.governorate);
     });
@@ -158,7 +158,7 @@ const ImprovedShippingReport = () => {
   };
 
   const getStatusLabel = (status: string) => {
-    const labels = {
+    const labels: Record<string, string> = {
       'pending': 'قيد المراجعة',
       'confirmed': 'تم التأكيد',
       'processing': 'قيد التحضير',
