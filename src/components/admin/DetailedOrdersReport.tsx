@@ -29,21 +29,29 @@ import {
   Clock,
   AlertCircle,
   CheckCircle,
-  XCircle
+  XCircle,
+  Edit,
+  Receipt
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useNavigate } from "react-router-dom";
+import CustomAmountDialog from "@/components/CustomAmountDialog";
+import { toast } from "sonner";
 
 const DetailedOrdersReport = () => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [paymentFilter, setPaymentFilter] = useState("all");
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [paymentType, setPaymentType] = useState<'collection' | 'shipping' | 'cost'>('collection');
 
   // Fetch orders data
-  const { data: orders = [], isLoading } = useQuery({
+  const { data: orders = [], isLoading, refetch } = useQuery({
     queryKey: ['detailed-orders-report'],
     queryFn: async () => {
       if (!user) return [];
@@ -116,6 +124,49 @@ const DetailedOrdersReport = () => {
     setIsDetailsOpen(true);
   };
 
+  const handleEditOrder = (order: any) => {
+    navigate(`/edit-order/${order.serial}`);
+  };
+
+  const handlePayment = async (amount: number) => {
+    if (!selectedOrder) return;
+
+    try {
+      // Add transaction record
+      const transactionType = paymentType === 'collection' ? 'order_collection' :
+                             paymentType === 'shipping' ? 'shipping_payment' : 'cost_payment';
+      
+      const description = paymentType === 'collection' ? `تحصيل من الطلب ${selectedOrder.serial}` :
+                         paymentType === 'shipping' ? `سداد شحن للطلب ${selectedOrder.serial}` :
+                         `سداد تكلفة للطلب ${selectedOrder.serial}`;
+
+      const { error: transactionError } = await supabase
+        .from('transactions')
+        .insert({
+          user_id: user?.id,
+          amount: amount,
+          transaction_type: transactionType,
+          description: description,
+          order_serial: selectedOrder.serial
+        });
+
+      if (transactionError) throw transactionError;
+
+      toast.success('تم تسجيل المعاملة بنجاح');
+      refetch();
+      setPaymentDialogOpen(false);
+    } catch (error) {
+      console.error('Error adding payment:', error);
+      toast.error('حدث خطأ في تسجيل المعاملة');
+    }
+  };
+
+  const openPaymentDialog = (order: any, type: 'collection' | 'shipping' | 'cost') => {
+    setSelectedOrder(order);
+    setPaymentType(type);
+    setPaymentDialogOpen(true);
+  };
+
   if (isLoading) {
     return (
       <Card>
@@ -140,7 +191,7 @@ const DetailedOrdersReport = () => {
               <FileText className="h-6 w-6 text-primary" />
               تقرير الطلبات التفصيلي
             </h1>
-            <p className="text-muted-foreground">تحليل شامل لجميع طلباتك</p>
+            <p className="text-muted-foreground">تحليل شامل لجميع طلباتك مع إمكانية التعديل والدفع</p>
           </div>
           <Button variant="outline" size="sm">
             <Download className="h-4 w-4 ml-1" />
@@ -365,16 +416,60 @@ const DetailedOrdersReport = () => {
                       </div>
 
                       {/* Actions */}
-                      <div className={`${isMobile ? 'col-span-1' : 'col-span-2'} flex items-center justify-end`}>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openOrderDetails(order)}
-                          className="text-xs"
-                        >
-                          <Eye className="h-3 w-3 ml-1" />
-                          التفاصيل
-                        </Button>
+                      <div className={`${isMobile ? 'col-span-1' : 'col-span-2'} flex flex-col gap-2`}>
+                        <div className="flex gap-1">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openOrderDetails(order)}
+                            className="text-xs flex-1"
+                          >
+                            <Eye className="h-3 w-3 ml-1" />
+                            التفاصيل
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditOrder(order)}
+                            className="text-xs flex-1"
+                          >
+                            <Edit className="h-3 w-3 ml-1" />
+                            تعديل
+                          </Button>
+                        </div>
+                        
+                        {/* Payment Actions */}
+                        <div className="flex gap-1">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openPaymentDialog(order, 'collection')}
+                            className="text-xs bg-green-50 hover:bg-green-100"
+                          >
+                            <Receipt className="h-3 w-3 ml-1" />
+                            تحصيل
+                          </Button>
+                          {order.shipping_cost > 0 && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openPaymentDialog(order, 'shipping')}
+                              className="text-xs bg-orange-50 hover:bg-orange-100"
+                            >
+                              <Truck className="h-3 w-3 ml-1" />
+                              شحن
+                            </Button>
+                          )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openPaymentDialog(order, 'cost')}
+                            className="text-xs bg-red-50 hover:bg-red-100"
+                          >
+                            <DollarSign className="h-3 w-3 ml-1" />
+                            تكلفة
+                          </Button>
+                        </div>
                       </div>
                     </div>
 
@@ -507,6 +602,23 @@ const DetailedOrdersReport = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Payment Dialog */}
+      <CustomAmountDialog
+        isOpen={paymentDialogOpen}
+        onClose={() => setPaymentDialogOpen(false)}
+        onConfirm={handlePayment}
+        title={
+          paymentType === 'collection' ? 'تحصيل مبلغ من الطلب' :
+          paymentType === 'shipping' ? 'سداد مصاريف الشحن' :
+          'سداد التكلفة'
+        }
+        defaultAmount={
+          paymentType === 'collection' ? ((selectedOrder?.total || 0) - (selectedOrder?.deposit || 0)) :
+          paymentType === 'shipping' ? (selectedOrder?.shipping_cost || 0) :
+          0
+        }
+      />
     </div>
   );
 };

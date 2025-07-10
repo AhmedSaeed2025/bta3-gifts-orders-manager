@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,6 +12,7 @@ import OrderStatsCards from '@/components/admin/OrderStatsCards';
 import OrdersTable from '@/components/admin/OrdersTable';
 import OrderDetailsDialog from '@/components/admin/OrderDetailsDialog';
 import { ORDER_STATUS_LABELS } from '@/types';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface AdminOrder {
   id: string;
@@ -52,6 +52,7 @@ interface AdminOrderItem {
 
 const AdminOrders = () => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null);
@@ -119,6 +120,10 @@ const AdminOrders = () => {
 
       toast.success('تم تحديث حالة الطلب بنجاح');
       loadOrders();
+      
+      // Invalidate related queries to keep data synchronized
+      queryClient.invalidateQueries({ queryKey: ['detailed-orders-report'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
     } catch (error) {
       console.error('Error updating order status:', error);
       toast.error('خطأ في تحديث حالة الطلب');
@@ -167,6 +172,10 @@ const AdminOrders = () => {
       console.log('Order and related data deleted successfully');
       toast.success('تم حذف الطلب وجميع المعاملات المرتبطة به بنجاح');
       loadOrders();
+      
+      // Invalidate related queries to keep data synchronized
+      queryClient.invalidateQueries({ queryKey: ['detailed-orders-report'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
     } catch (error) {
       console.error('Error deleting order:', error);
       toast.error('حدث خطأ في حذف الطلب');

@@ -9,6 +9,7 @@ import ImprovedItemAddForm from "./order/ImprovedItemAddForm";
 import ItemsTable from "./order/ItemsTable";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface OrderFormProps {
   editingOrder?: Order;
@@ -18,6 +19,7 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
   const { addOrder, updateOrder } = useSupabaseOrders();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const queryClient = useQueryClient();
   
   const [customerData, setCustomerData] = useState({
     paymentMethod: editingOrder?.paymentMethod || "",
@@ -169,9 +171,15 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
 
       if (editingOrder) {
         await updateOrder(editingOrder.serial, orderData);
-        navigate("/");
+        // Invalidate relevant queries to refresh data across components
+        queryClient.invalidateQueries({ queryKey: ['detailed-orders-report'] });
+        queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+        navigate("/legacy-admin");
       } else {
         await addOrder(orderData);
+        // Invalidate relevant queries to refresh data across components
+        queryClient.invalidateQueries({ queryKey: ['detailed-orders-report'] });
+        queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
         
         // Reset form
         setCustomerData({
