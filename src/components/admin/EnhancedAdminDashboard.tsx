@@ -22,9 +22,9 @@ import {
   Activity,
   Calendar,
   Filter,
-  Refresh
+  RefreshCw
 } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart as RechartsPieChart, Cell } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart as RechartsPieChart, Cell, Pie } from 'recharts';
 
 const EnhancedAdminDashboard = () => {
   const { user } = useAuth();
@@ -169,7 +169,7 @@ const EnhancedAdminDashboard = () => {
           <p className="text-muted-foreground">نظرة شاملة على أداء مشروعك</p>
         </div>
         <Button variant="outline" size="sm">
-          <Refresh className="h-4 w-4 ml-1" />
+          <RefreshCw className="h-4 w-4 ml-1" />
           تحديث البيانات
         </Button>
       </div>

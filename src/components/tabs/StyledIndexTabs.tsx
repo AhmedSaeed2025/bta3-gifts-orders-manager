@@ -16,10 +16,10 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 import OrderForm from "@/components/OrderForm";
 import MobileProductsManagement from "@/components/admin/MobileProductsManagement";
-import OrdersTable from "@/components/admin/OrdersTable";
 import DetailedOrdersReport from "@/components/admin/DetailedOrdersReport";
 import ImprovedShippingReport from "@/components/admin/ImprovedShippingReport";
 import EnhancedAdminDashboard from "@/components/admin/EnhancedAdminDashboard";
+import AdminOrders from "@/pages/admin/AdminOrders";
 
 const StyledIndexTabs = () => {
   const isMobile = useIsMobile();
@@ -41,7 +41,7 @@ const StyledIndexTabs = () => {
       id: "orders",
       label: "إدارة الطلبات",
       icon: FolderOpen,
-      component: <OrdersTable />
+      component: <AdminOrders />
     },
     {
       id: "products",
