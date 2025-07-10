@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { useQuery } from "@tanstack/react-query";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { formatCurrency } from "@/lib/utils";
@@ -17,7 +17,6 @@ import {
   Download, 
   Eye,
   TrendingUp,
-  TrendingDown,
   Package,
   DollarSign,
   Truck,
@@ -35,13 +34,14 @@ import {
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
-import CustomAmountDialog from "@/components/CustomAmountDialog";
+import OrderPaymentDialog from "./OrderPaymentDialog";
 import { toast } from "sonner";
 
 const DetailedOrdersReport = () => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [paymentFilter, setPaymentFilter] = useState("all");
@@ -128,10 +128,23 @@ const DetailedOrdersReport = () => {
     navigate(`/edit-order/${order.serial}`);
   };
 
-  const handlePayment = async (amount: number) => {
+  const handlePayment = async (amount: number, notes?: string) => {
     if (!selectedOrder) return;
 
     try {
+      // Update order based on payment type
+      if (paymentType === 'collection') {
+        // Update the order's deposit amount
+        const newDeposit = (selectedOrder.deposit || 0) + amount;
+        
+        const { error: orderError } = await supabase
+          .from('orders')
+          .update({ deposit: newDeposit })
+          .eq('id', selectedOrder.id);
+
+        if (orderError) throw orderError;
+      }
+
       // Add transaction record
       const transactionType = paymentType === 'collection' ? 'order_collection' :
                              paymentType === 'shipping' ? 'shipping_payment' : 'cost_payment';
@@ -146,7 +159,7 @@ const DetailedOrdersReport = () => {
           user_id: user?.id,
           amount: amount,
           transaction_type: transactionType,
-          description: description,
+          description: notes ? `${description} - ${notes}` : description,
           order_serial: selectedOrder.serial
         });
 
@@ -154,6 +167,7 @@ const DetailedOrdersReport = () => {
 
       toast.success('تم تسجيل المعاملة بنجاح');
       refetch();
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
       setPaymentDialogOpen(false);
     } catch (error) {
       console.error('Error adding payment:', error);
@@ -484,6 +498,13 @@ const DetailedOrdersReport = () => {
                         ))}
                       </div>
                     </div>
+
+                    {order.notes && (
+                      <div className="mt-3 pt-3 border-t">
+                        <div className="text-xs text-muted-foreground mb-1">ملاحظات:</div>
+                        <div className="text-sm bg-gray-50 p-2 rounded">{order.notes}</div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               );
@@ -598,26 +619,29 @@ const DetailedOrdersReport = () => {
                   </div>
                 </CardContent>
               </Card>
+
+              {selectedOrder.notes && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">ملاحظات</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm">{selectedOrder.notes}</p>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           )}
         </DialogContent>
       </Dialog>
 
       {/* Payment Dialog */}
-      <CustomAmountDialog
-        isOpen={paymentDialogOpen}
-        onClose={() => setPaymentDialogOpen(false)}
+      <OrderPaymentDialog
+        open={paymentDialogOpen}
+        onOpenChange={setPaymentDialogOpen}
+        order={selectedOrder}
+        paymentType={paymentType}
         onConfirm={handlePayment}
-        title={
-          paymentType === 'collection' ? 'تحصيل مبلغ من الطلب' :
-          paymentType === 'shipping' ? 'سداد مصاريف الشحن' :
-          'سداد التكلفة'
-        }
-        defaultAmount={
-          paymentType === 'collection' ? ((selectedOrder?.total || 0) - (selectedOrder?.deposit || 0)) :
-          paymentType === 'shipping' ? (selectedOrder?.shipping_cost || 0) :
-          0
-        }
       />
     </div>
   );

@@ -7,6 +7,7 @@ import { OrderItem, Order } from "@/types";
 import CustomerDataForm from "./order/CustomerDataForm";
 import ImprovedItemAddForm from "./order/ImprovedItemAddForm";
 import ItemsTable from "./order/ItemsTable";
+import NotesField from "./order/NotesField";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useQueryClient } from "@tanstack/react-query";
@@ -42,6 +43,7 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
   });
   
   const [items, setItems] = useState<OrderItem[]>(editingOrder?.items || []);
+  const [notes, setNotes] = useState<string>(editingOrder?.notes || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // المجموع الفرعي = مجموع (السعر - الخصم) × الكمية لكل صنف
@@ -50,13 +52,8 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
     return sum + discountedPrice * item.quantity;
   }, 0);
   
-  // إجمالي التكلفة = مجموع (التكلفة × الكمية) لكل صنف
   const totalCost = items.reduce((sum, item) => sum + item.cost * item.quantity, 0);
-  
-  // المبلغ الإجمالي = المجموع الفرعي + الشحن - العربون
   const totalAmount = subtotal + customerData.shippingCost - customerData.deposit;
-  
-  // صافي الربح = المجموع الفرعي - إجمالي التكلفة (الشحن لا يحسب في الربح)
   const netProfit = subtotal - totalCost;
 
   const handleCustomerDataChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -109,7 +106,6 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
     }
   };
 
-  // Function to update item in the list
   const updateItem = (index: number, updatedItem: OrderItem) => {
     const discountedPrice = updatedItem.price - (updatedItem.itemDiscount || 0);
     const profit = (discountedPrice - updatedItem.cost) * updatedItem.quantity;
@@ -166,18 +162,17 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
         total: totalAmount,
         profit: netProfit,
         status: editingOrder?.status || "pending",
-        discount: 0
+        discount: 0,
+        notes: notes.trim() || undefined
       };
 
       if (editingOrder) {
         await updateOrder(editingOrder.serial, orderData);
-        // Invalidate relevant queries to refresh data across components
         queryClient.invalidateQueries({ queryKey: ['detailed-orders-report'] });
         queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
         navigate("/legacy-admin");
       } else {
         await addOrder(orderData);
-        // Invalidate relevant queries to refresh data across components
         queryClient.invalidateQueries({ queryKey: ['detailed-orders-report'] });
         queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
         
@@ -193,6 +188,7 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
           deposit: 0,
         });
         setItems([]);
+        setNotes("");
       }
     } catch (error) {
       console.error('Error submitting order:', error);
@@ -236,6 +232,11 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
             editMode={!!editingOrder}
             totalCost={totalCost}
             netProfit={netProfit}
+          />
+
+          <NotesField
+            notes={notes}
+            onNotesChange={setNotes}
           />
           
           <Button 

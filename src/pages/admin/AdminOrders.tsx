@@ -1,18 +1,23 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useAuth } from '@/hooks/useAuth';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency } from '@/lib/utils';
-import { RefreshCw } from 'lucide-react';
-import AdminOrderInvoice from '@/components/admin/AdminOrderInvoice';
-import OrderStatsCards from '@/components/admin/OrderStatsCards';
+import { Search, Plus, Filter, Download, Trash2, FileText, Image } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { useNavigate } from 'react-router-dom';
 import OrdersTable from '@/components/admin/OrdersTable';
-import OrderDetailsDialog from '@/components/admin/OrderDetailsDialog';
-import { ORDER_STATUS_LABELS } from '@/types';
-import { useQueryClient } from '@tanstack/react-query';
+import MobileOrdersManagement from '@/components/admin/MobileOrdersManagement';
+import OrderPaymentDialog from '@/components/admin/OrderPaymentDialog';
+import AdminOrderInvoice from '@/components/admin/AdminOrderInvoice';
+import { toast } from 'sonner';
 
 interface AdminOrder {
   id: string;
@@ -35,6 +40,7 @@ interface AdminOrder {
   updated_at: string;
   notes?: string;
   attached_image_url?: string;
+  shipping_status?: string;
   admin_order_items: AdminOrderItem[];
 }
 
@@ -52,26 +58,26 @@ interface AdminOrderItem {
 
 const AdminOrders = () => {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [orders, setOrders] = useState<AdminOrder[]>([]);
-  const [loading, setLoading] = useState(true);
+  
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null);
   const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
+  const [orderDetailsDialogOpen, setOrderDetailsDialogOpen] = useState(false);
   const [notesDialogOpen, setNotesDialogOpen] = useState(false);
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
-  const [selectedOrderForNotes, setSelectedOrderForNotes] = useState<AdminOrder | null>(null);
-  const [selectedOrderForImage, setSelectedOrderForImage] = useState<AdminOrder | null>(null);
-  const [orderDetailsDialogOpen, setOrderDetailsDialogOpen] = useState(false);
-  const [selectedOrderForDetails, setSelectedOrderForDetails] = useState<AdminOrder | null>(null);
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [paymentType, setPaymentType] = useState<'collection' | 'shipping' | 'cost'>('collection');
 
-  // Load orders from database
-  const loadOrders = async () => {
-    if (!user) return;
-
-    try {
-      setLoading(true);
-      console.log('Loading admin orders...');
-      const { data: ordersData, error } = await supabase
+  const { data: orders = [], isLoading, refetch } = useQuery({
+    queryKey: ['admin-orders'],
+    queryFn: async () => {
+      if (!user) return [];
+      
+      const { data, error } = await supabase
         .from('admin_orders')
         .select(`
           *,
@@ -79,237 +85,262 @@ const AdminOrders = () => {
         `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user
+  });
 
-      if (error) {
-        console.error('Error loading orders:', error);
-        toast.error('خطأ في تحميل الطلبات');
-        return;
-      }
+  const filteredOrders = orders.filter((order: AdminOrder) => {
+    const matchesSearch = order.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         order.serial?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         order.customer_phone?.includes(searchTerm);
+    
+    const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
 
-      console.log('Loaded orders:', ordersData?.length || 0);
-      setOrders(ordersData || []);
-    } catch (error) {
-      console.error('Error loading orders:', error);
-      toast.error('خطأ في تحميل الطلبات');
-    } finally {
-      setLoading(false);
-    }
+  const calculateOrderDetails = (order: AdminOrder) => {
+    const orderSubtotal = order.admin_order_items?.reduce((sum, item) => {
+      return sum + (item.unit_price - (item.item_discount || 0)) * item.quantity;
+    }, 0) || 0;
+    
+    const orderCost = order.admin_order_items?.reduce((sum, item) => {
+      return sum + item.unit_cost * item.quantity;
+    }, 0) || 0;
+    
+    const orderNetProfit = orderSubtotal - orderCost;
+    
+    return { orderSubtotal, orderCost, orderNetProfit };
   };
 
-  useEffect(() => {
-    loadOrders();
-  }, [user]);
-
-  // Update order status
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
       const { error } = await supabase
         .from('admin_orders')
-        .update({ 
-          status: newStatus,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', orderId)
-        .eq('user_id', user?.id);
+        .update({ status: newStatus })
+        .eq('id', orderId);
 
-      if (error) {
-        console.error('Error updating order status:', error);
-        toast.error('خطأ في تحديث حالة الطلب');
-        return;
-      }
+      if (error) throw error;
 
       toast.success('تم تحديث حالة الطلب بنجاح');
-      loadOrders();
       
-      // Invalidate related queries to keep data synchronized
-      queryClient.invalidateQueries({ queryKey: ['detailed-orders-report'] });
+      // Invalidate all order-related queries to sync across components
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['detailed-orders-report'] });
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      
+      refetch();
     } catch (error) {
       console.error('Error updating order status:', error);
-      toast.error('خطأ في تحديث حالة الطلب');
+      toast.error('حدث خطأ في تحديث حالة الطلب');
     }
   };
 
-  // Enhanced delete order function to also delete related transactions
   const deleteOrder = async (orderId: string) => {
-    if (!window.confirm('هل أنت متأكد من حذف هذا الطلب؟ سيتم حذف جميع المعاملات المرتبطة به أيضاً.')) {
-      return;
-    }
+    if (!window.confirm('هل أنت متأكد من حذف هذا الطلب؟')) return;
 
     try {
-      const orderToDelete = orders.find(order => order.id === orderId);
-      if (!orderToDelete) {
-        toast.error('الطلب غير موجود');
-        return;
-      }
-
-      console.log('Deleting order and related transactions:', orderToDelete.serial);
-
-      // First delete related transactions from both transactions tables
-      const { error: transactionError } = await supabase
-        .from('transactions')
-        .delete()
-        .eq('order_serial', orderToDelete.serial)
-        .eq('user_id', user?.id);
-
-      if (transactionError) {
-        console.error('Error deleting transactions:', transactionError);
-        // Don't throw error, just log it as transactions might not exist
-      }
-
-      // Delete the order (cascade will handle admin_order_items)
-      const { error: orderError } = await supabase
+      const { error } = await supabase
         .from('admin_orders')
         .delete()
-        .eq('id', orderId)
-        .eq('user_id', user?.id);
+        .eq('id', orderId);
 
-      if (orderError) {
-        console.error('Error deleting order:', orderError);
-        throw orderError;
-      }
+      if (error) throw error;
 
-      console.log('Order and related data deleted successfully');
-      toast.success('تم حذف الطلب وجميع المعاملات المرتبطة به بنجاح');
-      loadOrders();
-      
-      // Invalidate related queries to keep data synchronized
-      queryClient.invalidateQueries({ queryKey: ['detailed-orders-report'] });
-      queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+      toast.success('تم حذف الطلب بنجاح');
+      refetch();
     } catch (error) {
       console.error('Error deleting order:', error);
       toast.error('حدث خطأ في حذف الطلب');
     }
   };
 
-  // حساب إجماليات صحيحة - إجمالي الطلبات = المجموع الفرعي (بدون شحن)
-  const calculateOrderTotals = () => {
-    const subtotal = orders.reduce((sum, order) => {
-      // حساب المجموع الفرعي من الأصناف فقط (السعر - الخصم) * الكمية
-      const orderSubtotal = order.admin_order_items.reduce((itemSum, item) => {
-        const discountedPrice = item.unit_price - (item.item_discount || 0);
-        return itemSum + (discountedPrice * item.quantity);
-      }, 0);
-      return sum + orderSubtotal;
-    }, 0);
-
-    const totalCost = orders.reduce((sum, order) => {
-      // حساب إجمالي التكلفة من تكلفة الأصناف * الكمية
-      const orderCost = order.admin_order_items.reduce((itemSum, item) => {
-        return itemSum + (item.unit_cost * item.quantity);
-      }, 0);
-      return sum + orderCost;
-    }, 0);
-
-    const totalShipping = orders.reduce((sum, order) => sum + (order.shipping_cost || 0), 0);
-    const totalDeposit = orders.reduce((sum, order) => sum + (order.deposit || 0), 0);
-    const netProfit = subtotal - totalCost; // الربح الصافي = المجموع الفرعي - التكلفة (بدون شحن)
-
-    return { subtotal, totalCost, totalShipping, totalDeposit, netProfit };
-  };
-
-  const { subtotal: totalOrders, totalCost: totalOrderCost, totalShipping, totalDeposit, netProfit: totalNetProfit } = calculateOrderTotals();
-
-  // حساب تفاصيل الطلب الفردي
-  const calculateOrderDetails = (order: AdminOrder) => {
-    const orderSubtotal = order.admin_order_items.reduce((sum, item) => {
-      const discountedPrice = item.unit_price - (item.item_discount || 0);
-      return sum + (discountedPrice * item.quantity);
-    }, 0);
-
-    const orderCost = order.admin_order_items.reduce((sum, item) => {
-      return sum + (item.unit_cost * item.quantity);
-    }, 0);
-
-    const orderNetProfit = orderSubtotal - orderCost;
-
-    return { orderSubtotal, orderCost, orderNetProfit };
-  };
-
   const openInvoiceDialog = (order: AdminOrder) => {
-    console.log('Opening invoice dialog for order:', order.serial);
     setSelectedOrder(order);
     setInvoiceDialogOpen(true);
   };
 
+  const openOrderDetailsDialog = (order: AdminOrder) => {
+    setSelectedOrder(order);
+    setOrderDetailsDialogOpen(true);
+  };
+
   const openNotesDialog = (order: AdminOrder) => {
-    console.log('Opening notes dialog for order:', order.serial);
-    setSelectedOrderForNotes(order);
+    setSelectedOrder(order);
     setNotesDialogOpen(true);
   };
 
   const openImageDialog = (order: AdminOrder) => {
-    console.log('Opening image dialog for order:', order.serial);
-    setSelectedOrderForImage(order);
+    setSelectedOrder(order);
     setImageDialogOpen(true);
   };
 
-  const openOrderDetailsDialog = (order: AdminOrder) => {
-    console.log('Opening order details dialog for order:', order.serial);
-    setSelectedOrderForDetails(order);
-    setOrderDetailsDialogOpen(true);
+  const handleEditOrder = (order: AdminOrder) => {
+    navigate(`/edit-order/${order.serial}`);
   };
 
-  if (loading) {
+  const handlePayment = async (amount: number, notes?: string) => {
+    if (!selectedOrder) return;
+
+    try {
+      // Update order based on payment type
+      if (paymentType === 'collection') {
+        const newDeposit = (selectedOrder.deposit || 0) + amount;
+        
+        const { error: orderError } = await supabase
+          .from('admin_orders')
+          .update({ deposit: newDeposit })
+          .eq('id', selectedOrder.id);
+
+        if (orderError) throw orderError;
+      }
+
+      // Add transaction record
+      const transactionType = paymentType === 'collection' ? 'order_collection' :
+                             paymentType === 'shipping' ? 'shipping_payment' : 'cost_payment';
+      
+      const description = paymentType === 'collection' ? `تحصيل من الطلب ${selectedOrder.serial}` :
+                         paymentType === 'shipping' ? `سداد شحن للطلب ${selectedOrder.serial}` :
+                         `سداد تكلفة للطلب ${selectedOrder.serial}`;
+
+      const { error: transactionError } = await supabase
+        .from('transactions')
+        .insert({
+          user_id: user?.id,
+          amount: amount,
+          transaction_type: transactionType,
+          description: notes ? `${description} - ${notes}` : description,
+          order_serial: selectedOrder.serial
+        });
+
+      if (transactionError) throw transactionError;
+
+      toast.success('تم تسجيل المعاملة بنجاح');
+      refetch();
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      setPaymentDialogOpen(false);
+    } catch (error) {
+      console.error('Error adding payment:', error);
+      toast.error('حدث خطأ في تسجيل المعاملة');
+    }
+  };
+
+  const openPaymentDialog = (order: AdminOrder, type: 'collection' | 'shipping' | 'cost') => {
+    setSelectedOrder(order);
+    setPaymentType(type);
+    setPaymentDialogOpen(true);
+  };
+
+  if (isLoading) {
     return (
-      <div className="p-6 space-y-6">
-        <div className="flex items-center justify-center py-8">
-          <RefreshCw className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </div>
+      <Card>
+        <CardContent className="p-6">
+          <div className="animate-pulse space-y-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="h-16 bg-gray-200 rounded"></div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="p-6 space-y-6" dir="rtl">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">إدارة الطلبات</h1>
-          <p className="text-muted-foreground">تتبع وإدارة جميع طلبات العملاء</p>
-        </div>
-        <Button onClick={loadOrders} variant="outline">
-          <RefreshCw className="h-4 w-4 mr-2" />
-          تحديث
-        </Button>
-      </div>
-
-      {/* Statistics Cards */}
-      <OrderStatsCards
-        totalOrders={orders.length}
-        pendingOrders={orders.filter(o => o.status === 'pending').length}
-        totalOrdersValue={totalOrders}
-        totalOrderCost={totalOrderCost}
-        totalShipping={totalShipping}
-        totalDeposit={totalDeposit}
-        totalNetProfit={totalNetProfit}
-      />
-
-      {/* Orders Table */}
+    <div className="space-y-6">
+      {/* Header */}
       <Card>
         <CardHeader>
-          <CardTitle>قائمة الطلبات</CardTitle>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-2xl font-bold">إدارة الطلبات</CardTitle>
+              <p className="text-muted-foreground">إدارة ومتابعة جميع طلبات العملاء</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm">
+                <Download className="h-4 w-4 ml-1" />
+                تصدير
+              </Button>
+              <Button onClick={() => navigate('/order')} size="sm">
+                <Plus className="h-4 w-4 ml-1" />
+                طلب جديد
+              </Button>
+            </div>
+          </div>
         </CardHeader>
-        <CardContent>
-          <OrdersTable
-            orders={orders}
-            updateOrderStatus={updateOrderStatus}
-            deleteOrder={deleteOrder}
-            openInvoiceDialog={openInvoiceDialog}
-            openOrderDetailsDialog={openOrderDetailsDialog}
-            openNotesDialog={openNotesDialog}
-            openImageDialog={openImageDialog}
-            calculateOrderDetails={calculateOrderDetails}
-          />
+      </Card>
+
+      {/* Filters */}
+      <Card>
+        <CardContent className="p-4">
+          <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-3'}`}>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">البحث</label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="اسم العميل، رقم الطلب، الهاتف..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">حالة الطلب</label>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">جميع الحالات</SelectItem>
+                  <SelectItem value="pending">قيد المراجعة</SelectItem>
+                  <SelectItem value="confirmed">تم التأكيد</SelectItem>
+                  <SelectItem value="processing">قيد التحضير</SelectItem>
+                  <SelectItem value="shipped">تم الشحن</SelectItem>
+                  <SelectItem value="delivered">تم التوصيل</SelectItem>
+                  <SelectItem value="cancelled">ملغي</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">الإجراءات</label>
+              <Button variant="outline" className="w-full">
+                <Filter className="h-4 w-4 ml-1" />
+                فلاتر متقدمة
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
-      {/* Order Details Dialog */}
-      <OrderDetailsDialog
-        open={orderDetailsDialogOpen}
-        onOpenChange={setOrderDetailsDialogOpen}
-        order={selectedOrderForDetails}
-        calculateOrderDetails={calculateOrderDetails}
-      />
+      {/* Orders List */}
+      {isMobile ? (
+        <MobileOrdersManagement
+          orders={filteredOrders}
+          onUpdateStatus={updateOrderStatus}
+          onDeleteOrder={deleteOrder}
+          onEditOrder={handleEditOrder}
+          onPrintInvoice={openInvoiceDialog}
+          onPayment={openPaymentDialog}
+          calculateOrderDetails={calculateOrderDetails}
+        />
+      ) : (
+        <OrdersTable
+          orders={filteredOrders}
+          updateOrderStatus={updateOrderStatus}
+          deleteOrder={deleteOrder}
+          openInvoiceDialog={openInvoiceDialog}
+          openOrderDetailsDialog={openOrderDetailsDialog}
+          openNotesDialog={openNotesDialog}
+          openImageDialog={openImageDialog}
+          calculateOrderDetails={calculateOrderDetails}
+        />
+      )}
 
       {/* Invoice Dialog */}
       <Dialog open={invoiceDialogOpen} onOpenChange={setInvoiceDialogOpen}>
@@ -318,25 +349,56 @@ const AdminOrders = () => {
             <DialogTitle>فاتورة الطلب - {selectedOrder?.serial}</DialogTitle>
           </DialogHeader>
           {selectedOrder && (
-            <AdminOrderInvoice 
-              order={selectedOrder}
-              onClose={() => setInvoiceDialogOpen(false)}
-            />
+            <AdminOrderInvoice order={selectedOrder} />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Order Details Dialog */}
+      <Dialog open={orderDetailsDialogOpen} onOpenChange={setOrderDetailsDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>تفاصيل الطلب - {selectedOrder?.serial}</DialogTitle>
+          </DialogHeader>
+          {selectedOrder && (
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-semibold mb-2">بيانات العميل</h4>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>الاسم: {selectedOrder.customer_name}</div>
+                  <div>الهاتف: {selectedOrder.customer_phone}</div>
+                  <div>المحافظة: {selectedOrder.governorate || 'غير محدد'}</div>
+                  <div>العنوان: {selectedOrder.shipping_address || 'غير محدد'}</div>
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold mb-2">المنتجات</h4>
+                <div className="space-y-2">
+                  {selectedOrder.admin_order_items?.map((item, index) => (
+                    <div key={index} className="bg-gray-50 p-2 rounded">
+                      <div>{item.product_name} - {item.product_size}</div>
+                      <div className="text-sm text-muted-foreground">
+                        الكمية: {item.quantity} | السعر: {formatCurrency(item.total_price)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           )}
         </DialogContent>
       </Dialog>
 
       {/* Notes Dialog */}
       <Dialog open={notesDialogOpen} onOpenChange={setNotesDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>ملاحظات الطلب - {selectedOrderForNotes?.serial}</DialogTitle>
+            <DialogTitle>ملاحظات الطلب - {selectedOrder?.serial}</DialogTitle>
           </DialogHeader>
-          {selectedOrderForNotes?.notes && (
-            <div className="p-4">
-              <div className="bg-gray-50 rounded-lg p-4">
-                <p className="text-sm whitespace-pre-wrap">{selectedOrderForNotes.notes}</p>
-              </div>
+          {selectedOrder?.notes && (
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <p>{selectedOrder.notes}</p>
             </div>
           )}
         </DialogContent>
@@ -344,21 +406,30 @@ const AdminOrders = () => {
 
       {/* Image Dialog */}
       <Dialog open={imageDialogOpen} onOpenChange={setImageDialogOpen}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>الصورة المرفقة - {selectedOrderForImage?.serial}</DialogTitle>
+            <DialogTitle>الصورة المرفقة - {selectedOrder?.serial}</DialogTitle>
           </DialogHeader>
-          {selectedOrderForImage?.attached_image_url && (
-            <div className="p-4">
-              <img
-                src={selectedOrderForImage.attached_image_url}
-                alt="الصورة المرفقة مع الطلب"
-                className="w-full h-auto max-h-[70vh] object-contain rounded-lg border"
+          {selectedOrder?.attached_image_url && (
+            <div className="flex justify-center">
+              <img 
+                src={selectedOrder.attached_image_url} 
+                alt="صورة مرفقة" 
+                className="max-w-full max-h-96 object-contain"
               />
             </div>
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Payment Dialog */}
+      <OrderPaymentDialog
+        open={paymentDialogOpen}
+        onOpenChange={setPaymentDialogOpen}
+        order={selectedOrder}
+        paymentType={paymentType}
+        onConfirm={handlePayment}
+      />
     </div>
   );
 };
