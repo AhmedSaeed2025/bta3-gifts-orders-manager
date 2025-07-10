@@ -1,229 +1,185 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useSupabaseOrders } from "@/context/SupabaseOrderContext";
-import Invoice from "./Invoice";
-import { Label } from "./ui/label";
-import { Button } from "./ui/button";
-import { Download, Pencil } from "lucide-react";
-import { Order } from "@/types";
-import { toast } from "sonner";
-import html2canvas from "html2canvas";
-import { jsPDF } from "jspdf";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { useNavigate } from "react-router-dom";
+
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Search, FileText, Eye, Loader2 } from 'lucide-react';
+import { AdminOrderInvoice } from '@/components/admin/AdminOrderInvoice';
+import { formatCurrency } from '@/lib/utils';
 
 const InvoiceTab = () => {
-  const { orders, loading } = useSupabaseOrders();
-  const [selectedOrderSerial, setSelectedOrderSerial] = useState<string>("");
-  const [selectedOrder, setSelectedOrder] = useState<Order | undefined>(orders && orders.length > 0 ? orders[0] : undefined);
-  const [isExporting, setIsExporting] = useState(false);
-  const invoiceRef = useRef<HTMLDivElement>(null);
-  const isMobile = useIsMobile();
-  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
 
-  useEffect(() => {
-    if (orders && orders.length > 0 && !selectedOrderSerial) {
-      setSelectedOrderSerial(orders[0].serial);
-      setSelectedOrder(orders[0]);
-    }
-  }, [orders, selectedOrderSerial]);
-
-  const handleOrderChange = (serial: string) => {
-    setSelectedOrderSerial(serial);
-    const order = orders.find(o => o.serial === serial);
-    if (order) {
-      setSelectedOrder(order);
-    }
-  };
-
-  const handleEditClick = () => {
-    if (selectedOrder) {
-      navigate(`/edit-order/${selectedOrder.serial}`);
-    }
-  };
-
-  const handleAccountsProgramClick = () => {
-    navigate("/legacy-admin");
-  };
-
-  const exportToPDF = async () => {
-    if (!invoiceRef.current || !selectedOrder || isExporting) return;
-
-    setIsExporting(true);
-    try {
-      toast.info("جاري إنشاء ملف PDF بجودة عالية، يرجى الانتظار...");
-
-      const invoiceElement = invoiceRef.current;
+  // Fetch admin orders
+  const { data: orders = [], isLoading } = useQuery({
+    queryKey: ['admin-orders-invoice'],
+    queryFn: async () => {
+      if (!user) return [];
       
-      // تحسين إعدادات html2canvas للحصول على جودة عالية
-      const canvas = await html2canvas(invoiceElement, {
-        scale: 2, // زيادة الدقة
-        useCORS: true,
-        logging: false,
-        allowTaint: false,
-        backgroundColor: "#ffffff",
-        imageTimeout: 2000,
-        foreignObjectRendering: false,
-        removeContainer: true,
-        width: invoiceElement.offsetWidth,
-        height: invoiceElement.offsetHeight,
-        onclone: (clonedDoc) => {
-          // تحسين عرض الصور في النسخة المستنسخة
-          const images = clonedDoc.querySelectorAll('img');
-          images.forEach((img) => {
-            img.style.opacity = '1';
-            img.style.visibility = 'visible';
-            img.style.display = 'inline-block';
-            img.style.maxWidth = '100%';
-            img.style.height = 'auto';
-          });
-          
-          // تحسين النصوص والخطوط
-          const allElements = clonedDoc.querySelectorAll('*');
-          allElements.forEach((el) => {
-            if (el instanceof HTMLElement) {
-              el.style.fontFamily = 'Tajawal, Arial, sans-serif';
-              (el.style as any)['-webkit-font-smoothing'] = 'antialiased';
-              (el.style as any)['-moz-osx-font-smoothing'] = 'grayscale';
-            }
-          });
-        }
-      });
-
-      // استخدام PNG بجودة عالية
-      const imgData = canvas.toDataURL('image/png');
+      const { data, error } = await supabase
+        .from('admin_orders')
+        .select(`
+          *,
+          admin_order_items (*)
+        `)
+        .eq('user_id', user.id)
+        .order('order_date', { ascending: false });
       
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-        compress: false, // عدم ضغط PDF للحفاظ على الجودة
-      });
-
-      // حساب أبعاد الصورة بشكل صحيح لتجنب التكبير الزائد
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      
-      // حساب النسبة المناسبة للاحتفاظ بالأبعاد
-      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-      const finalWidth = imgWidth * ratio;
-      const finalHeight = imgHeight * ratio;
-      
-      // توسيط الصورة في الصفحة
-      const x = (pdfWidth - finalWidth) / 2;
-      
-      // إضافة الصورة بالأبعاد المحسوبة
-      pdf.addImage(imgData, 'PNG', x, 0, finalWidth, finalHeight, undefined, 'FAST');
-      
-      // التعامل مع الصفحات المتعددة إذا لزم الأمر
-      let heightLeft = finalHeight;
-      let position = 0;
-      
-      while (heightLeft > pdfHeight) {
-        position = heightLeft - finalHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', x, position, finalWidth, finalHeight, undefined, 'FAST');
-        heightLeft -= pdfHeight;
+      if (error) {
+        console.error('Error fetching orders:', error);
+        throw error;
       }
       
-      pdf.save(`فاتورة-${selectedOrder.clientName}-${selectedOrder.serial}.pdf`);
-      toast.success("تم تصدير الفاتورة بجودة عالية بنجاح");
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      toast.error("حدث خطأ أثناء إنشاء ملف PDF. حاول مرة أخرى.");
-    } finally {
-      setIsExporting(false);
+      return data || [];
+    },
+    enabled: !!user
+  });
+
+  // Filter orders based on search term
+  const filteredOrders = orders.filter(order => 
+    order.serial.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    order.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    order.customer_phone.includes(searchTerm)
+  );
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'pending': return 'في الانتظار';
+      case 'confirmed': return 'مؤكد';
+      case 'processing': return 'قيد التجهيز';
+      case 'shipped': return 'تم الشحن';
+      case 'delivered': return 'تم التوصيل';
+      case 'cancelled': return 'ملغي';
+      default: return status;
     }
   };
 
-  if (loading) {
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-500 text-white';
+      case 'confirmed': return 'bg-blue-500 text-white';
+      case 'processing': return 'bg-purple-500 text-white';
+      case 'shipped': return 'bg-green-500 text-white';
+      case 'delivered': return 'bg-emerald-500 text-white';
+      case 'cancelled': return 'bg-red-500 text-white';
+      default: return 'bg-gray-500 text-white';
+    }
+  };
+
+  if (selectedOrder) {
     return (
-      <Card className="shadow-sm">
-        <CardContent className="flex items-center justify-center py-8">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gift-primary mx-auto"></div>
-            <p className="mt-2 text-gray-600 dark:text-gray-400 text-xs">جاري تحميل الفواتير...</p>
-          </div>
-        </CardContent>
-      </Card>
+      <AdminOrderInvoice 
+        order={selectedOrder} 
+        onClose={() => setSelectedOrder(null)} 
+      />
     );
   }
 
   return (
-    <Card className="shadow-sm">
-      <CardHeader className="py-2">
-        <CardTitle className={`${isMobile ? "text-sm" : "text-base"} flex items-center justify-between`}>
-          <span>طباعة الفاتورة</span>
-          <div className="flex gap-2">
-            <Button 
-              variant="secondary" 
-              size={isMobile ? "sm" : "default"}
-              onClick={handleAccountsProgramClick}
-              className={`${isMobile ? "text-xs h-6" : "text-xs h-7"} flex items-center gap-1`}
-            >
-              برنامج الحسابات
-            </Button>
-            {selectedOrder && (
-              <>
-                <Button
-                  onClick={exportToPDF}
-                  disabled={isExporting}
-                  size={isMobile ? "sm" : "default"}
-                  className={`${isMobile ? "text-xs h-6" : "text-xs h-7"} flex items-center gap-1 bg-blue-500 hover:bg-blue-600`}
-                >
-                  <Download size={isMobile ? 12 : 14} />
-                  {isExporting ? "جاري التصدير..." : (isMobile ? "PDF عالي الجودة" : "تصدير PDF عالي الجودة")}
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size={isMobile ? "sm" : "default"}
-                  onClick={handleEditClick}
-                  className={`${isMobile ? "text-xs h-6" : "text-xs h-7"} flex items-center gap-1`}
-                >
-                  <Pencil size={isMobile ? 12 : 14} />
-                  {isMobile ? "تعديل" : "تعديل الطلب"}
-                </Button>
-              </>
-            )}
-          </div>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className={`${isMobile ? "p-2" : "p-3"}`}>
-        {!orders || orders.length === 0 ? (
-          <p className="text-center py-3 text-xs">لا توجد طلبات متاحة لعرض الفاتورة</p>
-        ) : (
-          <div>
-            <div className="mb-3">
-              <Label htmlFor="orderSelect" className={`${isMobile ? "text-xs" : "text-xs"} mb-1 block`}>اختر الطلب:</Label>
-              <Select 
-                value={selectedOrderSerial}
-                onValueChange={handleOrderChange}
-              >
-                <SelectTrigger className={`w-full ${isMobile ? "text-xs h-7" : "text-xs h-8"}`}>
-                  <SelectValue placeholder="اختر الطلب" />
-                </SelectTrigger>
-                <SelectContent>
-                  {orders.map((order) => (
-                    <SelectItem key={order.serial} value={order.serial} className={`${isMobile ? "text-xs" : "text-xs"}`}>
-                      {`${order.serial} - ${order.clientName}`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            الفواتير
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {/* Search */}
+          <div className="mb-6">
+            <Label htmlFor="search">البحث في الطلبات</Label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                id="search"
+                type="text"
+                placeholder="ابحث برقم الطلب، اسم العميل، أو رقم الهاتف..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
             </div>
-
-            {selectedOrder && (
-              <div ref={invoiceRef}>
-                <Invoice order={selectedOrder} />
-              </div>
-            )}
           </div>
-        )}
-      </CardContent>
-    </Card>
+
+          {/* Orders List */}
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin" />
+              <span className="mr-2">جاري تحميل الطلبات...</span>
+            </div>
+          ) : filteredOrders.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              {searchTerm ? 'لا توجد طلبات تطابق البحث' : 'لا توجد طلبات'}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredOrders.map((order) => (
+                <div key={order.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="font-semibold text-lg">{order.serial}</h3>
+                        <Badge className={getStatusColor(order.status)}>
+                          {getStatusLabel(order.status)}
+                        </Badge>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div>
+                          <span className="text-gray-500">العميل:</span>
+                          <p className="font-medium">{order.customer_name}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">الهاتف:</span>
+                          <p className="font-medium">{order.customer_phone}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">التاريخ:</span>
+                          <p className="font-medium">
+                            {new Date(order.order_date).toLocaleDateString('ar-EG')}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">المبلغ الإجمالي:</span>
+                          <p className="font-bold text-green-600">
+                            {formatCurrency(order.total_amount)}
+                          </p>
+                        </div>
+                      </div>
+
+                      {order.notes && (
+                        <div className="mt-2">
+                          <span className="text-gray-500 text-sm">الملاحظات:</span>
+                          <p className="text-sm bg-gray-100 p-2 rounded mt-1">{order.notes}</p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="flex flex-col gap-2 mr-4">
+                      <Button
+                        onClick={() => setSelectedOrder(order)}
+                        size="sm"
+                        className="flex items-center gap-2"
+                      >
+                        <Eye className="h-4 w-4" />
+                        عرض الفاتورة
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

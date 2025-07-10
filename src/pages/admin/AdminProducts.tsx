@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { Plus, Edit, Trash2, Eye, EyeOff, Loader2, Image, Video, Tag, Star, Globe, X } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, EyeOff, Loader2, Image, Video, Tag, Star, Globe, X, FolderPlus } from 'lucide-react';
 
 const AdminProducts = () => {
   const { user } = useAuth();
@@ -69,7 +69,7 @@ const AdminProducts = () => {
   const [productForm, setProductForm] = useState({
     name: '',
     description: '',
-    category_id: 'no-category',
+    category_id: '',
     featured: false,
     is_active: true,
     image_url: '',
@@ -148,7 +148,7 @@ const AdminProducts = () => {
           .update({
             name: data.name,
             description: data.description,
-            category_id: data.category_id === 'no-category' ? null : data.category_id,
+            category_id: data.category_id || null,
             featured: data.featured,
             is_active: data.is_active,
             image_url: data.image_url,
@@ -170,7 +170,7 @@ const AdminProducts = () => {
             user_id: user!.id,
             name: data.name,
             description: data.description,
-            category_id: data.category_id === 'no-category' ? null : data.category_id,
+            category_id: data.category_id || null,
             featured: data.featured,
             is_active: data.is_active,
             image_url: data.image_url,
@@ -224,7 +224,7 @@ const AdminProducts = () => {
       setProductForm({
         name: '',
         description: '',
-        category_id: 'no-category',
+        category_id: '',
         featured: false,
         is_active: true,
         image_url: '',
@@ -288,7 +288,7 @@ const AdminProducts = () => {
     setProductForm({
       name: product.name,
       description: product.description || '',
-      category_id: product.category_id || 'no-category',
+      category_id: product.category_id || '',
       featured: product.featured,
       is_active: product.is_active,
       image_url: product.image_url || '',
@@ -336,8 +336,11 @@ const AdminProducts = () => {
         <div className="flex gap-2">
           <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline">
-                <Plus className="h-4 w-4 ml-2" />
+              <Button variant="outline" onClick={() => {
+                setEditingCategory(null);
+                setCategoryForm({ name: '', description: '' });
+              }}>
+                <FolderPlus className="h-4 w-4 ml-2" />
                 إضافة فئة
               </Button>
             </DialogTrigger>
@@ -376,7 +379,21 @@ const AdminProducts = () => {
 
           <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button onClick={() => {
+                setEditingProduct(null);
+                setProductForm({
+                  name: '',
+                  description: '',
+                  category_id: '',
+                  featured: false,
+                  is_active: true,
+                  image_url: '',
+                  video_url: '',
+                  discount_percentage: 0,
+                  sizes: [{ size: '', price: 0, cost: 0 }],
+                  images: [{ url: '', alt: '' }]
+                });
+              }}>
                 <Plus className="h-4 w-4 ml-2" />
                 إضافة منتج
               </Button>
@@ -405,7 +422,7 @@ const AdminProducts = () => {
                         <SelectValue placeholder="اختر فئة" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="no-category">بدون فئة</SelectItem>
+                        <SelectItem value="">بدون فئة</SelectItem>
                         {categories.map((category) => (
                           <SelectItem key={category.id} value={category.id}>
                             {category.name}
@@ -455,7 +472,7 @@ const AdminProducts = () => {
                   <div className="flex items-center justify-between">
                     <Label className="flex items-center gap-2">
                       <Image className="h-4 w-4" />
-                      صور إضافية (يدعم الصور المتحركة GIF)
+                      صور إضافية
                     </Label>
                     <Button type="button" variant="outline" size="sm" onClick={handleAddImage}>
                       <Plus className="h-4 w-4" />
@@ -702,19 +719,19 @@ const AdminProducts = () => {
                         <div className="flex flex-wrap gap-2 mb-2">
                           {product.product_sizes.map((size: any, index: number) => {
                             const discountedPrice = size.price * (1 - ((product.discount_percentage || 0) / 100));
-                            const profit = size.price - size.cost;
+                            const profit = discountedPrice - size.cost;
                             return (
                               <Badge key={index} variant="outline" className="text-xs">
                                 {size.size}: 
                                 {(product.discount_percentage || 0) > 0 ? (
                                   <>
-                                    <span className="line-through text-red-500 ml-1">{size.price}</span>
-                                    <span className="text-green-600 mr-1">{discountedPrice.toFixed(2)}</span>
+                                    <span className="line-through text-red-500 ml-1">{size.price} ج.م</span>
+                                    <span className="text-green-600 mr-1">{discountedPrice.toFixed(2)} ج.م</span>
                                   </>
                                 ) : (
-                                  <span className="mr-1">{size.price}</span>
+                                  <span className="mr-1">{size.price} ج.م</span>
                                 )}
-                                ج.م | الربح: {profit} ج.م
+                                | الربح: {profit.toFixed(2)} ج.م
                               </Badge>
                             );
                           })}
