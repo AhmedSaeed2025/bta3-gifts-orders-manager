@@ -17,11 +17,16 @@ const InvoiceTab = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
 
-  // Fetch admin orders
-  const { data: orders = [], isLoading } = useQuery({
+  // Fetch admin orders with proper error handling
+  const { data: orders = [], isLoading, error } = useQuery({
     queryKey: ['admin-orders-invoice'],
     queryFn: async () => {
-      if (!user) return [];
+      if (!user) {
+        console.log('No user found');
+        return [];
+      }
+      
+      console.log('Fetching orders for user:', user.id);
       
       const { data, error } = await supabase
         .from('admin_orders')
@@ -37,16 +42,19 @@ const InvoiceTab = () => {
         throw error;
       }
       
+      console.log('Fetched orders:', data);
       return data || [];
     },
-    enabled: !!user
+    enabled: !!user,
+    retry: 3,
+    retryDelay: 1000
   });
 
   // Filter orders based on search term
   const filteredOrders = orders.filter(order => 
-    order.serial.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    order.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    order.customer_phone.includes(searchTerm)
+    order.serial?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    order.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    order.customer_phone?.includes(searchTerm)
   );
 
   const getStatusLabel = (status: string) => {
@@ -79,6 +87,20 @@ const InvoiceTab = () => {
         order={selectedOrder} 
         onClose={() => setSelectedOrder(null)} 
       />
+    );
+  }
+
+  if (error) {
+    console.error('Query error:', error);
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="text-center py-8 text-red-500">
+            <p>حدث خطأ في تحميل الطلبات</p>
+            <p className="text-sm mt-2">{error.message}</p>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 

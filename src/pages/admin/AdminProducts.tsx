@@ -26,13 +26,18 @@ const AdminProducts = () => {
   const { data: categories = [] } = useQuery({
     queryKey: ['admin-categories'],
     queryFn: async () => {
+      if (!user) return [];
+      
       const { data, error } = await supabase
         .from('categories')
         .select('*')
-        .eq('user_id', user!.id)
+        .eq('user_id', user.id)
         .order('name');
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching categories:', error);
+        return [];
+      }
       return data || [];
     },
     enabled: !!user
@@ -42,6 +47,8 @@ const AdminProducts = () => {
   const { data: products = [], isLoading } = useQuery({
     queryKey: ['admin-products'],
     queryFn: async () => {
+      if (!user) return [];
+      
       const { data, error } = await supabase
         .from('products')
         .select(`
@@ -50,10 +57,13 @@ const AdminProducts = () => {
           product_sizes (*),
           product_images (*)
         `)
-        .eq('user_id', user!.id)
+        .eq('user_id', user.id)
         .order('sort_order', { ascending: true });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching products:', error);
+        return [];
+      }
       return data || [];
     },
     enabled: !!user
@@ -101,6 +111,10 @@ const AdminProducts = () => {
       setEditingCategory(null);
       setCategoryForm({ name: '', description: '' });
       toast.success(editingCategory ? 'تم تحديث الفئة' : 'تم إضافة الفئة');
+    },
+    onError: (error: any) => {
+      console.error('Category mutation error:', error);
+      toast.error('حدث خطأ في حفظ الفئة');
     }
   });
 
@@ -116,6 +130,10 @@ const AdminProducts = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-categories'] });
       toast.success('تم حذف الفئة');
+    },
+    onError: (error: any) => {
+      console.error('Delete category error:', error);
+      toast.error('حدث خطأ في حذف الفئة');
     }
   });
 
@@ -133,6 +151,10 @@ const AdminProducts = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
       queryClient.invalidateQueries({ queryKey: ['products'] });
       toast.success('تم تحديث حالة المنتج');
+    },
+    onError: (error: any) => {
+      console.error('Toggle visibility error:', error);
+      toast.error('حدث خطأ في تحديث حالة المنتج');
     }
   });
 
@@ -234,6 +256,10 @@ const AdminProducts = () => {
         images: [{ url: '', alt: '' }]
       });
       toast.success(editingProduct ? 'تم تحديث المنتج' : 'تم إضافة المنتج');
+    },
+    onError: (error: any) => {
+      console.error('Product mutation error:', error);
+      toast.error('حدث خطأ في حفظ المنتج');
     }
   });
 
@@ -422,7 +448,7 @@ const AdminProducts = () => {
                         <SelectValue placeholder="اختر فئة" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">بدون فئة</SelectItem>
+                        <SelectItem value="no-category">بدون فئة</SelectItem>
                         {categories.map((category) => (
                           <SelectItem key={category.id} value={category.id}>
                             {category.name}
@@ -467,7 +493,6 @@ const AdminProducts = () => {
                   </div>
                 </div>
 
-                {/* Multiple Images Section */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <Label className="flex items-center gap-2">

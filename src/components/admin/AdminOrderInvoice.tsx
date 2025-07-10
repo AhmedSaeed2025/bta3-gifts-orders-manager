@@ -108,11 +108,6 @@ const AdminOrderInvoice: React.FC<AdminOrderInvoiceProps> = ({ order, onClose })
             </div>
             <div className="text-left">
               <div className="flex items-center gap-4 mb-2">
-                <img 
-                  src="/lovable-uploads/56349ebc-4e94-4d30-8b30-1bdc57789a14.png" 
-                  alt="شعار الشركة" 
-                  className="h-16 w-16 object-contain"
-                />
                 <div>
                   <h2 className="text-xl font-bold text-gray-800">هدايا ملوك الهدايا</h2>
                   <p className="text-gray-600">مصر</p>
