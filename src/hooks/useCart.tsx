@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -43,9 +44,14 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       // Handle guest cart from localStorage
       const guestCart = localStorage.getItem('guest_cart');
       if (guestCart) {
-        const items = JSON.parse(guestCart);
-        console.log('Loaded guest cart items:', items);
-        setCartItems(items);
+        try {
+          const items = JSON.parse(guestCart);
+          console.log('Loaded guest cart items:', items);
+          setCartItems(items);
+        } catch (error) {
+          console.error('Error parsing guest cart:', error);
+          localStorage.removeItem('guest_cart');
+        }
       }
       return;
     }
@@ -100,6 +106,20 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
         console.log('Loaded cart items:', items);
         setCartItems(items || []);
+        
+        // Migrate guest cart to user cart if exists
+        const guestCart = localStorage.getItem('guest_cart');
+        if (guestCart) {
+          try {
+            const guestItems = JSON.parse(guestCart);
+            for (const guestItem of guestItems) {
+              await addToCart(guestItem.product_id, guestItem.size, guestItem.quantity, guestItem.price);
+            }
+            localStorage.removeItem('guest_cart');
+          } catch (error) {
+            console.error('Error migrating guest cart:', error);
+          }
+        }
       }
     } catch (error) {
       console.error('Error loading cart:', error);
@@ -139,6 +159,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         localStorage.setItem('guest_cart', JSON.stringify(guestCart));
         setCartItems(guestCart);
         console.log('Added to guest cart:', guestCart);
+        toast.success('تم إضافة المنتج للسلة');
         return;
       }
 
@@ -209,9 +230,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       }
 
       await loadCartItems();
+      toast.success('تم إضافة المنتج للسلة');
       console.log('Successfully added to cart');
     } catch (error) {
       console.error('Error adding to cart:', error);
+      toast.error('حدث خطأ في إضافة المنتج للسلة');
       throw error;
     } finally {
       setLoading(false);
@@ -226,7 +249,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         const guestCart = JSON.parse(localStorage.getItem('guest_cart') || '[]');
         const updatedCart = guestCart.map((item: any) =>
           item.id === itemId ? { ...item, quantity } : item
-        );
+        ).filter((item: any) => item.quantity > 0);
         localStorage.setItem('guest_cart', JSON.stringify(updatedCart));
         setCartItems(updatedCart);
         return;

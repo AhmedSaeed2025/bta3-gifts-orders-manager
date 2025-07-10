@@ -43,7 +43,7 @@ interface AdminOrder {
 
 interface AdminOrderInvoiceProps {
   order: AdminOrder;
-  onClose?: () => void; // Make onClose optional
+  onClose?: () => void;
 }
 
 const AdminOrderInvoice: React.FC<AdminOrderInvoiceProps> = ({ order, onClose }) => {
@@ -79,6 +79,7 @@ const AdminOrderInvoice: React.FC<AdminOrderInvoiceProps> = ({ order, onClose })
   };
 
   const subtotal = order.admin_order_items.reduce((sum, item) => sum + item.total_price, 0);
+  const remainingAmount = order.total_amount - (order.deposit || 0);
 
   return (
     <div className="space-y-4">
@@ -106,8 +107,17 @@ const AdminOrderInvoice: React.FC<AdminOrderInvoiceProps> = ({ order, onClose })
               <p className="text-gray-600">تاريخ الطلب: {new Date(order.order_date).toLocaleDateString('ar-EG')}</p>
             </div>
             <div className="text-left">
-              <h2 className="text-xl font-bold text-gray-800">متجري</h2>
-              <p className="text-gray-600">نظام إدارة المتاجر</p>
+              <div className="flex items-center gap-4 mb-2">
+                <img 
+                  src="/lovable-uploads/56349ebc-4e94-4d30-8b30-1bdc57789a14.png" 
+                  alt="شعار الشركة" 
+                  className="h-16 w-16 object-contain"
+                />
+                <div>
+                  <h2 className="text-xl font-bold text-gray-800">هدايا ملوك الهدايا</h2>
+                  <p className="text-gray-600">مصر</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -216,23 +226,29 @@ const AdminOrderInvoice: React.FC<AdminOrderInvoiceProps> = ({ order, onClose })
                   <span>-{formatCurrency(order.discount)}</span>
                 </div>
               )}
-              {order.deposit > 0 && (
-                <div className="flex justify-between text-blue-600">
-                  <span>العربون المدفوع:</span>
-                  <span>-{formatCurrency(order.deposit)}</span>
-                </div>
-              )}
               <div className="flex justify-between font-bold text-lg border-t border-gray-300 pt-2">
-                <span>المبلغ الإجمالي:</span>
+                <span>إجمالي الفاتورة:</span>
                 <span>{formatCurrency(order.total_amount)}</span>
               </div>
+              {order.deposit > 0 && (
+                <div className="flex justify-between text-blue-600 font-medium border-t border-gray-200 pt-2">
+                  <span>المبلغ المسدد (العربون):</span>
+                  <span>{formatCurrency(order.deposit)}</span>
+                </div>
+              )}
+              {remainingAmount > 0 && (
+                <div className="flex justify-between text-red-600 font-bold">
+                  <span>المبلغ المتبقي:</span>
+                  <span>{formatCurrency(remainingAmount)}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         {/* Footer */}
         <div className="mt-8 pt-4 border-t border-gray-300 text-center text-gray-600">
-          <p>شكراً لتعاملكم معنا</p>
+          <p>شكراً لتعاملكم مع هدايا ملوك الهدايا</p>
           <p className="text-sm mt-2">هذه فاتورة إلكترونية لا تحتاج إلى توقيع أو ختم</p>
         </div>
       </div>

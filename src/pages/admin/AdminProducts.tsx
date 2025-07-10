@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -60,23 +59,6 @@ const AdminProducts = () => {
     enabled: !!user
   });
 
-  // Toggle product visibility
-  const toggleVisibilityMutation = useMutation({
-    mutationFn: async ({ productId, isActive }: { productId: string; isActive: boolean }) => {
-      const { error } = await supabase
-        .from('products')
-        .update({ is_active: isActive })
-        .eq('id', productId);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-products'] });
-      queryClient.invalidateQueries({ queryKey: ['products'] });
-      toast.success('تم تحديث حالة المنتج');
-    }
-  });
-
   // Category form
   const [categoryForm, setCategoryForm] = useState({
     name: '',
@@ -95,6 +77,164 @@ const AdminProducts = () => {
     discount_percentage: 0,
     sizes: [{ size: '', price: 0, cost: 0 }],
     images: [{ url: '', alt: '' }]
+  });
+
+  // Create/Update category
+  const categoryMutation = useMutation({
+    mutationFn: async (data: typeof categoryForm) => {
+      if (editingCategory) {
+        const { error } = await supabase
+          .from('categories')
+          .update(data)
+          .eq('id', editingCategory.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('categories')
+          .insert({ ...data, user_id: user!.id });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-categories'] });
+      setIsCategoryDialogOpen(false);
+      setEditingCategory(null);
+      setCategoryForm({ name: '', description: '' });
+      toast.success(editingCategory ? 'تم تحديث الفئة' : 'تم إضافة الفئة');
+    }
+  });
+
+  // Delete category
+  const deleteCategoryMutation = useMutation({
+    mutationFn: async (categoryId: string) => {
+      const { error } = await supabase
+        .from('categories')
+        .delete()
+        .eq('id', categoryId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-categories'] });
+      toast.success('تم حذف الفئة');
+    }
+  });
+
+  // Toggle product visibility
+  const toggleVisibilityMutation = useMutation({
+    mutationFn: async ({ productId, isActive }: { productId: string; isActive: boolean }) => {
+      const { error } = await supabase
+        .from('products')
+        .update({ is_active: isActive })
+        .eq('id', productId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-products'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      toast.success('تم تحديث حالة المنتج');
+    }
+  });
+
+  // Create/Update product
+  const productMutation = useMutation({
+    mutationFn: async (data: typeof productForm) => {
+      let productId = editingProduct?.id;
+      
+      if (editingProduct) {
+        // Update product
+        const { error } = await supabase
+          .from('products')
+          .update({
+            name: data.name,
+            description: data.description,
+            category_id: data.category_id === 'no-category' ? null : data.category_id,
+            featured: data.featured,
+            is_active: data.is_active,
+            image_url: data.image_url,
+            video_url: data.video_url,
+            discount_percentage: data.discount_percentage
+          })
+          .eq('id', productId);
+        
+        if (error) throw error;
+
+        // Delete old sizes and images
+        await supabase.from('product_sizes').delete().eq('product_id', productId);
+        await supabase.from('product_images').delete().eq('product_id', productId);
+      } else {
+        // Create product
+        const { data: newProduct, error } = await supabase
+          .from('products')
+          .insert({
+            user_id: user!.id,
+            name: data.name,
+            description: data.description,
+            category_id: data.category_id === 'no-category' ? null : data.category_id,
+            featured: data.featured,
+            is_active: data.is_active,
+            image_url: data.image_url,
+            video_url: data.video_url,
+            discount_percentage: data.discount_percentage
+          })
+          .select()
+          .single();
+        
+        if (error) throw error;
+        productId = newProduct.id;
+      }
+
+      // Add sizes and images
+      if (data.sizes.length > 0) {
+        const sizesToInsert = data.sizes
+          .filter(size => size.size.trim() !== '')
+          .map(size => ({
+            product_id: productId,
+            size: size.size,
+            price: size.price,
+            cost: size.cost
+          }));
+
+        if (sizesToInsert.length > 0) {
+          await supabase.from('product_sizes').insert(sizesToInsert);
+        }
+      }
+
+      if (data.images.length > 0) {
+        const imagesToInsert = data.images
+          .filter(img => img.url.trim() !== '')
+          .map((img, index) => ({
+            product_id: productId,
+            image_url: img.url,
+            alt_text: img.alt,
+            is_primary: index === 0,
+            sort_order: index
+          }));
+
+        if (imagesToInsert.length > 0) {
+          await supabase.from('product_images').insert(imagesToInsert);
+        }
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-products'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      setIsProductDialogOpen(false);
+      setEditingProduct(null);
+      setProductForm({
+        name: '',
+        description: '',
+        category_id: 'no-category',
+        featured: false,
+        is_active: true,
+        image_url: '',
+        video_url: '',
+        discount_percentage: 0,
+        sizes: [{ size: '', price: 0, cost: 0 }],
+        images: [{ url: '', alt: '' }]
+      });
+      toast.success(editingProduct ? 'تم تحديث المنتج' : 'تم إضافة المنتج');
+    }
   });
 
   const handleAddSize = () => {
@@ -143,147 +283,6 @@ const AdminProducts = () => {
     }));
   };
 
-  // Create/Update category
-  const categoryMutation = useMutation({
-    mutationFn: async (data: typeof categoryForm) => {
-      if (editingCategory) {
-        const { error } = await supabase
-          .from('categories')
-          .update(data)
-          .eq('id', editingCategory.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('categories')
-          .insert({ ...data, user_id: user!.id });
-        if (error) throw error;
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-categories'] });
-      setIsCategoryDialogOpen(false);
-      setEditingCategory(null);
-      setCategoryForm({ name: '', description: '' });
-      toast.success(editingCategory ? 'تم تحديث الفئة' : 'تم إضافة الفئة');
-    }
-  });
-
-  // Create/Update product
-  const productMutation = useMutation({
-    mutationFn: async (data: typeof productForm) => {
-      let productId = editingProduct?.id;
-      
-      if (editingProduct) {
-        // Update product
-        const { error } = await supabase
-          .from('products')
-          .update({
-            name: data.name,
-            description: data.description,
-            category_id: data.category_id === 'no-category' ? null : data.category_id,
-            featured: data.featured,
-            is_active: data.is_active,
-            image_url: data.image_url,
-            video_url: data.video_url,
-            discount_percentage: data.discount_percentage
-          })
-          .eq('id', productId);
-        
-        if (error) throw error;
-
-        // Delete old sizes
-        await supabase.from('product_sizes').delete().eq('product_id', productId);
-        
-        // Delete old images
-        await supabase.from('product_images').delete().eq('product_id', productId);
-      } else {
-        // Create product
-        const { data: newProduct, error } = await supabase
-          .from('products')
-          .insert({
-            user_id: user!.id,
-            name: data.name,
-            description: data.description,
-            category_id: data.category_id === 'no-category' ? null : data.category_id,
-            featured: data.featured,
-            is_active: data.is_active,
-            image_url: data.image_url,
-            video_url: data.video_url,
-            discount_percentage: data.discount_percentage
-          })
-          .select()
-          .single();
-        
-        if (error) throw error;
-        productId = newProduct.id;
-      }
-
-      // Add sizes
-      if (data.sizes.length > 0) {
-        const sizesToInsert = data.sizes
-          .filter(size => size.size.trim() !== '')
-          .map(size => ({
-            product_id: productId,
-            size: size.size,
-            price: size.price,
-            cost: size.cost
-          }));
-
-        if (sizesToInsert.length > 0) {
-          const { error } = await supabase
-            .from('product_sizes')
-            .insert(sizesToInsert);
-          
-          if (error) throw error;
-        }
-      }
-
-      // Add images
-      if (data.images.length > 0) {
-        const imagesToInsert = data.images
-          .filter(img => img.url.trim() !== '')
-          .map((img, index) => ({
-            product_id: productId,
-            image_url: img.url,
-            alt_text: img.alt,
-            is_primary: index === 0,
-            sort_order: index
-          }));
-
-        if (imagesToInsert.length > 0) {
-          const { error } = await supabase
-            .from('product_images')
-            .insert(imagesToInsert);
-          
-          if (error) throw error;
-        }
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-products'] });
-      queryClient.invalidateQueries({ queryKey: ['products'] });
-      setIsProductDialogOpen(false);
-      setEditingProduct(null);
-      setProductForm({
-        name: '',
-        description: '',
-        category_id: 'no-category',
-        featured: false,
-        is_active: true,
-        image_url: '',
-        video_url: '',
-        discount_percentage: 0,
-        sizes: [{ size: '', price: 0, cost: 0 }],
-        images: [{ url: '', alt: '' }]
-      });
-      toast.success(editingProduct ? 'تم تحديث المنتج' : 'تم إضافة المنتج');
-    },
-    onError: (error) => {
-      console.error('Error saving product:', error);
-      toast.error('حدث خطأ في حفظ المنتج');
-    }
-  });
-
   const handleEditProduct = (product: any) => {
     setEditingProduct(product);
     setProductForm({
@@ -319,6 +318,12 @@ const AdminProducts = () => {
       description: category.description || ''
     });
     setIsCategoryDialogOpen(true);
+  };
+
+  const handleDeleteCategory = (categoryId: string) => {
+    if (confirm('هل أنت متأكد من حذف هذه الفئة؟')) {
+      deleteCategoryMutation.mutate(categoryId);
+    }
   };
 
   return (
@@ -606,13 +611,23 @@ const AdminProducts = () => {
               <div key={category.id} className="border rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-semibold">{category.name}</h3>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleEditCategory(category)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEditCategory(category)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteCategory(category.id)}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
                 {category.description && (
                   <p className="text-sm text-muted-foreground">{category.description}</p>
@@ -687,6 +702,7 @@ const AdminProducts = () => {
                         <div className="flex flex-wrap gap-2 mb-2">
                           {product.product_sizes.map((size: any, index: number) => {
                             const discountedPrice = size.price * (1 - ((product.discount_percentage || 0) / 100));
+                            const profit = size.price - size.cost;
                             return (
                               <Badge key={index} variant="outline" className="text-xs">
                                 {size.size}: 
@@ -698,7 +714,7 @@ const AdminProducts = () => {
                                 ) : (
                                   <span className="mr-1">{size.price}</span>
                                 )}
-                                ج.م
+                                ج.م | الربح: {profit} ج.م
                               </Badge>
                             );
                           })}

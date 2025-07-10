@@ -20,6 +20,7 @@ import { Info, Upload, X } from "lucide-react";
 interface FormData {
   clientName: string;
   phone: string;
+  email: string;
   paymentMethod: string;
   deliveryMethod: string;
   address: string;
@@ -36,6 +37,7 @@ const CheckoutPage = () => {
   const [formData, setFormData] = useState({
     clientName: "",
     phone: "",
+    email: "",
     paymentMethod: "",
     deliveryMethod: "",
     address: "",
@@ -59,6 +61,16 @@ const CheckoutPage = () => {
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const total = subtotal + shippingCost;
+
+  // Pre-fill form with user data if logged in
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        email: user.email || ""
+      }));
+    }
+  }, [user]);
 
   useEffect(() => {
     if (formData.deliveryMethod === "شحن للمنزل" && formData.governorate) {
@@ -131,11 +143,6 @@ const CheckoutPage = () => {
       return;
     }
 
-    if (!user) {
-      toast.error("يجب تسجيل الدخول أولاً");
-      return;
-    }
-
     setIsSubmitting(true);
 
     try {
@@ -148,7 +155,7 @@ const CheckoutPage = () => {
       if (formData.attachedImage) {
         try {
           const fileExt = formData.attachedImage.name.split('.').pop();
-          const fileName = `${user.id}/${serial}-${Date.now()}.${fileExt}`;
+          const fileName = `${user?.id || 'guest'}/${serial}-${Date.now()}.${fileExt}`;
           
           const { data: uploadData, error: uploadError } = await supabase.storage
             .from('order-attachments')
@@ -167,72 +174,75 @@ const CheckoutPage = () => {
         }
       }
       
-      // Save to orders table first
-      const { data: orderData, error: orderError } = await supabase
-        .from('orders')
-        .insert({
-          user_id: user.id,
-          serial,
-          payment_method: formData.paymentMethod,
-          client_name: formData.clientName,
-          phone: formData.phone,
-          delivery_method: formData.deliveryMethod,
-          address: formData.address,
-          governorate: formData.governorate,
-          shipping_cost: shippingCost,
-          discount: 0,
-          deposit: 0,
-          total,
+      // Save to orders table first (for authenticated users only)
+      if (user) {
+        const { data: orderData, error: orderError } = await supabase
+          .from('orders')
+          .insert({
+            user_id: user.id,
+            serial,
+            payment_method: formData.paymentMethod,
+            client_name: formData.clientName,
+            phone: formData.phone,
+            email: formData.email,
+            delivery_method: formData.deliveryMethod,
+            address: formData.address,
+            governorate: formData.governorate,
+            shipping_cost: shippingCost,
+            discount: 0,
+            deposit: 0,
+            total,
+            profit: 0,
+            status: 'pending',
+            notes: formData.notes || null,
+            attached_image_url: attachedImageUrl
+          })
+          .select()
+          .single();
+
+        if (orderError) {
+          console.error('Error inserting order:', orderError);
+          throw orderError;
+        }
+
+        console.log('Order inserted successfully:', orderData);
+
+        // Insert order items
+        const orderItems = cartItems.map(item => ({
+          order_id: orderData.id,
+          product_type: item.product?.name || 'Unknown Product',
+          size: item.size,
+          quantity: item.quantity,
+          cost: 0,
+          price: item.price,
           profit: 0,
-          status: 'pending',
-          notes: formData.notes || null,
-          attached_image_url: attachedImageUrl
-        })
-        .select()
-        .single();
+          item_discount: 0
+        }));
 
-      if (orderError) {
-        console.error('Error inserting order:', orderError);
-        throw orderError;
+        console.log('Inserting order items:', orderItems);
+
+        const { error: itemsError } = await supabase
+          .from('order_items')
+          .insert(orderItems);
+
+        if (itemsError) {
+          console.error('Error inserting order items:', itemsError);
+          throw itemsError;
+        }
+
+        console.log('Order items inserted successfully');
       }
 
-      console.log('Order inserted successfully:', orderData);
-
-      // Insert order items
-      const orderItems = cartItems.map(item => ({
-        order_id: orderData.id,
-        product_type: item.product?.name || 'Unknown Product',
-        size: item.size,
-        quantity: item.quantity,
-        cost: 0,
-        price: item.price,
-        profit: 0,
-        item_discount: 0
-      }));
-
-      console.log('Inserting order items:', orderItems);
-
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems);
-
-      if (itemsError) {
-        console.error('Error inserting order items:', itemsError);
-        throw itemsError;
-      }
-
-      console.log('Order items inserted successfully');
-
-      // Save to admin orders table with notes and image
+      // Save to admin orders table with notes and image (for all orders including guest orders)
       try {
         const { data: adminOrder, error: adminOrderError } = await supabase
           .from('admin_orders')
           .insert({
-            user_id: user.id,
+            user_id: user?.id || '00000000-0000-0000-0000-000000000000', // Default UUID for guest orders
             serial: serial,
             customer_name: formData.clientName,
             customer_phone: formData.phone,
-            customer_email: '',
+            customer_email: formData.email,
             shipping_address: formData.address,
             governorate: formData.governorate,
             payment_method: formData.paymentMethod,
@@ -279,6 +289,10 @@ const CheckoutPage = () => {
 
       await clearCart();
       toast.success("تم إنشاء الطلب بنجاح!");
+      
+      // Show order confirmation with serial number
+      toast.success(`رقم طلبك: ${serial}`, { duration: 5000 });
+      
       navigate("/");
       
     } catch (error) {
@@ -313,6 +327,11 @@ const CheckoutPage = () => {
           <Card>
             <CardHeader>
               <CardTitle>بيانات الطلب</CardTitle>
+              {!user && (
+                <p className="text-sm text-muted-foreground">
+                  يمكنك إتمام الطلب كضيف أو <Button variant="link" className="p-0 h-auto" onClick={() => navigate('/auth')}>تسجيل الدخول</Button>
+                </p>
+              )}
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -334,6 +353,17 @@ const CheckoutPage = () => {
                     value={formData.phone}
                     onChange={(e) => handleInputChange('phone', e.target.value)}
                     required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="email">البريد الإلكتروني</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    placeholder="اختياري"
                   />
                 </div>
 
