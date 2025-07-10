@@ -24,6 +24,7 @@ export interface Order {
   profit: number;
   status: OrderStatus;
   dateCreated: string;
+  notes?: string; // Add notes property
 }
 
 export type OrderStatus = "pending" | "confirmed" | "processing" | "sentToPrinter" | "readyForDelivery" | "shipped" | "delivered" | "cancelled";

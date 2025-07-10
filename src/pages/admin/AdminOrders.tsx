@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -349,7 +348,10 @@ const AdminOrders = () => {
             <DialogTitle>فاتورة الطلب - {selectedOrder?.serial}</DialogTitle>
           </DialogHeader>
           {selectedOrder && (
-            <AdminOrderInvoice order={selectedOrder} />
+            <AdminOrderInvoice 
+              order={selectedOrder} 
+              onClose={() => setInvoiceDialogOpen(false)}
+            />
           )}
         </DialogContent>
       </Dialog>

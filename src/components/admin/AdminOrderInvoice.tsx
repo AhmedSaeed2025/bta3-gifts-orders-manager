@@ -1,3 +1,4 @@
+
 import React, { useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -42,7 +43,7 @@ interface AdminOrder {
 
 interface AdminOrderInvoiceProps {
   order: AdminOrder;
-  onClose: () => void;
+  onClose?: () => void; // Make onClose optional
 }
 
 const AdminOrderInvoice: React.FC<AdminOrderInvoiceProps> = ({ order, onClose }) => {
@@ -87,9 +88,11 @@ const AdminOrderInvoice: React.FC<AdminOrderInvoiceProps> = ({ order, onClose })
           <Printer className="h-4 w-4" />
           طباعة الفاتورة
         </Button>
-        <Button variant="outline" onClick={onClose}>
-          إغلاق
-        </Button>
+        {onClose && (
+          <Button variant="outline" onClick={onClose}>
+            إغلاق
+          </Button>
+        )}
       </div>
 
       {/* Invoice Content */}

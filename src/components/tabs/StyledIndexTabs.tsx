@@ -74,7 +74,7 @@ const StyledIndexTabs = () => {
       id: "invoice",
       label: "الفاتورة",
       icon: Receipt,
-      component: <Invoice />
+      component: <Invoice order={null} />
     },
     {
       id: "settings",
