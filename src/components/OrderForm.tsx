@@ -3,11 +3,9 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSupabaseOrders } from "@/context/SupabaseOrderContext";
-import { usePrices } from "@/context/PriceContext";
-import { useProducts } from "@/context/ProductContext";
 import { OrderItem, Order } from "@/types";
 import CustomerDataForm from "./order/CustomerDataForm";
-import ItemAddForm from "./order/ItemAddForm";
+import ImprovedItemAddForm from "./order/ImprovedItemAddForm";
 import ItemsTable from "./order/ItemsTable";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -18,8 +16,6 @@ interface OrderFormProps {
 
 const OrderForm = ({ editingOrder }: OrderFormProps) => {
   const { addOrder, updateOrder } = useSupabaseOrders();
-  const { getProposedPrice } = usePrices();
-  const { products } = useProducts();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   
@@ -46,14 +42,6 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
   const [items, setItems] = useState<OrderItem[]>(editingOrder?.items || []);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const availableProductTypes = [...new Set(products.map(p => p.name))];
-  
-  const availableSizes = currentItem.productType ? 
-    products
-      .find(p => p.name === currentItem.productType)?.sizes
-      .map(s => s.size) || [] 
-    : [];
-
   // المجموع الفرعي = مجموع (السعر - الخصم) × الكمية لكل صنف
   const subtotal = items.reduce((sum, item) => {
     const discountedPrice = item.price - (item.itemDiscount || 0);
@@ -68,31 +56,6 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
   
   // صافي الربح = المجموع الفرعي - إجمالي التكلفة (الشحن لا يحسب في الربح)
   const netProfit = subtotal - totalCost;
-
-  useEffect(() => {
-    if (currentItem.productType && currentItem.size) {
-      const selectedProduct = products.find(p => p.name === currentItem.productType);
-      const selectedSize = selectedProduct?.sizes.find(s => s.size === currentItem.size);
-      
-      if (selectedSize) {
-        setCurrentItem(prev => ({
-          ...prev,
-          cost: selectedSize.cost,
-          price: selectedSize.price
-        }));
-      } else {
-        const proposedPrice = getProposedPrice(currentItem.productType, currentItem.size);
-        
-        if (proposedPrice) {
-          setCurrentItem(prev => ({
-            ...prev,
-            cost: proposedPrice.cost,
-            price: proposedPrice.price
-          }));
-        }
-      }
-    }
-  }, [currentItem.productType, currentItem.size, products, getProposedPrice]);
 
   const handleCustomerDataChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type } = e.target;
@@ -117,11 +80,31 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
     }));
   };
 
-  const handleItemSelectChange = (name: string, value: string) => {
-    setCurrentItem(prev => ({
-      ...prev,
-      [name]: value,
-    }));
+  const handleProductSelectionChange = (selection: {
+    categoryId: string;
+    productId: string;
+    productName: string;
+    size: string;
+    cost: number;
+    price: number;
+  } | null) => {
+    if (selection) {
+      setCurrentItem(prev => ({
+        ...prev,
+        productType: selection.productName,
+        size: selection.size,
+        cost: selection.cost,
+        price: selection.price
+      }));
+    } else {
+      setCurrentItem(prev => ({
+        ...prev,
+        productType: "",
+        size: "",
+        cost: 0,
+        price: 0
+      }));
+    }
   };
 
   // Function to update item in the list
@@ -179,7 +162,7 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
         governorate: customerData.governorate || "-",
         items,
         total: totalAmount,
-        profit: netProfit, // استخدام صافي الربح المحسوب بشكل صحيح
+        profit: netProfit,
         status: editingOrder?.status || "pending",
         discount: 0
       };
@@ -225,14 +208,11 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
             onSelectChange={handleCustomerSelectChange}
           />
           
-          <ItemAddForm
+          <ImprovedItemAddForm
             currentItem={currentItem}
-            availableProductTypes={availableProductTypes}
-            availableSizes={availableSizes}
             onItemChange={handleItemChange}
-            onSelectChange={handleItemSelectChange}
+            onProductSelectionChange={handleProductSelectionChange}
             onAddItem={addItem}
-            products={products}
           />
           
           <ItemsTable
@@ -244,7 +224,7 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
             discount={0}
             deposit={customerData.deposit}
             totalAmount={totalAmount}
-            products={products}
+            products={[]}
             editMode={!!editingOrder}
             totalCost={totalCost}
             netProfit={netProfit}
