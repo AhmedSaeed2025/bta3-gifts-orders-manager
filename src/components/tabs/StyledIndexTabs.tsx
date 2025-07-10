@@ -1,104 +1,132 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  BarChart3, 
+  Package, 
+  ShoppingCart, 
+  Plus, 
+  Receipt, 
+  FileText, 
+  Truck, 
+  Calculator,
+  Settings
+} from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import OrderForm from "../OrderForm";
-import InvoiceTab from "../InvoiceTab";
-import ImprovedAccountStatement from "../ImprovedAccountStatement";
-import SummaryReport from "../SummaryReport";
-import ProfitReport from "../ProfitReport";
-import MobileProductsManagement from "../admin/MobileProductsManagement";
-import { LayoutDashboard, Plus, Receipt, DollarSign, TrendingUp, BarChart3, Package } from "lucide-react";
-import Invoice from "../Invoice";
-
-const tabsData = [
-  {
-    id: "dashboard",
-    label: "لوحة التحكم",
-    icon: LayoutDashboard,
-    component: <SummaryReport />
-  },
-  {
-    id: "add-order",
-    label: "إضافة طلب",
-    icon: Plus,
-    component: <OrderForm />
-  },
-  {
-    id: "invoice",
-    label: "الفاتورة",
-    icon: Receipt,
-    component: <Invoice order={null} />
-  },
-  {
-    id: "account",
-    label: "كشف الحساب",
-    icon: DollarSign,
-    component: <ImprovedAccountStatement />
-  },
-  {
-    id: "profit",
-    label: "تقرير الأرباح",
-    icon: TrendingUp,
-    component: <ProfitReport />
-  },
-  {
-    id: "summary",
-    label: "التقارير",
-    icon: BarChart3,
-    component: <SummaryReport />
-  },
-  {
-    id: "products",
-    label: "إدارة المنتجات",
-    icon: Package,
-    component: <MobileProductsManagement />
-  }
-];
+import EnhancedAdminDashboard from "@/components/admin/EnhancedAdminDashboard";
+import OrderForm from "@/components/OrderForm";
+import ProductsManagementPro from "@/components/ProductsManagementPro";
+import AdminOrders from "@/pages/admin/AdminOrders";
+import ImprovedShippingReport from "@/components/admin/ImprovedShippingReport";
+import DetailedOrdersReport from "@/components/admin/DetailedOrdersReport";
+import ImprovedAccountStatement from "@/components/ImprovedAccountStatement";
+import Invoice from "@/components/Invoice";
+import AdminSettings from "@/pages/admin/AdminSettings";
 
 const StyledIndexTabs = () => {
   const isMobile = useIsMobile();
+  const [activeTab, setActiveTab] = useState("dashboard");
+
+  const tabs = [
+    {
+      id: "dashboard",
+      label: "لوحة التحكم",
+      icon: BarChart3,
+      component: <EnhancedAdminDashboard />
+    },
+    {
+      id: "add-order",
+      label: "إضافة طلب",
+      icon: Plus,
+      component: <OrderForm />
+    },
+    {
+      id: "orders-management",
+      label: "إدارة الطلبات",
+      icon: ShoppingCart,
+      component: <AdminOrders />
+    },
+    {
+      id: "products",
+      label: "إدارة المنتجات",
+      icon: Package,
+      component: <ProductsManagementPro />
+    },
+    {
+      id: "orders-report",
+      label: "تقرير الطلبات",
+      icon: FileText,
+      component: <DetailedOrdersReport />
+    },
+    {
+      id: "shipping-report",
+      label: "تقرير الشحن",
+      icon: Truck,
+      component: <ImprovedShippingReport />
+    },
+    {
+      id: "account-statement",
+      label: "كشف الحساب",
+      icon: Calculator,
+      component: <ImprovedAccountStatement />
+    },
+    {
+      id: "invoice",
+      label: "الفاتورة",
+      icon: Receipt,
+      component: <Invoice order={null} />
+    },
+    {
+      id: "settings",
+      label: "الإعدادات",
+      icon: Settings,
+      component: <AdminSettings />
+    }
+  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gift-primary/5 to-gift-secondary/5" dir="rtl">
-      <Tabs defaultValue="dashboard" className="w-full">
-        <div className="bg-white border-b shadow-sm sticky top-0 z-10">
-          <div className="max-w-7xl mx-auto">
-            <TabsList className={`grid w-full ${isMobile ? 'grid-cols-3' : 'grid-cols-7'} bg-transparent h-auto p-0`}>
-              {tabsData.map((tab) => {
-                const IconComponent = tab.icon;
-                return (
-                  <TabsTrigger
-                    key={tab.id}
-                    value={tab.id}
-                    className={`
-                      flex flex-col items-center gap-1 py-3 px-2 data-[state=active]:bg-gift-primary/10 
-                      data-[state=active]:text-gift-primary data-[state=active]:border-b-2 
-                      data-[state=active]:border-gift-primary rounded-none bg-transparent
-                      hover:bg-gift-primary/5 transition-all duration-200
-                      ${isMobile ? 'text-xs' : 'text-sm'}
-                    `}
-                  >
-                    <IconComponent className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
-                    <span className={`${isMobile ? 'text-[10px]' : 'text-xs'} font-medium whitespace-nowrap`}>
-                      {tab.label}
-                    </span>
-                  </TabsTrigger>
-                );
-              })}
-            </TabsList>
-          </div>
-        </div>
+    <div className="w-full" dir="rtl">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList 
+          className={`
+            grid w-full mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 
+            dark:from-blue-900/20 dark:to-indigo-900/20 p-1 rounded-xl
+            ${isMobile ? 'grid-cols-3 gap-1' : 'grid-cols-9 gap-2'}
+            ${isMobile ? 'h-auto' : 'h-14'}
+          `}
+        >
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <TabsTrigger
+                key={tab.id}
+                value={tab.id}
+                className={`
+                  flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200
+                  data-[state=active]:bg-white data-[state=active]:shadow-md
+                  data-[state=active]:text-blue-600 hover:bg-white/50
+                  ${isMobile ? 'flex-col text-xs min-h-[60px]' : 'flex-row text-sm min-h-[48px]'}
+                  font-medium
+                `}
+              >
+                <Icon className={isMobile ? "h-4 w-4" : "h-5 w-5"} />
+                <span className={isMobile ? "text-[10px] leading-tight text-center" : "text-sm"}>
+                  {tab.label}
+                </span>
+              </TabsTrigger>
+            );
+          })}
+        </TabsList>
 
-        <div className="max-w-7xl mx-auto p-4">
-          {tabsData.map((tab) => (
-            <TabsContent key={tab.id} value={tab.id} className="mt-0">
-              <div className="animate-fade-in">
-                {tab.component}
-              </div>
-            </TabsContent>
-          ))}
-        </div>
+        {tabs.map((tab) => (
+          <TabsContent 
+            key={tab.id} 
+            value={tab.id} 
+            className="mt-0 space-y-4"
+          >
+            {tab.component}
+          </TabsContent>
+        ))}
       </Tabs>
     </div>
   );

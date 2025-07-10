@@ -27,7 +27,7 @@ const OrderPaymentDialog = ({
   React.useEffect(() => {
     if (order && paymentType === 'collection') {
       // Set default amount to remaining balance
-      const remainingAmount = (order.total_amount || 0) - (order.deposit || 0);
+      const remainingAmount = (order.total || 0) - (order.deposit || 0);
       setAmount(remainingAmount);
     } else if (order && paymentType === 'shipping') {
       setAmount(order.shipping_cost || 0);
