@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Search, FileText, Eye, Loader2 } from 'lucide-react';
-import { AdminOrderInvoice } from '@/components/admin/AdminOrderInvoice';
+import AdminOrderInvoice from '@/components/admin/AdminOrderInvoice';
 import { formatCurrency } from '@/lib/utils';
 
 const InvoiceTab = () => {
