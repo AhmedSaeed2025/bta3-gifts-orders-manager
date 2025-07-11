@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,11 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, FileText, Eye, Loader2, Filter, Download, Printer, Calendar } from 'lucide-react';
+import { Search, FileText, Eye, Loader2, Printer } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { useReactToPrint } from 'react-to-print';
+import InvoiceHeader from './invoice/InvoiceHeader';
+import InvoiceCustomerInfo from './invoice/InvoiceCustomerInfo';
+import InvoiceItemsTable from './invoice/InvoiceItemsTable';
+import InvoiceTotals from './invoice/InvoiceTotals';
 
 interface Order {
   id: string;
@@ -140,9 +142,9 @@ const ImprovedInvoiceTab = () => {
     const remainingAmount = finalTotal - (selectedOrder.deposit || 0);
 
     return (
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Print Actions */}
-        <div className="flex flex-col sm:flex-row items-center gap-3 mb-6 print:hidden">
+        <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 mb-4 sm:mb-6 print:hidden">
           <Button 
             onClick={handlePrint} 
             className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg"
@@ -159,242 +161,55 @@ const ImprovedInvoiceTab = () => {
           </Button>
         </div>
 
-        {/* Invoice Content - Elegant & Professional */}
+        {/* Invoice Content */}
         <div ref={invoiceRef} className="bg-white text-gray-800 shadow-2xl rounded-xl overflow-hidden" dir="rtl">
-          {/* Header Section - Sophisticated */}
-          <div className="bg-gradient-to-l from-slate-50 to-blue-50 px-6 sm:px-8 lg:px-12 py-8">
-            <div className="flex flex-col lg:flex-row justify-between items-start gap-6">
-              {/* Company Info */}
-              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 w-full lg:w-auto">
-                <div className="flex-shrink-0">
-                  <img 
-                    src="/lovable-uploads/ac63ecb6-e1d0-4917-9537-12f75da70364.png" 
-                    alt="شعار بتاع هدايا" 
-                    className="w-16 h-16 sm:w-20 sm:h-20 object-contain rounded-xl shadow-md bg-white p-2" 
-                  />
-                </div>
-                <div className="text-center sm:text-right">
-                  <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-l from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                    #بتاع_هدايا_الأصلي
-                  </h1>
-                  <p className="text-sm sm:text-base text-gray-600 mt-1">Design4You - تصميم من أجلك</p>
-                  <p className="text-xs sm:text-sm text-gray-500 mt-1">ملوك الهدايا والتصميم في مصر</p>
-                </div>
-              </div>
-              
-              {/* Invoice Details */}
-              <div className="w-full lg:w-auto">
-                <div className="bg-white rounded-xl p-4 sm:p-6 shadow-lg border border-gray-100">
-                  <div className="text-center">
-                    <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-3">فاتورة رقم</h2>
-                    <div className="bg-gradient-to-l from-blue-600 to-purple-600 text-white rounded-lg px-4 py-2 mb-3">
-                      <span className="text-xl sm:text-2xl font-bold">{selectedOrder.serial}</span>
-                    </div>
-                    <p className="text-sm text-gray-600">
-                      التاريخ: {new Date(selectedOrder.date_created).toLocaleDateString('ar-EG')}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <InvoiceHeader 
+            orderSerial={selectedOrder.serial} 
+            orderDate={selectedOrder.date_created} 
+          />
+          
+          <InvoiceCustomerInfo
+            customerName={selectedOrder.client_name}
+            customerPhone={selectedOrder.phone}
+            paymentMethod={selectedOrder.payment_method}
+            deliveryMethod={selectedOrder.delivery_method}
+            status={selectedOrder.status}
+            address={selectedOrder.address}
+          />
 
-          {/* Customer & Order Information */}
-          <div className="px-6 sm:px-8 lg:px-12 py-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
-              {/* Customer Info */}
-              <div className="bg-blue-50/50 rounded-xl p-6 border border-blue-100">
-                <h3 className="text-lg font-bold text-blue-800 mb-4 flex items-center">
-                  <span className="bg-blue-600 text-white px-3 py-1 rounded-lg ml-3 text-sm">👤</span>
-                  بيانات العميل
-                </h3>
-                <div className="space-y-3 text-sm sm:text-base">
-                  <div className="flex items-center">
-                    <span className="font-semibold text-gray-700 ml-2">الاسم:</span>
-                    <span className="text-gray-900">{selectedOrder.client_name}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="font-semibold text-gray-700 ml-2">الهاتف:</span>
-                    <span className="text-gray-900">{selectedOrder.phone}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="font-semibold text-gray-700 ml-2">طريقة الدفع:</span>
-                    <span className="text-gray-900">{selectedOrder.payment_method}</span>
-                  </div>
-                </div>
-              </div>
+          <InvoiceItemsTable items={selectedOrder.order_items} />
 
-              {/* Delivery Info */}
-              <div className="bg-green-50/50 rounded-xl p-6 border border-green-100">
-                <h3 className="text-lg font-bold text-green-800 mb-4 flex items-center">
-                  <span className="bg-green-600 text-white px-3 py-1 rounded-lg ml-3 text-sm">🚚</span>
-                  معلومات التوصيل
-                </h3>
-                <div className="space-y-3 text-sm sm:text-base">
-                  <div className="flex items-center">
-                    <span className="font-semibold text-gray-700 ml-2">طريقة الاستلام:</span>
-                    <span className="text-gray-900">{selectedOrder.delivery_method}</span>
-                  </div>
-                  <div className="flex items-center flex-wrap">
-                    <span className="font-semibold text-gray-700 ml-2">حالة الطلب:</span>
-                    <Badge className={`text-xs ${getStatusColor(selectedOrder.status)}`}>
-                      {getStatusLabel(selectedOrder.status)}
-                    </Badge>
-                  </div>
-                  {selectedOrder.address && (
-                    <div className="flex items-start">
-                      <span className="font-semibold text-gray-700 ml-2">العنوان:</span>
-                      <span className="text-gray-900">{selectedOrder.address}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Order Items */}
-          <div className="px-6 sm:px-8 lg:px-12 pb-8">
-            <div className="bg-gray-50/50 rounded-xl p-6 border border-gray-100">
-              <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
-                <span className="bg-purple-600 text-white px-3 py-1 rounded-lg ml-3 text-sm">🛍️</span>
-                تفاصيل الطلب
-              </h3>
-              
-              {/* Mobile Card View */}
-              <div className="block sm:hidden space-y-4">
-                {selectedOrder.order_items.map((item, index) => (
-                  <div key={item.id} className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
-                    <div className="flex justify-between items-start mb-3">
-                      <h4 className="font-bold text-gray-800">{item.product_type}</h4>
-                      <span className="text-lg font-bold text-green-600">
-                        {formatCurrency(item.quantity * item.price - item.item_discount)}
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      <div>
-                        <span className="text-gray-500">المقاس:</span>
-                        <p className="font-medium text-gray-800">{item.size}</p>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">العدد:</span>
-                        <p className="font-medium text-gray-800">{item.quantity}</p>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">السعر:</span>
-                        <p className="font-medium text-gray-800">{formatCurrency(item.price)}</p>
-                      </div>
-                      {item.item_discount > 0 && (
-                        <div>
-                          <span className="text-gray-500">الخصم:</span>
-                          <p className="font-medium text-red-600">{formatCurrency(item.item_discount)}</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Desktop Table View */}
-              <div className="hidden sm:block overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="bg-gradient-to-l from-gray-100 to-gray-50">
-                      <th className="text-right p-4 font-bold text-gray-800 rounded-tr-lg">المنتج</th>
-                      <th className="text-center p-4 font-bold text-gray-800">المقاس</th>
-                      <th className="text-center p-4 font-bold text-gray-800">العدد</th>
-                      <th className="text-right p-4 font-bold text-gray-800">السعر</th>
-                      <th className="text-right p-4 font-bold text-gray-800 rounded-tl-lg">الإجمالي</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {selectedOrder.order_items.map((item, index) => (
-                      <tr key={item.id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'} border-b border-gray-100`}>
-                        <td className="p-4 text-gray-800 font-medium">{item.product_type}</td>
-                        <td className="p-4 text-center text-gray-700">{item.size}</td>
-                        <td className="p-4 text-center text-gray-700">{item.quantity}</td>
-                        <td className="p-4 text-gray-700">{formatCurrency(item.price)}</td>
-                        <td className="p-4 font-bold text-green-600">
-                          {formatCurrency(item.quantity * item.price - item.item_discount)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-
-          {/* Totals Section */}
-          <div className="px-6 sm:px-8 lg:px-12 pb-8">
-            <div className="flex justify-end">
-              <div className="w-full sm:w-96 bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-                <div className="space-y-4">
-                  <div className="flex justify-between text-gray-700">
-                    <span>المجموع الفرعي:</span>
-                    <span className="font-semibold">{formatCurrency(subtotal)}</span>
-                  </div>
-                  
-                  {selectedOrder.shipping_cost > 0 && (
-                    <div className="flex justify-between text-gray-700">
-                      <span>تكلفة الشحن:</span>
-                      <span className="font-semibold">{formatCurrency(selectedOrder.shipping_cost)}</span>
-                    </div>
-                  )}
-                  
-                  {selectedOrder.discount > 0 && (
-                    <div className="flex justify-between text-red-600">
-                      <span>الخصم:</span>
-                      <span className="font-semibold">-{formatCurrency(selectedOrder.discount)}</span>
-                    </div>
-                  )}
-                  
-                  <hr className="border-gray-200" />
-                  
-                  <div className="flex justify-between text-xl font-bold bg-gradient-to-l from-blue-600 to-purple-600 text-white p-4 rounded-lg">
-                    <span>إجمالي الفاتورة:</span>
-                    <span>{formatCurrency(finalTotal)}</span>
-                  </div>
-                  
-                  {selectedOrder.deposit > 0 && (
-                    <div className="flex justify-between text-blue-600 font-semibold">
-                      <span>المبلغ المسدد:</span>
-                      <span>{formatCurrency(selectedOrder.deposit)}</span>
-                    </div>
-                  )}
-                  
-                  {remainingAmount > 0 && (
-                    <div className="flex justify-between text-orange-600 font-bold text-lg">
-                      <span>المبلغ المتبقي:</span>
-                      <span>{formatCurrency(remainingAmount)}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
+          <InvoiceTotals
+            subtotal={subtotal}
+            shippingCost={selectedOrder.shipping_cost}
+            discount={selectedOrder.discount}
+            finalTotal={finalTotal}
+            deposit={selectedOrder.deposit || 0}
+            remainingAmount={remainingAmount}
+          />
 
           {/* Notes Section */}
           {selectedOrder.notes && (
-            <div className="px-6 sm:px-8 lg:px-12 pb-8">
-              <div className="bg-amber-50/50 rounded-xl p-6 border border-amber-100">
-                <h3 className="text-lg font-bold text-amber-800 mb-3">ملاحظات:</h3>
-                <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{selectedOrder.notes}</p>
+            <div className="px-6 sm:px-8 lg:px-12 pb-6 sm:pb-8">
+              <div className="bg-amber-50/50 rounded-xl p-4 sm:p-6 border border-amber-100">
+                <h3 className="text-sm sm:text-base lg:text-lg font-bold text-amber-800 mb-2 sm:mb-3">ملاحظات:</h3>
+                <p className="text-xs sm:text-sm lg:text-base text-gray-700 leading-relaxed whitespace-pre-wrap">{selectedOrder.notes}</p>
               </div>
             </div>
           )}
 
           {/* Footer */}
-          <div className="bg-gradient-to-l from-slate-100 to-blue-100 px-6 sm:px-8 lg:px-12 py-8 text-center">
+          <div className="bg-gradient-to-l from-slate-100 to-blue-100 px-6 sm:px-8 lg:px-12 py-6 sm:py-8 text-center">
             <div className="max-w-2xl mx-auto">
-              <p className="text-blue-800 font-bold text-lg mb-2">#شكراً_لثقتكم_في_بتاع_هدايا_الأصلي</p>
-              <p className="text-gray-600 text-sm mb-4">
+              <p className="text-blue-800 font-bold text-sm sm:text-base lg:text-lg mb-2">#شكراً_لثقتكم_في_بتاع_هدايا_الأصلي</p>
+              <p className="text-gray-600 text-xs sm:text-sm mb-3 sm:mb-4">
                 لأي استفسار يرجى التواصل معنا • هذه فاتورة إلكترونية معتمدة
               </p>
               <div className="flex justify-center">
                 <img 
                   src="/lovable-uploads/ac63ecb6-e1d0-4917-9537-12f75da70364.png" 
                   alt="ختم الشركة" 
-                  className="w-12 h-12 object-contain opacity-80 bg-white p-2 rounded-lg shadow-sm" 
+                  className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 object-contain opacity-80 bg-white p-2 rounded-lg shadow-sm" 
                 />
               </div>
             </div>
@@ -506,9 +321,9 @@ const ImprovedInvoiceTab = () => {
                     <div className="flex-1 w-full">
                       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-4">
                         <h3 className="text-xl font-bold text-gray-800">{order.serial}</h3>
-                        <Badge className={`text-sm ${getStatusColor(order.status)}`}>
+                        <span className={`text-sm px-3 py-1 rounded-full font-medium ${getStatusColor(order.status)}`}>
                           {getStatusLabel(order.status)}
-                        </Badge>
+                        </span>
                       </div>
                       
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">

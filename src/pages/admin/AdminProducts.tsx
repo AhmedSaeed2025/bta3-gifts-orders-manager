@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { Plus, Edit, Trash2, Eye, EyeOff, Loader2, Image, Video, Tag, Star, Globe, X, FolderPlus } from 'lucide-react';
+import ProductEditDialog from '@/components/admin/ProductEditDialog';
 
 const AdminProducts = () => {
   const { user } = useAuth();
@@ -21,7 +22,9 @@ const AdminProducts = () => {
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [editingCategory, setEditingCategory] = useState<any>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
+  
   // Fetch categories
   const { data: categories = [] } = useQuery({
     queryKey: ['admin-categories'],
@@ -44,7 +47,7 @@ const AdminProducts = () => {
   });
 
   // Fetch products
-  const { data: products = [], isLoading } = useQuery({
+  const { data: products = [], isLoading, refetch: refetchProducts } = useQuery({
     queryKey: ['admin-products'],
     queryFn: async () => {
       if (!user) return [];
@@ -69,24 +72,11 @@ const AdminProducts = () => {
     enabled: !!user
   });
 
+  
   // Category form
   const [categoryForm, setCategoryForm] = useState({
     name: '',
     description: ''
-  });
-
-  // Product form
-  const [productForm, setProductForm] = useState({
-    name: '',
-    description: '',
-    category_id: '',
-    featured: false,
-    is_active: true,
-    image_url: '',
-    video_url: '',
-    discount_percentage: 0,
-    sizes: [{ size: '', price: 0, cost: 0 }],
-    images: [{ url: '', alt: '' }]
   });
 
   // Create/Update category
@@ -137,25 +127,38 @@ const AdminProducts = () => {
     }
   });
 
-  // Toggle product visibility
-  const toggleVisibilityMutation = useMutation({
-    mutationFn: async ({ productId, isActive }: { productId: string; isActive: boolean }) => {
-      const { error } = await supabase
-        .from('products')
-        .update({ is_active: isActive })
-        .eq('id', productId);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-products'] });
-      queryClient.invalidateQueries({ queryKey: ['products'] });
-      toast.success('تم تحديث حالة المنتج');
-    },
-    onError: (error: any) => {
-      console.error('Toggle visibility error:', error);
-      toast.error('حدث خطأ في تحديث حالة المنتج');
+  const handleEditProduct = (product: any) => {
+    setEditingProduct(product);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleEditCategory = (category: any) => {
+    setEditingCategory(category);
+    setCategoryForm({
+      name: category.name,
+      description: category.description || ''
+    });
+    setIsCategoryDialogOpen(true);
+  };
+
+  const handleDeleteCategory = (categoryId: string) => {
+    if (confirm('هل أنت متأكد من حذف هذه الفئة؟')) {
+      deleteCategoryMutation.mutate(categoryId);
     }
+  };
+
+  // Product form
+  const [productForm, setProductForm] = useState({
+    name: '',
+    description: '',
+    category_id: '',
+    featured: false,
+    is_active: true,
+    image_url: '',
+    video_url: '',
+    discount_percentage: 0,
+    sizes: [{ size: '', price: 0, cost: 0 }],
+    images: [{ url: '', alt: '' }]
   });
 
   // Create/Update product
@@ -309,34 +312,6 @@ const AdminProducts = () => {
     }));
   };
 
-  const handleEditProduct = (product: any) => {
-    setEditingProduct(product);
-    setProductForm({
-      name: product.name,
-      description: product.description || '',
-      category_id: product.category_id || '',
-      featured: product.featured,
-      is_active: product.is_active,
-      image_url: product.image_url || '',
-      video_url: product.video_url || '',
-      discount_percentage: product.discount_percentage || 0,
-      sizes: product.product_sizes?.length > 0 
-        ? product.product_sizes.map((s: any) => ({
-            size: s.size,
-            price: s.price,
-            cost: s.cost
-          }))
-        : [{ size: '', price: 0, cost: 0 }],
-      images: product.product_images?.length > 0
-        ? product.product_images.map((img: any) => ({
-            url: img.image_url,
-            alt: img.alt_text || ''
-          }))
-        : [{ url: '', alt: '' }]
-    });
-    setIsProductDialogOpen(true);
-  };
-
   const handleEditCategory = (category: any) => {
     setEditingCategory(category);
     setCategoryForm({
@@ -398,243 +373,6 @@ const AdminProducts = () => {
                 >
                   {categoryMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : null}
                   {editingCategory ? 'تحديث الفئة' : 'إضافة الفئة'}
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-
-          <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => {
-                setEditingProduct(null);
-                setProductForm({
-                  name: '',
-                  description: '',
-                  category_id: '',
-                  featured: false,
-                  is_active: true,
-                  image_url: '',
-                  video_url: '',
-                  discount_percentage: 0,
-                  sizes: [{ size: '', price: 0, cost: 0 }],
-                  images: [{ url: '', alt: '' }]
-                });
-              }}>
-                <Plus className="h-4 w-4 ml-2" />
-                إضافة منتج
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>{editingProduct ? 'تعديل منتج' : 'إضافة منتج جديد'}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>اسم المنتج</Label>
-                    <Input
-                      value={productForm.name}
-                      onChange={(e) => setProductForm(prev => ({ ...prev, name: e.target.value }))}
-                      placeholder="اسم المنتج"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>الفئة</Label>
-                    <Select
-                      value={productForm.category_id}
-                      onValueChange={(value) => setProductForm(prev => ({ ...prev, category_id: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="اختر فئة" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="no-category">بدون فئة</SelectItem>
-                        {categories.map((category) => (
-                          <SelectItem key={category.id} value={category.id}>
-                            {category.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>وصف المنتج</Label>
-                  <Textarea
-                    value={productForm.description}
-                    onChange={(e) => setProductForm(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="وصف المنتج"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2">
-                      <Image className="h-4 w-4" />
-                      رابط الصورة الرئيسية
-                    </Label>
-                    <Input
-                      value={productForm.image_url}
-                      onChange={(e) => setProductForm(prev => ({ ...prev, image_url: e.target.value }))}
-                      placeholder="https://example.com/image.jpg"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2">
-                      <Video className="h-4 w-4" />
-                      رابط الفيديو
-                    </Label>
-                    <Input
-                      value={productForm.video_url}
-                      onChange={(e) => setProductForm(prev => ({ ...prev, video_url: e.target.value }))}
-                      placeholder="https://youtube.com/watch?v=..."
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <Label className="flex items-center gap-2">
-                      <Image className="h-4 w-4" />
-                      صور إضافية
-                    </Label>
-                    <Button type="button" variant="outline" size="sm" onClick={handleAddImage}>
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  
-                  {productForm.images.map((image, index) => (
-                    <div key={index} className="grid grid-cols-5 gap-2 items-end">
-                      <div className="col-span-2 space-y-1">
-                        <Label className="text-xs">رابط الصورة</Label>
-                        <Input
-                          placeholder="https://example.com/image.jpg"
-                          value={image.url}
-                          onChange={(e) => handleImageChange(index, 'url', e.target.value)}
-                        />
-                      </div>
-                      <div className="col-span-2 space-y-1">
-                        <Label className="text-xs">وصف الصورة</Label>
-                        <Input
-                          placeholder="وصف الصورة"
-                          value={image.alt}
-                          onChange={(e) => handleImageChange(index, 'alt', e.target.value)}
-                        />
-                      </div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleRemoveImage(index)}
-                        disabled={productForm.images.length === 1}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="flex items-center space-x-2 bg-gradient-to-r from-yellow-50 to-yellow-100 p-3 rounded-lg border border-yellow-200">
-                    <Switch
-                      checked={productForm.featured}
-                      onCheckedChange={(checked) => setProductForm(prev => ({ ...prev, featured: checked }))}
-                    />
-                    <div className="flex items-center gap-2">
-                      <Star className="h-4 w-4 text-yellow-600" />
-                      <Label className="text-yellow-800 font-medium">منتج مميز</Label>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2 bg-gradient-to-r from-green-50 to-green-100 p-3 rounded-lg border border-green-200">
-                    <Switch
-                      checked={productForm.is_active}
-                      onCheckedChange={(checked) => setProductForm(prev => ({ ...prev, is_active: checked }))}
-                    />
-                    <div className="flex items-center gap-2">
-                      <Globe className="h-4 w-4 text-green-600" />
-                      <Label className="text-green-800 font-medium">ظاهر في المتجر</Label>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2">
-                      <Tag className="h-4 w-4" />
-                      نسبة الخصم %
-                    </Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={productForm.discount_percentage}
-                      onChange={(e) => setProductForm(prev => ({ ...prev, discount_percentage: parseFloat(e.target.value) || 0 }))}
-                      placeholder="0"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <Label>المقاسات والأسعار</Label>
-                    <Button type="button" variant="outline" size="sm" onClick={handleAddSize}>
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  
-                  {productForm.sizes.map((size, index) => (
-                    <div key={index} className="grid grid-cols-5 gap-2 items-end">
-                      <div className="space-y-1">
-                        <Label className="text-xs">المقاس</Label>
-                        <Input
-                          placeholder="S, M, L"
-                          value={size.size}
-                          onChange={(e) => handleSizeChange(index, 'size', e.target.value)}
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-xs">التكلفة</Label>
-                        <Input
-                          type="number"
-                          value={size.cost}
-                          onChange={(e) => handleSizeChange(index, 'cost', parseFloat(e.target.value) || 0)}
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-xs">السعر الأصلي</Label>
-                        <Input
-                          type="number"
-                          value={size.price}
-                          onChange={(e) => handleSizeChange(index, 'price', parseFloat(e.target.value) || 0)}
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-xs">السعر بعد الخصم</Label>
-                        <Input
-                          type="number"
-                          value={size.price * (1 - productForm.discount_percentage / 100)}
-                          readOnly
-                          className="bg-gray-50"
-                        />
-                      </div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleRemoveSize(index)}
-                        disabled={productForm.sizes.length === 1}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-
-                <Button 
-                  onClick={() => productMutation.mutate(productForm)}
-                  disabled={productMutation.isPending}
-                  className="w-full"
-                >
-                  {productMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : null}
-                  {editingProduct ? 'تحديث المنتج' : 'إضافة المنتج'}
                 </Button>
               </div>
             </DialogContent>
@@ -776,22 +514,6 @@ const AdminProducts = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => toggleVisibilityMutation.mutate({
-                          productId: product.id,
-                          isActive: !product.is_active
-                        })}
-                        disabled={toggleVisibilityMutation.isPending}
-                      >
-                        {product.is_active ? (
-                          <Eye className="h-4 w-4 text-green-600" />
-                        ) : (
-                          <EyeOff className="h-4 w-4 text-gray-400" />
-                        )}
-                      </Button>
-                      
-                      <Button
-                        variant="ghost"
-                        size="sm"
                         onClick={() => handleEditProduct(product)}
                       >
                         <Edit className="h-4 w-4" />
@@ -810,6 +532,18 @@ const AdminProducts = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Product Edit Dialog */}
+      <ProductEditDialog
+        product={editingProduct}
+        categories={categories}
+        isOpen={isEditDialogOpen}
+        onClose={() => {
+          setIsEditDialogOpen(false);
+          setEditingProduct(null);
+        }}
+        onUpdate={refetchProducts}
+      />
     </div>
   );
 };
