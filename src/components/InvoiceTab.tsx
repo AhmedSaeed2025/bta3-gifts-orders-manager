@@ -29,13 +29,13 @@ const InvoiceTab = () => {
       console.log('Fetching orders for invoice tab, user:', user.id);
       
       const { data, error } = await supabase
-        .from('admin_orders')
+        .from('orders')
         .select(`
           *,
-          admin_order_items (*)
+          order_items (*)
         `)
         .eq('user_id', user.id)
-        .order('order_date', { ascending: false });
+        .order('date_created', { ascending: false });
       
       if (error) {
         console.error('Error fetching orders for invoice tab:', error);
@@ -53,8 +53,8 @@ const InvoiceTab = () => {
   // Filter orders based on search term
   const filteredOrders = orders.filter(order => 
     order.serial?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    order.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    order.customer_phone?.includes(searchTerm)
+    order.client_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    order.phone?.includes(searchTerm)
   );
 
   const getStatusLabel = (status: string) => {
@@ -154,26 +154,26 @@ const InvoiceTab = () => {
                       </div>
                       
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                         <div>
+                           <span className="text-gray-500">العميل:</span>
+                           <p className="font-medium">{order.client_name}</p>
+                         </div>
+                         <div>
+                           <span className="text-gray-500">الهاتف:</span>
+                           <p className="font-medium">{order.phone}</p>
+                         </div>
                         <div>
-                          <span className="text-gray-500">العميل:</span>
-                          <p className="font-medium">{order.customer_name}</p>
+                           <span className="text-gray-500">التاريخ:</span>
+                           <p className="font-medium">
+                             {new Date(order.date_created).toLocaleDateString('ar-EG')}
+                           </p>
                         </div>
-                        <div>
-                          <span className="text-gray-500">الهاتف:</span>
-                          <p className="font-medium">{order.customer_phone}</p>
-                        </div>
-                        <div>
-                          <span className="text-gray-500">التاريخ:</span>
-                          <p className="font-medium">
-                            {new Date(order.order_date).toLocaleDateString('ar-EG')}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-gray-500">المبلغ الإجمالي:</span>
-                          <p className="font-bold text-green-600">
-                            {formatCurrency(order.total_amount)}
-                          </p>
-                        </div>
+                         <div>
+                           <span className="text-gray-500">المبلغ الإجمالي:</span>
+                           <p className="font-bold text-green-600">
+                             {formatCurrency(order.total)}
+                           </p>
+                         </div>
                       </div>
 
                       {order.notes && (

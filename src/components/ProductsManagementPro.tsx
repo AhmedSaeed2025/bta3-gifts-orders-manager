@@ -213,20 +213,25 @@ const ProductsManagementPro = () => {
   const handleEdit = (product: Product) => {
     console.log('Editing product:', product);
     
-    setEditingProduct(product);
-    setFormData({
-      name: product.name,
-      description: product.description || '',
-      category_id: product.category_id || '',
-      sizes: product.product_sizes?.length > 0 
-        ? product.product_sizes.map(size => ({
-            size: size.size,
-            cost: size.cost,
-            price: size.price
-          }))
-        : [{ size: '', cost: 0, price: 0 }]
-    });
-    setIsDialogOpen(true);
+    try {
+      setEditingProduct(product);
+      setFormData({
+        name: product.name,
+        description: product.description || '',
+        category_id: product.category_id || '',
+        sizes: product.product_sizes?.length > 0 
+          ? product.product_sizes.map(size => ({
+              size: size.size,
+              cost: size.cost,
+              price: size.price
+            }))
+          : [{ size: '', cost: 0, price: 0 }]
+      });
+      setIsDialogOpen(true);
+    } catch (error) {
+      console.error('Error in handleEdit:', error);
+      toast.error('حدث خطأ في تحميل بيانات المنتج');
+    }
   };
 
   const handleDelete = async (productId: string) => {
