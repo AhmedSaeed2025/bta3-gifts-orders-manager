@@ -319,9 +319,28 @@ const ProductsManagementPro = () => {
               <p className="text-muted-foreground">إضافة وإدارة منتجات المتجر</p>
             </div>
             
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <Dialog open={isDialogOpen} onOpenChange={(open) => {
+              if (!open) {
+                setEditingProduct(null);
+                setFormData({
+                  name: '',
+                  description: '',
+                  category_id: '',
+                  sizes: [{ size: '', cost: 0, price: 0 }]
+                });
+              }
+              setIsDialogOpen(open);
+            }}>
               <DialogTrigger asChild>
-                <Button>
+                <Button onClick={() => {
+                  setEditingProduct(null);
+                  setFormData({
+                    name: '',
+                    description: '',
+                    category_id: '',
+                    sizes: [{ size: '', cost: 0, price: 0 }]
+                  });
+                }}>
                   <Plus className="h-4 w-4 ml-1" />
                   منتج جديد
                 </Button>

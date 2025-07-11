@@ -20,7 +20,7 @@ import AdminOrders from "@/pages/admin/AdminOrders";
 import ImprovedShippingReport from "@/components/admin/ImprovedShippingReport";
 import DetailedOrdersReport from "@/components/admin/DetailedOrdersReport";
 import ImprovedAccountStatement from "@/components/ImprovedAccountStatement";
-import InvoiceTab from "@/components/InvoiceTab";
+import ImprovedInvoiceTab from "@/components/ImprovedInvoiceTab";
 import AdminSettings from "@/pages/admin/AdminSettings";
 
 const StyledIndexTabs = () => {
@@ -74,7 +74,7 @@ const StyledIndexTabs = () => {
       id: "invoice",
       label: "الفاتورة",
       icon: Receipt,
-      component: <InvoiceTab />
+      component: <ImprovedInvoiceTab />
     },
     {
       id: "settings",
