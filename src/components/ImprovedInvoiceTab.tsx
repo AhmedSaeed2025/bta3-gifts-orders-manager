@@ -123,13 +123,13 @@ const ImprovedInvoiceTab = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending': return 'bg-yellow-500 text-white';
-      case 'confirmed': return 'bg-blue-500 text-white';
-      case 'processing': return 'bg-purple-500 text-white';
-      case 'shipped': return 'bg-green-500 text-white';
-      case 'delivered': return 'bg-emerald-500 text-white';
-      case 'cancelled': return 'bg-red-500 text-white';
-      default: return 'bg-gray-500 text-white';
+      case 'pending': return 'bg-amber-100 text-amber-800';
+      case 'confirmed': return 'bg-blue-100 text-blue-800';
+      case 'processing': return 'bg-purple-100 text-purple-800';
+      case 'shipped': return 'bg-green-100 text-green-800';
+      case 'delivered': return 'bg-emerald-100 text-emerald-800';
+      case 'cancelled': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -140,213 +140,261 @@ const ImprovedInvoiceTab = () => {
     const remainingAmount = finalTotal - (selectedOrder.deposit || 0);
 
     return (
-      <div className="space-y-4">
+      <div className="space-y-6">
         {/* Print Actions */}
-        <div className="flex flex-col sm:flex-row items-center gap-2 mb-4 print:hidden">
-          <Button variant="outline" onClick={handlePrint} className="w-full sm:w-auto bg-blue-500 text-white hover:bg-blue-600">
-            <Download className="h-4 w-4 ml-2" />
-            تحميل PDF
-          </Button>
-          <Button onClick={handlePrint} className="w-full sm:w-auto bg-green-500 text-white hover:bg-green-600">
+        <div className="flex flex-col sm:flex-row items-center gap-3 mb-6 print:hidden">
+          <Button 
+            onClick={handlePrint} 
+            className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg"
+          >
             <Printer className="h-4 w-4 ml-2" />
             طباعة الفاتورة
           </Button>
-          <Button variant="outline" onClick={() => setSelectedOrder(null)} className="w-full sm:w-auto">
-            إغلاق
+          <Button 
+            variant="outline" 
+            onClick={() => setSelectedOrder(null)} 
+            className="w-full sm:w-auto border-gray-300 hover:bg-gray-50"
+          >
+            العودة للقائمة
           </Button>
         </div>
 
-        {/* Invoice Content - Optimized for Mobile */}
-        <div ref={invoiceRef} className="bg-white text-black p-4 sm:p-6 md:p-8 min-h-screen" dir="rtl">
-          {/* Header - Mobile Optimized */}
-          <div className="flex flex-col lg:flex-row justify-between items-start mb-6 sm:mb-8 space-y-4 lg:space-y-0">
-            <div className="w-full lg:w-auto">
-              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:gap-4 mb-4">
-                <img 
-                  src="/lovable-uploads/6e9103de-62f6-4d29-adc7-17c0cbdc9eda.png" 
-                  alt="شعار الشركة" 
-                  className="w-12 h-12 sm:w-16 sm:h-16 object-contain mx-auto sm:mx-0" 
-                />
+        {/* Invoice Content - Elegant & Professional */}
+        <div ref={invoiceRef} className="bg-white text-gray-800 shadow-2xl rounded-xl overflow-hidden" dir="rtl">
+          {/* Header Section - Sophisticated */}
+          <div className="bg-gradient-to-l from-slate-50 to-blue-50 px-6 sm:px-8 lg:px-12 py-8">
+            <div className="flex flex-col lg:flex-row justify-between items-start gap-6">
+              {/* Company Info */}
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 w-full lg:w-auto">
+                <div className="flex-shrink-0">
+                  <img 
+                    src="/lovable-uploads/ac63ecb6-e1d0-4917-9537-12f75da70364.png" 
+                    alt="شعار بتاع هدايا" 
+                    className="w-16 h-16 sm:w-20 sm:h-20 object-contain rounded-xl shadow-md bg-white p-2" 
+                  />
+                </div>
                 <div className="text-center sm:text-right">
-                  <h1 className="text-xl sm:text-2xl font-bold text-red-600">#بتاع_هدايا_الأصلي</h1>
-                  <p className="text-sm sm:text-base text-gray-600">ملوك الهدايا في مصر</p>
+                  <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-l from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                    #بتاع_هدايا_الأصلي
+                  </h1>
+                  <p className="text-sm sm:text-base text-gray-600 mt-1">Design4You - تصميم من أجلك</p>
+                  <p className="text-xs sm:text-sm text-gray-500 mt-1">ملوك الهدايا والتصميم في مصر</p>
                 </div>
               </div>
-            </div>
-            
-            <div className="w-full lg:w-auto text-center lg:text-left border-2 border-red-600 rounded-lg p-3 sm:p-4 bg-red-50">
-              <h2 className="text-base sm:text-lg font-bold mb-2 text-red-700">فاتورة رقم</h2>
-              <h3 className="text-lg sm:text-xl font-bold text-red-600 mb-2">{selectedOrder.serial}</h3>
-              <p className="text-sm sm:text-base text-gray-600">
-                التاريخ: {new Date(selectedOrder.date_created).toLocaleDateString('ar-EG')}
-              </p>
-            </div>
-          </div>
-
-          <hr className="border-t-2 border-red-600 mb-6 sm:mb-8" />
-
-          {/* Customer Information - Mobile Responsive */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8 mb-6 sm:mb-8">
-            <div className="order-1">
-              <h3 className="text-base sm:text-lg font-bold text-red-600 mb-3 sm:mb-4 flex items-center">
-                <span className="bg-red-600 text-white px-2 py-1 rounded ml-2 text-sm">📋</span>
-                بيانات العميل
-              </h3>
-              <div className="bg-blue-50 p-3 sm:p-4 rounded-lg space-y-2 text-sm sm:text-base">
-                <p><span className="font-bold">اسم العميل:</span> {selectedOrder.client_name}</p>
-                <p><span className="font-bold">التليفون:</span> {selectedOrder.phone}</p>
-                <p><span className="font-bold">طريقة الدفع:</span> {selectedOrder.payment_method}</p>
-                <p><span className="font-bold">طريقة الاستلام:</span> {selectedOrder.delivery_method}</p>
-              </div>
-            </div>
-
-            <div className="order-2">
-              <h3 className="text-base sm:text-lg font-bold text-blue-600 mb-3 sm:mb-4 flex items-center">
-                <span className="bg-blue-600 text-white px-2 py-1 rounded ml-2 text-sm">🚚</span>
-                معلومات التوصيل
-              </h3>
-              <div className="bg-green-50 p-3 sm:p-4 rounded-lg space-y-2 text-sm sm:text-base">
-                <p><span className="font-bold">طريقة الاستلام:</span> {selectedOrder.delivery_method}</p>
-                <p className="flex flex-wrap items-center"><span className="font-bold ml-2">حالة الطلب:</span> 
-                  <Badge className={`text-xs sm:text-sm ${getStatusColor(selectedOrder.status)}`}>
-                    {getStatusLabel(selectedOrder.status)}
-                  </Badge>
-                </p>
-                {selectedOrder.address && (
-                  <p><span className="font-bold">العنوان:</span> {selectedOrder.address}</p>
-                )}
-                {selectedOrder.governorate && (
-                  <p><span className="font-bold">المحافظة:</span> {selectedOrder.governorate}</p>
-                )}
+              
+              {/* Invoice Details */}
+              <div className="w-full lg:w-auto">
+                <div className="bg-white rounded-xl p-4 sm:p-6 shadow-lg border border-gray-100">
+                  <div className="text-center">
+                    <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-3">فاتورة رقم</h2>
+                    <div className="bg-gradient-to-l from-blue-600 to-purple-600 text-white rounded-lg px-4 py-2 mb-3">
+                      <span className="text-xl sm:text-2xl font-bold">{selectedOrder.serial}</span>
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      التاريخ: {new Date(selectedOrder.date_created).toLocaleDateString('ar-EG')}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Order Items Table - Mobile Responsive */}
-          <div className="mb-6 sm:mb-8">
-            <h3 className="text-base sm:text-lg font-bold text-red-600 mb-3 sm:mb-4 flex items-center">
-              <span className="bg-red-600 text-white px-2 py-1 rounded ml-2 text-sm">🛍️</span>
-              تفاصيل الطلب
-            </h3>
-            
-            {/* Mobile Card View */}
-            <div className="block sm:hidden space-y-3">
-              {selectedOrder.order_items.map((item, index) => (
-                <div key={item.id} className="bg-gray-50 p-3 rounded-lg border">
-                  <div className="flex justify-between items-start mb-2">
-                    <h4 className="font-bold text-sm">{item.product_type}</h4>
-                    <span className="text-sm font-bold text-green-600">
-                      {formatCurrency(item.quantity * item.price - item.item_discount)}
-                    </span>
+          {/* Customer & Order Information */}
+          <div className="px-6 sm:px-8 lg:px-12 py-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+              {/* Customer Info */}
+              <div className="bg-blue-50/50 rounded-xl p-6 border border-blue-100">
+                <h3 className="text-lg font-bold text-blue-800 mb-4 flex items-center">
+                  <span className="bg-blue-600 text-white px-3 py-1 rounded-lg ml-3 text-sm">👤</span>
+                  بيانات العميل
+                </h3>
+                <div className="space-y-3 text-sm sm:text-base">
+                  <div className="flex items-center">
+                    <span className="font-semibold text-gray-700 ml-2">الاسم:</span>
+                    <span className="text-gray-900">{selectedOrder.client_name}</span>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
-                    <p><span className="font-medium">المقاس:</span> {item.size}</p>
-                    <p><span className="font-medium">العدد:</span> {item.quantity}</p>
-                    <p><span className="font-medium">السعر:</span> {formatCurrency(item.price)}</p>
-                    {item.item_discount > 0 && (
-                      <p><span className="font-medium">الخصم:</span> {formatCurrency(item.item_discount)}</p>
-                    )}
+                  <div className="flex items-center">
+                    <span className="font-semibold text-gray-700 ml-2">الهاتف:</span>
+                    <span className="text-gray-900">{selectedOrder.phone}</span>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="font-semibold text-gray-700 ml-2">طريقة الدفع:</span>
+                    <span className="text-gray-900">{selectedOrder.payment_method}</span>
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
 
-            {/* Desktop Table View */}
-            <div className="hidden sm:block overflow-x-auto">
-              <table className="w-full border-collapse text-sm">
-                <thead>
-                  <tr className="bg-red-600 text-white">
-                    <th className="border border-red-600 p-2 sm:p-3 text-right">المنتج</th>
-                    <th className="border border-red-600 p-2 sm:p-3 text-center">المقاس</th>
-                    <th className="border border-red-600 p-2 sm:p-3 text-center">العدد</th>
-                    <th className="border border-red-600 p-2 sm:p-3 text-right">السعر</th>
-                    <th className="border border-red-600 p-2 sm:p-3 text-right">الإجمالي</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {selectedOrder.order_items.map((item, index) => (
-                    <tr key={item.id} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-                      <td className="border border-gray-300 p-2 sm:p-3">{item.product_type}</td>
-                      <td className="border border-gray-300 p-2 sm:p-3 text-center">{item.size}</td>
-                      <td className="border border-gray-300 p-2 sm:p-3 text-center">{item.quantity}</td>
-                      <td className="border border-gray-300 p-2 sm:p-3">{formatCurrency(item.price)}</td>
-                      <td className="border border-gray-300 p-2 sm:p-3 font-bold">
+              {/* Delivery Info */}
+              <div className="bg-green-50/50 rounded-xl p-6 border border-green-100">
+                <h3 className="text-lg font-bold text-green-800 mb-4 flex items-center">
+                  <span className="bg-green-600 text-white px-3 py-1 rounded-lg ml-3 text-sm">🚚</span>
+                  معلومات التوصيل
+                </h3>
+                <div className="space-y-3 text-sm sm:text-base">
+                  <div className="flex items-center">
+                    <span className="font-semibold text-gray-700 ml-2">طريقة الاستلام:</span>
+                    <span className="text-gray-900">{selectedOrder.delivery_method}</span>
+                  </div>
+                  <div className="flex items-center flex-wrap">
+                    <span className="font-semibold text-gray-700 ml-2">حالة الطلب:</span>
+                    <Badge className={`text-xs ${getStatusColor(selectedOrder.status)}`}>
+                      {getStatusLabel(selectedOrder.status)}
+                    </Badge>
+                  </div>
+                  {selectedOrder.address && (
+                    <div className="flex items-start">
+                      <span className="font-semibold text-gray-700 ml-2">العنوان:</span>
+                      <span className="text-gray-900">{selectedOrder.address}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Order Items */}
+          <div className="px-6 sm:px-8 lg:px-12 pb-8">
+            <div className="bg-gray-50/50 rounded-xl p-6 border border-gray-100">
+              <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
+                <span className="bg-purple-600 text-white px-3 py-1 rounded-lg ml-3 text-sm">🛍️</span>
+                تفاصيل الطلب
+              </h3>
+              
+              {/* Mobile Card View */}
+              <div className="block sm:hidden space-y-4">
+                {selectedOrder.order_items.map((item, index) => (
+                  <div key={item.id} className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                    <div className="flex justify-between items-start mb-3">
+                      <h4 className="font-bold text-gray-800">{item.product_type}</h4>
+                      <span className="text-lg font-bold text-green-600">
                         {formatCurrency(item.quantity * item.price - item.item_discount)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <span className="text-gray-500">المقاس:</span>
+                        <p className="font-medium text-gray-800">{item.size}</p>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">العدد:</span>
+                        <p className="font-medium text-gray-800">{item.quantity}</p>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">السعر:</span>
+                        <p className="font-medium text-gray-800">{formatCurrency(item.price)}</p>
+                      </div>
+                      {item.item_discount > 0 && (
+                        <div>
+                          <span className="text-gray-500">الخصم:</span>
+                          <p className="font-medium text-red-600">{formatCurrency(item.item_discount)}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
 
-          {/* Totals - Mobile Optimized */}
-          <div className="border-t-2 border-red-600 pt-4">
-            <div className="flex justify-end">
-              <div className="w-full sm:w-80 space-y-3">
-                <div className="flex justify-between text-sm sm:text-lg">
-                  <span>المجموع الفرعي:</span>
-                  <span className="font-bold">{formatCurrency(subtotal)}</span>
-                </div>
-                
-                {selectedOrder.shipping_cost > 0 && (
-                  <div className="flex justify-between text-sm sm:text-base">
-                    <span>تكلفة الشحن:</span>
-                    <span>{formatCurrency(selectedOrder.shipping_cost)}</span>
-                  </div>
-                )}
-                
-                {selectedOrder.discount > 0 && (
-                  <div className="flex justify-between text-red-600 text-sm sm:text-base">
-                    <span>الخصم:</span>
-                    <span>-{formatCurrency(selectedOrder.discount)}</span>
-                  </div>
-                )}
-                
-                <div className="flex justify-between text-lg sm:text-xl font-bold bg-red-600 text-white p-2 sm:p-3 rounded">
-                  <span>إجمالي الفاتورة:</span>
-                  <span>{formatCurrency(finalTotal)}</span>
-                </div>
-                
-                {selectedOrder.deposit > 0 && (
-                  <div className="flex justify-between text-blue-600 font-bold text-sm sm:text-base">
-                    <span>المبلغ المسدد:</span>
-                    <span>{formatCurrency(selectedOrder.deposit)}</span>
-                  </div>
-                )}
-                
-                {remainingAmount > 0 && (
-                  <div className="flex justify-between text-red-600 font-bold text-base sm:text-lg">
-                    <span>المبلغ المتبقي:</span>
-                    <span>{formatCurrency(remainingAmount)}</span>
-                  </div>
-                )}
+              {/* Desktop Table View */}
+              <div className="hidden sm:block overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-gradient-to-l from-gray-100 to-gray-50">
+                      <th className="text-right p-4 font-bold text-gray-800 rounded-tr-lg">المنتج</th>
+                      <th className="text-center p-4 font-bold text-gray-800">المقاس</th>
+                      <th className="text-center p-4 font-bold text-gray-800">العدد</th>
+                      <th className="text-right p-4 font-bold text-gray-800">السعر</th>
+                      <th className="text-right p-4 font-bold text-gray-800 rounded-tl-lg">الإجمالي</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedOrder.order_items.map((item, index) => (
+                      <tr key={item.id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'} border-b border-gray-100`}>
+                        <td className="p-4 text-gray-800 font-medium">{item.product_type}</td>
+                        <td className="p-4 text-center text-gray-700">{item.size}</td>
+                        <td className="p-4 text-center text-gray-700">{item.quantity}</td>
+                        <td className="p-4 text-gray-700">{formatCurrency(item.price)}</td>
+                        <td className="p-4 font-bold text-green-600">
+                          {formatCurrency(item.quantity * item.price - item.item_discount)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
 
-          {/* Notes Section - Mobile Responsive */}
+          {/* Totals Section */}
+          <div className="px-6 sm:px-8 lg:px-12 pb-8">
+            <div className="flex justify-end">
+              <div className="w-full sm:w-96 bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+                <div className="space-y-4">
+                  <div className="flex justify-between text-gray-700">
+                    <span>المجموع الفرعي:</span>
+                    <span className="font-semibold">{formatCurrency(subtotal)}</span>
+                  </div>
+                  
+                  {selectedOrder.shipping_cost > 0 && (
+                    <div className="flex justify-between text-gray-700">
+                      <span>تكلفة الشحن:</span>
+                      <span className="font-semibold">{formatCurrency(selectedOrder.shipping_cost)}</span>
+                    </div>
+                  )}
+                  
+                  {selectedOrder.discount > 0 && (
+                    <div className="flex justify-between text-red-600">
+                      <span>الخصم:</span>
+                      <span className="font-semibold">-{formatCurrency(selectedOrder.discount)}</span>
+                    </div>
+                  )}
+                  
+                  <hr className="border-gray-200" />
+                  
+                  <div className="flex justify-between text-xl font-bold bg-gradient-to-l from-blue-600 to-purple-600 text-white p-4 rounded-lg">
+                    <span>إجمالي الفاتورة:</span>
+                    <span>{formatCurrency(finalTotal)}</span>
+                  </div>
+                  
+                  {selectedOrder.deposit > 0 && (
+                    <div className="flex justify-between text-blue-600 font-semibold">
+                      <span>المبلغ المسدد:</span>
+                      <span>{formatCurrency(selectedOrder.deposit)}</span>
+                    </div>
+                  )}
+                  
+                  {remainingAmount > 0 && (
+                    <div className="flex justify-between text-orange-600 font-bold text-lg">
+                      <span>المبلغ المتبقي:</span>
+                      <span>{formatCurrency(remainingAmount)}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Notes Section */}
           {selectedOrder.notes && (
-            <div className="mt-6 sm:mt-8">
-              <h3 className="text-base sm:text-lg font-bold text-gray-700 mb-3">ملاحظات:</h3>
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 sm:p-4">
-                <p className="text-sm sm:text-base text-gray-700 whitespace-pre-wrap">{selectedOrder.notes}</p>
+            <div className="px-6 sm:px-8 lg:px-12 pb-8">
+              <div className="bg-amber-50/50 rounded-xl p-6 border border-amber-100">
+                <h3 className="text-lg font-bold text-amber-800 mb-3">ملاحظات:</h3>
+                <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{selectedOrder.notes}</p>
               </div>
             </div>
           )}
 
-          {/* Footer - Mobile Optimized */}
-          <div className="mt-8 sm:mt-12 text-center">
-            <div className="bg-blue-100 p-3 sm:p-4 rounded-lg">
-              <p className="text-blue-800 font-bold text-sm sm:text-base">#شكراً_لثقتكم_في_بتاع_هدايا_الأصلي</p>
-              <p className="text-xs sm:text-sm text-gray-600 mt-2">
+          {/* Footer */}
+          <div className="bg-gradient-to-l from-slate-100 to-blue-100 px-6 sm:px-8 lg:px-12 py-8 text-center">
+            <div className="max-w-2xl mx-auto">
+              <p className="text-blue-800 font-bold text-lg mb-2">#شكراً_لثقتكم_في_بتاع_هدايا_الأصلي</p>
+              <p className="text-gray-600 text-sm mb-4">
                 لأي استفسار يرجى التواصل معنا • هذه فاتورة إلكترونية معتمدة
               </p>
-              <div className="mt-3 sm:mt-4 flex justify-center">
+              <div className="flex justify-center">
                 <img 
-                  src="/lovable-uploads/6e9103de-62f6-4d29-adc7-17c0cbdc9eda.png" 
+                  src="/lovable-uploads/ac63ecb6-e1d0-4917-9537-12f75da70364.png" 
                   alt="ختم الشركة" 
-                  className="w-8 h-8 sm:w-10 sm:h-10 object-contain opacity-60" 
+                  className="w-12 h-12 object-contain opacity-80 bg-white p-2 rounded-lg shadow-sm" 
                 />
               </div>
             </div>
@@ -359,7 +407,7 @@ const ImprovedInvoiceTab = () => {
   if (error) {
     console.error('Invoice tab query error:', error);
     return (
-      <Card>
+      <Card className="shadow-lg">
         <CardContent className="p-6">
           <div className="text-center py-8 text-red-500">
             <p>حدث خطأ في تحميل الطلبات</p>
@@ -372,19 +420,19 @@ const ImprovedInvoiceTab = () => {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
+      <Card className="shadow-lg border-0">
+        <CardHeader className="bg-gradient-to-l from-blue-50 to-purple-50">
+          <CardTitle className="flex items-center gap-3 text-xl">
+            <FileText className="h-6 w-6 text-blue-600" />
             الفواتير والطلبات
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          {/* Advanced Filters - Mobile Responsive */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <CardContent className="p-6">
+          {/* Advanced Filters */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <div>
-              <Label htmlFor="search">البحث</Label>
-              <div className="relative">
+              <Label htmlFor="search" className="text-gray-700 font-medium">البحث</Label>
+              <div className="relative mt-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
                   id="search"
@@ -392,15 +440,15 @@ const ImprovedInvoiceTab = () => {
                   placeholder="رقم الطلب، العميل، الهاتف..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
             </div>
             
             <div>
-              <Label>حالة الطلب</Label>
+              <Label className="text-gray-700 font-medium">حالة الطلب</Label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
+                <SelectTrigger className="mt-1 border-gray-300 focus:border-blue-500">
                   <SelectValue placeholder="جميع الحالات" />
                 </SelectTrigger>
                 <SelectContent>
@@ -416,34 +464,36 @@ const ImprovedInvoiceTab = () => {
             </div>
             
             <div>
-              <Label htmlFor="dateFrom">من تاريخ</Label>
+              <Label htmlFor="dateFrom" className="text-gray-700 font-medium">من تاريخ</Label>
               <Input
                 id="dateFrom"
                 type="date"
                 value={dateFrom}
                 onChange={(e) => setDateFrom(e.target.value)}
+                className="mt-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
             
             <div>
-              <Label htmlFor="dateTo">إلى تاريخ</Label>
+              <Label htmlFor="dateTo" className="text-gray-700 font-medium">إلى تاريخ</Label>
               <Input
                 id="dateTo"
                 type="date"
                 value={dateTo}
                 onChange={(e) => setDateTo(e.target.value)}
+                className="mt-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
           </div>
 
-          {/* Orders List - Mobile Responsive */}
+          {/* Orders List */}
           {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin" />
-              <span className="mr-2">جاري تحميل الطلبات...</span>
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+              <span className="mr-3 text-gray-600">جاري تحميل الطلبات...</span>
             </div>
           ) : filteredOrders.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-12 text-gray-500">
               {searchTerm || statusFilter !== 'all' || dateFrom || dateTo 
                 ? 'لا توجد طلبات تطابق معايير البحث' 
                 : 'لا توجد طلبات'}
@@ -451,52 +501,51 @@ const ImprovedInvoiceTab = () => {
           ) : (
             <div className="space-y-4">
               {filteredOrders.map((order) => (
-                <div key={order.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                  <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-3 lg:space-y-0">
+                <div key={order.id} className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all duration-300 hover:border-blue-200">
+                  <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-4 lg:space-y-0">
                     <div className="flex-1 w-full">
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-2">
-                        <h3 className="font-semibold text-lg">{order.serial}</h3>
-                        <Badge className={`text-xs ${getStatusColor(order.status)}`}>
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-4">
+                        <h3 className="text-xl font-bold text-gray-800">{order.serial}</h3>
+                        <Badge className={`text-sm ${getStatusColor(order.status)}`}>
                           {getStatusLabel(order.status)}
                         </Badge>
                       </div>
                       
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
                         <div>
-                          <span className="text-gray-500">العميل:</span>
-                          <p className="font-medium">{order.client_name}</p>
+                          <span className="text-gray-500 font-medium">العميل:</span>
+                          <p className="font-semibold text-gray-800">{order.client_name}</p>
                         </div>
                         <div>
-                          <span className="text-gray-500">الهاتف:</span>
-                          <p className="font-medium">{order.phone}</p>
+                          <span className="text-gray-500 font-medium">الهاتف:</span>
+                          <p className="font-semibold text-gray-800">{order.phone}</p>
                         </div>
                         <div>
-                          <span className="text-gray-500">التاريخ:</span>
-                          <p className="font-medium">
+                          <span className="text-gray-500 font-medium">التاريخ:</span>
+                          <p className="font-semibold text-gray-800">
                             {new Date(order.date_created).toLocaleDateString('ar-EG')}
                           </p>
                         </div>
                         <div>
-                          <span className="text-gray-500">المبلغ الإجمالي:</span>
-                          <p className="font-bold text-green-600">
+                          <span className="text-gray-500 font-medium">المبلغ الإجمالي:</span>
+                          <p className="font-bold text-green-600 text-lg">
                             {formatCurrency(order.total)}
                           </p>
                         </div>
                       </div>
 
                       {order.notes && (
-                        <div className="mt-2">
-                          <span className="text-gray-500 text-sm">الملاحظات:</span>
-                          <p className="text-sm bg-gray-100 p-2 rounded mt-1 line-clamp-2">{order.notes}</p>
+                        <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                          <span className="text-gray-500 text-sm font-medium">الملاحظات:</span>
+                          <p className="text-sm text-gray-700 mt-1 line-clamp-2">{order.notes}</p>
                         </div>
                       )}
                     </div>
                     
-                    <div className="flex flex-col gap-2 w-full lg:w-auto lg:mr-4">
+                    <div className="w-full lg:w-auto">
                       <Button
                         onClick={() => setSelectedOrder(order)}
-                        size="sm"
-                        className="w-full lg:w-auto flex items-center gap-2"
+                        className="w-full lg:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg flex items-center gap-2"
                       >
                         <Eye className="h-4 w-4" />
                         عرض الفاتورة
