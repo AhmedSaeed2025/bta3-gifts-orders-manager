@@ -22,11 +22,11 @@ const InvoiceTab = () => {
     queryKey: ['admin-orders-invoice'],
     queryFn: async () => {
       if (!user) {
-        console.log('No user found');
+        console.log('No user found for invoice tab');
         return [];
       }
       
-      console.log('Fetching orders for user:', user.id);
+      console.log('Fetching orders for invoice tab, user:', user.id);
       
       const { data, error } = await supabase
         .from('admin_orders')
@@ -38,11 +38,11 @@ const InvoiceTab = () => {
         .order('order_date', { ascending: false });
       
       if (error) {
-        console.error('Error fetching orders:', error);
+        console.error('Error fetching orders for invoice tab:', error);
         throw error;
       }
       
-      console.log('Fetched orders:', data);
+      console.log('Fetched orders for invoice tab:', data);
       return data || [];
     },
     enabled: !!user,
@@ -91,7 +91,7 @@ const InvoiceTab = () => {
   }
 
   if (error) {
-    console.error('Query error:', error);
+    console.error('Invoice tab query error:', error);
     return (
       <Card>
         <CardContent className="p-6">

@@ -63,6 +63,8 @@ const ProductsManagementPro = () => {
     queryFn: async () => {
       if (!user) return [];
       
+      console.log('Fetching products for user:', user.id);
+      
       const { data, error } = await supabase
         .from('products')
         .select(`
@@ -72,7 +74,12 @@ const ProductsManagementPro = () => {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching products:', error);
+        throw error;
+      }
+      
+      console.log('Fetched products:', data);
       return data || [];
     },
     enabled: !!user
@@ -90,7 +97,11 @@ const ProductsManagementPro = () => {
         .eq('user_id', user.id)
         .order('name');
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching categories:', error);
+        throw error;
+      }
+      
       return data || [];
     },
     enabled: !!user
@@ -122,6 +133,8 @@ const ProductsManagementPro = () => {
       let productId: string;
 
       if (editingProduct) {
+        console.log('Updating product:', editingProduct.id, productData);
+        
         // Update existing product
         const { data, error } = await supabase
           .from('products')
@@ -130,7 +143,11 @@ const ProductsManagementPro = () => {
           .select()
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error updating product:', error);
+          throw error;
+        }
+        
         productId = data.id;
 
         // Delete existing sizes
@@ -146,7 +163,11 @@ const ProductsManagementPro = () => {
           .select()
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error creating product:', error);
+          throw error;
+        }
+        
         productId = data.id;
       }
 
@@ -165,7 +186,10 @@ const ProductsManagementPro = () => {
           .from('product_sizes')
           .insert(sizesData);
 
-        if (sizesError) throw sizesError;
+        if (sizesError) {
+          console.error('Error inserting sizes:', sizesError);
+          throw sizesError;
+        }
       }
 
       toast.success(editingProduct ? 'تم تحديث المنتج بنجاح' : 'تم إضافة المنتج بنجاح');
@@ -187,6 +211,8 @@ const ProductsManagementPro = () => {
   };
 
   const handleEdit = (product: Product) => {
+    console.log('Editing product:', product);
+    
     setEditingProduct(product);
     setFormData({
       name: product.name,
@@ -207,12 +233,27 @@ const ProductsManagementPro = () => {
     if (!window.confirm('هل أنت متأكد من حذف هذا المنتج؟')) return;
 
     try {
+      // First delete product sizes
+      const { error: sizesError } = await supabase
+        .from('product_sizes')
+        .delete()
+        .eq('product_id', productId);
+
+      if (sizesError) {
+        console.error('Error deleting product sizes:', sizesError);
+        throw sizesError;
+      }
+
+      // Then delete the product
       const { error } = await supabase
         .from('products')
         .delete()
         .eq('id', productId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error deleting product:', error);
+        throw error;
+      }
 
       toast.success('تم حذف المنتج بنجاح');
       refetchProducts();
