@@ -312,21 +312,6 @@ const AdminProducts = () => {
     }));
   };
 
-  const handleEditCategory = (category: any) => {
-    setEditingCategory(category);
-    setCategoryForm({
-      name: category.name,
-      description: category.description || ''
-    });
-    setIsCategoryDialogOpen(true);
-  };
-
-  const handleDeleteCategory = (categoryId: string) => {
-    if (confirm('هل أنت متأكد من حذف هذه الفئة؟')) {
-      deleteCategoryMutation.mutate(categoryId);
-    }
-  };
-
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
