@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -141,150 +142,181 @@ const ImprovedInvoiceTab = () => {
     return (
       <div className="space-y-4">
         {/* Print Actions */}
-        <div className="flex items-center gap-2 mb-4 print:hidden">
-          <Button variant="outline" onClick={handlePrint} className="bg-blue-500 text-white hover:bg-blue-600">
+        <div className="flex flex-col sm:flex-row items-center gap-2 mb-4 print:hidden">
+          <Button variant="outline" onClick={handlePrint} className="w-full sm:w-auto bg-blue-500 text-white hover:bg-blue-600">
             <Download className="h-4 w-4 ml-2" />
-            تحميل PDF الجودة
+            تحميل PDF
           </Button>
-          <Button onClick={handlePrint} className="bg-green-500 text-white hover:bg-green-600">
+          <Button onClick={handlePrint} className="w-full sm:w-auto bg-green-500 text-white hover:bg-green-600">
             <Printer className="h-4 w-4 ml-2" />
-            طباعة
+            طباعة الفاتورة
           </Button>
-          <Button variant="outline" onClick={() => setSelectedOrder(null)}>
+          <Button variant="outline" onClick={() => setSelectedOrder(null)} className="w-full sm:w-auto">
             إغلاق
           </Button>
         </div>
 
-        {/* Invoice Content */}
-        <div ref={invoiceRef} className="bg-white text-black p-8 min-h-screen" dir="rtl">
-          {/* Header */}
-          <div className="flex justify-between items-start mb-8">
-            <div>
-              <div className="flex items-center gap-4 mb-4">
+        {/* Invoice Content - Optimized for Mobile */}
+        <div ref={invoiceRef} className="bg-white text-black p-4 sm:p-6 md:p-8 min-h-screen" dir="rtl">
+          {/* Header - Mobile Optimized */}
+          <div className="flex flex-col lg:flex-row justify-between items-start mb-6 sm:mb-8 space-y-4 lg:space-y-0">
+            <div className="w-full lg:w-auto">
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:gap-4 mb-4">
                 <img 
                   src="/lovable-uploads/6e9103de-62f6-4d29-adc7-17c0cbdc9eda.png" 
                   alt="شعار الشركة" 
-                  className="w-16 h-16 object-contain" 
+                  className="w-12 h-12 sm:w-16 sm:h-16 object-contain mx-auto sm:mx-0" 
                 />
-                <div>
-                  <h1 className="text-2xl font-bold text-red-600">بناء هديا الأصيل</h1>
-                  <p className="text-gray-600">ملوك الهدايا في مصر</p>
+                <div className="text-center sm:text-right">
+                  <h1 className="text-xl sm:text-2xl font-bold text-red-600">#بتاع_هدايا_الأصلي</h1>
+                  <p className="text-sm sm:text-base text-gray-600">ملوك الهدايا في مصر</p>
                 </div>
               </div>
             </div>
             
-            <div className="text-left">
-              <h2 className="text-lg font-bold mb-2">فاتورة رقم</h2>
-              <h3 className="text-xl font-bold text-red-600 mb-2">{selectedOrder.serial}</h3>
-              <p className="text-gray-600">
+            <div className="w-full lg:w-auto text-center lg:text-left border-2 border-red-600 rounded-lg p-3 sm:p-4 bg-red-50">
+              <h2 className="text-base sm:text-lg font-bold mb-2 text-red-700">فاتورة رقم</h2>
+              <h3 className="text-lg sm:text-xl font-bold text-red-600 mb-2">{selectedOrder.serial}</h3>
+              <p className="text-sm sm:text-base text-gray-600">
                 التاريخ: {new Date(selectedOrder.date_created).toLocaleDateString('ar-EG')}
               </p>
             </div>
           </div>
 
-          <hr className="border-t-2 border-red-600 mb-8" />
+          <hr className="border-t-2 border-red-600 mb-6 sm:mb-8" />
 
-          {/* Customer Information */}
-          <div className="grid grid-cols-2 gap-8 mb-8">
-            <div>
-              <h3 className="text-lg font-bold text-red-600 mb-4 flex items-center">
-                <span className="bg-red-600 text-white px-2 py-1 rounded ml-2">📋</span>
+          {/* Customer Information - Mobile Responsive */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8 mb-6 sm:mb-8">
+            <div className="order-1">
+              <h3 className="text-base sm:text-lg font-bold text-red-600 mb-3 sm:mb-4 flex items-center">
+                <span className="bg-red-600 text-white px-2 py-1 rounded ml-2 text-sm">📋</span>
                 بيانات العميل
               </h3>
-              <div className="bg-blue-50 p-4 rounded-lg space-y-2">
+              <div className="bg-blue-50 p-3 sm:p-4 rounded-lg space-y-2 text-sm sm:text-base">
                 <p><span className="font-bold">اسم العميل:</span> {selectedOrder.client_name}</p>
                 <p><span className="font-bold">التليفون:</span> {selectedOrder.phone}</p>
                 <p><span className="font-bold">طريقة الدفع:</span> {selectedOrder.payment_method}</p>
-                <p><span className="font-bold">طريقة الاستلام:</span> نقدي عند الاستلام</p>
+                <p><span className="font-bold">طريقة الاستلام:</span> {selectedOrder.delivery_method}</p>
               </div>
             </div>
 
-            <div>
-              <h3 className="text-lg font-bold text-blue-600 mb-4 flex items-center">
-                <span className="bg-blue-600 text-white px-2 py-1 rounded ml-2">🚚</span>
+            <div className="order-2">
+              <h3 className="text-base sm:text-lg font-bold text-blue-600 mb-3 sm:mb-4 flex items-center">
+                <span className="bg-blue-600 text-white px-2 py-1 rounded ml-2 text-sm">🚚</span>
                 معلومات التوصيل
               </h3>
-              <div className="bg-green-50 p-4 rounded-lg space-y-2">
+              <div className="bg-green-50 p-3 sm:p-4 rounded-lg space-y-2 text-sm sm:text-base">
                 <p><span className="font-bold">طريقة الاستلام:</span> {selectedOrder.delivery_method}</p>
-                <p><span className="font-bold">حالة الطلب:</span> 
-                  <Badge className={`mr-2 ${getStatusColor(selectedOrder.status)}`}>
+                <p className="flex flex-wrap items-center"><span className="font-bold ml-2">حالة الطلب:</span> 
+                  <Badge className={`text-xs sm:text-sm ${getStatusColor(selectedOrder.status)}`}>
                     {getStatusLabel(selectedOrder.status)}
                   </Badge>
                 </p>
+                {selectedOrder.address && (
+                  <p><span className="font-bold">العنوان:</span> {selectedOrder.address}</p>
+                )}
+                {selectedOrder.governorate && (
+                  <p><span className="font-bold">المحافظة:</span> {selectedOrder.governorate}</p>
+                )}
               </div>
             </div>
           </div>
 
-          {/* Order Items Table */}
-          <div className="mb-8">
-            <h3 className="text-lg font-bold text-red-600 mb-4 flex items-center">
-              <span className="bg-red-600 text-white px-2 py-1 rounded ml-2">🛍️</span>
+          {/* Order Items Table - Mobile Responsive */}
+          <div className="mb-6 sm:mb-8">
+            <h3 className="text-base sm:text-lg font-bold text-red-600 mb-3 sm:mb-4 flex items-center">
+              <span className="bg-red-600 text-white px-2 py-1 rounded ml-2 text-sm">🛍️</span>
               تفاصيل الطلب
             </h3>
             
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-red-600 text-white">
-                  <th className="border border-red-600 p-3 text-right">المنتج</th>
-                  <th className="border border-red-600 p-3 text-center">المقاس</th>
-                  <th className="border border-red-600 p-3 text-center">العدد</th>
-                  <th className="border border-red-600 p-3 text-right">السعر</th>
-                  <th className="border border-red-600 p-3 text-right">الإجمالي</th>
-                </tr>
-              </thead>
-              <tbody>
-                {selectedOrder.order_items.map((item, index) => (
-                  <tr key={item.id} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-                    <td className="border border-gray-300 p-3">{item.product_type}</td>
-                    <td className="border border-gray-300 p-3 text-center">{item.size}</td>
-                    <td className="border border-gray-300 p-3 text-center">{item.quantity}</td>
-                    <td className="border border-gray-300 p-3">{formatCurrency(item.price)}</td>
-                    <td className="border border-gray-300 p-3 font-bold">
+            {/* Mobile Card View */}
+            <div className="block sm:hidden space-y-3">
+              {selectedOrder.order_items.map((item, index) => (
+                <div key={item.id} className="bg-gray-50 p-3 rounded-lg border">
+                  <div className="flex justify-between items-start mb-2">
+                    <h4 className="font-bold text-sm">{item.product_type}</h4>
+                    <span className="text-sm font-bold text-green-600">
                       {formatCurrency(item.quantity * item.price - item.item_discount)}
-                    </td>
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
+                    <p><span className="font-medium">المقاس:</span> {item.size}</p>
+                    <p><span className="font-medium">العدد:</span> {item.quantity}</p>
+                    <p><span className="font-medium">السعر:</span> {formatCurrency(item.price)}</p>
+                    {item.item_discount > 0 && (
+                      <p><span className="font-medium">الخصم:</span> {formatCurrency(item.item_discount)}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full border-collapse text-sm">
+                <thead>
+                  <tr className="bg-red-600 text-white">
+                    <th className="border border-red-600 p-2 sm:p-3 text-right">المنتج</th>
+                    <th className="border border-red-600 p-2 sm:p-3 text-center">المقاس</th>
+                    <th className="border border-red-600 p-2 sm:p-3 text-center">العدد</th>
+                    <th className="border border-red-600 p-2 sm:p-3 text-right">السعر</th>
+                    <th className="border border-red-600 p-2 sm:p-3 text-right">الإجمالي</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {selectedOrder.order_items.map((item, index) => (
+                    <tr key={item.id} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+                      <td className="border border-gray-300 p-2 sm:p-3">{item.product_type}</td>
+                      <td className="border border-gray-300 p-2 sm:p-3 text-center">{item.size}</td>
+                      <td className="border border-gray-300 p-2 sm:p-3 text-center">{item.quantity}</td>
+                      <td className="border border-gray-300 p-2 sm:p-3">{formatCurrency(item.price)}</td>
+                      <td className="border border-gray-300 p-2 sm:p-3 font-bold">
+                        {formatCurrency(item.quantity * item.price - item.item_discount)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
-          {/* Totals */}
+          {/* Totals - Mobile Optimized */}
           <div className="border-t-2 border-red-600 pt-4">
             <div className="flex justify-end">
-              <div className="w-80 space-y-3">
-                <div className="flex justify-between text-lg">
+              <div className="w-full sm:w-80 space-y-3">
+                <div className="flex justify-between text-sm sm:text-lg">
                   <span>المجموع الفرعي:</span>
                   <span className="font-bold">{formatCurrency(subtotal)}</span>
                 </div>
                 
                 {selectedOrder.shipping_cost > 0 && (
-                  <div className="flex justify-between">
+                  <div className="flex justify-between text-sm sm:text-base">
                     <span>تكلفة الشحن:</span>
                     <span>{formatCurrency(selectedOrder.shipping_cost)}</span>
                   </div>
                 )}
                 
                 {selectedOrder.discount > 0 && (
-                  <div className="flex justify-between text-red-600">
+                  <div className="flex justify-between text-red-600 text-sm sm:text-base">
                     <span>الخصم:</span>
                     <span>-{formatCurrency(selectedOrder.discount)}</span>
                   </div>
                 )}
                 
-                <div className="flex justify-between text-xl font-bold bg-red-600 text-white p-3 rounded">
+                <div className="flex justify-between text-lg sm:text-xl font-bold bg-red-600 text-white p-2 sm:p-3 rounded">
                   <span>إجمالي الفاتورة:</span>
                   <span>{formatCurrency(finalTotal)}</span>
                 </div>
                 
                 {selectedOrder.deposit > 0 && (
-                  <div className="flex justify-between text-blue-600 font-bold">
+                  <div className="flex justify-between text-blue-600 font-bold text-sm sm:text-base">
                     <span>المبلغ المسدد:</span>
                     <span>{formatCurrency(selectedOrder.deposit)}</span>
                   </div>
                 )}
                 
                 {remainingAmount > 0 && (
-                  <div className="flex justify-between text-red-600 font-bold text-lg">
+                  <div className="flex justify-between text-red-600 font-bold text-base sm:text-lg">
                     <span>المبلغ المتبقي:</span>
                     <span>{formatCurrency(remainingAmount)}</span>
                   </div>
@@ -293,13 +325,30 @@ const ImprovedInvoiceTab = () => {
             </div>
           </div>
 
-          {/* Footer */}
-          <div className="mt-12 text-center">
-            <div className="bg-blue-100 p-4 rounded-lg">
-              <p className="text-blue-800 font-bold">شكراً لثقتكم في بناء هديا الأصيل</p>
-              <p className="text-sm text-gray-600 mt-2">
+          {/* Notes Section - Mobile Responsive */}
+          {selectedOrder.notes && (
+            <div className="mt-6 sm:mt-8">
+              <h3 className="text-base sm:text-lg font-bold text-gray-700 mb-3">ملاحظات:</h3>
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 sm:p-4">
+                <p className="text-sm sm:text-base text-gray-700 whitespace-pre-wrap">{selectedOrder.notes}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Footer - Mobile Optimized */}
+          <div className="mt-8 sm:mt-12 text-center">
+            <div className="bg-blue-100 p-3 sm:p-4 rounded-lg">
+              <p className="text-blue-800 font-bold text-sm sm:text-base">#شكراً_لثقتكم_في_بتاع_هدايا_الأصلي</p>
+              <p className="text-xs sm:text-sm text-gray-600 mt-2">
                 لأي استفسار يرجى التواصل معنا • هذه فاتورة إلكترونية معتمدة
               </p>
+              <div className="mt-3 sm:mt-4 flex justify-center">
+                <img 
+                  src="/lovable-uploads/6e9103de-62f6-4d29-adc7-17c0cbdc9eda.png" 
+                  alt="ختم الشركة" 
+                  className="w-8 h-8 sm:w-10 sm:h-10 object-contain opacity-60" 
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -331,8 +380,8 @@ const ImprovedInvoiceTab = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {/* Advanced Filters */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          {/* Advanced Filters - Mobile Responsive */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <div>
               <Label htmlFor="search">البحث</Label>
               <div className="relative">
@@ -387,7 +436,7 @@ const ImprovedInvoiceTab = () => {
             </div>
           </div>
 
-          {/* Orders List */}
+          {/* Orders List - Mobile Responsive */}
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-8 w-8 animate-spin" />
@@ -403,16 +452,16 @@ const ImprovedInvoiceTab = () => {
             <div className="space-y-4">
               {filteredOrders.map((order) => (
                 <div key={order.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
+                  <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-3 lg:space-y-0">
+                    <div className="flex-1 w-full">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-2">
                         <h3 className="font-semibold text-lg">{order.serial}</h3>
-                        <Badge className={getStatusColor(order.status)}>
+                        <Badge className={`text-xs ${getStatusColor(order.status)}`}>
                           {getStatusLabel(order.status)}
                         </Badge>
                       </div>
                       
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
                         <div>
                           <span className="text-gray-500">العميل:</span>
                           <p className="font-medium">{order.client_name}</p>
@@ -438,16 +487,16 @@ const ImprovedInvoiceTab = () => {
                       {order.notes && (
                         <div className="mt-2">
                           <span className="text-gray-500 text-sm">الملاحظات:</span>
-                          <p className="text-sm bg-gray-100 p-2 rounded mt-1">{order.notes}</p>
+                          <p className="text-sm bg-gray-100 p-2 rounded mt-1 line-clamp-2">{order.notes}</p>
                         </div>
                       )}
                     </div>
                     
-                    <div className="flex flex-col gap-2 mr-4">
+                    <div className="flex flex-col gap-2 w-full lg:w-auto lg:mr-4">
                       <Button
                         onClick={() => setSelectedOrder(order)}
                         size="sm"
-                        className="flex items-center gap-2"
+                        className="w-full lg:w-auto flex items-center gap-2"
                       >
                         <Eye className="h-4 w-4" />
                         عرض الفاتورة
