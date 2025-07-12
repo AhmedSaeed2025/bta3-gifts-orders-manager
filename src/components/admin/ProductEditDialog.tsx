@@ -81,7 +81,7 @@ const ProductEditDialog = ({ product, categories, isOpen, onClose, onUpdate }: P
         description: product.description || '',
         image_url: product.image_url || '',
         video_url: product.video_url || '',
-        category_id: product.category_id || '',
+        category_id: product.category_id || 'no-category',
         is_active: product.is_active,
         featured: product.featured,
         discount_percentage: product.discount_percentage || 0,
@@ -120,7 +120,7 @@ const ProductEditDialog = ({ product, categories, isOpen, onClose, onUpdate }: P
           description: data.description,
           image_url: data.image_url,
           video_url: data.video_url,
-          category_id: data.category_id || null,
+          category_id: data.category_id === 'no-category' ? null : data.category_id,
           is_active: data.is_active,
           featured: data.featured,
           discount_percentage: data.discount_percentage
@@ -332,7 +332,7 @@ const ProductEditDialog = ({ product, categories, isOpen, onClose, onUpdate }: P
                   <SelectValue placeholder="اختر فئة" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">بدون فئة</SelectItem>
+                  <SelectItem value="no-category">بدون فئة</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
                       {category.name}

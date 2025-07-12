@@ -134,38 +134,47 @@ const EnhancedAccountStatement = () => {
     <div className="space-y-6">
       {/* Header Cards */}
       <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-3'}`}>
-        <Card className="bg-gradient-to-r from-green-50 to-green-100 border-green-200">
-          <CardContent className="p-4">
+        <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200 shadow-sm hover:shadow-md transition-shadow">
+          <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-green-800">إجمالي الإيرادات</p>
-                <p className="text-2xl font-bold text-green-900">{formatCurrency(totalIncome)}</p>
+                <p className="text-sm font-medium text-emerald-700 mb-2">إجمالي الإيرادات</p>
+                <p className="text-3xl font-bold text-emerald-900">{formatCurrency(totalIncome)}</p>
               </div>
-              <TrendingUp className="h-8 w-8 text-green-600" />
+              <div className="bg-emerald-100 p-3 rounded-full">
+                <TrendingUp className="h-8 w-8 text-emerald-600" />
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-r from-red-50 to-red-100 border-red-200">
-          <CardContent className="p-4">
+        <Card className="bg-gradient-to-br from-rose-50 to-rose-100 border-rose-200 shadow-sm hover:shadow-md transition-shadow">
+          <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-red-800">إجمالي المصروفات</p>
-                <p className="text-2xl font-bold text-red-900">{formatCurrency(totalExpenses)}</p>
+                <p className="text-sm font-medium text-rose-700 mb-2">إجمالي المصروفات</p>
+                <p className="text-3xl font-bold text-rose-900">{formatCurrency(totalExpenses)}</p>
               </div>
-              <TrendingDown className="h-8 w-8 text-red-600" />
+              <div className="bg-rose-100 p-3 rounded-full">
+                <TrendingDown className="h-8 w-8 text-rose-600" />
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200">
-          <CardContent className="p-4">
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 shadow-sm hover:shadow-md transition-shadow">
+          <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-blue-800">الرصيد الحالي</p>
-                <p className="text-2xl font-bold text-blue-900">{formatCurrency(balance)}</p>
+                <p className="text-sm font-medium text-blue-700 mb-2">الرصيد الحالي</p>
+                <p className="text-3xl font-bold text-blue-900">{formatCurrency(balance)}</p>
+                <p className="text-xs text-blue-600 mt-1">
+                  {balance >= 0 ? 'رصيد إيجابي' : 'رصيد سالب'}
+                </p>
               </div>
-              <Wallet className="h-8 w-8 text-blue-600" />
+              <div className="bg-blue-100 p-3 rounded-full">
+                <Wallet className="h-8 w-8 text-blue-600" />
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -181,7 +190,10 @@ const EnhancedAccountStatement = () => {
             </CardTitle>
             <Dialog open={transferDialog} onOpenChange={setTransferDialog}>
               <DialogTrigger asChild>
-                <Button className="bg-purple-600 hover:bg-purple-700">
+                <Button 
+                  className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-sm"
+                  disabled={balance <= 0}
+                >
                   <ArrowRightLeft className="h-4 w-4 ml-2" />
                   تحويل مبلغ
                 </Button>
@@ -244,32 +256,33 @@ const EnhancedAccountStatement = () => {
               transactions.map((transaction) => (
                 <div 
                   key={transaction.id} 
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
+                  className="flex items-center justify-between p-5 border border-gray-200 rounded-xl hover:bg-gray-50 hover:shadow-sm transition-all duration-200"
                 >
                   <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
+                    <div className="flex items-center gap-3 mb-3">
                       <Badge 
                         variant={transaction.transaction_type === 'income' ? 'default' : 'destructive'}
-                        className={`${
+                        className={`px-3 py-1 text-sm font-medium ${
                           transaction.transaction_type === 'income' 
-                            ? 'bg-green-100 text-green-800 hover:bg-green-200' 
-                            : 'bg-red-100 text-red-800 hover:bg-red-200'
+                            ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200' 
+                            : 'bg-rose-100 text-rose-800 hover:bg-rose-200'
                         }`}
                       >
-                        {transaction.transaction_type === 'income' ? 'إيراد' : 'مصروف'}
+                        {transaction.transaction_type === 'income' ? '💰 إيراد' : '📤 مصروف'}
                       </Badge>
-                      <span className="text-sm text-gray-600">
+                      <span className="text-sm font-medium text-gray-700 bg-gray-100 px-2 py-1 rounded">
                         {transaction.order_serial}
                       </span>
                     </div>
                     
                     {transaction.description && (
-                      <p className="text-sm text-gray-600 mb-1">
+                      <p className="text-sm text-gray-700 mb-2 font-medium">
                         {transaction.description}
                       </p>
                     )}
                     
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-500 flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
                       {new Date(transaction.created_at).toLocaleString('ar-EG', {
                         year: 'numeric',
                         month: 'long',
@@ -280,11 +293,11 @@ const EnhancedAccountStatement = () => {
                     </p>
                   </div>
                   
-                  <div className="text-left">
-                    <p className={`text-lg font-bold ${
+                  <div className="text-left ml-4">
+                    <p className={`text-xl font-bold ${
                       transaction.transaction_type === 'income' 
-                        ? 'text-green-600' 
-                        : 'text-red-600'
+                        ? 'text-emerald-600' 
+                        : 'text-rose-600'
                     }`}>
                       {transaction.transaction_type === 'income' ? '+' : '-'}
                       {formatCurrency(transaction.amount)}

@@ -380,7 +380,7 @@ const ProductsManagementPro = () => {
                         <SelectValue placeholder="اختر الفئة" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">بدون فئة</SelectItem>
+                        <SelectItem value="no-category">بدون فئة</SelectItem>
                         {categories.map((category: Category) => (
                           <SelectItem key={category.id} value={category.id}>
                             {category.name}

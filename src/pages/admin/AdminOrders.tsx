@@ -110,7 +110,7 @@ const AdminOrders = () => {
     onSuccess: () => {
       syncOrders(); // Use the sync hook instead of individual invalidations
       toast.success('تم تحديث الطلب بنجاح');
-      // Don't close the dialog automatically - user must click save
+      handleCloseDialog(); // Close dialog after successful save
     },
     onError: (error: any) => {
       console.error('Error updating order:', error);
@@ -354,7 +354,7 @@ const AdminOrders = () => {
       </div>
 
       {/* Edit Order Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={() => {}}>
+      <Dialog open={isEditDialogOpen} onOpenChange={handleCloseDialog}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>تعديل الطلب {editingOrder?.serial}</DialogTitle>
