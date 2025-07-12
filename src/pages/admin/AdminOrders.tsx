@@ -354,8 +354,14 @@ const AdminOrders = () => {
       </div>
 
       {/* Edit Order Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={handleCloseDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <Dialog open={isEditDialogOpen} onOpenChange={(open) => {
+        if (!open && !updateOrderMutation.isPending) {
+          handleCloseDialog();
+        }
+      }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => {
+          e.preventDefault();
+        }}>
           <DialogHeader>
             <DialogTitle>تعديل الطلب {editingOrder?.serial}</DialogTitle>
           </DialogHeader>

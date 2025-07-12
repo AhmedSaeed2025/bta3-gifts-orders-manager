@@ -27,6 +27,13 @@ class ErrorBoundary extends Component<Props, State> {
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('خطأ في التطبيق:', error, errorInfo);
     
+    // Log error details for debugging
+    console.group('Error Details');
+    console.error('Error:', error.message);
+    console.error('Stack:', error.stack);
+    console.error('Component Stack:', errorInfo.componentStack);
+    console.groupEnd();
+    
     if (this.state.retryCount < this.maxRetries) {
       toast.error('حدث خطأ مؤقت، جاري المحاولة مرة أخرى...');
       
@@ -41,7 +48,7 @@ class ErrorBoundary extends Component<Props, State> {
       toast.error('حدث خطأ مستمر، جاري إعادة تحميل الصفحة...');
       
       setTimeout(() => {
-        window.location.reload();
+        window.location.href = '/legacy-admin';
       }, 2000);
     }
   }
