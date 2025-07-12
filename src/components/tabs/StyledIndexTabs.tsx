@@ -19,7 +19,7 @@ import ProductsManagementPro from "@/components/ProductsManagementPro";
 import AdminOrders from "@/pages/admin/AdminOrders";
 import ImprovedShippingReport from "@/components/admin/ImprovedShippingReport";
 import DetailedOrdersReport from "@/components/admin/DetailedOrdersReport";
-import AdvancedAccountStatement from "@/components/admin/AdvancedAccountStatement";
+import ComprehensiveAccountStatement from "@/components/admin/ComprehensiveAccountStatement";
 import ImprovedInvoiceTab from "@/components/ImprovedInvoiceTab";
 import AdminSettings from "@/pages/admin/AdminSettings";
 
@@ -68,7 +68,7 @@ const StyledIndexTabs = () => {
       id: "account-statement",
       label: "كشف الحساب",
       icon: Calculator,
-      component: <AdvancedAccountStatement />
+      component: <ComprehensiveAccountStatement />
     },
     {
       id: "invoice",
