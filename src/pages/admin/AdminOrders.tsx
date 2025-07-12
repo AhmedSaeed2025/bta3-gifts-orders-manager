@@ -1,236 +1,196 @@
+
 import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useOrderSync } from '@/hooks/useOrderSync';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { Textarea } from '@/components/ui/textarea';
 import { formatCurrency } from '@/lib/utils';
-import { Search, Plus, Filter, Download, Trash2, FileText, Image } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useNavigate } from 'react-router-dom';
-import OrdersTable from '@/components/admin/OrdersTable';
-import MobileOrdersManagement from '@/components/admin/MobileOrdersManagement';
-import OrderPaymentDialog from '@/components/admin/OrderPaymentDialog';
-import AdminOrderInvoice from '@/components/admin/AdminOrderInvoice';
 import { toast } from 'sonner';
+import { 
+  Edit, 
+  Trash2, 
+  Search, 
+  Calendar, 
+  Package, 
+  User, 
+  Phone,
+  MapPin,
+  CreditCard,
+  Truck,
+  Save,
+  X
+} from 'lucide-react';
 
-interface AdminOrder {
+interface Order {
   id: string;
   serial: string;
-  customer_name: string;
-  customer_phone: string;
-  customer_email?: string;
-  shipping_address?: string;
+  client_name: string;
+  phone: string;
+  email?: string;
+  address?: string;
   governorate?: string;
   payment_method: string;
   delivery_method: string;
   shipping_cost: number;
   discount: number;
   deposit: number;
-  total_amount: number;
+  total: number;
   profit: number;
   status: string;
-  order_date: string;
-  created_at: string;
-  updated_at: string;
   notes?: string;
-  attached_image_url?: string;
-  shipping_status?: string;
-  admin_order_items: AdminOrderItem[];
-}
-
-interface AdminOrderItem {
-  id: string;
-  product_name: string;
-  product_size: string;
-  quantity: number;
-  unit_cost: number;
-  unit_price: number;
-  item_discount: number;
-  total_price: number;
-  profit: number;
+  date_created: string;
 }
 
 const AdminOrders = () => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { syncOrders } = useOrderSync();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null);
-  const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
-  const [orderDetailsDialogOpen, setOrderDetailsDialogOpen] = useState(false);
-  const [notesDialogOpen, setNotesDialogOpen] = useState(false);
-  const [imageDialogOpen, setImageDialogOpen] = useState(false);
-  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
-  const [paymentType, setPaymentType] = useState<'collection' | 'shipping' | 'cost'>('collection');
+  const [editingOrder, setEditingOrder] = useState<Order | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
+  // Fetch orders
   const { data: orders = [], isLoading, refetch } = useQuery({
     queryKey: ['admin-orders'],
     queryFn: async () => {
       if (!user) return [];
       
       const { data, error } = await supabase
-        .from('admin_orders')
-        .select(`
-          *,
-          admin_order_items (*)
-        `)
+        .from('orders')
+        .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('date_created', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching orders:', error);
+        return [];
+      }
+      
       return data || [];
     },
     enabled: !!user
   });
 
-  const filteredOrders = orders.filter((order: AdminOrder) => {
-    const matchesSearch = order.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.serial?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.customer_phone?.includes(searchTerm);
+  // Update order mutation
+  const updateOrderMutation = useMutation({
+    mutationFn: async (updatedOrder: Order) => {
+      const { error } = await supabase
+        .from('orders')
+        .update({
+          client_name: updatedOrder.client_name,
+          phone: updatedOrder.phone,
+          email: updatedOrder.email,
+          address: updatedOrder.address,
+          governorate: updatedOrder.governorate,
+          payment_method: updatedOrder.payment_method,
+          delivery_method: updatedOrder.delivery_method,
+          shipping_cost: updatedOrder.shipping_cost,
+          discount: updatedOrder.discount,
+          deposit: updatedOrder.deposit,
+          total: updatedOrder.total,
+          status: updatedOrder.status,
+          notes: updatedOrder.notes
+        })
+        .eq('id', updatedOrder.id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      syncOrders(); // Use the sync hook instead of individual invalidations
+      toast.success('تم تحديث الطلب بنجاح');
+      // Don't close the dialog automatically - user must click save
+    },
+    onError: (error: any) => {
+      console.error('Error updating order:', error);
+      toast.error('حدث خطأ في تحديث الطلب');
+    }
+  });
+
+  // Delete order mutation
+  const deleteOrderMutation = useMutation({
+    mutationFn: async (orderId: string) => {
+      const { error } = await supabase
+        .from('orders')
+        .delete()
+        .eq('id', orderId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      syncOrders();
+      toast.success('تم حذف الطلب بنجاح');
+    },
+    onError: (error: any) => {
+      console.error('Error deleting order:', error);
+      toast.error('حدث خطأ في حذف الطلب');
+    }
+  });
+
+  const handleEditOrder = (order: Order) => {
+    setEditingOrder(order);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleSaveOrder = () => {
+    if (editingOrder) {
+      updateOrderMutation.mutate(editingOrder);
+    }
+  };
+
+  const handleCloseDialog = () => {
+    setIsEditDialogOpen(false);
+    setEditingOrder(null);
+  };
+
+  const handleDeleteOrder = (orderId: string) => {
+    if (confirm('هل أنت متأكد من حذف هذا الطلب؟')) {
+      deleteOrderMutation.mutate(orderId);
+    }
+  };
+
+  const filteredOrders = orders.filter((order) => {
+    const matchesSearch = 
+      order.serial.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.phone.includes(searchTerm);
     
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
     
     return matchesSearch && matchesStatus;
   });
 
-  const calculateOrderDetails = (order: AdminOrder) => {
-    const orderSubtotal = order.admin_order_items?.reduce((sum, item) => {
-      return sum + (item.unit_price - (item.item_discount || 0)) * item.quantity;
-    }, 0) || 0;
-    
-    const orderCost = order.admin_order_items?.reduce((sum, item) => {
-      return sum + item.unit_cost * item.quantity;
-    }, 0) || 0;
-    
-    const orderNetProfit = orderSubtotal - orderCost;
-    
-    return { orderSubtotal, orderCost, orderNetProfit };
+  const getStatusColor = (status: string) => {
+    const colors = {
+      'pending': 'bg-yellow-100 text-yellow-800',
+      'confirmed': 'bg-blue-100 text-blue-800',
+      'shipped': 'bg-purple-100 text-purple-800',
+      'delivered': 'bg-green-100 text-green-800',
+      'cancelled': 'bg-red-100 text-red-800'
+    };
+    return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
 
-  const updateOrderStatus = async (orderId: string, newStatus: string) => {
-    try {
-      const { error } = await supabase
-        .from('admin_orders')
-        .update({ status: newStatus })
-        .eq('id', orderId);
-
-      if (error) throw error;
-
-      toast.success('تم تحديث حالة الطلب بنجاح');
-      
-      // Invalidate all order-related queries to sync across components
-      queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
-      queryClient.invalidateQueries({ queryKey: ['detailed-orders-report'] });
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
-      
-      refetch();
-    } catch (error) {
-      console.error('Error updating order status:', error);
-      toast.error('حدث خطأ في تحديث حالة الطلب');
-    }
-  };
-
-  const deleteOrder = async (orderId: string) => {
-    if (!window.confirm('هل أنت متأكد من حذف هذا الطلب؟')) return;
-
-    try {
-      const { error } = await supabase
-        .from('admin_orders')
-        .delete()
-        .eq('id', orderId);
-
-      if (error) throw error;
-
-      toast.success('تم حذف الطلب بنجاح');
-      refetch();
-    } catch (error) {
-      console.error('Error deleting order:', error);
-      toast.error('حدث خطأ في حذف الطلب');
-    }
-  };
-
-  const openInvoiceDialog = (order: AdminOrder) => {
-    setSelectedOrder(order);
-    setInvoiceDialogOpen(true);
-  };
-
-  const openOrderDetailsDialog = (order: AdminOrder) => {
-    setSelectedOrder(order);
-    setOrderDetailsDialogOpen(true);
-  };
-
-  const openNotesDialog = (order: AdminOrder) => {
-    setSelectedOrder(order);
-    setNotesDialogOpen(true);
-  };
-
-  const openImageDialog = (order: AdminOrder) => {
-    setSelectedOrder(order);
-    setImageDialogOpen(true);
-  };
-
-  const handleEditOrder = (order: AdminOrder) => {
-    navigate(`/edit-order/${order.serial}`);
-  };
-
-  const handlePayment = async (amount: number, notes?: string) => {
-    if (!selectedOrder) return;
-
-    try {
-      // Update order based on payment type
-      if (paymentType === 'collection') {
-        const newDeposit = (selectedOrder.deposit || 0) + amount;
-        
-        const { error: orderError } = await supabase
-          .from('admin_orders')
-          .update({ deposit: newDeposit })
-          .eq('id', selectedOrder.id);
-
-        if (orderError) throw orderError;
-      }
-
-      // Add transaction record
-      const transactionType = paymentType === 'collection' ? 'order_collection' :
-                             paymentType === 'shipping' ? 'shipping_payment' : 'cost_payment';
-      
-      const description = paymentType === 'collection' ? `تحصيل من الطلب ${selectedOrder.serial}` :
-                         paymentType === 'shipping' ? `سداد شحن للطلب ${selectedOrder.serial}` :
-                         `سداد تكلفة للطلب ${selectedOrder.serial}`;
-
-      const { error: transactionError } = await supabase
-        .from('transactions')
-        .insert({
-          user_id: user?.id,
-          amount: amount,
-          transaction_type: transactionType,
-          description: notes ? `${description} - ${notes}` : description,
-          order_serial: selectedOrder.serial
-        });
-
-      if (transactionError) throw transactionError;
-
-      toast.success('تم تسجيل المعاملة بنجاح');
-      refetch();
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      setPaymentDialogOpen(false);
-    } catch (error) {
-      console.error('Error adding payment:', error);
-      toast.error('حدث خطأ في تسجيل المعاملة');
-    }
-  };
-
-  const openPaymentDialog = (order: AdminOrder, type: 'collection' | 'shipping' | 'cost') => {
-    setSelectedOrder(order);
-    setPaymentType(type);
-    setPaymentDialogOpen(true);
+  const getStatusText = (status: string) => {
+    const statusTexts = {
+      'pending': 'في الانتظار',
+      'confirmed': 'مؤكد',
+      'shipped': 'تم الشحن',
+      'delivered': 'تم التسليم',
+      'cancelled': 'ملغي'
+    };
+    return statusTexts[status as keyof typeof statusTexts] || status;
   };
 
   if (isLoading) {
@@ -252,35 +212,23 @@ const AdminOrders = () => {
       {/* Header */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-2xl font-bold">إدارة الطلبات</CardTitle>
-              <p className="text-muted-foreground">إدارة ومتابعة جميع طلبات العملاء</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm">
-                <Download className="h-4 w-4 ml-1" />
-                تصدير
-              </Button>
-              <Button onClick={() => navigate('/order')} size="sm">
-                <Plus className="h-4 w-4 ml-1" />
-                طلب جديد
-              </Button>
-            </div>
-          </div>
+          <CardTitle className="text-2xl font-bold flex items-center gap-2">
+            <Package className="h-6 w-6" />
+            إدارة الطلبات
+          </CardTitle>
         </CardHeader>
       </Card>
 
       {/* Filters */}
       <Card>
         <CardContent className="p-4">
-          <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-3'}`}>
+          <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'}`}>
             <div className="space-y-2">
-              <label className="text-sm font-medium">البحث</label>
+              <Label>البحث</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
-                  placeholder="اسم العميل، رقم الطلب، الهاتف..."
+                  placeholder="البحث برقم الطلب أو اسم العميل أو رقم الهاتف..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -289,149 +237,282 @@ const AdminOrders = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">حالة الطلب</label>
+              <Label>حالة الطلب</Label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">جميع الحالات</SelectItem>
-                  <SelectItem value="pending">قيد المراجعة</SelectItem>
-                  <SelectItem value="confirmed">تم التأكيد</SelectItem>
-                  <SelectItem value="processing">قيد التحضير</SelectItem>
+                  <SelectItem value="pending">في الانتظار</SelectItem>
+                  <SelectItem value="confirmed">مؤكد</SelectItem>
                   <SelectItem value="shipped">تم الشحن</SelectItem>
-                  <SelectItem value="delivered">تم التوصيل</SelectItem>
+                  <SelectItem value="delivered">تم التسليم</SelectItem>
                   <SelectItem value="cancelled">ملغي</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">الإجراءات</label>
-              <Button variant="outline" className="w-full">
-                <Filter className="h-4 w-4 ml-1" />
-                فلاتر متقدمة
-              </Button>
             </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Orders List */}
-      {isMobile ? (
-        <MobileOrdersManagement
-          orders={filteredOrders}
-          onUpdateStatus={updateOrderStatus}
-          onDeleteOrder={deleteOrder}
-          onEditOrder={handleEditOrder}
-          onPrintInvoice={openInvoiceDialog}
-          onPayment={openPaymentDialog}
-          calculateOrderDetails={calculateOrderDetails}
-        />
-      ) : (
-        <OrdersTable
-          orders={filteredOrders}
-          updateOrderStatus={updateOrderStatus}
-          deleteOrder={deleteOrder}
-          openInvoiceDialog={openInvoiceDialog}
-          openOrderDetailsDialog={openOrderDetailsDialog}
-          openNotesDialog={openNotesDialog}
-          openImageDialog={openImageDialog}
-          calculateOrderDetails={calculateOrderDetails}
-        />
-      )}
+      <div className="grid gap-4">
+        {filteredOrders.map((order) => (
+          <Card key={order.id}>
+            <CardContent className="p-4">
+              <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-12'}`}>
+                {/* Order Info */}
+                <div className={`${isMobile ? 'col-span-1' : 'col-span-8'} space-y-3`}>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <Badge variant="outline" className="font-mono">
+                      {order.serial}
+                    </Badge>
+                    <Badge className={getStatusColor(order.status)}>
+                      {getStatusText(order.status)}
+                    </Badge>
+                    <span className="text-sm text-gray-500 flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      {new Date(order.date_created).toLocaleDateString('ar-EG')}
+                    </span>
+                  </div>
 
-      {/* Invoice Dialog */}
-      <Dialog open={invoiceDialogOpen} onOpenChange={setInvoiceDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>فاتورة الطلب - {selectedOrder?.serial}</DialogTitle>
-          </DialogHeader>
-          {selectedOrder && (
-            <AdminOrderInvoice 
-              order={selectedOrder} 
-              onClose={() => setInvoiceDialogOpen(false)}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4 text-gray-500" />
+                      <span>{order.client_name}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Phone className="h-4 w-4 text-gray-500" />
+                      <span>{order.phone}</span>
+                    </div>
+                    {order.address && (
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-gray-500" />
+                        <span className="truncate">{order.address}</span>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <CreditCard className="h-4 w-4 text-gray-500" />
+                      <span>{order.payment_method}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Truck className="h-4 w-4 text-gray-500" />
+                      <span>{order.delivery_method}</span>
+                    </div>
+                  </div>
+                </div>
 
-      {/* Order Details Dialog */}
-      <Dialog open={orderDetailsDialogOpen} onOpenChange={setOrderDetailsDialogOpen}>
+                {/* Financial Info */}
+                <div className={`${isMobile ? 'col-span-1' : 'col-span-2'} space-y-2`}>
+                  <div className="text-right">
+                    <p className="text-sm text-gray-600">الإجمالي</p>
+                    <p className="text-lg font-bold text-green-600">
+                      {formatCurrency(order.total)}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-gray-600">الربح</p>
+                    <p className="text-sm font-semibold text-blue-600">
+                      {formatCurrency(order.profit)}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className={`${isMobile ? 'col-span-1' : 'col-span-2'} flex gap-2`}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEditOrder(order)}
+                    className="flex-1"
+                  >
+                    <Edit className="h-3 w-3 ml-1" />
+                    تعديل
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDeleteOrder(order.id)}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+
+        {filteredOrders.length === 0 && (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p className="text-muted-foreground">لا توجد طلبات تطابق معايير البحث</p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* Edit Order Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={() => {}}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>تفاصيل الطلب - {selectedOrder?.serial}</DialogTitle>
+            <DialogTitle>تعديل الطلب {editingOrder?.serial}</DialogTitle>
           </DialogHeader>
-          {selectedOrder && (
+          
+          {editingOrder && (
             <div className="space-y-4">
-              <div>
-                <h4 className="font-semibold mb-2">بيانات العميل</h4>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div>الاسم: {selectedOrder.customer_name}</div>
-                  <div>الهاتف: {selectedOrder.customer_phone}</div>
-                  <div>المحافظة: {selectedOrder.governorate || 'غير محدد'}</div>
-                  <div>العنوان: {selectedOrder.shipping_address || 'غير محدد'}</div>
-                </div>
-              </div>
-              
-              <div>
-                <h4 className="font-semibold mb-2">المنتجات</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  {selectedOrder.admin_order_items?.map((item, index) => (
-                    <div key={index} className="bg-gray-50 p-2 rounded">
-                      <div>{item.product_name} - {item.product_size}</div>
-                      <div className="text-sm text-muted-foreground">
-                        الكمية: {item.quantity} | السعر: {formatCurrency(item.total_price)}
-                      </div>
-                    </div>
-                  ))}
+                  <Label>اسم العميل</Label>
+                  <Input
+                    value={editingOrder.client_name}
+                    onChange={(e) => setEditingOrder({
+                      ...editingOrder,
+                      client_name: e.target.value
+                    })}
+                  />
                 </div>
+                <div className="space-y-2">
+                  <Label>رقم الهاتف</Label>
+                  <Input
+                    value={editingOrder.phone}
+                    onChange={(e) => setEditingOrder({
+                      ...editingOrder,
+                      phone: e.target.value
+                    })}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>البريد الإلكتروني</Label>
+                <Input
+                  type="email"
+                  value={editingOrder.email || ''}
+                  onChange={(e) => setEditingOrder({
+                    ...editingOrder,
+                    email: e.target.value
+                  })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>العنوان</Label>
+                <Textarea
+                  value={editingOrder.address || ''}
+                  onChange={(e) => setEditingOrder({
+                    ...editingOrder,
+                    address: e.target.value
+                  })}
+                  rows={2}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>المحافظة</Label>
+                  <Input
+                    value={editingOrder.governorate || ''}
+                    onChange={(e) => setEditingOrder({
+                      ...editingOrder,
+                      governorate: e.target.value
+                    })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>حالة الطلب</Label>
+                  <Select
+                    value={editingOrder.status}
+                    onValueChange={(value) => setEditingOrder({
+                      ...editingOrder,
+                      status: value
+                    })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">في الانتظار</SelectItem>
+                      <SelectItem value="confirmed">مؤكد</SelectItem>
+                      <SelectItem value="shipped">تم الشحن</SelectItem>
+                      <SelectItem value="delivered">تم التسليم</SelectItem>
+                      <SelectItem value="cancelled">ملغي</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label>تكلفة الشحن</Label>
+                  <Input
+                    type="number"
+                    value={editingOrder.shipping_cost}
+                    onChange={(e) => setEditingOrder({
+                      ...editingOrder,
+                      shipping_cost: parseFloat(e.target.value) || 0
+                    })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>الخصم</Label>
+                  <Input
+                    type="number"
+                    value={editingOrder.discount}
+                    onChange={(e) => setEditingOrder({
+                      ...editingOrder,
+                      discount: parseFloat(e.target.value) || 0
+                    })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>العربون</Label>
+                  <Input
+                    type="number"
+                    value={editingOrder.deposit}
+                    onChange={(e) => setEditingOrder({
+                      ...editingOrder,
+                      deposit: parseFloat(e.target.value) || 0
+                    })}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>ملاحظات</Label>
+                <Textarea
+                  value={editingOrder.notes || ''}
+                  onChange={(e) => setEditingOrder({
+                    ...editingOrder,
+                    notes: e.target.value
+                  })}
+                  rows={3}
+                />
+              </div>
+
+              <div className="flex gap-2 pt-4 border-t">
+                <Button 
+                  onClick={handleSaveOrder}
+                  disabled={updateOrderMutation.isPending}
+                  className="flex-1"
+                >
+                  <Save className="h-4 w-4 ml-2" />
+                  {updateOrderMutation.isPending ? 'جاري الحفظ...' : 'حفظ التغييرات'}
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={handleCloseDialog}
+                  className="flex-1"
+                >
+                  <X className="h-4 w-4 ml-2" />
+                  إغلاق
+                </Button>
               </div>
             </div>
           )}
         </DialogContent>
       </Dialog>
-
-      {/* Notes Dialog */}
-      <Dialog open={notesDialogOpen} onOpenChange={setNotesDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>ملاحظات الطلب - {selectedOrder?.serial}</DialogTitle>
-          </DialogHeader>
-          {selectedOrder?.notes && (
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <p>{selectedOrder.notes}</p>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Image Dialog */}
-      <Dialog open={imageDialogOpen} onOpenChange={setImageDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>الصورة المرفقة - {selectedOrder?.serial}</DialogTitle>
-          </DialogHeader>
-          {selectedOrder?.attached_image_url && (
-            <div className="flex justify-center">
-              <img 
-                src={selectedOrder.attached_image_url} 
-                alt="صورة مرفقة" 
-                className="max-w-full max-h-96 object-contain"
-              />
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Payment Dialog */}
-      <OrderPaymentDialog
-        open={paymentDialogOpen}
-        onOpenChange={setPaymentDialogOpen}
-        order={selectedOrder}
-        paymentType={paymentType}
-        onConfirm={handlePayment}
-      />
     </div>
   );
 };

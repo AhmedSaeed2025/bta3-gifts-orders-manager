@@ -74,7 +74,8 @@ const ProductEditDialog = ({ product, categories, isOpen, onClose, onUpdate }: P
   });
 
   useEffect(() => {
-    if (product) {
+    if (product && isOpen) {
+      console.log('Setting form data for product:', product);
       setFormData({
         name: product.name || '',
         description: product.description || '',
@@ -103,11 +104,13 @@ const ProductEditDialog = ({ product, categories, isOpen, onClose, onUpdate }: P
           : [{ id: '', image_url: '', alt_text: '', is_primary: true, sort_order: 0 }]
       });
     }
-  }, [product]);
+  }, [product, isOpen]);
 
   const updateProductMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
       if (!product) return;
+      
+      console.log('Updating product with data:', data);
       
       // Update product basic info
       const { error: productError } = await supabase
@@ -124,7 +127,10 @@ const ProductEditDialog = ({ product, categories, isOpen, onClose, onUpdate }: P
         })
         .eq('id', product.id);
 
-      if (productError) throw productError;
+      if (productError) {
+        console.error('Product update error:', productError);
+        throw productError;
+      }
 
       // Delete existing sizes and images
       await supabase.from('product_sizes').delete().eq('product_id', product.id);
@@ -144,7 +150,10 @@ const ProductEditDialog = ({ product, categories, isOpen, onClose, onUpdate }: P
         const { error: sizesError } = await supabase
           .from('product_sizes')
           .insert(sizesToInsert);
-        if (sizesError) throw sizesError;
+        if (sizesError) {
+          console.error('Sizes insert error:', sizesError);
+          throw sizesError;
+        }
       }
 
       // Insert new images
@@ -162,12 +171,17 @@ const ProductEditDialog = ({ product, categories, isOpen, onClose, onUpdate }: P
         const { error: imagesError } = await supabase
           .from('product_images')
           .insert(imagesToInsert);
-        if (imagesError) throw imagesError;
+        if (imagesError) {
+          console.error('Images insert error:', imagesError);
+          throw imagesError;
+        }
       }
     },
     onSuccess: () => {
+      console.log('Product updated successfully');
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
       queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['products-management'] });
       toast.success('تم تحديث المنتج بنجاح');
       onUpdate();
       onClose();
@@ -192,6 +206,7 @@ const ProductEditDialog = ({ product, categories, isOpen, onClose, onUpdate }: P
     onSuccess: (_, isActive) => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
       queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['products-management'] });
       toast.success(isActive ? 'تم إظهار المنتج في المتجر' : 'تم إخفاء المنتج من المتجر');
       onUpdate();
     },
@@ -259,6 +274,7 @@ const ProductEditDialog = ({ product, categories, isOpen, onClose, onUpdate }: P
       toast.error('يرجى إدخال اسم المنتج');
       return;
     }
+    console.log('Submitting form with data:', formData);
     updateProductMutation.mutate(formData);
   };
 
