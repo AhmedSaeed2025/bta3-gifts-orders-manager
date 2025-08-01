@@ -139,7 +139,8 @@ const ImprovedInvoiceTab = () => {
   if (selectedOrder) {
     const subtotal = selectedOrder.order_items.reduce((sum, item) => sum + (item.quantity * item.price - item.item_discount), 0);
     const finalTotal = subtotal + selectedOrder.shipping_cost - selectedOrder.discount;
-    const remainingAmount = finalTotal - (selectedOrder.deposit || 0);
+    const paymentsReceived = (selectedOrder as any).payments_received || selectedOrder.deposit || 0;
+    const remainingAmount = finalTotal - paymentsReceived;
 
     return (
       <div className="space-y-4 sm:space-y-6">
@@ -184,7 +185,7 @@ const ImprovedInvoiceTab = () => {
             shippingCost={selectedOrder.shipping_cost}
             discount={selectedOrder.discount}
             finalTotal={finalTotal}
-            deposit={selectedOrder.deposit || 0}
+            deposit={paymentsReceived}
             remainingAmount={remainingAmount}
           />
 

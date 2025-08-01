@@ -79,7 +79,9 @@ export type Database = {
           notes: string | null
           order_date: string
           payment_method: string
+          payments_received: number | null
           profit: number | null
+          remaining_amount: number | null
           serial: string
           shipping_address: string | null
           shipping_cost: number | null
@@ -103,7 +105,9 @@ export type Database = {
           notes?: string | null
           order_date?: string
           payment_method: string
+          payments_received?: number | null
           profit?: number | null
+          remaining_amount?: number | null
           serial: string
           shipping_address?: string | null
           shipping_cost?: number | null
@@ -127,7 +131,9 @@ export type Database = {
           notes?: string | null
           order_date?: string
           payment_method?: string
+          payments_received?: number | null
           profit?: number | null
+          remaining_amount?: number | null
           serial?: string
           shipping_address?: string | null
           shipping_cost?: number | null
@@ -329,8 +335,10 @@ export type Database = {
           id: string
           notes: string | null
           payment_method: string
+          payments_received: number | null
           phone: string
           profit: number
+          remaining_amount: number | null
           serial: string
           shipping_cost: number | null
           status: string
@@ -351,8 +359,10 @@ export type Database = {
           id?: string
           notes?: string | null
           payment_method: string
+          payments_received?: number | null
           phone: string
           profit: number
+          remaining_amount?: number | null
           serial: string
           shipping_cost?: number | null
           status?: string
@@ -373,8 +383,10 @@ export type Database = {
           id?: string
           notes?: string | null
           payment_method?: string
+          payments_received?: number | null
           phone?: string
           profit?: number
+          remaining_amount?: number | null
           serial?: string
           shipping_cost?: number | null
           status?: string

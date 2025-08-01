@@ -51,16 +51,22 @@ const InvoiceTotals = ({
             </div>
             
             {deposit > 0 && (
-              <div className="flex justify-between text-xs sm:text-sm lg:text-base text-blue-600 font-semibold">
+              <div className="flex justify-between text-xs sm:text-sm lg:text-base text-green-600 font-semibold bg-green-50 p-2 rounded">
                 <span>المبلغ المسدد:</span>
                 <span>{formatCurrency(deposit)}</span>
               </div>
             )}
             
             {remainingAmount > 0 && (
-              <div className="flex justify-between text-sm sm:text-base lg:text-lg text-orange-600 font-bold">
-                <span>المبلغ المتبقي:</span>
+              <div className="flex justify-between text-sm sm:text-base lg:text-lg text-red-600 font-bold bg-red-50 p-2 rounded border border-red-200">
+                <span>المبلغ المتبقي للسداد:</span>
                 <span>{formatCurrency(remainingAmount)}</span>
+              </div>
+            )}
+            
+            {remainingAmount === 0 && finalTotal > 0 && (
+              <div className="flex justify-center text-sm sm:text-base text-green-600 font-bold bg-green-100 p-3 rounded-lg border border-green-300">
+                <span>✅ تم السداد بالكامل</span>
               </div>
             )}
           </div>
