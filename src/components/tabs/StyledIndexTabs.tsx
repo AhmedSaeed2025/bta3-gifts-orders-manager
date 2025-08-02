@@ -10,7 +10,8 @@ import {
   FileText, 
   Truck, 
   Calculator,
-  Settings
+  Settings,
+  Printer
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import EnhancedAdminDashboard from "@/components/admin/EnhancedAdminDashboard";
@@ -22,6 +23,7 @@ import DetailedOrdersReport from "@/components/admin/DetailedOrdersReport";
 import ComprehensiveAccountStatement from "@/components/admin/ComprehensiveAccountStatement";
 import ImprovedInvoiceTab from "@/components/ImprovedInvoiceTab";
 import AdminSettings from "@/pages/admin/AdminSettings";
+import PrintingReport from "@/components/admin/PrintingReport";
 
 const StyledIndexTabs = () => {
   const isMobile = useIsMobile();
@@ -71,6 +73,12 @@ const StyledIndexTabs = () => {
       component: <ComprehensiveAccountStatement />
     },
     {
+      id: "printing-report",
+      label: "المطبعة",
+      icon: Printer,
+      component: <PrintingReport />
+    },
+    {
       id: "invoice",
       label: "الفاتورة",
       icon: Receipt,
@@ -91,7 +99,7 @@ const StyledIndexTabs = () => {
           className={`
             grid w-full mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 
             dark:from-blue-900/20 dark:to-indigo-900/20 p-1 rounded-xl
-            ${isMobile ? 'grid-cols-3 gap-1' : 'grid-cols-9 gap-2'}
+            ${isMobile ? 'grid-cols-3 gap-1' : 'grid-cols-10 gap-2'}
             ${isMobile ? 'h-auto' : 'h-14'}
           `}
         >

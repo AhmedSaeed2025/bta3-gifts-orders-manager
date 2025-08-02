@@ -133,10 +133,23 @@ const SimpleAccountStatement = () => {
       .filter(t => t.transaction_type === 'expense')
       .reduce((sum, t) => sum + t.amount, 0);
 
-    const balance = totalIncome - totalExpenses;
+    // Add collections (payments_received) and profits as income
+    const totalCollections = orderSummary?.net_profit || 0;
+    const totalAdjustedIncome = totalIncome + totalCollections + (orderSummary?.total_shipping || 0);
 
-    return { balance, totalIncome, totalExpenses };
-  }, [transactions]);
+    // Add costs and shipping as expenses
+    const totalAdjustedExpenses = totalExpenses + (orderSummary?.total_costs || 0);
+
+    const balance = totalAdjustedIncome - totalAdjustedExpenses;
+
+    return { 
+      balance, 
+      totalIncome: totalAdjustedIncome, 
+      totalExpenses: totalAdjustedExpenses,
+      collections: totalCollections,
+      advertising: transactions.filter(t => t.transaction_type === 'expense' && t.description?.includes('إعلان')).reduce((sum, t) => sum + t.amount, 0)
+    };
+  }, [transactions, orderSummary]);
 
   // Add new transaction mutation
   const addTransactionMutation = useMutation({
@@ -331,6 +344,7 @@ const SimpleAccountStatement = () => {
                   <SelectContent>
                     <SelectItem value="income">إيراد</SelectItem>
                     <SelectItem value="expense">مصروف</SelectItem>
+                    <SelectItem value="expense">مصروف إعلانات</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
