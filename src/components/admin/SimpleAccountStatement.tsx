@@ -377,12 +377,73 @@ const SimpleAccountStatement = () => {
           <CardTitle className="text-lg">آخر المعاملات</CardTitle>
         </CardHeader>
         <CardContent>
-          {transactions.length === 0 ? (
+          {transactions.length === 0 && (!orderSummary || orderSummary.net_profit === 0) ? (
             <div className="text-center py-8 text-gray-500">
               لا توجد معاملات
             </div>
           ) : (
             <div className="space-y-3">
+              {/* عرض التحصيلات من الطلبات كإيرادات */}
+              {orderSummary && orderSummary.net_profit > 0 && (
+                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-full bg-green-100">
+                      <Plus className="h-4 w-4 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-green-800">تحصيلات من الطلبات</p>
+                      <p className="text-sm text-green-600">
+                        إجمالي الأرباح المحصلة من الطلبات
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-lg font-bold text-green-600">
+                    +{formatCurrency(orderSummary.net_profit)}
+                  </div>
+                </div>
+              )}
+
+              {/* عرض الشحن كإيراد */}
+              {orderSummary && orderSummary.total_shipping > 0 && (
+                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-full bg-green-100">
+                      <Plus className="h-4 w-4 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-green-800">إيرادات الشحن</p>
+                      <p className="text-sm text-green-600">
+                        إجمالي مبالغ الشحن المحصلة
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-lg font-bold text-green-600">
+                    +{formatCurrency(orderSummary.total_shipping)}
+                  </div>
+                </div>
+              )}
+
+              {/* عرض التكاليف كمصروفات */}
+              {orderSummary && orderSummary.total_costs > 0 && (
+                <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-200">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-full bg-red-100">
+                      <Minus className="h-4 w-4 text-red-600" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-red-800">تكاليف الطلبات</p>
+                      <p className="text-sm text-red-600">
+                        إجمالي تكاليف المنتجات
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-lg font-bold text-red-600">
+                    -{formatCurrency(orderSummary.total_costs)}
+                  </div>
+                </div>
+              )}
+
+              {/* المعاملات اليدوية */}
               {transactions.slice(0, 10).map((transaction) => (
                 <div key={transaction.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-3">
