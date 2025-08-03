@@ -78,21 +78,32 @@ const SimpleAccountStatement = () => {
     enabled: !!user
   });
 
-  // Fetch order summary
-  const { data: orderSummary } = useQuery({
-    queryKey: ['order-summary'],
+  // Fetch orders data
+  const { data: orders } = useQuery({
+    queryKey: ['admin-orders-for-summary'],
     queryFn: async () => {
-      if (!user) return null;
+      if (!user) return [];
       
-      const { data: orders, error } = await supabase
+      const { data, error } = await supabase
         .from('admin_orders')
         .select('total_amount, shipping_cost, profit, payments_received, remaining_amount, status')
         .eq('user_id', user.id);
       
       if (error) {
-        console.error('Error fetching order summary:', error);
-        return null;
+        console.error('Error fetching orders:', error);
+        return [];
       }
+      
+      return data || [];
+    },
+    enabled: !!user
+  });
+
+  // Fetch order summary
+  const { data: orderSummary } = useQuery({
+    queryKey: ['order-summary'],
+    queryFn: async () => {
+      if (!user || !orders) return null;
       
       const summary = orders.reduce((acc, order) => {
         const orderTotal = order.total_amount;
@@ -120,7 +131,7 @@ const SimpleAccountStatement = () => {
 
       return summary;
     },
-    enabled: !!user
+    enabled: !!user && !!orders
   });
 
   // Calculate balances
@@ -133,12 +144,16 @@ const SimpleAccountStatement = () => {
       .filter(t => t.transaction_type === 'expense')
       .reduce((sum, t) => sum + t.amount, 0);
 
-    // Add collections (payments_received) and profits as income
-    const totalCollections = orderSummary?.net_profit || 0;
-    const totalAdjustedIncome = totalIncome + totalCollections + (orderSummary?.total_shipping || 0);
+    // Add collections (payments_received from orders) as income
+    const ordersPaymentsReceived = orders?.reduce((sum, order) => sum + (order.payments_received || 0), 0) || 0;
+    const totalCollections = ordersPaymentsReceived;
+    const totalAdjustedIncome = totalIncome + totalCollections;
 
-    // Add costs and shipping as expenses
-    const totalAdjustedExpenses = totalExpenses + (orderSummary?.total_costs || 0);
+    // Add costs and shipping costs as expenses  
+    const totalShippingCosts = transactions
+      .filter(t => t.transaction_type === 'expense' && t.description?.includes('شحن'))
+      .reduce((sum, t) => sum + t.amount, 0);
+    const totalAdjustedExpenses = totalExpenses + (orderSummary?.total_costs || 0) + totalShippingCosts;
 
     const balance = totalAdjustedIncome - totalAdjustedExpenses;
 
@@ -403,22 +418,22 @@ const SimpleAccountStatement = () => {
                 </div>
               )}
 
-              {/* عرض الشحن كإيراد */}
-              {orderSummary && orderSummary.total_shipping > 0 && (
-                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+              {/* عرض مصاريف الشحن */}
+              {transactions.filter(t => t.transaction_type === 'expense' && t.description?.includes('شحن')).length > 0 && (
+                <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-200">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-full bg-green-100">
-                      <Plus className="h-4 w-4 text-green-600" />
+                    <div className="p-2 rounded-full bg-red-100">
+                      <Minus className="h-4 w-4 text-red-600" />
                     </div>
                     <div>
-                      <p className="font-medium text-green-800">إيرادات الشحن</p>
-                      <p className="text-sm text-green-600">
-                        إجمالي مبالغ الشحن المحصلة
+                      <p className="font-medium text-red-800">مصاريف الشحن</p>
+                      <p className="text-sm text-red-600">
+                        إجمالي تكاليف الشحن المدفوعة
                       </p>
                     </div>
                   </div>
-                  <div className="text-lg font-bold text-green-600">
-                    +{formatCurrency(orderSummary.total_shipping)}
+                  <div className="text-lg font-bold text-red-600">
+                    -{formatCurrency(transactions.filter(t => t.transaction_type === 'expense' && t.description?.includes('شحن')).reduce((sum, t) => sum + t.amount, 0))}
                   </div>
                 </div>
               )}

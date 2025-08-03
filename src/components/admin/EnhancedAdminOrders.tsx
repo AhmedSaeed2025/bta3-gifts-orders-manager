@@ -130,6 +130,35 @@ const EnhancedAdminOrders = () => {
     });
   };
 
+  // Delete order mutation
+  const deleteOrderMutation = useMutation({
+    mutationFn: async (orderId: string) => {
+      if (!user) throw new Error('يجب تسجيل الدخول أولاً');
+      
+      const { error } = await supabase
+        .from('admin_orders')
+        .delete()
+        .eq('id', orderId)
+        .eq('user_id', user.id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-orders-enhanced'] });
+      toast.success('تم حذف الطلب بنجاح');
+    },
+    onError: (error: any) => {
+      console.error('Delete order error:', error);
+      toast.error('حدث خطأ في حذف الطلب');
+    }
+  });
+
+  const handleDeleteOrder = (orderId: string) => {
+    if (window.confirm('هل أنت متأكد من حذف هذا الطلب؟')) {
+      deleteOrderMutation.mutate(orderId);
+    }
+  };
+
   const getPaymentStatus = (order: Order) => {
     if (order.payments_received >= order.total_amount) {
       return 'paid';
@@ -311,6 +340,16 @@ const EnhancedAdminOrders = () => {
                         size="sm"
                       >
                         <Edit className="h-4 w-4" />
+                      </Button>
+
+                      {/* حذف الطلب */}
+                      <Button
+                        onClick={() => handleDeleteOrder(order.id)}
+                        variant="outline"
+                        size="sm"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <XCircle className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
