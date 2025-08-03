@@ -180,14 +180,24 @@ const ItemsTable = ({
                       <td className="border border-gray-300 p-2">
                         <div className="flex gap-1 justify-center">
                           <Button
-                            onClick={() => saveEdit(index)}
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              saveEdit(index);
+                            }}
                             size="sm"
                             className="h-6 w-6 p-0 bg-green-500 hover:bg-green-600"
                           >
                             <Save size={12} />
                           </Button>
                           <Button
-                            onClick={cancelEditing}
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              cancelEditing();
+                            }}
                             size="sm"
                             variant="outline"
                             className="h-6 w-6 p-0"
@@ -211,7 +221,12 @@ const ItemsTable = ({
                       <td className="border border-gray-300 p-2">
                         <div className="flex gap-1 justify-center">
                           <Button
-                            onClick={() => startEditing(index)}
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              startEditing(index);
+                            }}
                             size="sm"
                             variant="outline"
                             className="h-6 w-6 p-0"
@@ -219,7 +234,12 @@ const ItemsTable = ({
                             <Edit size={12} />
                           </Button>
                           <Button
-                            onClick={() => onRemoveItem(index)}
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              onRemoveItem(index);
+                            }}
                             size="sm"
                             variant="destructive"
                             className="h-6 w-6 p-0"
