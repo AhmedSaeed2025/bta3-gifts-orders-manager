@@ -1,8 +1,8 @@
 import React from 'react';
-import SimpleAccountStatement from './SimpleAccountStatement';
+import ImprovedComprehensiveAccountStatement from './ImprovedComprehensiveAccountStatement';
 
 const ComprehensiveAccountStatement = () => {
-  return <SimpleAccountStatement />;
+  return <ImprovedComprehensiveAccountStatement />;
 };
 
 export default ComprehensiveAccountStatement;
