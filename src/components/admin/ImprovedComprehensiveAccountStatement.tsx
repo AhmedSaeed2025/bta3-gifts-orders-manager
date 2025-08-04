@@ -171,7 +171,14 @@ const ImprovedComprehensiveAccountStatement = () => {
       const isIncome = transaction.transaction_type === 'income';
       const isShipping = transaction.description?.includes('شحن') || false;
       const isAdvertising = transaction.description?.includes('إعلان') || transaction.description?.includes('دعاية') || false;
-      const isOrderPayment = transaction.description?.includes('دفعة من طلب') || false;
+      
+      // تحديد ما إذا كانت المعاملة تحصيل من طلب (جميع الصيغ المحتملة)
+      const isOrderPayment = transaction.description?.includes('دفعة من طلب') || 
+                            transaction.description?.includes('تحصيل من الطلب') ||
+                            transaction.description?.includes('تحصيل من طلب') ||
+                            transaction.description?.includes('دفعة طلب') ||
+                            transaction.order_serial || // إذا كان هناك رقم طلب مرتبط
+                            false;
       
       if (isIncome) {
         if (isOrderPayment) {
