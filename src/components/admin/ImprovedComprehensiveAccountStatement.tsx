@@ -185,22 +185,23 @@ const ImprovedComprehensiveAccountStatement = () => {
                             false;
       
       if (isIncome) {
+        // جميع الإيرادات (سواء تحصيلات من طلبات أو إيرادات أخرى)
         if (isOrderPayment) {
-          // هذه تحصيلات من العملاء - تدخل في التحصيلات فقط
-          acc.totalCollections += transaction.amount;
+          // تحصيلات من العملاء - تُسجل كإيراد موجب
+          acc.totalCollections += Math.abs(transaction.amount);
         } else {
-          // إيرادات أخرى غير مرتبطة بالطلبات
-          acc.otherIncome += transaction.amount;
-          acc.totalCollections += transaction.amount;
+          // إيرادات أخرى - تُسجل كإيراد موجب  
+          acc.otherIncome += Math.abs(transaction.amount);
+          acc.totalCollections += Math.abs(transaction.amount);
         }
       } else {
-        // المصروفات
+        // المصروفات - تُسجل كقيم موجبة لكنها تُخصم من الرصيد
         if (isShipping) {
-          acc.paidShipping += transaction.amount;
+          acc.paidShipping += Math.abs(transaction.amount);
         } else {
-          acc.otherExpenses += transaction.amount;
+          acc.otherExpenses += Math.abs(transaction.amount);
         }
-        acc.totalPayments += transaction.amount;
+        acc.totalPayments += Math.abs(transaction.amount);
       }
       
       return acc;
