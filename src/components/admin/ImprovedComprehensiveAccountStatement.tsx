@@ -144,19 +144,17 @@ const ImprovedComprehensiveAccountStatement = () => {
 
   // Calculate comprehensive financial summary
   const financialSummary: FinancialSummary = useMemo(() => {
-    // حساب بيانات الطلبات - مع تصحيح منطق العربون والتحصيلات
+    // حساب بيانات الطلبات
     const ordersSummary = orders.reduce((acc, order: OrderData) => {
       const orderCost = order.total_amount - order.profit - order.shipping_cost;
-      // استخدام payments_received أولاً، وإذا لم يكن متوفراً استخدم deposit
-      const collectedAmount = order.payments_received || order.deposit || 0;
+      const collectedAmount = order.payments_received || 0; // فقط ما تم تحصيله فعلياً
       
       return {
         totalSales: acc.totalSales + order.total_amount,
-        collectedSales: acc.collectedSales + collectedAmount, // تصحيح: استخدام المبلغ المحصل الفعلي
+        collectedSales: acc.collectedSales + collectedAmount,
         totalProductCosts: acc.totalProductCosts + orderCost,
         totalShippingCosts: acc.totalShippingCosts + order.shipping_cost,
         collectedShipping: acc.collectedShipping + (collectedAmount > 0 ? order.shipping_cost : 0),
-        totalCollections: acc.totalCollections + collectedAmount, // تصحيح: تسجيل كتحصيل إيجابي
         netProfit: acc.netProfit + order.profit
       };
     }, {
@@ -165,24 +163,29 @@ const ImprovedComprehensiveAccountStatement = () => {
       totalProductCosts: 0,
       totalShippingCosts: 0,
       collectedShipping: 0,
-      totalCollections: 0,
       netProfit: 0
     });
 
-    // حساب المعاملات اليدوية
+    // حساب المعاملات اليدوية - فصل التحصيلات عن الإيرادات الأخرى
     const manualTransactions = transactions.reduce((acc, transaction) => {
       const isIncome = transaction.transaction_type === 'income';
       const isShipping = transaction.description?.includes('شحن') || false;
       const isAdvertising = transaction.description?.includes('إعلان') || transaction.description?.includes('دعاية') || false;
+      const isOrderPayment = transaction.description?.includes('دفعة من طلب') || false;
       
       if (isIncome) {
-        acc.otherIncome += transaction.amount;
-        acc.totalCollections += transaction.amount;
+        if (isOrderPayment) {
+          // هذه تحصيلات من العملاء - لا تضاف كإيرادات أخرى
+          acc.totalCollections += transaction.amount;
+        } else {
+          // إيرادات أخرى غير مرتبطة بالطلبات
+          acc.otherIncome += transaction.amount;
+          acc.totalCollections += transaction.amount;
+        }
       } else {
+        // المصروفات
         if (isShipping) {
           acc.paidShipping += transaction.amount;
-        } else if (isAdvertising) {
-          acc.otherExpenses += transaction.amount;
         } else {
           acc.otherExpenses += transaction.amount;
         }
@@ -194,7 +197,7 @@ const ImprovedComprehensiveAccountStatement = () => {
       otherIncome: 0,
       otherExpenses: 0,
       paidShipping: 0,
-      totalCollections: ordersSummary.totalCollections,
+      totalCollections: ordersSummary.collectedSales, // البداية بتحصيلات الطلبات
       totalPayments: 0
     });
 
@@ -205,7 +208,9 @@ const ImprovedComprehensiveAccountStatement = () => {
     
     return {
       ...ordersSummary,
-      ...manualTransactions,
+      otherIncome: manualTransactions.otherIncome,
+      otherExpenses: manualTransactions.otherExpenses,
+      paidShipping: manualTransactions.paidShipping,
       paidProductCosts: ordersSummary.totalProductCosts, // افتراض أن كل التكاليف مدفوعة
       currentBalance,
       totalCollections,
