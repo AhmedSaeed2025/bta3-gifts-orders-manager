@@ -177,12 +177,16 @@ const ImprovedComprehensiveAccountStatement = () => {
                             transaction.description?.includes('تحصيل من الطلب') ||
                             transaction.description?.includes('تحصيل من طلب') ||
                             transaction.description?.includes('دفعة طلب') ||
+                            transaction.description?.includes('تحصيل') ||
+                            transaction.description?.includes('سداد') ||
+                            transaction.description?.includes('عربون') ||
+                            transaction.description?.includes('دفعة') ||
                             transaction.order_serial || // إذا كان هناك رقم طلب مرتبط
                             false;
       
       if (isIncome) {
         if (isOrderPayment) {
-          // هذه تحصيلات من العملاء - لا تضاف كإيرادات أخرى
+          // هذه تحصيلات من العملاء - تدخل في التحصيلات فقط
           acc.totalCollections += transaction.amount;
         } else {
           // إيرادات أخرى غير مرتبطة بالطلبات
