@@ -651,17 +651,17 @@ const ImprovedComprehensiveAccountStatement = () => {
                     </p>
                   </div>
                   
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <p className={`text-lg font-bold ${
-                        transaction.transaction_type === 'income' 
-                          ? 'text-green-600' 
-                          : 'text-red-600'
-                      }`}>
-                        {transaction.transaction_type === 'income' ? '+' : '-'}
-                        {formatCurrency(transaction.amount)}
-                      </p>
-                    </div>
+                   <div className="flex items-center gap-4">
+                     <div className="text-right">
+                       <p className={`text-lg font-bold ${
+                         transaction.transaction_type === 'income' 
+                           ? 'text-green-600' 
+                           : 'text-red-600'
+                       }`}>
+                         {transaction.transaction_type === 'income' ? '+' : '-'}
+                         {formatCurrency(Math.abs(transaction.amount))}
+                       </p>
+                     </div>
                     
                     <div className="flex gap-2">
                       <Button
