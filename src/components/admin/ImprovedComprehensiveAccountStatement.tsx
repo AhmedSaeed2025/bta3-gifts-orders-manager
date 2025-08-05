@@ -166,61 +166,80 @@ const ImprovedComprehensiveAccountStatement = () => {
       netProfit: 0
     });
 
-    // حساب المعاملات اليدوية - فصل التحصيلات عن المصروفات
+    // حساب المعاملات اليدوية وتوجيهها للأقسام المناسبة
     const manualTransactions = transactions.reduce((acc, transaction) => {
       const isIncome = transaction.transaction_type === 'income';
-      const isShipping = transaction.description?.includes('شحن') || false;
+      const amount = Math.abs(transaction.amount);
       
-      // تحديد ما إذا كانت المعاملة تحصيل من طلب (جميع الصيغ المحتملة)
+      // تحديد نوع المعاملة من الوصف
       const isOrderPayment = transaction.description?.includes('دفعة من طلب') || 
                             transaction.description?.includes('تحصيل من الطلب') ||
                             transaction.description?.includes('تحصيل من طلب') ||
                             transaction.description?.includes('دفعة طلب') ||
                             transaction.description?.includes('تحصيل') ||
-                            transaction.description?.includes('سداد') ||
+                            transaction.description?.includes('سداد من عميل') ||
                             transaction.description?.includes('عربون') ||
-                            transaction.description?.includes('دفعة') ||
-                            transaction.order_serial || // إذا كان هناك رقم طلب مرتبط
-                            false;
+                            transaction.order_serial;
+
+      const isProductCost = transaction.description?.includes('تكلفة') || 
+                           transaction.description?.includes('سداد') ||
+                           transaction.description?.includes('شراء') ||
+                           transaction.description?.includes('مواد خام') ||
+                           transaction.description?.includes('إنتاج');
+      
+      const isShippingExpense = transaction.description?.includes('شحن') && !isIncome;
       
       if (isIncome || isOrderPayment) {
-        // جميع الإيرادات والتحصيلات تُضاف للتحصيلات
-        acc.totalCollections += Math.abs(transaction.amount);
-        
-        if (!isOrderPayment) {
-          // الإيرادات الأخرى (غير تحصيلات الطلبات)
-          acc.otherIncome += Math.abs(transaction.amount);
-        }
-      } else {
-        // المصروفات - تُضاف للمدفوعات
-        if (isShipping) {
-          acc.paidShipping += Math.abs(transaction.amount);
+        // الإيرادات والتحصيلات - تُضاف للتحصيلات
+        if (isOrderPayment) {
+          // تحصيلات من العملاء تُضاف لتحصيلات المبيعات
+          acc.collectedSales += amount;
         } else {
-          acc.otherExpenses += Math.abs(transaction.amount);
+          // إيرادات أخرى
+          acc.otherIncome += amount;
         }
-        acc.totalPayments += Math.abs(transaction.amount);
+        acc.totalCollections += amount;
+      } else {
+        // المصروفات - تُوجه حسب النوع
+        if (isProductCost) {
+          // تكاليف المنتجات - تُضاف للتكاليف المدفوعة
+          acc.paidProductCosts += amount;
+        } else if (isShippingExpense) {
+          // مصاريف الشحن
+          acc.paidShipping += amount;
+        } else {
+          // مصاريف أخرى
+          acc.otherExpenses += amount;
+        }
+        acc.totalPayments += amount;
       }
       
       return acc;
     }, {
+      collectedSales: ordersSummary.collectedSales, // البداية بتحصيلات الطلبات
       otherIncome: 0,
+      paidProductCosts: 0, // تكاليف المنتجات المدفوعة
       otherExpenses: 0,
       paidShipping: 0,
-      totalCollections: ordersSummary.collectedSales, // البداية بتحصيلات الطلبات
+      totalCollections: ordersSummary.collectedSales,
       totalPayments: 0
     });
 
-    // الحسابات النهائية
+    // الحسابات النهائية مع التأكد من التوجيه الصحيح
+    const totalProductCostsIncludingManual = ordersSummary.totalProductCosts + manualTransactions.paidProductCosts;
     const totalCollections = manualTransactions.totalCollections;
-    const totalPayments = manualTransactions.totalPayments + ordersSummary.totalProductCosts;
+    const totalPayments = manualTransactions.totalPayments;
     const currentBalance = totalCollections - totalPayments;
     
     return {
       ...ordersSummary,
+      // تحديث القيم بالمعاملات اليدوية
+      collectedSales: manualTransactions.collectedSales,
+      totalProductCosts: totalProductCostsIncludingManual,
+      paidProductCosts: manualTransactions.paidProductCosts,
       otherIncome: manualTransactions.otherIncome,
       otherExpenses: manualTransactions.otherExpenses,
       paidShipping: manualTransactions.paidShipping,
-      paidProductCosts: ordersSummary.totalProductCosts, // افتراض أن كل التكاليف مدفوعة
       currentBalance,
       totalCollections,
       totalPayments
