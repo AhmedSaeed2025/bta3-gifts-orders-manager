@@ -166,11 +166,10 @@ const ImprovedComprehensiveAccountStatement = () => {
       netProfit: 0
     });
 
-    // حساب المعاملات اليدوية - فصل التحصيلات عن الإيرادات الأخرى
+    // حساب المعاملات اليدوية - فصل التحصيلات عن المصروفات
     const manualTransactions = transactions.reduce((acc, transaction) => {
       const isIncome = transaction.transaction_type === 'income';
       const isShipping = transaction.description?.includes('شحن') || false;
-      const isAdvertising = transaction.description?.includes('إعلان') || transaction.description?.includes('دعاية') || false;
       
       // تحديد ما إذا كانت المعاملة تحصيل من طلب (جميع الصيغ المحتملة)
       const isOrderPayment = transaction.description?.includes('دفعة من طلب') || 
@@ -184,18 +183,16 @@ const ImprovedComprehensiveAccountStatement = () => {
                             transaction.order_serial || // إذا كان هناك رقم طلب مرتبط
                             false;
       
-      if (isIncome) {
-        // جميع الإيرادات (سواء تحصيلات من طلبات أو إيرادات أخرى)
-        if (isOrderPayment) {
-          // تحصيلات من العملاء - تُسجل كإيراد موجب
-          acc.totalCollections += Math.abs(transaction.amount);
-        } else {
-          // إيرادات أخرى - تُسجل كإيراد موجب  
+      if (isIncome || isOrderPayment) {
+        // جميع الإيرادات والتحصيلات تُضاف للتحصيلات
+        acc.totalCollections += Math.abs(transaction.amount);
+        
+        if (!isOrderPayment) {
+          // الإيرادات الأخرى (غير تحصيلات الطلبات)
           acc.otherIncome += Math.abs(transaction.amount);
-          acc.totalCollections += Math.abs(transaction.amount);
         }
       } else {
-        // المصروفات - تُسجل كقيم موجبة لكنها تُخصم من الرصيد
+        // المصروفات - تُضاف للمدفوعات
         if (isShipping) {
           acc.paidShipping += Math.abs(transaction.amount);
         } else {
