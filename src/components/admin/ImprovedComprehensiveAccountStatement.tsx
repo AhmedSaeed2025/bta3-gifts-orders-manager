@@ -323,6 +323,43 @@ const ImprovedComprehensiveAccountStatement = () => {
     }
   });
 
+  // Helper function to determine transaction type and styling
+  const getTransactionStyle = (transaction: Transaction) => {
+    const isIncome = transaction.transaction_type === 'income';
+    const isOrderPayment = transaction.description?.includes('دفعة من طلب') || 
+                          transaction.description?.includes('تحصيل من الطلب') ||
+                          transaction.description?.includes('تحصيل من طلب') ||
+                          transaction.description?.includes('دفعة طلب') ||
+                          transaction.description?.includes('تحصيل') ||
+                          transaction.description?.includes('سداد') ||
+                          transaction.description?.includes('عربون') ||
+                          transaction.description?.includes('دفعة') ||
+                          transaction.order_serial ||
+                          false;
+    
+    if (isIncome || isOrderPayment) {
+      return {
+        bgColor: 'bg-green-50 border-green-200',
+        badgeStyle: 'bg-green-100 text-green-800',
+        textColor: 'text-green-800',
+        amountColor: 'text-green-600',
+        icon: '💰',
+        label: isOrderPayment ? 'تحصيل طلب' : 'إيراد',
+        sign: '+'
+      };
+    } else {
+      return {
+        bgColor: 'bg-red-50 border-red-200',
+        badgeStyle: 'bg-red-100 text-red-800',
+        textColor: 'text-red-800',
+        amountColor: 'text-red-600',
+        icon: '💸',
+        label: 'مصروف',
+        sign: '-'
+      };
+    }
+  };
+
   const handleAddTransaction = () => {
     const amount = parseFloat(newTransaction.amount);
     if (!amount || amount <= 0) {
@@ -613,78 +650,71 @@ const ImprovedComprehensiveAccountStatement = () => {
                 لا توجد معاملات متطابقة مع الفلتر المحدد
               </div>
             ) : (
-              filteredTransactions.map((transaction) => (
-                <div 
-                  key={transaction.id} 
-                  className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <Badge 
-                        variant={transaction.transaction_type === 'income' ? 'default' : 'destructive'}
-                        className={`px-3 py-1 text-sm font-medium ${
-                          transaction.transaction_type === 'income' 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-red-100 text-red-800'
-                        }`}
-                      >
-                        {transaction.transaction_type === 'income' ? '↗️ إيراد' : '↙️ مصروف'}
-                      </Badge>
-                      <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                        {transaction.order_serial}
-                      </span>
-                    </div>
-                    
-                    {transaction.description && (
-                      <p className="text-sm text-gray-700 mb-1 font-medium">
-                        {transaction.description}
+              filteredTransactions.map((transaction) => {
+                const style = getTransactionStyle(transaction);
+                
+                return (
+                  <div 
+                    key={transaction.id} 
+                    className={`flex items-center justify-between p-4 border rounded-lg hover:shadow-sm transition-all ${style.bgColor}`}
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <Badge className={`px-3 py-1 text-sm font-medium ${style.badgeStyle}`}>
+                          {style.icon} {style.label}
+                        </Badge>
+                        <span className="text-sm text-gray-500 bg-white px-2 py-1 rounded border">
+                          {transaction.order_serial}
+                        </span>
+                      </div>
+                      
+                      {transaction.description && (
+                        <p className={`text-sm mb-1 font-medium ${style.textColor}`}>
+                          {transaction.description}
+                        </p>
+                      )}
+                      
+                      <p className="text-xs text-gray-500 flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {new Date(transaction.created_at).toLocaleString('ar-EG', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
                       </p>
-                    )}
+                    </div>
                     
-                    <p className="text-xs text-gray-500">
-                      {new Date(transaction.created_at).toLocaleString('ar-EG', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </p>
-                  </div>
-                  
-                   <div className="flex items-center gap-4">
-                     <div className="text-right">
-                       <p className={`text-lg font-bold ${
-                         transaction.transaction_type === 'income' 
-                           ? 'text-green-600' 
-                           : 'text-red-600'
-                       }`}>
-                         {transaction.transaction_type === 'income' ? '+' : '-'}
-                         {formatCurrency(Math.abs(transaction.amount))}
-                       </p>
-                     </div>
-                    
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleEditTransaction(transaction)}
-                        className="h-8 w-8 p-0"
-                      >
-                        <Edit className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleDeleteTransaction(transaction.id)}
-                        className="h-8 w-8 p-0"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <p className={`text-xl font-bold ${style.amountColor}`}>
+                          {style.sign}{formatCurrency(Math.abs(transaction.amount))}
+                        </p>
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEditTransaction(transaction)}
+                          className="h-8 w-8 p-0 hover:bg-blue-50"
+                        >
+                          <Edit className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleDeleteTransaction(transaction.id)}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </CardContent>
