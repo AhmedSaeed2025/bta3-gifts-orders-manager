@@ -174,10 +174,13 @@ const ModernAccountStatement = () => {
   // Edit transaction mutation
   const editTransactionMutation = useMutation({
     mutationFn: async (transaction: Transaction) => {
+      // إصلاح المبلغ ليكون موجب دائماً والاتجاه يحدده نوع المعاملة
+      const amount = Math.abs(transaction.amount);
+      
       const { error } = await supabase
         .from('transactions')
         .update({
-          amount: transaction.amount,
+          amount: amount,
           transaction_type: transaction.transaction_type,
           description: transaction.description,
           created_at: transaction.created_at

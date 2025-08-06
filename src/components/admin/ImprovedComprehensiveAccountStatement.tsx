@@ -166,49 +166,30 @@ const ImprovedComprehensiveAccountStatement = () => {
       netProfit: 0
     });
 
-    // حساب المعاملات اليدوية وتوجيهها للأقسام المناسبة
+  // حساب المعاملات اليدوية وتوجيهها للأقسام المناسبة
     const manualTransactions = transactions.reduce((acc, transaction) => {
-      const isIncome = transaction.transaction_type === 'income';
       const amount = Math.abs(transaction.amount);
       
-      // تحديد نوع المعاملة من الوصف
-      const isOrderPayment = transaction.description?.includes('دفعة من طلب') || 
-                            transaction.description?.includes('تحصيل من الطلب') ||
-                            transaction.description?.includes('تحصيل من طلب') ||
-                            transaction.description?.includes('دفعة طلب') ||
-                            transaction.description?.includes('تحصيل') ||
-                            transaction.description?.includes('سداد من عميل') ||
-                            transaction.description?.includes('عربون') ||
-                            transaction.order_serial;
-
-      const isProductCost = transaction.description?.includes('تكلفة') || 
-                           transaction.description?.includes('سداد') ||
-                           transaction.description?.includes('شراء') ||
-                           transaction.description?.includes('مواد خام') ||
-                           transaction.description?.includes('إنتاج');
-      
-      const isShippingExpense = transaction.description?.includes('شحن') && !isIncome;
-      
-      if (isIncome || isOrderPayment) {
-        // الإيرادات والتحصيلات - تُضاف للتحصيلات
-        if (isOrderPayment) {
-          // تحصيلات من العملاء تُضاف لتحصيلات المبيعات
-          acc.collectedSales += amount;
-        } else {
-          // إيرادات أخرى
-          acc.otherIncome += amount;
-        }
+      // التوجيه المحاسبي الصحيح حسب نوع المعاملة
+      if (transaction.transaction_type === 'income') {
+        // الإيرادات - تُضاف للتحصيلات
+        acc.otherIncome += amount;
         acc.totalCollections += amount;
-      } else {
-        // المصروفات - تُوجه حسب النوع
+      } else if (transaction.transaction_type === 'expense') {
+        // المصروفات - تُصنف حسب النوع
+        const isProductCost = transaction.description?.includes('تكلفة') || 
+                             transaction.description?.includes('سداد تكلفة') ||
+                             transaction.description?.includes('شراء') ||
+                             transaction.description?.includes('مواد خام') ||
+                             transaction.description?.includes('إنتاج');
+        
+        const isShippingExpense = transaction.description?.includes('شحن');
+        
         if (isProductCost) {
-          // تكاليف المنتجات - تُضاف للتكاليف المدفوعة
           acc.paidProductCosts += amount;
         } else if (isShippingExpense) {
-          // مصاريف الشحن
           acc.paidShipping += amount;
         } else {
-          // مصاريف أخرى
           acc.otherExpenses += amount;
         }
         acc.totalPayments += amount;
@@ -218,7 +199,7 @@ const ImprovedComprehensiveAccountStatement = () => {
     }, {
       collectedSales: ordersSummary.collectedSales, // البداية بتحصيلات الطلبات
       otherIncome: 0,
-      paidProductCosts: 0, // تكاليف المنتجات المدفوعة
+      paidProductCosts: 0,
       otherExpenses: 0,
       paidShipping: 0,
       totalCollections: ordersSummary.collectedSales,
@@ -342,25 +323,15 @@ const ImprovedComprehensiveAccountStatement = () => {
   // Helper function to determine transaction type and styling
   const getTransactionStyle = (transaction: Transaction) => {
     const isIncome = transaction.transaction_type === 'income';
-    const isOrderPayment = transaction.description?.includes('دفعة من طلب') || 
-                          transaction.description?.includes('تحصيل من الطلب') ||
-                          transaction.description?.includes('تحصيل من طلب') ||
-                          transaction.description?.includes('دفعة طلب') ||
-                          transaction.description?.includes('تحصيل') ||
-                          transaction.description?.includes('سداد') ||
-                          transaction.description?.includes('عربون') ||
-                          transaction.description?.includes('دفعة') ||
-                          transaction.order_serial ||
-                          false;
     
-    if (isIncome || isOrderPayment) {
+    if (isIncome) {
       return {
         bgColor: 'bg-green-50 border-green-200',
         badgeStyle: 'bg-green-100 text-green-800',
         textColor: 'text-green-800',
         amountColor: 'text-green-600',
         icon: '💰',
-        label: isOrderPayment ? 'تحصيل طلب' : 'إيراد',
+        label: 'إيراد',
         sign: '+'
       };
     } else {
