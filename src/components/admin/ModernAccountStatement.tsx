@@ -128,9 +128,15 @@ const ModernAccountStatement = () => {
     // Calculate manual transactions
     const manualTransactions = transactions.reduce((acc, transaction) => {
       const amount = Math.abs(transaction.amount);
-      const isIncome = transaction.transaction_type === 'income';
       
-      if (isIncome) {
+      // تحديد نوع المعاملة بناءً على الوصف والنوع
+      const isOrderPayment = transaction.description?.includes('تحصيل') || 
+                            transaction.description?.includes('دفعة') ||
+                            transaction.description?.includes('عربون') ||
+                            transaction.description?.includes('سداد من عميل') ||
+                            transaction.order_serial?.includes('INV-');
+      
+      if (transaction.transaction_type === 'income' || isOrderPayment) {
         acc.totalIncome += amount;
       } else {
         acc.totalExpenses += amount;
@@ -239,7 +245,14 @@ const ModernAccountStatement = () => {
   };
 
   const getTransactionStyle = (transaction: Transaction) => {
-    const isIncome = transaction.transaction_type === 'income';
+    // تحديد نوع المعاملة بناءً على الوصف والنوع
+    const isOrderPayment = transaction.description?.includes('تحصيل') || 
+                          transaction.description?.includes('دفعة') ||
+                          transaction.description?.includes('عربون') ||
+                          transaction.description?.includes('سداد من عميل') ||
+                          transaction.order_serial?.includes('INV-');
+    
+    const isIncome = transaction.transaction_type === 'income' || isOrderPayment;
     
     if (isIncome) {
       return {
@@ -248,7 +261,7 @@ const ModernAccountStatement = () => {
         textColor: 'text-green-800',
         amountColor: 'text-green-600',
         icon: TrendingUp,
-        label: 'إيراد',
+        label: isOrderPayment ? 'تحصيل' : 'إيراد',
         sign: '+'
       };
     } else {

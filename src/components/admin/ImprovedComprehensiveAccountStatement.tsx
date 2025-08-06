@@ -170,21 +170,32 @@ const ImprovedComprehensiveAccountStatement = () => {
     const manualTransactions = transactions.reduce((acc, transaction) => {
       const amount = Math.abs(transaction.amount);
       
-      // التوجيه المحاسبي الصحيح حسب نوع المعاملة
-      if (transaction.transaction_type === 'income') {
-        // الإيرادات - تُضاف للتحصيلات
-        acc.otherIncome += amount;
+      // تحديد نوع المعاملة بناءً على الوصف والنوع
+      const isOrderPayment = transaction.description?.includes('تحصيل') || 
+                            transaction.description?.includes('دفعة') ||
+                            transaction.description?.includes('عربون') ||
+                            transaction.description?.includes('سداد من عميل') ||
+                            transaction.order_serial?.includes('INV-');
+      
+      const isProductCost = transaction.description?.includes('تكلفة') || 
+                           transaction.description?.includes('سداد تكلفة') ||
+                           transaction.description?.includes('شراء') ||
+                           transaction.description?.includes('مواد خام') ||
+                           transaction.description?.includes('إنتاج');
+      
+      const isShippingExpense = transaction.description?.includes('شحن') && !isOrderPayment;
+      
+      // التوجيه المحاسبي الصحيح
+      if (transaction.transaction_type === 'income' || isOrderPayment) {
+        // الإيرادات والتحصيلات
+        if (isOrderPayment) {
+          acc.collectedSales += amount;
+        } else {
+          acc.otherIncome += amount;
+        }
         acc.totalCollections += amount;
-      } else if (transaction.transaction_type === 'expense') {
-        // المصروفات - تُصنف حسب النوع
-        const isProductCost = transaction.description?.includes('تكلفة') || 
-                             transaction.description?.includes('سداد تكلفة') ||
-                             transaction.description?.includes('شراء') ||
-                             transaction.description?.includes('مواد خام') ||
-                             transaction.description?.includes('إنتاج');
-        
-        const isShippingExpense = transaction.description?.includes('شحن');
-        
+      } else {
+        // المصروفات
         if (isProductCost) {
           acc.paidProductCosts += amount;
         } else if (isShippingExpense) {
@@ -197,7 +208,7 @@ const ImprovedComprehensiveAccountStatement = () => {
       
       return acc;
     }, {
-      collectedSales: ordersSummary.collectedSales, // البداية بتحصيلات الطلبات
+      collectedSales: ordersSummary.collectedSales,
       otherIncome: 0,
       paidProductCosts: 0,
       otherExpenses: 0,
@@ -322,7 +333,14 @@ const ImprovedComprehensiveAccountStatement = () => {
 
   // Helper function to determine transaction type and styling
   const getTransactionStyle = (transaction: Transaction) => {
-    const isIncome = transaction.transaction_type === 'income';
+    // تحديد نوع المعاملة بناءً على الوصف والنوع
+    const isOrderPayment = transaction.description?.includes('تحصيل') || 
+                          transaction.description?.includes('دفعة') ||
+                          transaction.description?.includes('عربون') ||
+                          transaction.description?.includes('سداد من عميل') ||
+                          transaction.order_serial?.includes('INV-');
+    
+    const isIncome = transaction.transaction_type === 'income' || isOrderPayment;
     
     if (isIncome) {
       return {
@@ -331,7 +349,7 @@ const ImprovedComprehensiveAccountStatement = () => {
         textColor: 'text-green-800',
         amountColor: 'text-green-600',
         icon: '💰',
-        label: 'إيراد',
+        label: isOrderPayment ? 'تحصيل' : 'إيراد',
         sign: '+'
       };
     } else {
