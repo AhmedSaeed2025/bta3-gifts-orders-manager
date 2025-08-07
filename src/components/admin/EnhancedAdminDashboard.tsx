@@ -175,51 +175,51 @@ const EnhancedAdminDashboard = () => {
       </div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50">
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">إجمالي الطلبات</p>
-                <p className="text-xl font-bold text-blue-700 dark:text-blue-300">{totalOrders}</p>
+                <p className="text-lg sm:text-xl font-bold text-blue-700 dark:text-blue-300">{totalOrders}</p>
               </div>
-              <ShoppingCart className="h-8 w-8 text-blue-500" />
+              <ShoppingCart className="h-6 w-6 sm:h-8 sm:w-8 text-blue-500" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-950/50 dark:to-green-900/50">
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-green-600 dark:text-green-400 font-medium">إجمالي الإيرادات</p>
-                <p className="text-xl font-bold text-green-700 dark:text-green-300">{formatCurrency(totalRevenue)}</p>
+                <p className="text-lg sm:text-xl font-bold text-green-700 dark:text-green-300">{formatCurrency(totalRevenue)}</p>
               </div>
-              <DollarSign className="h-8 w-8 text-green-500" />
+              <DollarSign className="h-6 w-6 sm:h-8 sm:w-8 text-green-500" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-950/50 dark:to-purple-900/50">
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-purple-600 dark:text-purple-400 font-medium">صافي الربح</p>
-                <p className="text-xl font-bold text-purple-700 dark:text-purple-300">{formatCurrency(totalProfit)}</p>
+                <p className="text-lg sm:text-xl font-bold text-purple-700 dark:text-purple-300">{formatCurrency(totalProfit)}</p>
               </div>
-              <TrendingUp className="h-8 w-8 text-purple-500" />
+              <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-purple-500" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-950/50 dark:to-orange-900/50">
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-orange-600 dark:text-orange-400 font-medium">متوسط قيمة الطلب</p>
-                <p className="text-xl font-bold text-orange-700 dark:text-orange-300">{formatCurrency(averageOrderValue)}</p>
+                <p className="text-lg sm:text-xl font-bold text-orange-700 dark:text-orange-300">{formatCurrency(averageOrderValue)}</p>
               </div>
-              <Target className="h-8 w-8 text-orange-500" />
+              <Target className="h-6 w-6 sm:h-8 sm:w-8 text-orange-500" />
             </div>
           </CardContent>
         </Card>
@@ -382,7 +382,7 @@ const EnhancedAdminDashboard = () => {
           <CardTitle className="text-lg">مؤشرات الأداء الرئيسية</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             <div className="text-center p-4 border rounded-lg">
               <div className="text-2xl font-bold text-blue-600">{((completedOrders / totalOrders) * 100 || 0).toFixed(1)}%</div>
               <div className="text-xs text-muted-foreground">معدل إتمام الطلبات</div>

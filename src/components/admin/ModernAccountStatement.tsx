@@ -136,7 +136,19 @@ const ModernAccountStatement = () => {
                             transaction.description?.includes('سداد من عميل') ||
                             transaction.order_serial?.includes('INV-');
       
-      if (transaction.transaction_type === 'income' || isOrderPayment) {
+      // تحديد المصروفات بناءً على الوصف
+      const isExpense = transaction.description?.includes('تكلفة إنتاج') ||
+                       transaction.description?.includes('شحن للمنزل') ||
+                       transaction.description?.includes('مصروفات إعلانات') ||
+                       transaction.description?.includes('تكلفة') ||
+                       transaction.description?.includes('مصروف') ||
+                       transaction.description?.includes('شحن') ||
+                       transaction.description?.includes('إعلان') ||
+                       transaction.transaction_type === 'expense';
+      
+      if (isExpense) {
+        acc.totalExpenses += amount;
+      } else if (transaction.transaction_type === 'income' || isOrderPayment) {
         acc.totalIncome += amount;
       } else {
         acc.totalExpenses += amount;
@@ -180,6 +192,10 @@ const ModernAccountStatement = () => {
   // Edit transaction mutation
   const editTransactionMutation = useMutation({
     mutationFn: async (transaction: Transaction) => {
+      if (!transaction.id) {
+        throw new Error('Transaction ID is required');
+      }
+      
       // إصلاح المبلغ ليكون موجب دائماً والاتجاه يحدده نوع المعاملة
       const amount = Math.abs(transaction.amount);
       
@@ -252,7 +268,17 @@ const ModernAccountStatement = () => {
                           transaction.description?.includes('سداد من عميل') ||
                           transaction.order_serial?.includes('INV-');
     
-    const isIncome = transaction.transaction_type === 'income' || isOrderPayment;
+    // تحديد المصروفات بناءً على الوصف
+    const isExpense = transaction.description?.includes('تكلفة إنتاج') ||
+                     transaction.description?.includes('شحن للمنزل') ||
+                     transaction.description?.includes('مصروفات إعلانات') ||
+                     transaction.description?.includes('تكلفة') ||
+                     transaction.description?.includes('مصروف') ||
+                     transaction.description?.includes('شحن') ||
+                     transaction.description?.includes('إعلان') ||
+                     transaction.transaction_type === 'expense';
+    
+    const isIncome = (transaction.transaction_type === 'income' || isOrderPayment) && !isExpense;
     
     if (isIncome) {
       return {
