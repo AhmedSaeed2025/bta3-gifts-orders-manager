@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Search, FileText, Eye, Loader2 } from 'lucide-react';
-import AdminOrderInvoice from '@/components/admin/AdminOrderInvoice';
+import InvoiceTemplateSelector from '@/components/invoice/InvoiceTemplateSelector';
 import { formatCurrency } from '@/lib/utils';
 
 const InvoiceTab = () => {
@@ -82,9 +82,26 @@ const InvoiceTab = () => {
   };
 
   if (selectedOrder) {
+    // Import store settings query
+    const { data: storeSettings } = useQuery({
+      queryKey: ['store-settings-invoice'],
+      queryFn: async () => {
+        if (!user) return null;
+        const { data } = await supabase
+          .from('store_settings')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('is_active', true)
+          .single();
+        return data;
+      },
+      enabled: !!user
+    });
+
     return (
-      <AdminOrderInvoice 
+      <InvoiceTemplateSelector 
         order={selectedOrder} 
+        storeSettings={storeSettings}
         onClose={() => setSelectedOrder(null)} 
       />
     );

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -7,13 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, FileText, Eye, Loader2, Printer } from 'lucide-react';
+import { Search, FileText, Eye, Loader2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
-import { useReactToPrint } from 'react-to-print';
-import InvoiceHeader from './invoice/InvoiceHeader';
-import InvoiceCustomerInfo from './invoice/InvoiceCustomerInfo';
-import InvoiceItemsTable from './invoice/InvoiceItemsTable';
-import InvoiceTotals from './invoice/InvoiceTotals';
+import InvoiceTemplateSelector from './invoice/InvoiceTemplateSelector';
 
 interface Order {
   id: string;
@@ -55,7 +51,6 @@ const ImprovedInvoiceTab = () => {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const invoiceRef = useRef<HTMLDivElement>(null);
 
   // Fetch orders with proper error handling
   const { data: orders = [], isLoading, error } = useQuery({
@@ -106,11 +101,6 @@ const ImprovedInvoiceTab = () => {
     return matchesSearch && matchesStatus && matchesDateFrom && matchesDateTo;
   });
 
-  const handlePrint = useReactToPrint({
-    content: () => invoiceRef.current,
-    documentTitle: `فاتورة-${selectedOrder?.serial}`,
-  });
-
   const getStatusLabel = (status: string) => {
     switch (status) {
       case 'pending': return 'قيد المراجعة';
@@ -137,86 +127,28 @@ const ImprovedInvoiceTab = () => {
 
   // Invoice view
   if (selectedOrder) {
-    const subtotal = selectedOrder.order_items.reduce((sum, item) => sum + (item.quantity * item.price - item.item_discount), 0);
-    const finalTotal = subtotal + selectedOrder.shipping_cost - selectedOrder.discount;
-    const paymentsReceived = (selectedOrder as any).payments_received || selectedOrder.deposit || 0;
-    const remainingAmount = finalTotal - paymentsReceived;
+    // Fetch store settings for invoice
+    const { data: storeSettings } = useQuery({
+      queryKey: ['store-settings-invoice'],
+      queryFn: async () => {
+        if (!user) return null;
+        const { data } = await supabase
+          .from('store_settings')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('is_active', true)
+          .single();
+        return data;
+      },
+      enabled: !!user
+    });
 
     return (
-      <div className="space-y-4 sm:space-y-6">
-        {/* Print Actions */}
-        <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 mb-4 sm:mb-6 print:hidden">
-          <Button 
-            onClick={handlePrint} 
-            className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg"
-          >
-            <Printer className="h-4 w-4 ml-2" />
-            طباعة الفاتورة
-          </Button>
-          <Button 
-            variant="outline" 
-            onClick={() => setSelectedOrder(null)} 
-            className="w-full sm:w-auto border-gray-300 hover:bg-gray-50"
-          >
-            العودة للقائمة
-          </Button>
-        </div>
-
-        {/* Invoice Content */}
-        <div ref={invoiceRef} className="bg-white text-gray-800 shadow-2xl rounded-xl overflow-hidden" dir="rtl">
-          <InvoiceHeader 
-            orderSerial={selectedOrder.serial} 
-            orderDate={selectedOrder.date_created} 
-          />
-          
-          <InvoiceCustomerInfo
-            customerName={selectedOrder.client_name}
-            customerPhone={selectedOrder.phone}
-            paymentMethod={selectedOrder.payment_method}
-            deliveryMethod={selectedOrder.delivery_method}
-            status={selectedOrder.status}
-            address={selectedOrder.address}
-          />
-
-          <InvoiceItemsTable items={selectedOrder.order_items} />
-
-          <InvoiceTotals
-            subtotal={subtotal}
-            shippingCost={selectedOrder.shipping_cost}
-            discount={selectedOrder.discount}
-            finalTotal={finalTotal}
-            deposit={paymentsReceived}
-            remainingAmount={remainingAmount}
-          />
-
-          {/* Notes Section */}
-          {selectedOrder.notes && (
-            <div className="px-6 sm:px-8 lg:px-12 pb-6 sm:pb-8">
-              <div className="bg-amber-50/50 rounded-xl p-4 sm:p-6 border border-amber-100">
-                <h3 className="text-sm sm:text-base lg:text-lg font-bold text-amber-800 mb-2 sm:mb-3">ملاحظات:</h3>
-                <p className="text-xs sm:text-sm lg:text-base text-gray-700 leading-relaxed whitespace-pre-wrap">{selectedOrder.notes}</p>
-              </div>
-            </div>
-          )}
-
-          {/* Footer */}
-          <div className="bg-gradient-to-l from-slate-100 to-blue-100 px-6 sm:px-8 lg:px-12 py-6 sm:py-8 text-center">
-            <div className="max-w-2xl mx-auto">
-              <p className="text-blue-800 font-bold text-sm sm:text-base lg:text-lg mb-2">#شكراً_لثقتكم_في_بتاع_هدايا_الأصلي</p>
-              <p className="text-gray-600 text-xs sm:text-sm mb-3 sm:mb-4">
-                لأي استفسار يرجى التواصل معنا • هذه فاتورة إلكترونية معتمدة
-              </p>
-              <div className="flex justify-center">
-                <img 
-                  src="/lovable-uploads/ac63ecb6-e1d0-4917-9537-12f75da70364.png" 
-                  alt="ختم الشركة" 
-                  className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 object-contain opacity-80 bg-white p-2 rounded-lg shadow-sm" 
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <InvoiceTemplateSelector 
+        order={selectedOrder}
+        storeSettings={storeSettings}
+        onClose={() => setSelectedOrder(null)}
+      />
     );
   }
 
