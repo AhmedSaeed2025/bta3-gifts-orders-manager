@@ -17,6 +17,22 @@ const InvoiceTab = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
 
+  // Fetch store settings (always, not conditionally)
+  const { data: storeSettings } = useQuery({
+    queryKey: ['store-settings-invoice'],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data } = await supabase
+        .from('store_settings')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .single();
+      return data;
+    },
+    enabled: !!user
+  });
+
   // Fetch admin orders with proper error handling
   const { data: orders = [], isLoading, error } = useQuery({
     queryKey: ['admin-orders-invoice'],
@@ -82,22 +98,6 @@ const InvoiceTab = () => {
   };
 
   if (selectedOrder) {
-    // Import store settings query
-    const { data: storeSettings } = useQuery({
-      queryKey: ['store-settings-invoice'],
-      queryFn: async () => {
-        if (!user) return null;
-        const { data } = await supabase
-          .from('store_settings')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('is_active', true)
-          .single();
-        return data;
-      },
-      enabled: !!user
-    });
-
     return (
       <InvoiceTemplateSelector 
         order={selectedOrder} 

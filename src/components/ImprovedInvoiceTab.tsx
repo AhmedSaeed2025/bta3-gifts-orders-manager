@@ -52,6 +52,22 @@ const ImprovedInvoiceTab = () => {
   const [dateTo, setDateTo] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
+  // Fetch store settings for invoice (always, not conditionally)
+  const { data: storeSettings } = useQuery({
+    queryKey: ['store-settings-invoice'],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data } = await supabase
+        .from('store_settings')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .single();
+      return data;
+    },
+    enabled: !!user
+  });
+
   // Fetch orders with proper error handling
   const { data: orders = [], isLoading, error } = useQuery({
     queryKey: ['orders-invoice'],
@@ -127,22 +143,6 @@ const ImprovedInvoiceTab = () => {
 
   // Invoice view
   if (selectedOrder) {
-    // Fetch store settings for invoice
-    const { data: storeSettings } = useQuery({
-      queryKey: ['store-settings-invoice'],
-      queryFn: async () => {
-        if (!user) return null;
-        const { data } = await supabase
-          .from('store_settings')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('is_active', true)
-          .single();
-        return data;
-      },
-      enabled: !!user
-    });
-
     return (
       <InvoiceTemplateSelector 
         order={selectedOrder}
