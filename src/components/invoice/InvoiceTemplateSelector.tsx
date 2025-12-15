@@ -8,6 +8,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import ClassicInvoiceTemplate from './templates/ClassicInvoiceTemplate';
 import ModernInvoiceTemplate from './templates/ModernInvoiceTemplate';
 import ElegantInvoiceTemplate from './templates/ElegantInvoiceTemplate';
+import ProfessionalInvoiceTemplate from './templates/ProfessionalInvoiceTemplate';
 
 interface InvoiceTemplateSelectorProps {
   order: any;
@@ -15,7 +16,7 @@ interface InvoiceTemplateSelectorProps {
   onClose?: () => void;
 }
 
-type TemplateType = 'classic' | 'modern' | 'elegant';
+type TemplateType = 'classic' | 'modern' | 'elegant' | 'professional';
 
 const InvoiceTemplateSelector: React.FC<InvoiceTemplateSelectorProps> = ({
   order,
@@ -50,7 +51,8 @@ const InvoiceTemplateSelector: React.FC<InvoiceTemplateSelectorProps> = ({
     const templates = {
       classic: <ClassicInvoiceTemplate order={order} storeSettings={storeSettings} />,
       modern: <ModernInvoiceTemplate order={order} storeSettings={storeSettings} />,
-      elegant: <ElegantInvoiceTemplate order={order} storeSettings={storeSettings} />
+      elegant: <ElegantInvoiceTemplate order={order} storeSettings={storeSettings} />,
+      professional: <ProfessionalInvoiceTemplate order={order} storeSettings={storeSettings} />
     };
     return templates[selectedTemplate];
   };
@@ -58,7 +60,8 @@ const InvoiceTemplateSelector: React.FC<InvoiceTemplateSelectorProps> = ({
   const templateDescriptions = {
     classic: 'تصميم تقليدي رسمي مناسب للأعمال التجارية',
     modern: 'تصميم عصري بألوان متدرجة وتأثيرات حديثة',
-    elegant: 'تصميم أنيق راقي مع إطار ذهبي مميز'
+    elegant: 'تصميم أنيق راقي مع إطار ذهبي مميز',
+    professional: 'تصميم احترافي نظيف مع ملخص واضح للفاتورة'
   };
 
   if (previewMode) {
@@ -111,7 +114,7 @@ const InvoiceTemplateSelector: React.FC<InvoiceTemplateSelectorProps> = ({
           className="w-full"
           dir="rtl"
         >
-          <TabsList className="grid w-full grid-cols-3 mb-6">
+          <TabsList className="grid w-full grid-cols-4 mb-6">
             <TabsTrigger value="classic" className="text-xs sm:text-sm">
               الكلاسيكي
             </TabsTrigger>
@@ -120,6 +123,9 @@ const InvoiceTemplateSelector: React.FC<InvoiceTemplateSelectorProps> = ({
             </TabsTrigger>
             <TabsTrigger value="elegant" className="text-xs sm:text-sm">
               الأنيق
+            </TabsTrigger>
+            <TabsTrigger value="professional" className="text-xs sm:text-sm">
+              الاحترافي
             </TabsTrigger>
           </TabsList>
 
@@ -151,6 +157,14 @@ const InvoiceTemplateSelector: React.FC<InvoiceTemplateSelectorProps> = ({
             <div className="border-2 border-gray-200 rounded-lg overflow-hidden">
               <div className={`${isMobile ? 'scale-50 origin-top-right' : 'scale-75 origin-top'} transform`}>
                 <ElegantInvoiceTemplate order={order} storeSettings={storeSettings} />
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="professional" className="mt-0">
+            <div className="border-2 border-gray-200 rounded-lg overflow-hidden">
+              <div className={`${isMobile ? 'scale-50 origin-top-right' : 'scale-75 origin-top'} transform`}>
+                <ProfessionalInvoiceTemplate order={order} storeSettings={storeSettings} />
               </div>
             </div>
           </TabsContent>
