@@ -7,7 +7,10 @@ interface InvoiceTemplateProps {
 }
 
 const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, storeSettings }) => {
-  const subtotal = order.items?.reduce((sum: number, item: any) => {
+  // Support both 'items' and 'order_items' from different data sources
+  const items = order.items || order.order_items || [];
+  
+  const subtotal = items.reduce((sum: number, item: any) => {
     const itemTotal = (item.price || item.unit_price || 0) * (item.quantity || 1);
     return sum + itemTotal;
   }, 0) || 0;
@@ -72,7 +75,7 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
           {/* Invoice Number */}
           <div className="text-right">
             <p className="text-gray-500 text-sm">فاتورة رقم</p>
-            <p className="text-red-600 font-bold text-lg">INV-{order.serial}</p>
+            <p className="text-red-600 font-bold text-lg">{order.serial}</p>
           </div>
         </div>
       </div>
@@ -148,7 +151,7 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
               </tr>
             </thead>
             <tbody>
-              {order.items?.map((item: any, index: number) => {
+              {items.length > 0 ? items.map((item: any, index: number) => {
                 const price = item.price || item.unit_price || 0;
                 const itemTotal = price * (item.quantity || 1);
                 return (
@@ -166,7 +169,11 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
                     <td className="p-3 text-left font-semibold">{formatCurrency(itemTotal)}</td>
                   </tr>
                 );
-              })}
+              }) : (
+                <tr>
+                  <td colSpan={5} className="p-4 text-center text-gray-500">لا توجد أصناف</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
