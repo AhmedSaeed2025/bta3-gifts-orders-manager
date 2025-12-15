@@ -53,7 +53,10 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
   }, 0);
   
   const totalCost = items.reduce((sum, item) => sum + item.cost * item.quantity, 0);
-  const totalAmount = subtotal + customerData.shippingCost - customerData.deposit;
+  // الإجمالي الكلي = المجموع الفرعي + الشحن (بدون خصم العربون)
+  const totalAmount = subtotal + customerData.shippingCost;
+  // المبلغ المتبقي = الإجمالي - العربون
+  const remainingAmount = totalAmount - customerData.deposit;
   const netProfit = subtotal - totalCost;
 
   const handleCustomerDataChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -160,6 +163,7 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
         governorate: customerData.governorate || "-",
         items,
         total: totalAmount,
+        remaining_amount: remainingAmount,
         profit: netProfit,
         status: editingOrder?.status || "pending",
         discount: 0,
@@ -228,6 +232,7 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
             discount={0}
             deposit={customerData.deposit}
             totalAmount={totalAmount}
+            remainingAmount={remainingAmount}
             products={[]}
             editMode={!!editingOrder}
             totalCost={totalCost}

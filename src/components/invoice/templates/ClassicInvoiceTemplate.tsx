@@ -12,13 +12,14 @@ const ClassicInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, storeSe
   const logoUrl = storeSettings?.logo_url;
   
   const subtotal = items.reduce((sum: number, item: any) => {
-    const itemTotal = item.total_price || (item.quantity * item.price - (item.item_discount || 0));
+    const itemTotal = item.total_price || ((item.price || item.unit_price || 0) * (item.quantity || 1) - (item.item_discount || 0));
     return sum + itemTotal;
   }, 0);
   
-  const total = subtotal + (order.shipping_cost || 0) - (order.discount || 0);
-  const paid = order.payments_received || order.deposit || 0;
-  const remaining = total - paid;
+  // Use order.total if available, otherwise calculate from items
+  const total = order.total || order.total_amount || (subtotal + (order.shipping_cost || 0) - (order.discount || 0));
+  const paid = (order.deposit || 0) + (order.payments_received || 0);
+  const remaining = order.remaining_amount ?? (total - paid);
 
   const getStatusLabel = (status: string) => {
     const labels: Record<string, string> = {

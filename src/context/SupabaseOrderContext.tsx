@@ -167,6 +167,9 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
       const serial = await generateSerialNumber();
       console.log('Generated serial for new order:', serial);
       
+      // Calculate remaining amount properly
+      const remainingAmount = (newOrder as any).remaining_amount ?? (newOrder.total - (newOrder.deposit || 0));
+      
       // Insert order into the main orders table
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
@@ -184,6 +187,7 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
           discount: newOrder.discount || 0,
           deposit: newOrder.deposit,
           total: newOrder.total,
+          remaining_amount: remainingAmount,
           profit: newOrder.profit,
           status: newOrder.status
         })
@@ -221,6 +225,8 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
       }
 
       // Also insert into admin_orders table for admin dashboard
+      const adminRemainingAmount = (newOrder as any).remaining_amount ?? (newOrder.total - (newOrder.deposit || 0));
+      
       const { data: adminOrderData, error: adminOrderError } = await supabase
         .from('admin_orders')
         .insert({
@@ -237,6 +243,7 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
           discount: newOrder.discount || 0,
           deposit: newOrder.deposit,
           total_amount: newOrder.total,
+          remaining_amount: adminRemainingAmount,
           profit: newOrder.profit,
           status: newOrder.status,
           order_date: new Date().toISOString()
@@ -302,6 +309,9 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
 
       if (fetchError) throw fetchError;
 
+      // Calculate remaining amount properly
+      const updateRemainingAmount = (updatedOrder as any).remaining_amount ?? (updatedOrder.total - (updatedOrder.deposit || 0));
+      
       // Update the order
       const { error: orderError } = await supabase
         .from('orders')
@@ -316,6 +326,7 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
           discount: updatedOrder.discount,
           deposit: updatedOrder.deposit,
           total: updatedOrder.total,
+          remaining_amount: updateRemainingAmount,
           profit: updatedOrder.profit,
           status: updatedOrder.status,
           updated_at: new Date().toISOString()
@@ -352,6 +363,8 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
       if (itemsError) throw itemsError;
 
       // Also update admin_orders if it exists
+      const adminUpdateRemainingAmount = (updatedOrder as any).remaining_amount ?? (updatedOrder.total - (updatedOrder.deposit || 0));
+      
       const { error: adminUpdateError } = await supabase
         .from('admin_orders')
         .update({
@@ -365,6 +378,7 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
           discount: updatedOrder.discount,
           deposit: updatedOrder.deposit,
           total_amount: updatedOrder.total,
+          remaining_amount: adminUpdateRemainingAmount,
           profit: updatedOrder.profit,
           status: updatedOrder.status,
           updated_at: new Date().toISOString()

@@ -17,6 +17,7 @@ interface ItemsTableProps {
   discount: number;
   deposit: number;
   totalAmount: number;
+  remainingAmount?: number;
   products: Product[];
   editMode?: boolean;
   totalCost?: number;
@@ -32,6 +33,7 @@ const ItemsTable = ({
   discount, 
   deposit, 
   totalAmount,
+  remainingAmount,
   products,
   editMode = false,
   totalCost = 0,
@@ -280,9 +282,15 @@ const ItemsTable = ({
             <span className="text-green-600 font-bold">{netProfit.toFixed(2)} ج.م</span>
           </div>
           <div className="flex justify-between text-lg font-bold border-t pt-2">
-            <span>الإجمالي:</span>
+            <span>الإجمالي الكلي:</span>
             <span>{totalAmount.toFixed(2)} ج.م</span>
           </div>
+          {deposit > 0 && remainingAmount !== undefined && (
+            <div className="flex justify-between text-lg font-bold text-red-600">
+              <span>المتبقي بعد العربون:</span>
+              <span>{remainingAmount.toFixed(2)} ج.م</span>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
