@@ -7,7 +7,7 @@ interface InvoiceTemplateProps {
 }
 
 const ClassicInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, storeSettings }) => {
-  const items = order.order_items || order.admin_order_items || [];
+  const items = order.items || order.order_items || order.admin_order_items || [];
   const storeName = storeSettings?.store_name || "متجري";
   const logoUrl = storeSettings?.logo_url;
   
