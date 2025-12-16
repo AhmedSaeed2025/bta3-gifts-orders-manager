@@ -194,20 +194,14 @@ const ElegantInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, storeSe
                 <span className="font-bold">الإجمالي الكلي:</span>
                 <span className="font-bold text-amber-700">{formatCurrency(total)}</span>
               </div>
-              {paid > 0 && (
-                <>
-                  <div className="flex justify-between text-green-700 border-t border-amber-200 pt-2">
-                    <span className="font-serif">المبلغ المدفوع:</span>
-                    <span className="font-bold">{formatCurrency(paid)}</span>
-                  </div>
-                  {remaining > 0 && (
-                    <div className="flex justify-between text-red-700 text-base sm:text-lg border-t border-amber-200 pt-2">
-                      <span className="font-serif font-bold">المتبقي:</span>
-                      <span className="font-bold">{formatCurrency(remaining)}</span>
-                    </div>
-                  )}
-                </>
-              )}
+              <div className="flex justify-between text-green-700 border-t border-amber-200 pt-2">
+                <span className="font-serif">المبلغ المدفوع:</span>
+                <span className="font-bold">{formatCurrency(paid)}</span>
+              </div>
+              <div className="flex justify-between text-red-700 text-base sm:text-lg border-t border-amber-200 pt-2">
+                <span className="font-serif font-bold">المتبقي:</span>
+                <span className="font-bold">{formatCurrency(remaining)}</span>
+              </div>
             </div>
           </div>
         </div>

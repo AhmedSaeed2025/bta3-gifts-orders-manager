@@ -194,21 +194,23 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
               <span className="text-gray-600">مصاريف الشحن:</span>
               <span className="font-semibold">{formatCurrency(order.shipping_cost || 0)}</span>
             </div>
-            {(order.deposit || 0) > 0 && (
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-600">العربون المدفوع:</span>
-                <span className="font-semibold text-green-600">- {formatCurrency(order.deposit || 0)}</span>
-              </div>
-            )}
             {(order.discount || 0) > 0 && (
               <div className="flex justify-between items-center text-sm">
                 <span className="text-gray-600">الخصم:</span>
-                <span className="font-semibold text-green-600">- {formatCurrency(order.discount || 0)}</span>
+                <span className="font-semibold text-red-600">- {formatCurrency(order.discount || 0)}</span>
               </div>
             )}
             <div className="flex justify-between items-center pt-3 border-t border-gray-200">
-              <span className="bg-green-500 text-white px-4 py-2 rounded font-bold">المجموع الكلي:</span>
-              <span className="font-bold text-lg">{formatCurrency(remaining > 0 ? remaining : total)}</span>
+              <span className="bg-blue-500 text-white px-4 py-2 rounded font-bold">المجموع الكلي:</span>
+              <span className="font-bold text-lg">{formatCurrency(total)}</span>
+            </div>
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-gray-600">المبلغ المدفوع:</span>
+              <span className="font-semibold text-green-600">{formatCurrency(paid)}</span>
+            </div>
+            <div className="flex justify-between items-center pt-3 border-t border-gray-200">
+              <span className="bg-red-500 text-white px-4 py-2 rounded font-bold">المبلغ المتبقي:</span>
+              <span className="font-bold text-lg text-red-600">{formatCurrency(remaining)}</span>
             </div>
           </div>
         </div>
