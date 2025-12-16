@@ -158,20 +158,14 @@ const ClassicInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, storeSe
               <span className="font-bold">الإجمالي الكلي:</span>
               <span className="font-bold text-blue-600">{formatCurrency(total)}</span>
             </div>
-            {paid > 0 && (
-              <>
-                <div className="flex justify-between text-green-600">
-                  <span className="font-medium">المبلغ المدفوع:</span>
-                  <span className="font-bold">{formatCurrency(paid)}</span>
-                </div>
-                {remaining > 0 && (
-                  <div className="flex justify-between text-red-600 text-base sm:text-lg">
-                    <span className="font-bold">المتبقي:</span>
-                    <span className="font-bold">{formatCurrency(remaining)}</span>
-                  </div>
-                )}
-              </>
-            )}
+            <div className="flex justify-between text-green-600">
+              <span className="font-medium">المبلغ المدفوع:</span>
+              <span className="font-bold">{formatCurrency(paid)}</span>
+            </div>
+            <div className="flex justify-between text-red-600 text-base sm:text-lg">
+              <span className="font-bold">المتبقي:</span>
+              <span className="font-bold">{formatCurrency(remaining)}</span>
+            </div>
           </div>
         </div>
       </div>
