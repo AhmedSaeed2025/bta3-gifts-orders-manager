@@ -1,5 +1,6 @@
 import React from 'react';
 import { formatCurrency } from '@/lib/utils';
+import { calculateOrderFinancials } from '@/lib/orderFinancials';
 
 interface InvoiceTemplateProps {
   order: any;
@@ -7,17 +8,7 @@ interface InvoiceTemplateProps {
 }
 
 const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, storeSettings }) => {
-  // Support both 'items' and 'order_items' from different data sources
-  const items = order.items || order.order_items || [];
-  
-  const subtotal = items.reduce((sum: number, item: any) => {
-    const itemTotal = (item.price || item.unit_price || 0) * (item.quantity || 1);
-    return sum + itemTotal;
-  }, 0) || 0;
-  
-  const total = order.total || order.total_amount || 0;
-  const paid = (order.deposit || 0) + (order.payments_received || 0);
-  const remaining = order.remaining_amount || (total - paid);
+  const { items, subtotal, shipping, discount, total, paid, remaining } = calculateOrderFinancials(order);
 
   const getStatusLabel = (status: string) => {
     const statusMap: { [key: string]: string } = {
@@ -153,7 +144,9 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
             <tbody>
               {items.length > 0 ? items.map((item: any, index: number) => {
                 const price = item.price || item.unit_price || 0;
-                const itemTotal = price * (item.quantity || 1);
+                const qty = item.quantity || 1;
+                const itemDiscount = item.item_discount || 0;
+                const itemTotal = (price * qty) - itemDiscount;
                 return (
                   <tr key={index} className="border-b border-gray-200 hover:bg-gray-50">
                     <td className="p-3 text-right text-red-600 font-medium">
@@ -192,12 +185,12 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
             </div>
             <div className="flex justify-between items-center text-sm">
               <span className="text-gray-600">مصاريف الشحن:</span>
-              <span className="font-semibold">{formatCurrency(order.shipping_cost || 0)}</span>
+              <span className="font-semibold">{formatCurrency(shipping)}</span>
             </div>
-            {(order.discount || 0) > 0 && (
+            {discount > 0 && (
               <div className="flex justify-between items-center text-sm">
                 <span className="text-gray-600">الخصم:</span>
-                <span className="font-semibold text-red-600">- {formatCurrency(order.discount || 0)}</span>
+                <span className="font-semibold text-red-600">- {formatCurrency(discount)}</span>
               </div>
             )}
             <div className="flex justify-between items-center pt-3 border-t border-gray-200">
@@ -206,7 +199,7 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
             </div>
             <div className="flex justify-between items-center text-sm">
               <span className="text-gray-600">المبلغ المدفوع:</span>
-              <span className="font-semibold text-green-600">{formatCurrency(paid)}</span>
+              <span className="font-semibold text-green-600">{formatCurrency(-paid)}</span>
             </div>
             <div className="flex justify-between items-center pt-3 border-t border-gray-200">
               <span className="bg-red-500 text-white px-4 py-2 rounded font-bold">المبلغ المتبقي:</span>

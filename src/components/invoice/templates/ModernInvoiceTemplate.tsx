@@ -1,5 +1,6 @@
 import React from 'react';
 import { formatCurrency } from '@/lib/utils';
+import { calculateOrderFinancials } from '@/lib/orderFinancials';
 
 interface InvoiceTemplateProps {
   order: any;
@@ -7,19 +8,10 @@ interface InvoiceTemplateProps {
 }
 
 const ModernInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, storeSettings }) => {
-  const items = order.items || order.order_items || order.admin_order_items || [];
   const storeName = storeSettings?.store_name || "متجري";
   const logoUrl = storeSettings?.logo_url;
-  
-  const subtotal = items.reduce((sum: number, item: any) => {
-    const itemTotal = item.total_price || ((item.price || item.unit_price || 0) * (item.quantity || 1) - (item.item_discount || 0));
-    return sum + itemTotal;
-  }, 0);
-  
-  // Use order.total if available, otherwise calculate from items
-  const total = order.total || order.total_amount || (subtotal + (order.shipping_cost || 0) - (order.discount || 0));
-  const paid = (order.deposit || 0) + (order.payments_received || 0);
-  const remaining = order.remaining_amount ?? (total - paid);
+
+  const { items, subtotal, shipping, discount, total, paid, remaining } = calculateOrderFinancials(order);
 
   const getStatusLabel = (status: string) => {
     const labels: Record<string, string> = {
@@ -201,12 +193,12 @@ const ModernInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, storeSet
               </div>
               <div className="flex justify-between">
                 <span>تكلفة الشحن:</span>
-                <span className="font-bold">{formatCurrency(order.shipping_cost || 0)}</span>
+                <span className="font-bold">{formatCurrency(shipping)}</span>
               </div>
-              {order.discount > 0 && (
+              {discount > 0 && (
                 <div className="flex justify-between text-red-400">
                   <span>الخصم:</span>
-                  <span className="font-bold">-{formatCurrency(order.discount)}</span>
+                  <span className="font-bold">-{formatCurrency(discount)}</span>
                 </div>
               )}
               <div className="border-t-2 border-white/30 pt-3 flex justify-between text-lg sm:text-xl">
@@ -215,7 +207,7 @@ const ModernInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, storeSet
               </div>
               <div className="flex justify-between text-green-400">
                 <span>المبلغ المدفوع:</span>
-                <span className="font-bold">{formatCurrency(paid)}</span>
+                <span className="font-bold">{formatCurrency(-paid)}</span>
               </div>
               <div className="flex justify-between text-red-400 text-base sm:text-lg">
                 <span className="font-bold">المتبقي:</span>

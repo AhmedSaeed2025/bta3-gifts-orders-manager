@@ -10,6 +10,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { formatCurrency } from "@/lib/utils";
+import { calculateOrderFinancials } from "@/lib/orderFinancials";
 import { 
   FileText, 
   Search, 
@@ -50,6 +51,8 @@ const DetailedOrdersReport = () => {
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [paymentType, setPaymentType] = useState<'collection' | 'shipping' | 'cost'>('collection');
 
+  const selectedFinancials = selectedOrder ? calculateOrderFinancials(selectedOrder) : null;
+
   // Fetch orders data
   const { data: orders = [], isLoading, refetch } = useQuery({
     queryKey: ['detailed-orders-report'],
@@ -85,10 +88,10 @@ const DetailedOrdersReport = () => {
 
   // Calculate summary statistics
   const totalOrders = filteredOrders.length;
-  const totalRevenue = filteredOrders.reduce((sum, order) => sum + (order.total || 0), 0);
+  const totalRevenue = filteredOrders.reduce((sum, order) => sum + calculateOrderFinancials(order).total, 0);
   const totalProfit = filteredOrders.reduce((sum, order) => sum + (order.profit || 0), 0);
-  const totalShipping = filteredOrders.reduce((sum, order) => sum + (order.shipping_cost || 0), 0);
-  const totalDeposits = filteredOrders.reduce((sum, order) => sum + (order.deposit || 0), 0);
+  const totalShipping = filteredOrders.reduce((sum, order) => sum + calculateOrderFinancials(order).shipping, 0);
+  const totalDeposits = filteredOrders.reduce((sum, order) => sum + calculateOrderFinancials(order).paid, 0);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -354,7 +357,7 @@ const DetailedOrdersReport = () => {
         <CardContent>
           <div className="space-y-4">
             {filteredOrders.map((order) => {
-              const remainingAmount = (order.total || 0) - (order.deposit || 0);
+              const { total, paid, remaining, shipping } = calculateOrderFinancials(order);
               
               return (
                 <Card key={order.id} className="border-l-4 border-l-primary">
@@ -389,7 +392,7 @@ const DetailedOrdersReport = () => {
                         <div className="grid grid-cols-2 gap-4 text-sm">
                           <div className="space-y-1">
                             <div className="text-xs text-muted-foreground">المبلغ الإجمالي</div>
-                            <div className="font-bold text-green-600">{formatCurrency(order.total || 0)}</div>
+                            <div className="font-bold text-green-600">{formatCurrency(total)}</div>
                           </div>
                           <div className="space-y-1">
                             <div className="text-xs text-muted-foreground">الربح</div>
@@ -397,11 +400,11 @@ const DetailedOrdersReport = () => {
                           </div>
                           <div className="space-y-1">
                             <div className="text-xs text-muted-foreground">العربون</div>
-                            <div className="font-bold text-purple-600">{formatCurrency(order.deposit || 0)}</div>
+                            <div className="font-bold text-purple-600">{formatCurrency(-paid)}</div>
                           </div>
                           <div className="space-y-1">
                             <div className="text-xs text-muted-foreground">المتبقي</div>
-                            <div className="font-bold text-orange-600">{formatCurrency(remainingAmount)}</div>
+                            <div className="font-bold text-orange-600">{formatCurrency(remaining)}</div>
                           </div>
                         </div>
                       </div>
@@ -416,9 +419,9 @@ const DetailedOrdersReport = () => {
                           <Truck className="h-3 w-3" />
                           <span className="text-xs">{order.delivery_method}</span>
                         </div>
-                        {order.shipping_cost > 0 && (
+                        {shipping > 0 && (
                           <div className="text-xs text-muted-foreground">
-                            شحن: {formatCurrency(order.shipping_cost)}
+                            شحن: {formatCurrency(shipping)}
                           </div>
                         )}
                         {order.governorate && (
@@ -587,29 +590,29 @@ const DetailedOrdersReport = () => {
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <span>المجموع الفرعي:</span>
-                        <span>{formatCurrency((selectedOrder.total || 0) - (selectedOrder.shipping_cost || 0))}</span>
+                        <span>{formatCurrency(selectedFinancials?.subtotal ?? 0)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>الشحن:</span>
-                        <span>{formatCurrency(selectedOrder.shipping_cost || 0)}</span>
+                        <span>{formatCurrency(selectedFinancials?.shipping ?? 0)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>الخصم:</span>
-                        <span>{formatCurrency(selectedOrder.discount || 0)}</span>
+                        <span>{formatCurrency(selectedFinancials?.discount ?? 0)}</span>
                       </div>
                       <div className="flex justify-between font-bold border-t pt-2">
                         <span>الإجمالي:</span>
-                        <span>{formatCurrency(selectedOrder.total || 0)}</span>
+                        <span>{formatCurrency(selectedFinancials?.total ?? 0)}</span>
                       </div>
                     </div>
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <span>العربون المسدد:</span>
-                        <span className="text-green-600">{formatCurrency(selectedOrder.deposit || 0)}</span>
+                        <span className="text-green-600">{formatCurrency(-(selectedFinancials?.paid ?? 0))}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>المتبقي:</span>
-                        <span className="text-orange-600">{formatCurrency((selectedOrder.total || 0) - (selectedOrder.deposit || 0))}</span>
+                        <span className="text-orange-600">{formatCurrency(selectedFinancials?.remaining ?? 0)}</span>
                       </div>
                       <div className="flex justify-between font-bold border-t pt-2">
                         <span>صافي الربح:</span>
