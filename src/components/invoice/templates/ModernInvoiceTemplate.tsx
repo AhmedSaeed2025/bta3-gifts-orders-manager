@@ -1,6 +1,7 @@
 import React from 'react';
 import { formatCurrency } from '@/lib/utils';
 import { calculateOrderFinancials } from '@/lib/orderFinancials';
+import { useOrderStatuses } from '@/hooks/useOrderStatuses';
 
 interface InvoiceTemplateProps {
   order: any;
@@ -10,23 +11,11 @@ interface InvoiceTemplateProps {
 const ModernInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, storeSettings }) => {
   const storeName = storeSettings?.store_name || "متجري";
   const logoUrl = storeSettings?.logo_url;
+  const { getStatusLabel } = useOrderStatuses();
 
   const { items, subtotal, shipping, discount, total, paid, remaining } = calculateOrderFinancials(order);
 
-  const getStatusLabel = (status: string) => {
-    const labels: Record<string, string> = {
-      pending: 'في الانتظار',
-      confirmed: 'مؤكد',
-      processing: 'قيد التجهيز',
-      shipped: 'تم الشحن',
-      delivered: 'تم التوصيل',
-      cancelled: 'ملغي',
-      completed: 'مكتمل'
-    };
-    return labels[status] || status;
-  };
-
-  const getStatusColor = (status: string) => {
+  const getModernStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       pending: 'bg-amber-500',
       confirmed: 'bg-blue-500',
@@ -73,7 +62,7 @@ const ModernInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, storeSet
 
       {/* Status Badge */}
       <div className="flex justify-center mb-5">
-        <div className={`${getStatusColor(order.status)} text-white px-4 py-1.5 rounded-full shadow text-xs font-bold`}>
+        <div className={`${getModernStatusColor(order.status)} text-white px-4 py-1.5 rounded-full shadow text-xs font-bold`}>
           {getStatusLabel(order.status)}
         </div>
       </div>

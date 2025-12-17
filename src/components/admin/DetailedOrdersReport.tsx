@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { formatCurrency } from "@/lib/utils";
 import { calculateOrderFinancials } from "@/lib/orderFinancials";
+import { useOrderStatuses } from "@/hooks/useOrderStatuses";
 import { 
   FileText, 
   Search, 
@@ -43,6 +44,8 @@ const DetailedOrdersReport = () => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { getStatusOptions, getStatusLabel, getStatusColor } = useOrderStatuses();
+  
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [paymentFilter, setPaymentFilter] = useState("all");
@@ -52,6 +55,7 @@ const DetailedOrdersReport = () => {
   const [paymentType, setPaymentType] = useState<'collection' | 'shipping' | 'cost'>('collection');
 
   const selectedFinancials = selectedOrder ? calculateOrderFinancials(selectedOrder) : null;
+  const statusOptions = getStatusOptions();
 
   // Fetch orders data
   const { data: orders = [], isLoading, refetch } = useQuery({
@@ -93,16 +97,6 @@ const DetailedOrdersReport = () => {
   const totalShipping = filteredOrders.reduce((sum, order) => sum + calculateOrderFinancials(order).shipping, 0);
   const totalDeposits = filteredOrders.reduce((sum, order) => sum + calculateOrderFinancials(order).paid, 0);
 
-  const orderStatuses = [
-    { value: 'pending', label: 'قيد الانتظار', color: 'bg-yellow-100 text-yellow-800' },
-    { value: 'confirmed', label: 'مؤكد', color: 'bg-blue-100 text-blue-800' },
-    { value: 'processing', label: 'جاري التجهيز', color: 'bg-purple-100 text-purple-800' },
-    { value: 'shipped', label: 'تم الشحن', color: 'bg-indigo-100 text-indigo-800' },
-    { value: 'delivered', label: 'تم التوصيل', color: 'bg-green-100 text-green-800' },
-    { value: 'completed', label: 'مكتمل', color: 'bg-emerald-100 text-emerald-800' },
-    { value: 'cancelled', label: 'ملغي', color: 'bg-red-100 text-red-800' },
-  ];
-
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed': 
@@ -112,16 +106,6 @@ const DetailedOrdersReport = () => {
       case 'shipped': return <Truck className="h-4 w-4 text-indigo-500" />;
       default: return <AlertCircle className="h-4 w-4 text-gray-500" />;
     }
-  };
-
-  const getStatusLabel = (status: string) => {
-    const found = orderStatuses.find(s => s.value === status);
-    return found?.label || status;
-  };
-
-  const getStatusColor = (status: string) => {
-    const found = orderStatuses.find(s => s.value === status);
-    return found?.color || 'bg-gray-100 text-gray-800';
   };
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
@@ -137,6 +121,7 @@ const DetailedOrdersReport = () => {
       refetch();
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-orders-enhanced'] });
     } catch (error) {
       console.error('Error updating status:', error);
       toast.error('حدث خطأ في تحديث حالة الطلب');
@@ -220,20 +205,20 @@ const DetailedOrdersReport = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3 md:gap-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <FileText className="h-6 w-6 text-primary" />
-              تقرير الطلبات التفصيلي
+            <h1 className={`font-bold flex items-center gap-2 ${isMobile ? 'text-base' : 'text-2xl'}`}>
+              <FileText className={`text-primary ${isMobile ? 'h-4 w-4' : 'h-6 w-6'}`} />
+              تقرير الطلبات
             </h1>
-            <p className="text-muted-foreground">تحليل شامل لجميع طلباتك مع إمكانية التعديل والدفع</p>
+            <p className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-sm'}`}>تحليل شامل لجميع طلباتك</p>
           </div>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" className={isMobile ? 'text-xs px-2' : ''}>
             <Download className="h-4 w-4 ml-1" />
-            تصدير Excel
+            {!isMobile && 'تصدير'}
           </Button>
         </div>
 
@@ -257,12 +242,12 @@ const DetailedOrdersReport = () => {
               <div className="space-y-2">
                 <label className="text-sm font-medium">حالة الطلب</label>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger>
+                  <SelectTrigger className="text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">جميع الحالات</SelectItem>
-                    {orderStatuses.map(status => (
+                    {statusOptions.map(status => (
                       <SelectItem key={status.value} value={status.value}>{status.label}</SelectItem>
                     ))}
                   </SelectContent>
@@ -394,11 +379,11 @@ const DetailedOrdersReport = () => {
                             value={order.status} 
                             onValueChange={(value) => handleStatusChange(order.id, value)}
                           >
-                            <SelectTrigger className={`h-7 w-auto min-w-[100px] text-xs ${getStatusColor(order.status)}`}>
+                            <SelectTrigger className={`h-7 w-auto min-w-[90px] text-xs ${getStatusColor(order.status)}`}>
                               <SelectValue>{getStatusLabel(order.status)}</SelectValue>
                             </SelectTrigger>
                             <SelectContent>
-                              {orderStatuses.map(status => (
+                              {statusOptions.map(status => (
                                 <SelectItem key={status.value} value={status.value}>
                                   {status.label}
                                 </SelectItem>
