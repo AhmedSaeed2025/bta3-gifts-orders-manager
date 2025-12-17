@@ -9,17 +9,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { formatCurrency } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useOrderStatuses } from '@/hooks/useOrderStatuses';
 import { toast } from 'sonner';
 import { 
   Edit, 
   Search, 
-  Calendar, 
   Package, 
   User, 
   Phone,
   MapPin,
   CreditCard,
-  Truck,
   CheckCircle2,
   XCircle,
   DollarSign,
@@ -47,18 +46,6 @@ interface Order {
   remaining_amount: number;
 }
 
-const statusConfig = {
-  'pending': { label: 'معلق', color: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
-  'confirmed': { label: 'مؤكد', color: 'bg-blue-100 text-blue-800 border-blue-200' },
-  'processing': { label: 'قيد التنفيذ', color: 'bg-purple-100 text-purple-800 border-purple-200' },
-  'sent_to_printing': { label: 'مرسل للمطبعة', color: 'bg-orange-100 text-orange-800 border-orange-200' },
-  'printing_received': { label: 'تم استلام الطباعة', color: 'bg-indigo-100 text-indigo-800 border-indigo-200' },
-  'shipped': { label: 'تم الشحن', color: 'bg-cyan-100 text-cyan-800 border-cyan-200' },
-  'delivered': { label: 'تم التسليم', color: 'bg-green-100 text-green-800 border-green-200' },
-  'cancelled': { label: 'ملغي', color: 'bg-red-100 text-red-800 border-red-200' },
-  'returned': { label: 'مرتجع', color: 'bg-gray-100 text-gray-800 border-gray-200' }
-};
-
 const paymentStatusConfig = {
   'not_paid': { label: 'غير مدفوع', color: 'bg-red-100 text-red-800', icon: XCircle },
   'partial': { label: 'دفع جزئي', color: 'bg-yellow-100 text-yellow-800', icon: AlertTriangle },
@@ -69,11 +56,14 @@ const EnhancedAdminOrders = () => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
+  const { getStatusOptions, getStatusLabel, getStatusColor } = useOrderStatuses();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  
+  const statusOptions = getStatusOptions();
 
   // Fetch orders
   const { data: orders = [], isLoading } = useQuery({
@@ -201,35 +191,35 @@ const EnhancedAdminOrders = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* العنوان والفلاتر */}
       <Card>
-        <CardHeader className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-          <CardTitle className="text-center text-xl font-bold">إدارة الطلبات المحسنة</CardTitle>
+        <CardHeader className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-3 md:p-6">
+          <CardTitle className={`text-center font-bold ${isMobile ? 'text-base' : 'text-xl'}`}>إدارة الطلبات</CardTitle>
         </CardHeader>
-        <CardContent className="p-4">
-          <div className="flex flex-col md:flex-row gap-4">
+        <CardContent className="p-3 md:p-4">
+          <div className="flex flex-col md:flex-row gap-3 md:gap-4">
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <input
                   type="text"
-                  placeholder="البحث برقم الطلب أو اسم العميل أو الهاتف..."
+                  placeholder="البحث برقم الطلب أو اسم العميل..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full pl-10 pr-4 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
             </div>
             <div className="md:w-48">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
+                <SelectTrigger className="text-sm">
                   <SelectValue placeholder="فلترة بالحالة" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">جميع الحالات</SelectItem>
-                  {Object.entries(statusConfig).map(([status, config]) => (
-                    <SelectItem key={status} value={status}>{config.label}</SelectItem>
+                  {statusOptions.map((status) => (
+                    <SelectItem key={status.value} value={status.value}>{status.label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -275,8 +265,8 @@ const EnhancedAdminOrders = () => {
                         {new Date(order.order_date).toLocaleDateString('ar-EG')}
                       </p>
                       <div className="flex gap-2">
-                        <Badge className={statusConfig[order.status as keyof typeof statusConfig]?.color || 'bg-gray-100'}>
-                          {statusConfig[order.status as keyof typeof statusConfig]?.label || order.status}
+                        <Badge className={getStatusColor(order.status)}>
+                          {getStatusLabel(order.status)}
                         </Badge>
                       </div>
                     </div>
@@ -320,12 +310,12 @@ const EnhancedAdminOrders = () => {
                     <div className="flex gap-2">
                       {/* تغيير الحالة */}
                       <Select value={order.status} onValueChange={(newStatus) => handleStatusChange(order, newStatus)}>
-                        <SelectTrigger className="w-40">
+                        <SelectTrigger className={`${isMobile ? 'w-28 text-xs' : 'w-40'}`}>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {Object.entries(statusConfig).map(([status, config]) => (
-                            <SelectItem key={status} value={status}>{config.label}</SelectItem>
+                          {statusOptions.map((status) => (
+                            <SelectItem key={status.value} value={status.value}>{status.label}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -403,8 +393,8 @@ const EnhancedAdminOrders = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(statusConfig).map(([status, config]) => (
-                      <SelectItem key={status} value={status}>{config.label}</SelectItem>
+                    {statusOptions.map((status) => (
+                      <SelectItem key={status.value} value={status.value}>{status.label}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

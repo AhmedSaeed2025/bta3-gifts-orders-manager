@@ -1,6 +1,7 @@
 import React from 'react';
 import { formatCurrency } from '@/lib/utils';
 import { calculateOrderFinancials } from '@/lib/orderFinancials';
+import { useOrderStatuses } from '@/hooks/useOrderStatuses';
 
 interface InvoiceTemplateProps {
   order: any;
@@ -10,21 +11,9 @@ interface InvoiceTemplateProps {
 const ElegantInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, storeSettings }) => {
   const storeName = storeSettings?.store_name || "متجري";
   const logoUrl = storeSettings?.logo_url;
+  const { getStatusLabel } = useOrderStatuses();
 
   const { items, subtotal, shipping, discount, total, paid, remaining } = calculateOrderFinancials(order);
-
-  const getStatusLabel = (status: string) => {
-    const labels: Record<string, string> = {
-      pending: 'في الانتظار',
-      confirmed: 'مؤكد',
-      processing: 'قيد التجهيز',
-      shipped: 'تم الشحن',
-      delivered: 'تم التوصيل',
-      cancelled: 'ملغي',
-      completed: 'مكتمل'
-    };
-    return labels[status] || status;
-  };
 
   return (
     <div className="bg-white text-gray-900 p-4 sm:p-6 border-4 border-double border-amber-600" dir="rtl">

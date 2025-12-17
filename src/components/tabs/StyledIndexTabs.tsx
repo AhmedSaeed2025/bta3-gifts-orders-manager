@@ -118,15 +118,15 @@ const StyledIndexTabs = () => {
                 key={tab.id}
                 value={tab.id}
                 className={`
-                  flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200
+                  flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 rounded-lg transition-all duration-200
                   data-[state=active]:bg-white data-[state=active]:shadow-md
                   data-[state=active]:text-blue-600 hover:bg-white/50
-                  ${isMobile ? 'flex-col text-xs min-h-[60px]' : 'flex-row text-sm min-h-[48px]'}
+                  ${isMobile ? 'flex-col text-[9px] min-h-[50px]' : 'flex-row text-sm min-h-[48px]'}
                   font-medium
                 `}
               >
-                <Icon className={isMobile ? "h-4 w-4" : "h-5 w-5"} />
-                <span className={isMobile ? "text-[10px] leading-tight text-center" : "text-sm"}>
+                <Icon className={isMobile ? "h-3.5 w-3.5" : "h-5 w-5"} />
+                <span className={isMobile ? "text-[8px] leading-tight text-center line-clamp-2" : "text-sm"}>
                   {tab.label}
                 </span>
               </TabsTrigger>
