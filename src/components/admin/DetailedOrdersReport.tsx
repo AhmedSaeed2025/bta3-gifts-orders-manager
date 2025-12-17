@@ -93,33 +93,54 @@ const DetailedOrdersReport = () => {
   const totalShipping = filteredOrders.reduce((sum, order) => sum + calculateOrderFinancials(order).shipping, 0);
   const totalDeposits = filteredOrders.reduce((sum, order) => sum + calculateOrderFinancials(order).paid, 0);
 
+  const orderStatuses = [
+    { value: 'pending', label: 'قيد الانتظار', color: 'bg-yellow-100 text-yellow-800' },
+    { value: 'confirmed', label: 'مؤكد', color: 'bg-blue-100 text-blue-800' },
+    { value: 'processing', label: 'جاري التجهيز', color: 'bg-purple-100 text-purple-800' },
+    { value: 'shipped', label: 'تم الشحن', color: 'bg-indigo-100 text-indigo-800' },
+    { value: 'delivered', label: 'تم التوصيل', color: 'bg-green-100 text-green-800' },
+    { value: 'completed', label: 'مكتمل', color: 'bg-emerald-100 text-emerald-800' },
+    { value: 'cancelled', label: 'ملغي', color: 'bg-red-100 text-red-800' },
+  ];
+
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'completed': return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case 'completed': 
+      case 'delivered': return <CheckCircle className="h-4 w-4 text-green-500" />;
       case 'pending': return <Clock className="h-4 w-4 text-yellow-500" />;
       case 'cancelled': return <XCircle className="h-4 w-4 text-red-500" />;
+      case 'shipped': return <Truck className="h-4 w-4 text-indigo-500" />;
       default: return <AlertCircle className="h-4 w-4 text-gray-500" />;
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    const variants = {
-      'completed': 'default',
-      'pending': 'secondary',
-      'cancelled': 'destructive'
-    };
-    
-    const labels = {
-      'completed': 'مكتمل',
-      'pending': 'قيد الانتظار',
-      'cancelled': 'ملغي'
-    };
+  const getStatusLabel = (status: string) => {
+    const found = orderStatuses.find(s => s.value === status);
+    return found?.label || status;
+  };
 
-    return (
-      <Badge variant={variants[status as keyof typeof variants] as any}>
-        {labels[status as keyof typeof labels] || status}
-      </Badge>
-    );
+  const getStatusColor = (status: string) => {
+    const found = orderStatuses.find(s => s.value === status);
+    return found?.color || 'bg-gray-100 text-gray-800';
+  };
+
+  const handleStatusChange = async (orderId: string, newStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ status: newStatus, updated_at: new Date().toISOString() })
+        .eq('id', orderId);
+
+      if (error) throw error;
+
+      toast.success(`تم تحديث حالة الطلب إلى: ${getStatusLabel(newStatus)}`);
+      refetch();
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+    } catch (error) {
+      console.error('Error updating status:', error);
+      toast.error('حدث خطأ في تحديث حالة الطلب');
+    }
   };
 
   const openOrderDetails = (order: any) => {
@@ -241,9 +262,9 @@ const DetailedOrdersReport = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">جميع الحالات</SelectItem>
-                    <SelectItem value="pending">قيد الانتظار</SelectItem>
-                    <SelectItem value="completed">مكتمل</SelectItem>
-                    <SelectItem value="cancelled">ملغي</SelectItem>
+                    {orderStatuses.map(status => (
+                      <SelectItem key={status.value} value={status.value}>{status.label}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -365,11 +386,25 @@ const DetailedOrdersReport = () => {
                     <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-12'}`}>
                       {/* Order Info */}
                       <div className={`${isMobile ? 'col-span-1' : 'col-span-3'} space-y-2`}>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <Badge variant="outline" className="text-xs">
                             {order.serial}
                           </Badge>
-                          {getStatusBadge(order.status)}
+                          <Select 
+                            value={order.status} 
+                            onValueChange={(value) => handleStatusChange(order.id, value)}
+                          >
+                            <SelectTrigger className={`h-7 w-auto min-w-[100px] text-xs ${getStatusColor(order.status)}`}>
+                              <SelectValue>{getStatusLabel(order.status)}</SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                              {orderStatuses.map(status => (
+                                <SelectItem key={status.value} value={status.value}>
+                                  {status.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                         <div className="space-y-1">
                           <div className="flex items-center gap-1 text-sm">
