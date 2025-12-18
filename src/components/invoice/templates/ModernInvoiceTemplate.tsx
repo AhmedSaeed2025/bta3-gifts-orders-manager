@@ -27,7 +27,9 @@ const ModernInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, storeSet
       const canvas = await html2canvas(invoiceRef.current, {
         scale: 2,
         useCORS: true,
-        backgroundColor: '#f8fafc'
+        backgroundColor: '#f8fafc',
+        logging: false,
+        allowTaint: true,
       });
       
       const link = document.createElement('a');
@@ -42,21 +44,21 @@ const ModernInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, storeSet
 
   const getModernStatusColor = (status: string) => {
     const colors: Record<string, string> = {
-      pending: 'bg-amber-500',
-      confirmed: 'bg-blue-500',
-      processing: 'bg-purple-500',
-      shipped: 'bg-green-500',
-      delivered: 'bg-emerald-500',
-      cancelled: 'bg-red-500',
-      completed: 'bg-emerald-600'
+      pending: '#f59e0b',
+      confirmed: '#3b82f6',
+      processing: '#8b5cf6',
+      shipped: '#22c55e',
+      delivered: '#10b981',
+      cancelled: '#ef4444',
+      completed: '#059669'
     };
-    return colors[status] || 'bg-gray-500';
+    return colors[status] || '#6b7280';
   };
 
   return (
-    <div className="relative">
+    <div>
       {/* Screenshot Button */}
-      <div className="flex justify-center mb-3 print:hidden">
+      <div style={{ textAlign: 'center', marginBottom: '12px' }} className="print:hidden">
         <Button 
           onClick={handleScreenshot}
           variant="outline"
@@ -68,97 +70,124 @@ const ModernInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, storeSet
         </Button>
       </div>
 
-      <div ref={invoiceRef} className="bg-gradient-to-br from-slate-50 via-white to-slate-50 text-gray-900 p-3 sm:p-5" dir="rtl">
+      <div 
+        ref={invoiceRef} 
+        style={{
+          backgroundColor: '#f8fafc',
+          color: '#1f2937',
+          padding: '16px',
+          fontFamily: 'Tajawal, Arial, sans-serif',
+          direction: 'rtl',
+          width: '100%',
+          maxWidth: '400px',
+          margin: '0 auto',
+        }}
+      >
         {/* Header */}
-        <div className="bg-gradient-to-l from-blue-600 via-purple-600 to-blue-700 text-white rounded-xl p-3 mb-4 shadow-lg">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              {logoUrl && (
-                <div className="bg-white p-1 rounded-lg shadow">
-                  <img src={logoUrl} alt="Logo" className="w-8 h-8 sm:w-10 sm:h-10 object-contain" />
-                </div>
-              )}
-              <div>
-                <h1 className="text-sm sm:text-base font-black">{storeName}</h1>
-                <p className="text-[10px] text-blue-100">فاتورة إلكترونية</p>
-              </div>
-            </div>
-            <div className="text-left bg-white/20 backdrop-blur-sm rounded-lg p-2 border border-white/30">
-              <p className="text-[10px] text-blue-100">رقم الفاتورة</p>
-              <p className="text-sm sm:text-base font-black">{order.serial}</p>
-              <p className="text-[10px] text-blue-100">
-                {new Date(order.order_date || order.date_created).toLocaleDateString('ar-EG')}
-              </p>
-            </div>
-          </div>
+        <div style={{ backgroundColor: '#7c3aed', color: '#ffffff', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <tbody>
+              <tr>
+                <td style={{ verticalAlign: 'middle', textAlign: 'right' }}>
+                  {logoUrl && (
+                    <div style={{ display: 'inline-block', backgroundColor: '#ffffff', padding: '4px', borderRadius: '8px', marginLeft: '8px', verticalAlign: 'middle' }}>
+                      <img src={logoUrl} alt="Logo" style={{ width: '40px', height: '40px', objectFit: 'contain', display: 'block' }} />
+                    </div>
+                  )}
+                  <div style={{ display: 'inline-block', verticalAlign: 'middle' }}>
+                    <div style={{ fontSize: '16px', fontWeight: 'bold' }}>{storeName}</div>
+                    <div style={{ fontSize: '10px', opacity: '0.8' }}>فاتورة إلكترونية</div>
+                  </div>
+                </td>
+                <td style={{ verticalAlign: 'middle', textAlign: 'left', backgroundColor: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '8px' }}>
+                  <div style={{ fontSize: '10px', opacity: '0.8' }}>رقم الفاتورة</div>
+                  <div style={{ fontSize: '14px', fontWeight: 'bold' }}>{order.serial}</div>
+                  <div style={{ fontSize: '10px', opacity: '0.8' }}>
+                    {new Date(order.order_date || order.date_created).toLocaleDateString('ar-EG')}
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
         {/* Status Badge */}
-        <div className="flex justify-center mb-4">
-          <div className={`${getModernStatusColor(order.status)} text-white px-3 py-1 rounded-full shadow text-[10px] sm:text-xs font-bold`}>
+        <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+          <span style={{ 
+            display: 'inline-block',
+            backgroundColor: getModernStatusColor(order.status), 
+            color: '#ffffff', 
+            padding: '6px 16px', 
+            borderRadius: '20px', 
+            fontSize: '11px', 
+            fontWeight: 'bold' 
+          }}>
             {getStatusLabel(order.status)}
-          </div>
+          </span>
         </div>
 
         {/* Customer & Order Info */}
-        <div className="grid grid-cols-2 gap-2 mb-4">
-          <div className="bg-white rounded-lg shadow p-2 border border-gray-100">
-            <div className="flex items-center gap-1.5 mb-2">
-              <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-[10px]">👤</span>
-              </div>
-              <h3 className="text-[11px] sm:text-xs font-bold text-gray-800">معلومات العميل</h3>
-            </div>
-            <div className="space-y-0.5 text-[10px] sm:text-[11px]">
-              <p><span className="text-gray-500">الاسم:</span> <span className="font-medium">{order.customer_name || order.client_name}</span></p>
-              <p><span className="text-gray-500">الهاتف:</span> <span className="font-medium">{order.customer_phone || order.phone}</span></p>
-              {(order.shipping_address || order.address) && (
-                <p className="truncate"><span className="text-gray-500">العنوان:</span> <span className="font-medium">{order.shipping_address || order.address}</span></p>
-              )}
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-2 border border-gray-100">
-            <div className="flex items-center gap-1.5 mb-2">
-              <div className="w-5 h-5 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-[10px]">📦</span>
-              </div>
-              <h3 className="text-[11px] sm:text-xs font-bold text-gray-800">تفاصيل الطلب</h3>
-            </div>
-            <div className="space-y-0.5 text-[10px] sm:text-[11px]">
-              <p><span className="text-gray-500">الدفع:</span> <span className="font-medium">{order.payment_method}</span></p>
-              <p><span className="text-gray-500">التوصيل:</span> <span className="font-medium">{order.delivery_method}</span></p>
-              {order.governorate && <p><span className="text-gray-500">المحافظة:</span> <span className="font-medium">{order.governorate}</span></p>}
-            </div>
-          </div>
-        </div>
+        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '16px' }}>
+          <tbody>
+            <tr>
+              <td style={{ width: '50%', verticalAlign: 'top', paddingLeft: '4px' }}>
+                <div style={{ backgroundColor: '#ffffff', padding: '10px', borderRadius: '10px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                  <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#374151', marginBottom: '8px' }}>
+                    <span style={{ display: 'inline-block', width: '20px', height: '20px', backgroundColor: '#7c3aed', borderRadius: '50%', textAlign: 'center', lineHeight: '20px', color: '#fff', fontSize: '10px', marginLeft: '6px', verticalAlign: 'middle' }}>👤</span>
+                    معلومات العميل
+                  </div>
+                  <div style={{ fontSize: '10px', lineHeight: '1.8' }}>
+                    <div><span style={{ color: '#6b7280' }}>الاسم:</span> <span style={{ fontWeight: '500' }}>{order.customer_name || order.client_name}</span></div>
+                    <div><span style={{ color: '#6b7280' }}>الهاتف:</span> <span style={{ fontWeight: '500' }}>{order.customer_phone || order.phone}</span></div>
+                    {(order.shipping_address || order.address) && (
+                      <div><span style={{ color: '#6b7280' }}>العنوان:</span> <span style={{ fontWeight: '500' }}>{order.shipping_address || order.address}</span></div>
+                    )}
+                  </div>
+                </div>
+              </td>
+              <td style={{ width: '50%', verticalAlign: 'top', paddingRight: '4px' }}>
+                <div style={{ backgroundColor: '#ffffff', padding: '10px', borderRadius: '10px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                  <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#374151', marginBottom: '8px' }}>
+                    <span style={{ display: 'inline-block', width: '20px', height: '20px', backgroundColor: '#10b981', borderRadius: '50%', textAlign: 'center', lineHeight: '20px', color: '#fff', fontSize: '10px', marginLeft: '6px', verticalAlign: 'middle' }}>📦</span>
+                    تفاصيل الطلب
+                  </div>
+                  <div style={{ fontSize: '10px', lineHeight: '1.8' }}>
+                    <div><span style={{ color: '#6b7280' }}>الدفع:</span> <span style={{ fontWeight: '500' }}>{order.payment_method}</span></div>
+                    <div><span style={{ color: '#6b7280' }}>التوصيل:</span> <span style={{ fontWeight: '500' }}>{order.delivery_method}</span></div>
+                    {order.governorate && <div><span style={{ color: '#6b7280' }}>المحافظة:</span> <span style={{ fontWeight: '500' }}>{order.governorate}</span></div>}
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
 
         {/* Items Table */}
-        <div className="mb-4 bg-white rounded-lg shadow overflow-hidden border border-gray-100">
-          <table className="w-full text-[10px] sm:text-[11px]">
+        <div style={{ marginBottom: '16px', backgroundColor: '#ffffff', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px' }}>
             <thead>
-              <tr className="bg-gradient-to-l from-gray-800 via-gray-900 to-gray-800 text-white">
-                <th className="p-1.5 text-right w-6">#</th>
-                <th className="p-1.5 text-right">المنتج</th>
-                <th className="p-1.5 text-center w-12 sm:w-14">المقاس</th>
-                <th className="p-1.5 text-center w-8">الكمية</th>
-                <th className="p-1.5 text-center w-12 sm:w-14">السعر</th>
-                <th className="p-1.5 text-left w-12 sm:w-14">الإجمالي</th>
+              <tr style={{ backgroundColor: '#1f2937', color: '#ffffff' }}>
+                <th style={{ padding: '8px 4px', textAlign: 'right', fontWeight: '600' }}>#</th>
+                <th style={{ padding: '8px 4px', textAlign: 'right', fontWeight: '600' }}>المنتج</th>
+                <th style={{ padding: '8px 4px', textAlign: 'center', fontWeight: '600' }}>المقاس</th>
+                <th style={{ padding: '8px 4px', textAlign: 'center', fontWeight: '600' }}>الكمية</th>
+                <th style={{ padding: '8px 4px', textAlign: 'center', fontWeight: '600' }}>السعر</th>
+                <th style={{ padding: '8px 4px', textAlign: 'left', fontWeight: '600' }}>الإجمالي</th>
               </tr>
             </thead>
             <tbody>
               {items.map((item: any, index: number) => {
                 const itemTotal = item.total_price || (item.quantity * item.price - (item.item_discount || 0));
                 return (
-                  <tr key={item.id} className={`${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'} hover:bg-blue-50/50`}>
-                    <td className="p-1.5 text-center">{index + 1}</td>
-                    <td className="p-1.5 font-medium truncate max-w-[70px] sm:max-w-none">{item.product_name || item.product_type}</td>
-                    <td className="p-1.5 text-center">{item.product_size || item.size}</td>
-                    <td className="p-1.5 text-center">
-                      <span className="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded-full font-bold text-[9px]">{item.quantity}</span>
+                  <tr key={item.id} style={{ backgroundColor: index % 2 === 0 ? '#f9fafb' : '#ffffff', borderBottom: '1px solid #e5e7eb' }}>
+                    <td style={{ padding: '6px 4px', textAlign: 'center' }}>{index + 1}</td>
+                    <td style={{ padding: '6px 4px', textAlign: 'right', fontWeight: '500' }}>{item.product_name || item.product_type}</td>
+                    <td style={{ padding: '6px 4px', textAlign: 'center' }}>{item.product_size || item.size}</td>
+                    <td style={{ padding: '6px 4px', textAlign: 'center' }}>
+                      <span style={{ backgroundColor: '#dbeafe', color: '#1e40af', padding: '2px 8px', borderRadius: '10px', fontWeight: 'bold', fontSize: '9px' }}>{item.quantity}</span>
                     </td>
-                    <td className="p-1.5 text-center">{formatCurrency(item.unit_price || item.price)}</td>
-                    <td className="p-1.5 text-left font-bold text-green-600">{formatCurrency(itemTotal)}</td>
+                    <td style={{ padding: '6px 4px', textAlign: 'center' }}>{formatCurrency(item.unit_price || item.price)}</td>
+                    <td style={{ padding: '6px 4px', textAlign: 'left', fontWeight: 'bold', color: '#16a34a' }}>{formatCurrency(itemTotal)}</td>
                   </tr>
                 );
               })}
@@ -168,53 +197,53 @@ const ModernInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, storeSet
 
         {/* Notes */}
         {order.notes && (
-          <div className="mb-4 bg-gradient-to-r from-amber-50 to-orange-50 border-r-3 border-amber-400 p-2 rounded-lg shadow-sm">
-            <p className="text-[10px] sm:text-[11px] text-gray-700">{order.notes}</p>
+          <div style={{ marginBottom: '16px', backgroundColor: '#fef3c7', borderRight: '3px solid #f59e0b', padding: '10px', borderRadius: '8px' }}>
+            <div style={{ fontSize: '10px', color: '#374151' }}>{order.notes}</div>
           </div>
         )}
 
         {/* Totals */}
-        <div className="flex justify-end mb-4">
-          <div className="w-full sm:w-56">
-            <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white rounded-xl shadow-lg overflow-hidden">
-              <div className="p-3 space-y-1.5 text-[10px] sm:text-[11px]">
-                <div className="flex justify-between">
-                  <span>المجموع الفرعي:</span>
-                  <span className="font-bold">{formatCurrency(subtotal)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>الشحن:</span>
-                  <span className="font-bold">{formatCurrency(shipping)}</span>
-                </div>
+        <div style={{ marginBottom: '16px' }}>
+          <div style={{ width: '100%', maxWidth: '220px', marginRight: 'auto', backgroundColor: '#1f2937', borderRadius: '12px', overflow: 'hidden', color: '#ffffff' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <tbody>
+                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.2)' }}>
+                  <td style={{ padding: '8px 12px', fontSize: '10px' }}>المجموع الفرعي:</td>
+                  <td style={{ padding: '8px 12px', fontSize: '10px', fontWeight: 'bold', textAlign: 'left' }}>{formatCurrency(subtotal)}</td>
+                </tr>
+                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.2)' }}>
+                  <td style={{ padding: '8px 12px', fontSize: '10px' }}>الشحن:</td>
+                  <td style={{ padding: '8px 12px', fontSize: '10px', fontWeight: 'bold', textAlign: 'left' }}>{formatCurrency(shipping)}</td>
+                </tr>
                 {discount > 0 && (
-                  <div className="flex justify-between text-red-400">
-                    <span>الخصم:</span>
-                    <span className="font-bold">-{formatCurrency(discount)}</span>
-                  </div>
+                  <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.2)' }}>
+                    <td style={{ padding: '8px 12px', fontSize: '10px', color: '#f87171' }}>الخصم:</td>
+                    <td style={{ padding: '8px 12px', fontSize: '10px', fontWeight: 'bold', textAlign: 'left', color: '#f87171' }}>-{formatCurrency(discount)}</td>
+                  </tr>
                 )}
-                <div className="border-t border-white/30 pt-1.5 flex justify-between text-xs">
-                  <span className="font-black">الإجمالي:</span>
-                  <span className="font-black text-yellow-400">{formatCurrency(total)}</span>
-                </div>
-                <div className="flex justify-between text-green-400">
-                  <span>المدفوع:</span>
-                  <span className="font-bold">{formatCurrency(-paid)}</span>
-                </div>
-                <div className="flex justify-between text-red-400 text-xs font-bold">
-                  <span>المتبقي:</span>
-                  <span>{formatCurrency(remaining)}</span>
-                </div>
-              </div>
-            </div>
+                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.2)' }}>
+                  <td style={{ padding: '10px 12px', fontSize: '11px', fontWeight: 'bold' }}>الإجمالي:</td>
+                  <td style={{ padding: '10px 12px', fontSize: '12px', fontWeight: 'bold', textAlign: 'left', color: '#fbbf24' }}>{formatCurrency(total)}</td>
+                </tr>
+                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.2)' }}>
+                  <td style={{ padding: '8px 12px', fontSize: '10px', color: '#4ade80' }}>المدفوع:</td>
+                  <td style={{ padding: '8px 12px', fontSize: '10px', fontWeight: 'bold', textAlign: 'left', color: '#4ade80' }}>{formatCurrency(-paid)}</td>
+                </tr>
+                <tr>
+                  <td style={{ padding: '10px 12px', fontSize: '11px', fontWeight: 'bold', color: '#f87171' }}>المتبقي:</td>
+                  <td style={{ padding: '10px 12px', fontSize: '12px', fontWeight: 'bold', textAlign: 'left', color: '#f87171' }}>{formatCurrency(remaining)}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="bg-gradient-to-l from-gray-800 via-gray-900 to-gray-800 text-white rounded-xl p-3 text-center shadow-lg">
-          <p className="text-xs font-black">✨ شكراً لثقتكم ✨</p>
-          <p className="text-[10px] text-gray-300">
-            {storeSettings?.contact_phone && `📞 ${storeSettings.contact_phone}`}
-          </p>
+        <div style={{ backgroundColor: '#1f2937', color: '#ffffff', borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+          <div style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '4px' }}>✨ شكراً لثقتكم ✨</div>
+          {storeSettings?.contact_phone && (
+            <div style={{ fontSize: '10px', opacity: '0.8' }}>📞 {storeSettings.contact_phone}</div>
+          )}
         </div>
       </div>
     </div>
