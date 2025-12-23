@@ -73,7 +73,8 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
         total: Number(order.total),
         profit: Number(order.profit),
         status: order.status as OrderStatus,
-        dateCreated: order.date_created
+        dateCreated: order.date_created,
+        notes: order.notes || undefined,
       })) || [];
 
       console.log('Formatted orders:', formattedOrders);
@@ -189,7 +190,8 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
           total: newOrder.total,
           remaining_amount: remainingAmount,
           profit: newOrder.profit,
-          status: newOrder.status
+          status: newOrder.status,
+          notes: newOrder.notes ?? null,
         })
         .select()
         .single();
@@ -246,7 +248,8 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
           remaining_amount: adminRemainingAmount,
           profit: newOrder.profit,
           status: newOrder.status,
-          order_date: new Date().toISOString()
+          order_date: new Date().toISOString(),
+          notes: newOrder.notes ?? null,
         })
         .select()
         .single();
@@ -329,6 +332,7 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
           remaining_amount: updateRemainingAmount,
           profit: updatedOrder.profit,
           status: updatedOrder.status,
+          notes: updatedOrder.notes ?? null,
           updated_at: new Date().toISOString()
         })
         .eq('serial', serial)
@@ -381,6 +385,7 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
           remaining_amount: adminUpdateRemainingAmount,
           profit: updatedOrder.profit,
           status: updatedOrder.status,
+          notes: updatedOrder.notes ?? null,
           updated_at: new Date().toISOString()
         })
         .eq('serial', serial)
