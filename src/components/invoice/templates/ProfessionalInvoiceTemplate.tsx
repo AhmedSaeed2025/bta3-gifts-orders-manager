@@ -255,11 +255,17 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
         {/* Notes */}
         {order.notes && (
           <div style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>
-            <div style={{ marginBottom: '4px' }}>
-              <span style={{ display: 'inline-block', width: '8px', height: '8px', backgroundColor: '#dc2626', borderRadius: '50%', marginLeft: '6px', verticalAlign: 'middle' }}></span>
-              <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#dc2626', verticalAlign: 'middle' }}>ملاحظات</span>
+            <div style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', padding: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                <div style={{ width: '22px', height: '22px', backgroundColor: '#dc2626', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <span style={{ fontSize: '10px', color: '#fff' }}>📝</span>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#dc2626', marginBottom: '4px' }}>ملاحظات الطلب:</div>
+                  <div style={{ fontSize: '10px', color: '#374151', lineHeight: '1.6' }}>{order.notes}</div>
+                </div>
+              </div>
             </div>
-            <div style={{ fontSize: '10px', color: '#6b7280', backgroundColor: '#f9fafb', padding: '8px', borderRadius: '4px' }}>{order.notes}</div>
           </div>
         )}
 

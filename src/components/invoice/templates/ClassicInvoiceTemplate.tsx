@@ -171,8 +171,14 @@ const ClassicInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, storeSe
 
         {/* Notes */}
         {order.notes && (
-          <div style={{ marginBottom: '16px', backgroundColor: '#fefce8', borderRight: '3px solid #facc15', padding: '8px', borderRadius: '4px' }}>
-            <div style={{ fontSize: '10px', color: '#374151' }}>{order.notes}</div>
+          <div style={{ marginBottom: '16px', backgroundColor: '#fefce8', borderRight: '4px solid #f59e0b', padding: '10px', borderRadius: '6px' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+              <span style={{ fontSize: '14px' }}>📝</span>
+              <div>
+                <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#92400e', marginBottom: '4px' }}>ملاحظات الطلب:</div>
+                <div style={{ fontSize: '10px', color: '#374151', lineHeight: '1.5' }}>{order.notes}</div>
+              </div>
+            </div>
           </div>
         )}
 

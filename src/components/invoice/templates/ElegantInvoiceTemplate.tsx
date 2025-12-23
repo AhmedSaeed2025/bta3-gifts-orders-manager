@@ -184,8 +184,16 @@ const ElegantInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, storeSe
 
         {/* Notes */}
         {order.notes && (
-          <div style={{ marginBottom: '16px', border: '1px solid #fcd34d', padding: '10px', borderRadius: '8px', backgroundColor: '#fffbeb' }}>
-            <div style={{ fontSize: '10px', color: '#374151' }}>{order.notes}</div>
+          <div style={{ marginBottom: '16px', border: '2px solid #fcd34d', padding: '12px', borderRadius: '8px', backgroundColor: '#fffbeb' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+              <div style={{ width: '20px', height: '20px', backgroundColor: '#d97706', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <span style={{ fontSize: '10px', color: '#fff' }}>📝</span>
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#92400e', marginBottom: '4px' }}>ملاحظات الطلب:</div>
+                <div style={{ fontSize: '10px', color: '#374151', lineHeight: '1.6', fontStyle: 'italic' }}>{order.notes}</div>
+              </div>
+            </div>
           </div>
         )}
 
