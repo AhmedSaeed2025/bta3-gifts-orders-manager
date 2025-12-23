@@ -197,8 +197,16 @@ const ModernInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, storeSet
 
         {/* Notes */}
         {order.notes && (
-          <div style={{ marginBottom: '16px', backgroundColor: '#fef3c7', borderRight: '3px solid #f59e0b', padding: '10px', borderRadius: '8px' }}>
-            <div style={{ fontSize: '10px', color: '#374151' }}>{order.notes}</div>
+          <div style={{ marginBottom: '16px', backgroundColor: '#fef3c7', borderRight: '4px solid #f59e0b', padding: '12px', borderRadius: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+              <div style={{ width: '24px', height: '24px', backgroundColor: '#f59e0b', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <span style={{ fontSize: '12px' }}>📝</span>
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#92400e', marginBottom: '4px' }}>ملاحظات الطلب:</div>
+                <div style={{ fontSize: '10px', color: '#374151', lineHeight: '1.6' }}>{order.notes}</div>
+              </div>
+            </div>
           </div>
         )}
 

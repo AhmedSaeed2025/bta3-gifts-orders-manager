@@ -361,6 +361,21 @@ const EnhancedAdminOrders = () => {
                       {order.payment_method}
                     </p>
                   </div>
+
+                  {/* الملاحظات */}
+                  {order.notes && (
+                    <div className="mt-3 pt-3 border-t border-gray-200">
+                      <div className="flex items-start gap-2 bg-amber-50 dark:bg-amber-950/30 p-3 rounded-lg border border-amber-200 dark:border-amber-800">
+                        <div className="flex-shrink-0 w-5 h-5 rounded-full bg-amber-500 flex items-center justify-center">
+                          <span className="text-white text-xs">📝</span>
+                        </div>
+                        <div>
+                          <span className="text-xs font-bold text-amber-700 dark:text-amber-400 block mb-1">ملاحظات:</span>
+                          <p className="text-xs text-gray-700 dark:text-gray-300">{order.notes}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             );
