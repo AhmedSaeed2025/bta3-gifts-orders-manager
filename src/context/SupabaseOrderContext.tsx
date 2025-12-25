@@ -191,7 +191,7 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
           remaining_amount: remainingAmount,
           profit: newOrder.profit,
           status: newOrder.status,
-          notes: newOrder.notes ?? null,
+          notes: typeof (newOrder as any).notes === 'string' ? ((newOrder as any).notes.trim() || null) : null,
         })
         .select()
         .single();
@@ -249,7 +249,7 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
           profit: newOrder.profit,
           status: newOrder.status,
           order_date: new Date().toISOString(),
-          notes: newOrder.notes ?? null,
+          notes: typeof (newOrder as any).notes === 'string' ? ((newOrder as any).notes.trim() || null) : null,
         })
         .select()
         .single();
@@ -316,7 +316,7 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
       const updateRemainingAmount = (updatedOrder as any).remaining_amount ?? (updatedOrder.total - (updatedOrder.deposit || 0));
       
       // Update the order
-      const { error: orderError } = await supabase
+      const { data: updatedRow, error: orderError } = await supabase
         .from('orders')
         .update({
           payment_method: updatedOrder.paymentMethod,
@@ -332,11 +332,15 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
           remaining_amount: updateRemainingAmount,
           profit: updatedOrder.profit,
           status: updatedOrder.status,
-          notes: updatedOrder.notes ?? null,
+          notes: typeof (updatedOrder as any).notes === 'string' ? ((updatedOrder as any).notes.trim() || null) : null,
           updated_at: new Date().toISOString()
         })
         .eq('serial', serial)
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .select('serial, notes')
+        .single();
+
+      console.log('Order updated row (notes):', updatedRow);
 
       if (orderError) throw orderError;
 
@@ -369,7 +373,7 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
       // Also update admin_orders if it exists
       const adminUpdateRemainingAmount = (updatedOrder as any).remaining_amount ?? (updatedOrder.total - (updatedOrder.deposit || 0));
       
-      const { error: adminUpdateError } = await supabase
+      const { data: adminUpdatedRow, error: adminUpdateError } = await supabase
         .from('admin_orders')
         .update({
           customer_name: updatedOrder.clientName,
@@ -385,11 +389,15 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
           remaining_amount: adminUpdateRemainingAmount,
           profit: updatedOrder.profit,
           status: updatedOrder.status,
-          notes: updatedOrder.notes ?? null,
+          notes: typeof (updatedOrder as any).notes === 'string' ? ((updatedOrder as any).notes.trim() || null) : null,
           updated_at: new Date().toISOString()
         })
         .eq('serial', serial)
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .select('serial, notes')
+        .single();
+
+      console.log('Admin order updated row (notes):', adminUpdatedRow);
 
       if (adminUpdateError) {
         console.error('Error updating admin order:', adminUpdateError);
