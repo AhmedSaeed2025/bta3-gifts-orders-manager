@@ -25,6 +25,7 @@ import AdminOrders from "./pages/admin/AdminOrders";
 import AdminCustomers from "./pages/admin/AdminCustomers";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminReports from "./pages/admin/AdminReports";
+import AdminFinance from "./pages/admin/AdminFinance";
 
 // Order Management
 import OrderPage from "./pages/OrderPage";
@@ -90,6 +91,7 @@ function App() {
                                   <Route path="products" element={<AdminProducts />} />
                                   <Route path="orders" element={<AdminOrders />} />
                                   <Route path="customers" element={<AdminCustomers />} />
+                                  <Route path="finance" element={<AdminFinance />} />
                                   <Route path="settings" element={<AdminSettings />} />
                                   <Route path="reports" element={<AdminReports />} />
                                 </Route>

@@ -13,6 +13,7 @@ import {
   BarChart3,
   LogOut,
   Loader2,
+  Wallet,
   Store,
   FileText,
   ArrowLeft
@@ -80,12 +81,17 @@ const AdminLayout = () => {
       icon: Users 
     },
     { 
+      title: 'الإدارة المالية', 
+      href: '/admin/finance', 
+      icon: Wallet 
+    },
+    { 
       title: 'التقارير', 
       href: '/admin/reports', 
       icon: BarChart3 
     },
     { 
-      title: 'الإعدادات', 
+      title: 'الإعدادات',
       href: '/admin/settings', 
       icon: Settings 
     }
