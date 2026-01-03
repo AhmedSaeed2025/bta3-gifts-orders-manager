@@ -241,6 +241,63 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_payments: {
+        Row: {
+          amount: number
+          created_at: string | null
+          customer_name: string
+          id: string
+          notes: string | null
+          order_id: string
+          payment_date: string
+          payment_method: string
+          payment_status: string
+          reference_number: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          customer_name: string
+          id?: string
+          notes?: string | null
+          order_id: string
+          payment_date?: string
+          payment_method: string
+          payment_status?: string
+          reference_number?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          customer_name?: string
+          id?: string
+          notes?: string | null
+          order_id?: string
+          payment_date?: string
+          payment_method?: string
+          payment_status?: string
+          reference_number?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_payments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "order_financial_view"
+            referencedColumns: ["order_id"]
+          },
+          {
+            foreignKeyName: "customer_payments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_reviews: {
         Row: {
           created_at: string | null
@@ -312,6 +369,13 @@ export type Database = {
           size?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "order_financial_view"
+            referencedColumns: ["order_id"]
+          },
           {
             foreignKeyName: "order_items_order_id_fkey"
             columns: ["order_id"]
@@ -921,9 +985,86 @@ export type Database = {
         }
         Relationships: []
       }
+      workshop_payments: {
+        Row: {
+          actual_payment_date: string | null
+          cost_amount: number
+          created_at: string | null
+          expected_payment_date: string | null
+          id: string
+          notes: string | null
+          order_id: string
+          payment_status: string
+          product_name: string
+          size_or_variant: string | null
+          user_id: string
+          workshop_name: string
+        }
+        Insert: {
+          actual_payment_date?: string | null
+          cost_amount: number
+          created_at?: string | null
+          expected_payment_date?: string | null
+          id?: string
+          notes?: string | null
+          order_id: string
+          payment_status?: string
+          product_name: string
+          size_or_variant?: string | null
+          user_id: string
+          workshop_name: string
+        }
+        Update: {
+          actual_payment_date?: string | null
+          cost_amount?: number
+          created_at?: string | null
+          expected_payment_date?: string | null
+          id?: string
+          notes?: string | null
+          order_id?: string
+          payment_status?: string
+          product_name?: string
+          size_or_variant?: string | null
+          user_id?: string
+          workshop_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workshop_payments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "order_financial_view"
+            referencedColumns: ["order_id"]
+          },
+          {
+            foreignKeyName: "workshop_payments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
-      [_ in never]: never
+      order_financial_view: {
+        Row: {
+          cash_flow_status: string | null
+          client_name: string | null
+          date_created: string | null
+          financial_status: string | null
+          net_profit_loss: number | null
+          order_id: string | null
+          order_status: string | null
+          paid_workshop_cost: number | null
+          selling_price: number | null
+          serial: string | null
+          total_customer_paid: number | null
+          total_workshop_cost: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       generate_serial_number: { Args: never; Returns: string }
