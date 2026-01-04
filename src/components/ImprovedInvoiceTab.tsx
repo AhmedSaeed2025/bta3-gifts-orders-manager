@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Search, FileText, Eye, Loader2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import InvoiceTemplateSelector from './invoice/InvoiceTemplateSelector';
+import { useDateFilter } from '@/components/tabs/StyledIndexTabs';
 
 interface Order {
   id: string;
@@ -46,6 +47,7 @@ interface OrderItem {
 
 const ImprovedInvoiceTab = () => {
   const { user } = useAuth();
+  const { startDate, endDate } = useDateFilter();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateFrom, setDateFrom] = useState('');
@@ -101,7 +103,7 @@ const ImprovedInvoiceTab = () => {
     retryDelay: 1000
   });
 
-  // Filter orders based on search term and filters
+  // Filter orders based on search term, filters, and date context filter
   const filteredOrders = orders.filter(order => {
     const matchesSearch = 
       order.serial?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -114,7 +116,11 @@ const ImprovedInvoiceTab = () => {
     const matchesDateFrom = !dateFrom || orderDate >= new Date(dateFrom);
     const matchesDateTo = !dateTo || orderDate <= new Date(dateTo);
     
-    return matchesSearch && matchesStatus && matchesDateFrom && matchesDateTo;
+    // Apply global date filter from context
+    const matchesContextDateFrom = !startDate || orderDate >= startDate;
+    const matchesContextDateTo = !endDate || orderDate <= endDate;
+    
+    return matchesSearch && matchesStatus && matchesDateFrom && matchesDateTo && matchesContextDateFrom && matchesContextDateTo;
   });
 
   const getStatusLabel = (status: string) => {
