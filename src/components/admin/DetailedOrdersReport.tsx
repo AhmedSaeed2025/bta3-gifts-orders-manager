@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { formatCurrency } from "@/lib/utils";
 import { calculateOrderFinancials } from "@/lib/orderFinancials";
 import { useOrderStatuses } from "@/hooks/useOrderStatuses";
+import { useDateFilter } from "@/components/tabs/StyledIndexTabs";
 import { 
   FileText, 
   Search, 
@@ -45,6 +46,7 @@ const DetailedOrdersReport = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { getStatusOptions, getStatusLabel, getStatusColor } = useOrderStatuses();
+  const { startDate, endDate } = useDateFilter();
   
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -78,7 +80,7 @@ const DetailedOrdersReport = () => {
     enabled: !!user
   });
 
-  // Filter orders
+  // Filter orders with date filter support
   const filteredOrders = orders.filter(order => {
     const matchesSearch = order.client_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          order.serial?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -87,7 +89,12 @@ const DetailedOrdersReport = () => {
     const matchesStatus = statusFilter === "all" || order.status === statusFilter;
     const matchesPayment = paymentFilter === "all" || order.payment_method === paymentFilter;
     
-    return matchesSearch && matchesStatus && matchesPayment;
+    // Apply date filter from context
+    const orderDate = new Date(order.date_created);
+    const matchesDateFrom = !startDate || orderDate >= startDate;
+    const matchesDateTo = !endDate || orderDate <= endDate;
+    
+    return matchesSearch && matchesStatus && matchesPayment && matchesDateFrom && matchesDateTo;
   });
 
   // Calculate summary statistics
@@ -108,8 +115,9 @@ const DetailedOrdersReport = () => {
     }
   };
 
-  const handleStatusChange = async (orderId: string, newStatus: string) => {
+  const handleStatusChange = async (orderId: string, serial: string, newStatus: string) => {
     try {
+      // Update orders table
       const { error } = await supabase
         .from('orders')
         .update({ status: newStatus, updated_at: new Date().toISOString() })
@@ -117,11 +125,25 @@ const DetailedOrdersReport = () => {
 
       if (error) throw error;
 
+      // Also update admin_orders table to keep in sync
+      const { error: adminError } = await supabase
+        .from('admin_orders')
+        .update({ status: newStatus, updated_at: new Date().toISOString() })
+        .eq('serial', serial)
+        .eq('user_id', user?.id);
+
+      if (adminError) {
+        console.error('Error syncing admin_orders:', adminError);
+      }
+
       toast.success(`تم تحديث حالة الطلب إلى: ${getStatusLabel(newStatus)}`);
       refetch();
+      // Invalidate all order-related queries
       queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['orders-invoice'] });
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
       queryClient.invalidateQueries({ queryKey: ['admin-orders-enhanced'] });
+      queryClient.invalidateQueries({ queryKey: ['printing-orders'] });
     } catch (error) {
       console.error('Error updating status:', error);
       toast.error('حدث خطأ في تحديث حالة الطلب');
@@ -377,7 +399,7 @@ const DetailedOrdersReport = () => {
                           </Badge>
                           <Select 
                             value={order.status} 
-                            onValueChange={(value) => handleStatusChange(order.id, value)}
+                            onValueChange={(value) => handleStatusChange(order.id, order.serial, value)}
                           >
                             <SelectTrigger className={`h-7 w-auto min-w-[90px] text-xs ${getStatusColor(order.status)}`}>
                               <SelectValue>{getStatusLabel(order.status)}</SelectValue>

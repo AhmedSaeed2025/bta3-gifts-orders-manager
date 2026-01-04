@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { formatCurrency } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useOrderStatuses } from '@/hooks/useOrderStatuses';
+import { useDateFilter } from '@/components/tabs/StyledIndexTabs';
 import { toast } from 'sonner';
 import { 
   Edit, 
@@ -57,6 +58,7 @@ const EnhancedAdminOrders = () => {
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   const { getStatusOptions, getStatusLabel, getStatusColor } = useOrderStatuses();
+  const { startDate, endDate } = useDateFilter();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -87,22 +89,38 @@ const EnhancedAdminOrders = () => {
     enabled: !!user
   });
 
-  // Update order status mutation
+  // Update order status mutation - syncs both tables
   const updateOrderMutation = useMutation({
-    mutationFn: async ({ orderId, updates }: { orderId: string; updates: Partial<Order> }) => {
+    mutationFn: async ({ orderId, serial, updates }: { orderId: string; serial: string; updates: Partial<Order> }) => {
       if (!user) throw new Error('يجب تسجيل الدخول أولاً');
       
-      const { error } = await supabase
+      // Update admin_orders
+      const { error: adminError } = await supabase
         .from('admin_orders')
-        .update(updates)
+        .update({ ...updates, updated_at: new Date().toISOString() })
         .eq('id', orderId)
         .eq('user_id', user.id);
       
-      if (error) throw error;
+      if (adminError) throw adminError;
+
+      // Also update orders table to keep them in sync
+      const { error: ordersError } = await supabase
+        .from('orders')
+        .update({ status: updates.status, updated_at: new Date().toISOString() })
+        .eq('serial', serial)
+        .eq('user_id', user.id);
+      
+      if (ordersError) {
+        console.error('Error syncing orders table:', ordersError);
+      }
     },
     onSuccess: () => {
+      // Invalidate all order-related queries to sync across all screens
       queryClient.invalidateQueries({ queryKey: ['admin-orders-enhanced'] });
       queryClient.invalidateQueries({ queryKey: ['printing-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['orders-invoice'] });
+      queryClient.invalidateQueries({ queryKey: ['detailed-orders-report'] });
       toast.success('تم تحديث الطلب بنجاح');
       setShowEditDialog(false);
       setSelectedOrder(null);
@@ -116,6 +134,7 @@ const EnhancedAdminOrders = () => {
   const handleStatusChange = (order: Order, newStatus: string) => {
     updateOrderMutation.mutate({
       orderId: order.id,
+      serial: order.serial,
       updates: { status: newStatus }
     });
   };
@@ -173,7 +192,12 @@ const EnhancedAdminOrders = () => {
     
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
     
-    return matchesSearch && matchesStatus;
+    // Apply date filter
+    const orderDate = new Date(order.order_date);
+    const matchesDateFrom = !startDate || orderDate >= startDate;
+    const matchesDateTo = !endDate || orderDate <= endDate;
+    
+    return matchesSearch && matchesStatus && matchesDateFrom && matchesDateTo;
   });
 
   if (isLoading) {
@@ -418,6 +442,7 @@ const EnhancedAdminOrders = () => {
               <Button 
                 onClick={() => selectedOrder && updateOrderMutation.mutate({
                   orderId: selectedOrder.id,
+                  serial: selectedOrder.serial,
                   updates: { status: selectedOrder.status }
                 })}
                 disabled={updateOrderMutation.isPending}

@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import CustomAmountDialog from "./CustomAmountDialog";
+import { useDateFilter } from "@/components/tabs/StyledIndexTabs";
 import { 
   Edit, 
   Eye, 
@@ -40,6 +41,7 @@ const OrdersTable = () => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { startDate, endDate } = useDateFilter();
 
   // Filter states
   const [filterMonth, setFilterMonth] = useState<string>("all");
@@ -71,7 +73,7 @@ const OrdersTable = () => {
     return Array.from(years).sort().reverse();
   }, [safeOrders]);
 
-  // Filter orders based on selected filters
+  // Filter orders based on selected filters and global date filter
   const filteredOrders = React.useMemo(() => {
     return safeOrders.filter(order => {
       const orderDate = new Date(order.dateCreated);
@@ -82,9 +84,13 @@ const OrdersTable = () => {
       if (filterMonth !== "all" && orderMonth !== filterMonth) return false;
       if (filterStatus !== "all" && order.status !== filterStatus) return false;
       
+      // Apply global date filter from context
+      if (startDate && orderDate < startDate) return false;
+      if (endDate && orderDate > endDate) return false;
+      
       return true;
     });
-  }, [safeOrders, filterMonth, filterYear, filterStatus]);
+  }, [safeOrders, filterMonth, filterYear, filterStatus, startDate, endDate]);
 
   // Calculate summary statistics
   const summaryStats = React.useMemo(() => {
