@@ -43,13 +43,9 @@ const PrintingOrdersReport = () => {
   const { data: printingOrders, isLoading } = useQuery({
     queryKey: ['printing-orders', user?.id],
     queryFn: async () => {
-      // Get orders that are in printing-related statuses
+      // Get orders that are sent to printing
       const printingStatuses = [
-        'processing',
-        'sentToPrinter', 
-        'sent_to_printing',
-        'printing_received',
-        'readyForDelivery'
+        'sent_to_printing'
       ];
       
       const { data, error } = await supabase

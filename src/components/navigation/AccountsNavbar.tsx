@@ -7,6 +7,7 @@ const navLinks = [
   { to: "/store", label: "المتجر" },
   { to: "/admin/dashboard", label: "لوحة التحكم" },
   { to: "/legacy-admin", label: "برنامج الحسابات" },
+  { to: "/admin/finance", label: "الإدارة المالية" },
 ];
 
 const AccountsNavbar = () => {
@@ -20,8 +21,10 @@ const AccountsNavbar = () => {
           const isActive =
             link.to === "/legacy-admin"
               ? location.pathname.startsWith("/legacy-admin")
+              : link.to === "/admin/finance"
+              ? location.pathname === "/admin/finance"
               : link.to === "/admin/dashboard"
-              ? location.pathname.startsWith("/admin")
+              ? location.pathname.startsWith("/admin") && location.pathname !== "/admin/finance"
               : location.pathname === link.to || (link.to === "/store" && location.pathname === "/");
           return (
             <Link
