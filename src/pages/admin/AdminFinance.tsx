@@ -5,13 +5,15 @@ import {
   CreditCard, 
   Factory, 
   TrendingUp, 
-  Clock 
+  Clock,
+  Printer
 } from 'lucide-react';
 import FinanceDashboard from '@/components/finance/FinanceDashboard';
 import CustomerPaymentsScreen from '@/components/finance/CustomerPaymentsScreen';
 import WorkshopPaymentsScreen from '@/components/finance/WorkshopPaymentsScreen';
 import OrderProfitabilityScreen from '@/components/finance/OrderProfitabilityScreen';
 import PendingMoneyScreen from '@/components/finance/PendingMoneyScreen';
+import PrintingOrdersReport from '@/components/finance/PrintingOrdersReport';
 
 const AdminFinance = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -26,10 +28,18 @@ const AdminFinance = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
+        <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-grid">
           <TabsTrigger value="dashboard" className="gap-2">
             <LayoutDashboard className="h-4 w-4" />
             <span className="hidden sm:inline">لوحة التحكم</span>
+          </TabsTrigger>
+          <TabsTrigger value="profitability" className="gap-2">
+            <TrendingUp className="h-4 w-4" />
+            <span className="hidden sm:inline">ربحية الطلبات</span>
+          </TabsTrigger>
+          <TabsTrigger value="printing-report" className="gap-2">
+            <Printer className="h-4 w-4" />
+            <span className="hidden sm:inline">تقرير الورشة</span>
           </TabsTrigger>
           <TabsTrigger value="customer-payments" className="gap-2">
             <CreditCard className="h-4 w-4" />
@@ -38,10 +48,6 @@ const AdminFinance = () => {
           <TabsTrigger value="workshop-payments" className="gap-2">
             <Factory className="h-4 w-4" />
             <span className="hidden sm:inline">مدفوعات الورش</span>
-          </TabsTrigger>
-          <TabsTrigger value="profitability" className="gap-2">
-            <TrendingUp className="h-4 w-4" />
-            <span className="hidden sm:inline">ربحية الطلبات</span>
           </TabsTrigger>
           <TabsTrigger value="pending" className="gap-2">
             <Clock className="h-4 w-4" />
@@ -53,16 +59,20 @@ const AdminFinance = () => {
           <FinanceDashboard />
         </TabsContent>
 
+        <TabsContent value="profitability">
+          <OrderProfitabilityScreen />
+        </TabsContent>
+
+        <TabsContent value="printing-report">
+          <PrintingOrdersReport />
+        </TabsContent>
+
         <TabsContent value="customer-payments">
           <CustomerPaymentsScreen />
         </TabsContent>
 
         <TabsContent value="workshop-payments">
           <WorkshopPaymentsScreen />
-        </TabsContent>
-
-        <TabsContent value="profitability">
-          <OrderProfitabilityScreen />
         </TabsContent>
 
         <TabsContent value="pending">

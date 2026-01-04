@@ -48,20 +48,25 @@ const FinanceDashboard = () => {
     enabled: !!user
   });
 
-  // Fetch orders for alerts
+  // Fetch orders for alerts - all orders automatically appear
   const { data: orders, isLoading: loadingOrders } = useQuery({
     queryKey: ['orders-for-alerts', user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('orders')
-        .select('id, serial, total, status, client_name')
-        .eq('user_id', user?.id);
+        .select('id, serial, total, status, client_name, date_created, profit')
+        .eq('user_id', user?.id)
+        .order('date_created', { ascending: false });
       
       if (error) throw error;
       return data || [];
     },
     enabled: !!user
   });
+
+  // Fetch printing orders count
+  const printingStatuses = ['processing', 'sentToPrinter', 'sent_to_printing', 'printing_received', 'readyForDelivery'];
+  const printingOrdersCount = orders?.filter(o => printingStatuses.includes(o.status)).length || 0;
 
   // Calculate totals
   const totalCashIn = customerPayments?.reduce((sum, p) => 
@@ -247,28 +252,42 @@ const FinanceDashboard = () => {
       )}
 
       {/* Quick Stats */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
               <CheckCircle className="h-4 w-4 text-green-500" />
-              طلبات مربحة
+              إجمالي الطلبات
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{orders?.filter(o => o.status === 'delivered').length || 0}</div>
+            <div className="text-2xl font-bold">{orders?.length || 0}</div>
+            <p className="text-xs text-muted-foreground">مرتبطة تلقائياً</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <XCircle className="h-4 w-4 text-red-500" />
-              طلبات خاسرة
+              <CheckCircle className="h-4 w-4 text-green-500" />
+              طلبات تم توصيلها
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold text-green-600">{orders?.filter(o => o.status === 'delivered').length || 0}</div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-orange-200 bg-orange-50/50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Clock className="h-4 w-4 text-orange-500" />
+              في الورشة / الطباعة
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-600">{printingOrdersCount}</div>
+            <p className="text-xs text-muted-foreground">جاري الطباعة</p>
           </CardContent>
         </Card>
 
@@ -276,11 +295,13 @@ const FinanceDashboard = () => {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
               <Clock className="h-4 w-4 text-yellow-500" />
-              طلبات غير مكتملة
+              طلبات قيد التنفيذ
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{orders?.filter(o => o.status !== 'delivered').length || 0}</div>
+            <div className="text-2xl font-bold text-yellow-600">
+              {orders?.filter(o => !['delivered', 'cancelled'].includes(o.status)).length || 0}
+            </div>
           </CardContent>
         </Card>
       </div>
