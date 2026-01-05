@@ -97,10 +97,16 @@ const AdminLayout = () => {
     }
   ];
 
+  // Check if current route should hide sidebar on mobile
+  const isFullScreenMobile = location.pathname === '/admin/finance';
+
   return (
     <div className="min-h-screen bg-background flex" dir="rtl">
-      {/* Sidebar */}
-      <aside className="w-64 bg-card border-r flex flex-col">
+      {/* Sidebar - Hidden on mobile for full-screen pages */}
+      <aside className={cn(
+        "w-64 bg-card border-r flex-col",
+        isFullScreenMobile ? "hidden lg:flex" : "hidden md:flex"
+      )}>
         {/* Header with Navigation Icons */}
         <div className="p-6 border-b">
           <h1 className="text-xl font-bold mb-3">لوحة تحكم الأدمن</h1>
