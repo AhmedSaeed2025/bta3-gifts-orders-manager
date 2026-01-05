@@ -19,41 +19,63 @@ const AdminFinance = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
 
   return (
-    <div className="p-6 space-y-6" dir="rtl">
+    <div className="p-3 sm:p-6 space-y-4 sm:space-y-6" dir="rtl">
+      {/* Header - Responsive */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">الإدارة المالية</h1>
-          <p className="text-muted-foreground">Cash Flow & Workshops</p>
+          <h1 className="text-xl sm:text-3xl font-bold">الإدارة المالية</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground">Cash Flow & Workshops</p>
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-grid">
-          <TabsTrigger value="dashboard" className="gap-2">
-            <LayoutDashboard className="h-4 w-4" />
-            <span className="hidden sm:inline">لوحة التحكم</span>
-          </TabsTrigger>
-          <TabsTrigger value="profitability" className="gap-2">
-            <TrendingUp className="h-4 w-4" />
-            <span className="hidden sm:inline">ربحية الطلبات</span>
-          </TabsTrigger>
-          <TabsTrigger value="printing-report" className="gap-2">
-            <Printer className="h-4 w-4" />
-            <span className="hidden sm:inline">تقرير الورشة</span>
-          </TabsTrigger>
-          <TabsTrigger value="customer-payments" className="gap-2">
-            <CreditCard className="h-4 w-4" />
-            <span className="hidden sm:inline">مدفوعات العملاء</span>
-          </TabsTrigger>
-          <TabsTrigger value="workshop-payments" className="gap-2">
-            <Factory className="h-4 w-4" />
-            <span className="hidden sm:inline">مدفوعات الورش</span>
-          </TabsTrigger>
-          <TabsTrigger value="pending" className="gap-2">
-            <Clock className="h-4 w-4" />
-            <span className="hidden sm:inline">المعلقات</span>
-          </TabsTrigger>
-        </TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-3 sm:space-y-4">
+        {/* Mobile: Horizontal scrollable tabs */}
+        <div className="w-full overflow-x-auto pb-2 -mx-3 px-3 sm:mx-0 sm:px-0">
+          <TabsList className="inline-flex w-max sm:w-full sm:grid sm:grid-cols-6 gap-1 p-1 min-w-max">
+            <TabsTrigger 
+              value="dashboard" 
+              className="flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm whitespace-nowrap"
+            >
+              <LayoutDashboard className="h-4 w-4 shrink-0" />
+              <span>لوحة التحكم</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="profitability" 
+              className="flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm whitespace-nowrap"
+            >
+              <TrendingUp className="h-4 w-4 shrink-0" />
+              <span>الربحية</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="printing-report" 
+              className="flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm whitespace-nowrap"
+            >
+              <Printer className="h-4 w-4 shrink-0" />
+              <span>الورشة</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="customer-payments" 
+              className="flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm whitespace-nowrap"
+            >
+              <CreditCard className="h-4 w-4 shrink-0" />
+              <span>العملاء</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="workshop-payments" 
+              className="flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm whitespace-nowrap"
+            >
+              <Factory className="h-4 w-4 shrink-0" />
+              <span>الورش</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="pending" 
+              className="flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm whitespace-nowrap"
+            >
+              <Clock className="h-4 w-4 shrink-0" />
+              <span>المعلقات</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="dashboard">
           <FinanceDashboard />
