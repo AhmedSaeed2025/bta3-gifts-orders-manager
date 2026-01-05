@@ -134,172 +134,168 @@ const FinanceDashboard = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">إجمالي النقد الداخل</CardTitle>
-            <TrendingUp className="h-4 w-4 text-green-500" />
+    <div className="space-y-4 sm:space-y-6">
+      {/* Stats Cards - Mobile: 2 cols, Desktop: 4 cols */}
+      <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
+        <Card className="p-0">
+          <CardHeader className="flex flex-row items-center justify-between p-3 sm:p-4 pb-1 sm:pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium">النقد الداخل</CardTitle>
+            <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-green-500" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {totalCashIn.toLocaleString()} ج.م
+          <CardContent className="p-3 sm:p-4 pt-0">
+            <div className="text-base sm:text-2xl font-bold text-green-600">
+              {totalCashIn.toLocaleString()}
             </div>
-            <p className="text-xs text-muted-foreground">
-              من مدفوعات العملاء
-            </p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">ج.م</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">إجمالي النقد الخارج</CardTitle>
-            <TrendingDown className="h-4 w-4 text-red-500" />
+        <Card className="p-0">
+          <CardHeader className="flex flex-row items-center justify-between p-3 sm:p-4 pb-1 sm:pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium">النقد الخارج</CardTitle>
+            <TrendingDown className="h-3 w-3 sm:h-4 sm:w-4 text-red-500" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">
-              {totalCashOut.toLocaleString()} ج.م
+          <CardContent className="p-3 sm:p-4 pt-0">
+            <div className="text-base sm:text-2xl font-bold text-red-600">
+              {totalCashOut.toLocaleString()}
             </div>
-            <p className="text-xs text-muted-foreground">
-              لمدفوعات الورش
-            </p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">ج.م</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">صافي التدفق النقدي</CardTitle>
-            <ArrowUpDown className="h-4 w-4 text-primary" />
+        <Card className="p-0">
+          <CardHeader className="flex flex-row items-center justify-between p-3 sm:p-4 pb-1 sm:pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium">صافي التدفق</CardTitle>
+            <ArrowUpDown className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
           </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${netCashFlow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {netCashFlow.toLocaleString()} ج.م
+          <CardContent className="p-3 sm:p-4 pt-0">
+            <div className={`text-base sm:text-2xl font-bold ${netCashFlow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {netCashFlow.toLocaleString()}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[10px] sm:text-xs text-muted-foreground">
               {netCashFlow >= 0 ? 'إيجابي' : 'سلبي'}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">الربح/الخسارة</CardTitle>
-            <Wallet className="h-4 w-4 text-primary" />
+        <Card className="p-0">
+          <CardHeader className="flex flex-row items-center justify-between p-3 sm:p-4 pb-1 sm:pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium">الربح/الخسارة</CardTitle>
+            <Wallet className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
           </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${netCashFlow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+          <CardContent className="p-3 sm:p-4 pt-0">
+            <div className={`text-base sm:text-2xl font-bold ${netCashFlow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
               {netCashFlow >= 0 ? 'ربح' : 'خسارة'}
             </div>
-            <p className="text-xs text-muted-foreground">
-              بناءً على الحركة النقدية الفعلية
-            </p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">فعلي</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Pending Summary */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">مستحقات من العملاء</CardTitle>
-            <Clock className="h-4 w-4 text-yellow-500" />
+      {/* Pending Summary - Mobile: 2 cols */}
+      <div className="grid grid-cols-2 gap-2 sm:gap-4">
+        <Card className="p-0 border-yellow-200 bg-yellow-50/30 dark:bg-yellow-950/10">
+          <CardHeader className="flex flex-row items-center justify-between p-3 sm:p-4 pb-1 sm:pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium">من العملاء</CardTitle>
+            <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-500" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">
-              {pendingFromCustomers.toLocaleString()} ج.م
+          <CardContent className="p-3 sm:p-4 pt-0">
+            <div className="text-base sm:text-2xl font-bold text-yellow-600">
+              {pendingFromCustomers.toLocaleString()}
             </div>
-            <p className="text-xs text-muted-foreground">
-              في انتظار التحصيل
-            </p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">مستحقات</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">مستحقات للورش</CardTitle>
-            <Clock className="h-4 w-4 text-orange-500" />
+        <Card className="p-0 border-orange-200 bg-orange-50/30 dark:bg-orange-950/10">
+          <CardHeader className="flex flex-row items-center justify-between p-3 sm:p-4 pb-1 sm:pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium">للورش</CardTitle>
+            <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-orange-500" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
-              {pendingToWorkshops.toLocaleString()} ج.م
+          <CardContent className="p-3 sm:p-4 pt-0">
+            <div className="text-base sm:text-2xl font-bold text-orange-600">
+              {pendingToWorkshops.toLocaleString()}
             </div>
-            <p className="text-xs text-muted-foreground">
-              في انتظار السداد
-            </p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">مستحقات</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Smart Alerts */}
+      {/* Smart Alerts - Compact on mobile */}
       {alerts.length > 0 && (
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold">تنبيهات ذكية</h3>
+        <div className="space-y-2 sm:space-y-4">
+          <h3 className="text-sm sm:text-lg font-semibold">تنبيهات ذكية</h3>
           {alerts.map((alert, index) => (
-            <Alert key={index} variant={alert.type === 'error' ? 'destructive' : 'default'}>
-              {alert.type === 'warning' && <AlertTriangle className="h-4 w-4" />}
-              {alert.type === 'error' && <XCircle className="h-4 w-4" />}
-              {alert.type === 'info' && <Clock className="h-4 w-4" />}
-              <AlertTitle>
-                {alert.type === 'warning' && 'تحذير'}
-                {alert.type === 'error' && 'خطأ'}
-                {alert.type === 'info' && 'معلومة'}
-              </AlertTitle>
-              <AlertDescription>{alert.message}</AlertDescription>
+            <Alert key={index} variant={alert.type === 'error' ? 'destructive' : 'default'} className="py-2 sm:py-3">
+              <div className="flex items-start gap-2">
+                {alert.type === 'warning' && <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4 mt-0.5" />}
+                {alert.type === 'error' && <XCircle className="h-3 w-3 sm:h-4 sm:w-4 mt-0.5" />}
+                {alert.type === 'info' && <Clock className="h-3 w-3 sm:h-4 sm:w-4 mt-0.5" />}
+                <div>
+                  <AlertTitle className="text-xs sm:text-sm">
+                    {alert.type === 'warning' && 'تحذير'}
+                    {alert.type === 'error' && 'خطأ'}
+                    {alert.type === 'info' && 'معلومة'}
+                  </AlertTitle>
+                  <AlertDescription className="text-xs sm:text-sm">{alert.message}</AlertDescription>
+                </div>
+              </div>
             </Alert>
           ))}
         </div>
       )}
 
-      {/* Quick Stats */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-green-500" />
-              إجمالي الطلبات
+      {/* Quick Stats - Mobile: 2x2 grid */}
+      <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
+        <Card className="p-0">
+          <CardHeader className="p-3 sm:p-4 pb-1 sm:pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
+              <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 text-green-500" />
+              الطلبات
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{orders?.length || 0}</div>
-            <p className="text-xs text-muted-foreground">مرتبطة تلقائياً</p>
+          <CardContent className="p-3 sm:p-4 pt-0">
+            <div className="text-xl sm:text-2xl font-bold">{orders?.length || 0}</div>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">إجمالي</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-green-500" />
-              طلبات تم توصيلها
+        <Card className="p-0">
+          <CardHeader className="p-3 sm:p-4 pb-1 sm:pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
+              <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 text-green-500" />
+              تم التوصيل
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{orders?.filter(o => o.status === 'delivered').length || 0}</div>
+          <CardContent className="p-3 sm:p-4 pt-0">
+            <div className="text-xl sm:text-2xl font-bold text-green-600">
+              {orders?.filter(o => o.status === 'delivered').length || 0}
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="border-orange-200 bg-orange-50/50">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Clock className="h-4 w-4 text-orange-500" />
-              في الورشة / الطباعة
+        <Card className="p-0 border-orange-200 bg-orange-50/30 dark:bg-orange-950/10">
+          <CardHeader className="p-3 sm:p-4 pb-1 sm:pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
+              <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-orange-500" />
+              في الورشة
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{printingOrdersCount}</div>
-            <p className="text-xs text-muted-foreground">جاري الطباعة</p>
+          <CardContent className="p-3 sm:p-4 pt-0">
+            <div className="text-xl sm:text-2xl font-bold text-orange-600">{printingOrdersCount}</div>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">طباعة</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Clock className="h-4 w-4 text-yellow-500" />
-              طلبات قيد التنفيذ
+        <Card className="p-0">
+          <CardHeader className="p-3 sm:p-4 pb-1 sm:pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
+              <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-500" />
+              قيد التنفيذ
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">
+          <CardContent className="p-3 sm:p-4 pt-0">
+            <div className="text-xl sm:text-2xl font-bold text-yellow-600">
               {orders?.filter(o => !['delivered', 'cancelled'].includes(o.status)).length || 0}
             </div>
           </CardContent>
