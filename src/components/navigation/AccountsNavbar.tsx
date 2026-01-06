@@ -13,21 +13,22 @@ const AccountsNavbar = () => {
 
   // Fetch store settings to check if store is enabled
   const { data: storeSettings } = useQuery({
-    queryKey: ['store-settings-visibility'],
+    queryKey: ['store-settings-visibility', user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('store_settings')
-        .select('is_active')
+        .select('store_enabled')
         .eq('user_id', user!.id)
-        .single();
+        .eq('is_active', true)
+        .maybeSingle();
       
-      if (error && error.code !== 'PGRST116') return { is_active: true };
-      return data || { is_active: true };
+      if (error) return { store_enabled: true };
+      return data || { store_enabled: true };
     },
     enabled: !!user
   });
 
-  const isStoreEnabled = storeSettings?.is_active !== false;
+  const isStoreEnabled = storeSettings?.store_enabled !== false;
 
   const navLinks = [
     ...(isStoreEnabled ? [{ to: "/store", label: "المتجر" }] : []),

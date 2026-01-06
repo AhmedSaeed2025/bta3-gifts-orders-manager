@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/responsive-table";
 
 const SummaryReport = () => {
-  const { orders, loading } = useSupabaseOrders();
+  const { orders, loading, reloadOrders } = useSupabaseOrders();
   const reportRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
@@ -124,6 +124,17 @@ const SummaryReport = () => {
     setFilterMonth("all");
     setFilterYear("all");
     setFilterStatus("all");
+  };
+
+  const refreshData = async () => {
+    try {
+      toast.info("جاري تحديث البيانات...");
+      await reloadOrders();
+      toast.success("تم تحديث البيانات");
+    } catch (error) {
+      console.error('Refresh orders error:', error);
+      toast.error("حدث خطأ أثناء تحديث البيانات");
+    }
   };
 
   const truncateText = (text: string, maxLength: number = 30) => {
@@ -296,7 +307,15 @@ const SummaryReport = () => {
               </Select>
             </div>
             
-            <div className="flex items-end">
+            <div className="flex items-end gap-2 flex-col">
+              <Button 
+                onClick={refreshData}
+                variant="secondary"
+                className="w-full flex items-center gap-2"
+              >
+                <RefreshCw className="h-4 w-4" />
+                تحديث البيانات
+              </Button>
               <Button 
                 onClick={clearFilters}
                 variant="outline"

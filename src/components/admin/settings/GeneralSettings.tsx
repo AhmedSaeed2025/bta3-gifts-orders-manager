@@ -27,15 +27,15 @@ const GeneralSettings = ({ formData, onInputChange, onToggleChange }: GeneralSet
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between p-4 bg-background rounded-lg border">
             <div className="space-y-1">
-              <Label htmlFor="is_store_active" className="text-base font-medium">تفعيل المتجر</Label>
+              <Label htmlFor="store_enabled" className="text-base font-medium">تفعيل المتجر</Label>
               <p className="text-sm text-muted-foreground">
                 تحكم في إظهار أو إخفاء المتجر للعملاء
               </p>
             </div>
             <Switch
-              id="is_store_active"
-              checked={formData.is_active !== false}
-              onCheckedChange={(checked) => onToggleChange?.('is_active', checked)}
+              id="store_enabled"
+              checked={formData.store_enabled !== false}
+              onCheckedChange={(checked) => onToggleChange?.('store_enabled', checked)}
             />
           </div>
         </CardContent>

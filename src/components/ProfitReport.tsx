@@ -14,7 +14,7 @@ import ProfitChart from "./reports/ProfitChart";
 import ProfitTable from "./reports/ProfitTable";
 
 const ProfitReport = () => {
-  const { orders, loading } = useSupabaseOrders();
+  const { orders, loading, reloadOrders } = useSupabaseOrders();
   const reportRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
   const [filterMonth, setFilterMonth] = useState<string>("all");
@@ -274,6 +274,7 @@ const ProfitReport = () => {
         availableYears={availableYears}
         availableProducts={availableProducts}
         onClearFilters={clearFilters}
+        onRefresh={() => reloadOrders()}
         onExportExcel={handleExcelExport}
         onExportPDF={handlePDFExport}
       />

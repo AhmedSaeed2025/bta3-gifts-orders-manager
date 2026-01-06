@@ -668,6 +668,7 @@ export type Database = {
           favicon_url: string | null
           footer_banner_link: string | null
           footer_banner_url: string | null
+          footer_brand_text: string | null
           free_shipping_enabled: boolean | null
           free_shipping_threshold: number | null
           hero_banner_link: string | null
@@ -703,6 +704,7 @@ export type Database = {
           side_banner_2_url: string | null
           snapchat_url: string | null
           store_description: string | null
+          store_enabled: boolean
           store_name: string
           store_tagline: string | null
           telegram_url: string | null
@@ -745,6 +747,7 @@ export type Database = {
           favicon_url?: string | null
           footer_banner_link?: string | null
           footer_banner_url?: string | null
+          footer_brand_text?: string | null
           free_shipping_enabled?: boolean | null
           free_shipping_threshold?: number | null
           hero_banner_link?: string | null
@@ -780,6 +783,7 @@ export type Database = {
           side_banner_2_url?: string | null
           snapchat_url?: string | null
           store_description?: string | null
+          store_enabled?: boolean
           store_name?: string
           store_tagline?: string | null
           telegram_url?: string | null
@@ -822,6 +826,7 @@ export type Database = {
           favicon_url?: string | null
           footer_banner_link?: string | null
           footer_banner_url?: string | null
+          footer_brand_text?: string | null
           free_shipping_enabled?: boolean | null
           free_shipping_threshold?: number | null
           hero_banner_link?: string | null
@@ -857,6 +862,7 @@ export type Database = {
           side_banner_2_url?: string | null
           snapchat_url?: string | null
           store_description?: string | null
+          store_enabled?: boolean
           store_name?: string
           store_tagline?: string | null
           telegram_url?: string | null

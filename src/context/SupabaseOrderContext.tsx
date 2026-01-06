@@ -12,6 +12,7 @@ interface OrderContextType {
   deleteOrder: (index: number) => Promise<void>;
   updateOrderStatus: (index: number, status: OrderStatus) => Promise<void>;
   getOrderBySerial: (serial: string) => Order | undefined;
+  reloadOrders: () => Promise<void>;
   loading: boolean;
 }
 
@@ -519,6 +520,7 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
       deleteOrder, 
       updateOrderStatus, 
       getOrderBySerial,
+      reloadOrders: loadOrders,
       loading
     }}>
       {children}
