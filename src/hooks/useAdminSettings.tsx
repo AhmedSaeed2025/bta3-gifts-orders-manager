@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 
 export interface AdminSettingsFormData {
   // Store Visibility
-  is_active: boolean;
+  store_enabled: boolean;
   
   // General Settings
   store_name: string;
@@ -90,7 +90,7 @@ export interface AdminSettingsFormData {
 
 const defaultFormData: AdminSettingsFormData = {
   // Store Visibility
-  is_active: true,
+  store_enabled: true,
   
   // General Settings
   store_name: '',
@@ -185,9 +185,9 @@ export const useAdminSettings = () => {
         .select('*')
         .eq('user_id', user!.id)
         .eq('is_active', true)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
         throw error;
       }
 
@@ -200,7 +200,7 @@ export const useAdminSettings = () => {
   useEffect(() => {
     if (storeSettings) {
       setFormData({
-        is_active: storeSettings.is_active !== false,
+        store_enabled: (storeSettings as any).store_enabled !== false,
         store_name: storeSettings.store_name || '',
         store_tagline: storeSettings.store_tagline || '',
         store_description: (storeSettings as any).store_description || '',
@@ -327,6 +327,7 @@ export const useAdminSettings = () => {
       queryClient.invalidateQueries({ queryKey: ['store-settings'] });
       queryClient.invalidateQueries({ queryKey: ['store-settings-return-policy'] });
       queryClient.invalidateQueries({ queryKey: ['store-settings-display'] });
+      queryClient.invalidateQueries({ queryKey: ['store-settings-visibility'] });
     },
     onError: (error) => {
       console.error('Error saving settings:', error);

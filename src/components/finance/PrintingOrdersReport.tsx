@@ -57,7 +57,7 @@ const PrintingOrdersReport = () => {
   const { data: printingOrders, isLoading } = useQuery({
     queryKey: ['printing-orders', user?.id],
     queryFn: async () => {
-      const printingStatuses = ['sent_to_printing'];
+      const printingStatuses = ['sentToPrinter', 'sent_to_printing'];
       
       // Fetch from orders table
       const { data: ordersData, error: ordersError } = await supabase

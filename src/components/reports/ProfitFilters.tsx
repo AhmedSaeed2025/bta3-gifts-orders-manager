@@ -17,6 +17,7 @@ interface ProfitFiltersProps {
   availableYears: string[];
   availableProducts: string[];
   onClearFilters: () => void;
+  onRefresh?: () => void;
   onExportExcel: () => void;
   onExportPDF: () => void;
 }
@@ -31,6 +32,7 @@ const ProfitFilters: React.FC<ProfitFiltersProps> = ({
   availableYears,
   availableProducts,
   onClearFilters,
+  onRefresh,
   onExportExcel,
   onExportPDF
 }) => {
@@ -120,7 +122,17 @@ const ProfitFilters: React.FC<ProfitFiltersProps> = ({
             </Select>
           </div>
           
-          <div className="flex items-end">
+          <div className="flex items-end gap-2 flex-col">
+            {onRefresh && (
+              <Button
+                onClick={onRefresh}
+                variant="secondary"
+                className="w-full flex items-center gap-2"
+              >
+                <RefreshCw className={`${isMobile ? "h-3 w-3" : "h-4 w-4"}`} />
+                تحديث البيانات
+              </Button>
+            )}
             <Button 
               onClick={onClearFilters}
               variant="outline"

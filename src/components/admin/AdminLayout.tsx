@@ -47,6 +47,27 @@ const AdminLayout = () => {
     enabled: !!user
   });
 
+  // Check store visibility (hide store links when disabled)
+  const { data: storeVisibility } = useQuery({
+    queryKey: ['store-settings-visibility', user?.id],
+    queryFn: async () => {
+      if (!user) return { store_enabled: true };
+
+      const { data, error } = await supabase
+        .from('store_settings')
+        .select('store_enabled')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (error) return { store_enabled: true };
+      return data || { store_enabled: true };
+    },
+    enabled: !!user
+  });
+
+  const isStoreEnabled = storeVisibility?.store_enabled !== false;
+
   if (!user || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -113,14 +134,16 @@ const AdminLayout = () => {
           
           {/* Quick Navigation Icons */}
           <div className="flex items-center gap-2 mb-3">
-            <Link 
-              to="/store" 
-              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary transition-colors"
-              title="العودة للمتجر"
-            >
-              <Store className="h-4 w-4" />
-              <span className="text-sm font-medium">المتجر</span>
-            </Link>
+            {isStoreEnabled && (
+              <Link 
+                to="/store" 
+                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary transition-colors"
+                title="العودة للمتجر"
+              >
+                <Store className="h-4 w-4" />
+                <span className="text-sm font-medium">المتجر</span>
+              </Link>
+            )}
             
             <Link 
               to="/legacy-admin" 
@@ -174,15 +197,17 @@ const AdminLayout = () => {
           </Button>
           
           {/* Enhanced Return to Store Link */}
-          <div className="pt-3 border-t">
-            <Link 
-              to="/store" 
-              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors p-2 rounded-lg hover:bg-muted"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              العودة للمتجر الرئيسي
-            </Link>
-          </div>
+          {isStoreEnabled && (
+            <div className="pt-3 border-t">
+              <Link 
+                to="/store" 
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors p-2 rounded-lg hover:bg-muted"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                العودة للمتجر الرئيسي
+              </Link>
+            </div>
+          )}
         </div>
       </aside>
 
