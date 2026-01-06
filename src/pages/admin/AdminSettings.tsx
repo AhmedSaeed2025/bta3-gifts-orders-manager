@@ -146,6 +146,7 @@ const AdminSettings = () => {
           <GeneralSettings 
             formData={formData}
             onInputChange={handleInputChange}
+            onToggleChange={handleToggleChange}
           />
         </TabsContent>
 

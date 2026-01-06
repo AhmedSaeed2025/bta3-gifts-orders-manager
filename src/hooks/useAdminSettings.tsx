@@ -5,6 +5,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 
 export interface AdminSettingsFormData {
+  // Store Visibility
+  is_active: boolean;
+  
   // General Settings
   store_name: string;
   store_tagline: string;
@@ -86,6 +89,9 @@ export interface AdminSettingsFormData {
 }
 
 const defaultFormData: AdminSettingsFormData = {
+  // Store Visibility
+  is_active: true,
+  
   // General Settings
   store_name: '',
   store_tagline: '',
@@ -194,6 +200,7 @@ export const useAdminSettings = () => {
   useEffect(() => {
     if (storeSettings) {
       setFormData({
+        is_active: storeSettings.is_active !== false,
         store_name: storeSettings.store_name || '',
         store_tagline: storeSettings.store_tagline || '',
         store_description: (storeSettings as any).store_description || '',
