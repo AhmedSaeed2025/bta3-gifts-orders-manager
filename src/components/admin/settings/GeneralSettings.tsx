@@ -4,16 +4,43 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Building2, Mail, Phone, MapPin, Type } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Building2, Mail, Phone, MapPin, Type, Store } from 'lucide-react';
 
 interface GeneralSettingsProps {
   formData: any;
   onInputChange: (field: string, value: string) => void;
+  onToggleChange?: (field: string, value: boolean) => void;
 }
 
-const GeneralSettings = ({ formData, onInputChange }: GeneralSettingsProps) => {
+const GeneralSettings = ({ formData, onInputChange, onToggleChange }: GeneralSettingsProps) => {
   return (
     <div className="space-y-6">
+      {/* Store Visibility Control */}
+      <Card className="border-2 border-primary/20 bg-primary/5">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Store className="h-5 w-5 text-primary" />
+            <CardTitle>إعدادات المتجر</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between p-4 bg-background rounded-lg border">
+            <div className="space-y-1">
+              <Label htmlFor="is_store_active" className="text-base font-medium">تفعيل المتجر</Label>
+              <p className="text-sm text-muted-foreground">
+                تحكم في إظهار أو إخفاء المتجر للعملاء
+              </p>
+            </div>
+            <Switch
+              id="is_store_active"
+              checked={formData.is_active !== false}
+              onCheckedChange={(checked) => onToggleChange?.('is_active', checked)}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
