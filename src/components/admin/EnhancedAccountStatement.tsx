@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -14,6 +14,7 @@ import { formatCurrency } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
 import { Calendar, TrendingUp, TrendingDown, Wallet, Plus, ArrowRightLeft, DollarSign } from 'lucide-react';
+import { useDateFilter } from '@/components/tabs/StyledIndexTabs';
 
 interface Transaction {
   id: string;
@@ -28,13 +29,14 @@ const EnhancedAccountStatement = () => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
+  const { startDate, endDate } = useDateFilter();
   
   const [transferDialog, setTransferDialog] = useState(false);
   const [transferAmount, setTransferAmount] = useState('');
   const [transferDescription, setTransferDescription] = useState('');
 
   // Fetch transactions
-  const { data: transactions = [], isLoading } = useQuery({
+  const { data: allTransactions = [], isLoading } = useQuery({
     queryKey: ['transactions'],
     queryFn: async () => {
       if (!user) return [];
@@ -54,6 +56,16 @@ const EnhancedAccountStatement = () => {
     },
     enabled: !!user
   });
+
+  // Filter transactions by date
+  const transactions = useMemo(() => {
+    return allTransactions.filter(transaction => {
+      const transactionDate = new Date(transaction.created_at);
+      const matchesDateFrom = !startDate || transactionDate >= startDate;
+      const matchesDateTo = !endDate || transactionDate <= endDate;
+      return matchesDateFrom && matchesDateTo;
+    });
+  }, [allTransactions, startDate, endDate]);
 
   // Calculate balance
   const balance = transactions.reduce((total, transaction) => {

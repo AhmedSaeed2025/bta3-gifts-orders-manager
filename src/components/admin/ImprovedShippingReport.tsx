@@ -10,6 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useDateFilter } from '@/components/tabs/StyledIndexTabs';
 import {
   Truck,
   Package,
@@ -31,18 +32,15 @@ import {
 const ImprovedShippingReport = () => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  const { startDate, endDate } = useDateFilter();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [governorateFilter, setGovernorateFilter] = useState('all');
-  const [selectedPeriod, setSelectedPeriod] = useState('30');
 
   // Fetch orders with shipping info
-  const { data: orders = [], isLoading, refetch } = useQuery({
-    queryKey: ['shipping-orders', selectedPeriod],
+  const { data: allOrders = [], isLoading, refetch } = useQuery({
+    queryKey: ['shipping-orders'],
     queryFn: async () => {
-      const daysAgo = new Date();
-      daysAgo.setDate(daysAgo.getDate() - parseInt(selectedPeriod));
-
       const { data, error } = await supabase
         .from('admin_orders')
         .select(`
@@ -50,7 +48,6 @@ const ImprovedShippingReport = () => {
           admin_order_items (*)
         `)
         .eq('user_id', user!.id)
-        .gte('order_date', daysAgo.toISOString())
         .order('order_date', { ascending: false });
 
       if (error) throw error;
@@ -59,9 +56,9 @@ const ImprovedShippingReport = () => {
     enabled: !!user
   });
 
-  // Filter orders based on search and filters
+  // Filter orders based on search, filters, and date context
   const filteredOrders = useMemo(() => {
-    return orders.filter(order => {
+    return allOrders.filter(order => {
       const matchesSearch = !searchTerm || 
         order.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         order.customer_phone.includes(searchTerm) ||
@@ -70,11 +67,16 @@ const ImprovedShippingReport = () => {
       const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
       const matchesGovernorate = governorateFilter === 'all' || order.governorate === governorateFilter;
       
-      return matchesSearch && matchesStatus && matchesGovernorate;
+      // Apply date filter from context
+      const orderDate = new Date(order.order_date);
+      const matchesDateFrom = !startDate || orderDate >= startDate;
+      const matchesDateTo = !endDate || orderDate <= endDate;
+      
+      return matchesSearch && matchesStatus && matchesGovernorate && matchesDateFrom && matchesDateTo;
     });
-  }, [orders, searchTerm, statusFilter, governorateFilter]);
+  }, [allOrders, searchTerm, statusFilter, governorateFilter, startDate, endDate]);
 
-  // Calculate shipping statistics
+  // Calculate shipping statistics from filteredOrders
   const shippingStats = useMemo(() => {
     const stats = {
       totalOrders: filteredOrders.length,
@@ -134,11 +136,11 @@ const ImprovedShippingReport = () => {
   // Get unique governorates for filter
   const availableGovernorates = useMemo(() => {
     const govs = new Set<string>();
-    orders.forEach(order => {
+    allOrders.forEach(order => {
       if (order.governorate) govs.add(order.governorate);
     });
     return Array.from(govs).sort();
-  }, [orders]);
+  }, [allOrders]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -319,18 +321,6 @@ const ImprovedShippingReport = () => {
                 {availableGovernorates.map((gov) => (
                   <SelectItem key={gov} value={gov}>{gov}</SelectItem>
                 ))}
-              </SelectContent>
-            </Select>
-            
-            <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="7">آخر 7 أيام</SelectItem>
-                <SelectItem value="30">آخر 30 يوماً</SelectItem>
-                <SelectItem value="90">آخر 3 أشهر</SelectItem>
-                <SelectItem value="365">آخر سنة</SelectItem>
               </SelectContent>
             </Select>
           </div>
