@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useDateFilter } from '@/components/tabs/StyledIndexTabs';
 import { 
   Package,
   CheckCircle,
@@ -36,12 +37,16 @@ interface PrintingOrder {
 const PrintingReport = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { startDate, endDate } = useDateFilter();
 
   // Fetch orders sent to printing
-  const { data: printingOrders = [], isLoading } = useQuery({
+  const { data: allPrintingOrders = [], isLoading } = useQuery({
     queryKey: ['printing-orders'],
     queryFn: async () => {
       if (!user) return [];
+      
+      // البحث عن الطلبات بحالات مختلفة للمطبعة
+      const printingStatuses = ['sent_to_printing', 'sentToPrinter', 'printing', 'in_printing'];
       
       const { data: orders, error } = await supabase
         .from('admin_orders')
@@ -62,7 +67,7 @@ const PrintingReport = () => {
           )
         `)
         .eq('user_id', user.id)
-        .eq('status', 'sent_to_printing')
+        .in('status', printingStatuses)
         .order('order_date', { ascending: false });
       
       if (error) {
@@ -77,6 +82,16 @@ const PrintingReport = () => {
     },
     enabled: !!user
   });
+
+  // Filter by date context
+  const printingOrders = useMemo(() => {
+    return allPrintingOrders.filter(order => {
+      const orderDate = new Date(order.order_date);
+      const matchesDateFrom = !startDate || orderDate >= startDate;
+      const matchesDateTo = !endDate || orderDate <= endDate;
+      return matchesDateFrom && matchesDateTo;
+    });
+  }, [allPrintingOrders, startDate, endDate]);
 
   // Mark order as received from printing
   const markReceivedMutation = useMutation({

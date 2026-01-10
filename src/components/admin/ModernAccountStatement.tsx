@@ -13,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { formatCurrency } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
+import { useDateFilter } from '@/components/tabs/StyledIndexTabs';
 import { 
   Plus, 
   Minus,
@@ -45,6 +46,7 @@ interface OrderData {
   remaining_amount: number;
   status: string;
   deposit: number;
+  created_at: string;
 }
 
 interface FinancialSummary {
@@ -60,12 +62,13 @@ const ModernAccountStatement = () => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
+  const { startDate, endDate } = useDateFilter();
   
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [filterType, setFilterType] = useState<string>('all');
 
   // Fetch transactions
-  const { data: transactions = [], isLoading: transactionsLoading } = useQuery({
+  const { data: allTransactions = [], isLoading: transactionsLoading } = useQuery({
     queryKey: ['transactions'],
     queryFn: async () => {
       if (!user) return [];
@@ -87,7 +90,7 @@ const ModernAccountStatement = () => {
   });
 
   // Fetch orders data
-  const { data: orders = [], isLoading: ordersLoading } = useQuery({
+  const { data: allOrders = [], isLoading: ordersLoading } = useQuery({
     queryKey: ['admin-orders-for-modern-statement'],
     queryFn: async () => {
       if (!user) return [];
@@ -106,6 +109,25 @@ const ModernAccountStatement = () => {
     },
     enabled: !!user
   });
+
+  // Filter by date
+  const transactions = useMemo(() => {
+    return allTransactions.filter(transaction => {
+      const transactionDate = new Date(transaction.created_at);
+      const matchesDateFrom = !startDate || transactionDate >= startDate;
+      const matchesDateTo = !endDate || transactionDate <= endDate;
+      return matchesDateFrom && matchesDateTo;
+    });
+  }, [allTransactions, startDate, endDate]);
+
+  const orders = useMemo(() => {
+    return allOrders.filter(order => {
+      const orderDate = new Date(order.created_at);
+      const matchesDateFrom = !startDate || orderDate >= startDate;
+      const matchesDateTo = !endDate || orderDate <= endDate;
+      return matchesDateFrom && matchesDateTo;
+    });
+  }, [allOrders, startDate, endDate]);
 
   // Calculate financial summary
   const financialSummary: FinancialSummary = useMemo(() => {
