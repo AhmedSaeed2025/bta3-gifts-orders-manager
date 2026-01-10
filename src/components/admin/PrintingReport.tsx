@@ -93,22 +93,43 @@ const PrintingReport = () => {
     });
   }, [allPrintingOrders, startDate, endDate]);
 
-  // Mark order as received from printing
+  // Mark order as received from printing - changes to "readyForDelivery" status
   const markReceivedMutation = useMutation({
-    mutationFn: async (orderId: string) => {
+    mutationFn: async (orderData: { id: string; serial: string }) => {
       if (!user) throw new Error('يجب تسجيل الدخول أولاً');
       
-      const { error } = await supabase
+      const newStatus = 'readyForDelivery';
+      
+      // Update admin_orders table
+      const { error: adminError } = await supabase
         .from('admin_orders')
-        .update({ status: 'printing_received' })
-        .eq('id', orderId)
+        .update({ status: newStatus, updated_at: new Date().toISOString() })
+        .eq('id', orderData.id)
         .eq('user_id', user.id);
       
-      if (error) throw error;
+      if (adminError) throw adminError;
+
+      // Also update orders table to keep in sync
+      const { error: ordersError } = await supabase
+        .from('orders')
+        .update({ status: newStatus, updated_at: new Date().toISOString() })
+        .eq('serial', orderData.serial)
+        .eq('user_id', user.id);
+
+      if (ordersError) {
+        console.error('Error syncing orders table:', ordersError);
+      }
     },
     onSuccess: () => {
+      // Invalidate all order-related queries to sync across all reports
       queryClient.invalidateQueries({ queryKey: ['printing-orders'] });
-      toast.success('تم تحديث حالة الطلب بنجاح');
+      queryClient.invalidateQueries({ queryKey: ['shipping-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['detailed-orders-report'] });
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['orders-invoice'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-orders-enhanced'] });
+      toast.success('تم استلام الطلب من المطبعة - الحالة الآن: تحت التسليم');
     },
     onError: (error: any) => {
       console.error('Update order status error:', error);
@@ -116,8 +137,8 @@ const PrintingReport = () => {
     }
   });
 
-  const handleMarkReceived = (orderId: string) => {
-    markReceivedMutation.mutate(orderId);
+  const handleMarkReceived = (order: PrintingOrder) => {
+    markReceivedMutation.mutate({ id: order.id, serial: order.serial });
   };
 
   const totalOrders = printingOrders.length;
@@ -257,7 +278,7 @@ const PrintingReport = () => {
                         </p>
                       </div>
                       <Button
-                        onClick={() => handleMarkReceived(order.id)}
+                        onClick={() => handleMarkReceived(order)}
                         disabled={markReceivedMutation.isPending}
                         className="bg-green-600 hover:bg-green-700 text-white"
                       >
