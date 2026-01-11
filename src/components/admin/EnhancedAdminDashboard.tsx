@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { formatCurrency } from "@/lib/utils";
+import { useDateFilter } from "@/components/tabs/StyledIndexTabs";
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -28,9 +29,10 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 
 const EnhancedAdminDashboard = () => {
   const { user } = useAuth();
+  const { startDate, endDate } = useDateFilter();
 
   // Fetch orders data
-  const { data: orders = [], isLoading: ordersLoading } = useQuery({
+  const { data: allOrders = [], isLoading: ordersLoading } = useQuery({
     queryKey: ['dashboard-orders'],
     queryFn: async () => {
       if (!user) return [];
@@ -49,6 +51,18 @@ const EnhancedAdminDashboard = () => {
     },
     enabled: !!user
   });
+
+  // Filter orders by date
+  const orders = useMemo(() => {
+    if (!startDate && !endDate) return allOrders;
+    
+    return allOrders.filter(order => {
+      const orderDate = new Date(order.date_created);
+      if (startDate && orderDate < startDate) return false;
+      if (endDate && orderDate > new Date(endDate.getTime() + 24 * 60 * 60 * 1000)) return false;
+      return true;
+    });
+  }, [allOrders, startDate, endDate]);
 
   // Fetch products data
   const { data: products = [] } = useQuery({

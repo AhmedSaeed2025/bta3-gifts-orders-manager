@@ -285,6 +285,25 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
         }
       }
 
+      // إضافة معاملة العربون إلى كشف الحساب إذا كان موجوداً
+      if (newOrder.deposit && newOrder.deposit > 0) {
+        const { error: depositTransactionError } = await supabase
+          .from('transactions')
+          .insert({
+            user_id: user.id,
+            amount: newOrder.deposit,
+            transaction_type: 'income',
+            description: `عربون - طلب ${serial} - ${newOrder.clientName}`,
+            order_serial: serial
+          });
+
+        if (depositTransactionError) {
+          console.error('Error adding deposit transaction:', depositTransactionError);
+        } else {
+          console.log('Deposit transaction added successfully');
+        }
+      }
+
       console.log('Order items inserted successfully');
       toast.success("تم إضافة الطلب بنجاح");
       await loadOrders(); // Reload to get the updated list
@@ -303,15 +322,18 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
     try {
       console.log('Updating order:', serial, updatedOrder);
       
-      // First get the order ID from the serial
-      const { data: orderData, error: fetchError } = await supabase
+      // First get the current order data to compare deposit
+      const { data: currentOrder, error: fetchCurrentError } = await supabase
         .from('orders')
-        .select('id')
+        .select('id, deposit')
         .eq('serial', serial)
         .eq('user_id', user.id)
         .single();
 
-      if (fetchError) throw fetchError;
+      if (fetchCurrentError) throw fetchCurrentError;
+
+      const oldDeposit = Number(currentOrder.deposit) || 0;
+      const newDeposit = updatedOrder.deposit || 0;
 
       // Calculate remaining amount properly
       const updateRemainingAmount = (updatedOrder as any).remaining_amount ?? (updatedOrder.total - (updatedOrder.deposit || 0));
@@ -349,13 +371,13 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
       const { error: deleteItemsError } = await supabase
         .from('order_items')
         .delete()
-        .eq('order_id', orderData.id);
+        .eq('order_id', currentOrder.id);
 
       if (deleteItemsError) throw deleteItemsError;
 
       // Insert new order items
       const orderItems = updatedOrder.items.map(item => ({
-        order_id: orderData.id,
+        order_id: currentOrder.id,
         product_type: item.productType,
         size: item.size,
         quantity: item.quantity,
@@ -402,6 +424,40 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
 
       if (adminUpdateError) {
         console.error('Error updating admin order:', adminUpdateError);
+      }
+
+      // تحديث/إضافة/حذف معاملة العربون في كشف الحساب
+      if (newDeposit !== oldDeposit) {
+        // أولاً: حذف معاملة العربون القديمة للطلب
+        const { error: deleteDepositError } = await supabase
+          .from('transactions')
+          .delete()
+          .eq('order_serial', serial)
+          .eq('user_id', user.id)
+          .ilike('description', '%عربون%');
+
+        if (deleteDepositError) {
+          console.error('Error deleting old deposit transaction:', deleteDepositError);
+        }
+
+        // إذا كان العربون الجديد أكبر من صفر، أضف معاملة جديدة
+        if (newDeposit > 0) {
+          const { error: addDepositError } = await supabase
+            .from('transactions')
+            .insert({
+              user_id: user.id,
+              amount: newDeposit,
+              transaction_type: 'income',
+              description: `عربون - طلب ${serial} - ${updatedOrder.clientName}`,
+              order_serial: serial
+            });
+
+          if (addDepositError) {
+            console.error('Error adding deposit transaction:', addDepositError);
+          } else {
+            console.log('Deposit transaction updated successfully');
+          }
+        }
       }
 
       console.log('Order updated successfully');

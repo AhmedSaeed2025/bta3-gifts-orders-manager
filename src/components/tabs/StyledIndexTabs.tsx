@@ -109,60 +109,13 @@ const StyledIndexTabs = () => {
     { value: "11", label: "ديسمبر" },
   ];
 
+  // Reverse order of tabs - from right to left (settings first, dashboard last)
   const tabs = [
     {
-      id: "dashboard",
-      label: "لوحة التحكم",
-      icon: BarChart3,
-      component: <EnhancedAdminDashboard />
-    },
-    {
-      id: "add-order",
-      label: "إضافة طلب",
-      icon: Plus,
-      component: <OrderForm />
-    },
-    {
-      id: "orders-management",
-      label: "إدارة الطلبات",
-      icon: ShoppingCart,
-      component: <AdminOrders />
-    },
-    {
-      id: "products",
-      label: "إدارة المنتجات",
-      icon: Package,
-      component: <ProductsManagementPro />
-    },
-    {
-      id: "orders-report",
-      label: "تقرير الطلبات",
-      icon: FileText,
-      component: <DetailedOrdersReport />
-    },
-    {
-      id: "shipping-report",
-      label: "تقرير الشحن",
-      icon: Truck,
-      component: <ImprovedShippingReport />
-    },
-    {
-      id: "account-statement",
-      label: "كشف الحساب",
-      icon: Calculator,
-      component: <ComprehensiveAccountStatement />
-    },
-    {
-      id: "modern-account-statement",
-      label: "كشف حساب محدث",
-      icon: FileBarChart,
-      component: <ModernAccountStatement />
-    },
-    {
-      id: "printing-report",
-      label: "المطبعة",
-      icon: Printer,
-      component: <PrintingReport />
+      id: "settings",
+      label: "الإعدادات",
+      icon: Settings,
+      component: <AdminSettings />
     },
     {
       id: "invoice",
@@ -171,10 +124,58 @@ const StyledIndexTabs = () => {
       component: <ImprovedInvoiceTab />
     },
     {
-      id: "settings",
-      label: "الإعدادات",
-      icon: Settings,
-      component: <AdminSettings />
+      id: "printing-report",
+      label: "المطبعة",
+      icon: Printer,
+      component: <PrintingReport />
+    },
+    {
+      id: "modern-account-statement",
+      label: "كشف حساب محدث",
+      icon: FileBarChart,
+      component: <ModernAccountStatement />
+    },
+    {
+      id: "account-statement",
+      label: "كشف الحساب",
+      icon: Calculator,
+      component: <ComprehensiveAccountStatement />
+    },
+    {
+      id: "shipping-report",
+      label: "تقرير الشحن",
+      icon: Truck,
+      component: <ImprovedShippingReport />
+    },
+    {
+      id: "orders-report",
+      label: "تقرير الطلبات",
+      icon: FileText,
+      component: <DetailedOrdersReport />
+    },
+    {
+      id: "products",
+      label: "إدارة المنتجات",
+      icon: Package,
+      component: <ProductsManagementPro />
+    },
+    {
+      id: "orders-management",
+      label: "إدارة الطلبات",
+      icon: ShoppingCart,
+      component: <AdminOrders />
+    },
+    {
+      id: "add-order",
+      label: "إضافة طلب",
+      icon: Plus,
+      component: <OrderForm />
+    },
+    {
+      id: "dashboard",
+      label: "لوحة التحكم",
+      icon: BarChart3,
+      component: <EnhancedAdminDashboard />
     }
   ];
 
