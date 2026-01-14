@@ -230,49 +230,43 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
 
         {/* Invoice Summary */}
         <div style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>
-          <div style={{ width: '200px', marginRight: 'auto', marginLeft: '0', border: '1px solid #e5e7eb', borderRadius: '8px', overflow: 'hidden' }}>
-            <div style={{ backgroundColor: '#f9fafb', padding: '6px', textAlign: 'center', borderBottom: '1px solid #e5e7eb' }}>
-              <span style={{ fontWeight: 'bold', color: '#374151', fontSize: '10px' }}>ملخص الفاتورة</span>
-            </div>
-            
-            {/* إجمالي المنتجات */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 8px', borderBottom: '1px solid #f3f4f6' }}>
-              <span style={{ fontSize: '10px', color: '#6b7280' }}>إجمالي المنتجات:</span>
-              <span style={{ fontSize: '10px', fontWeight: '600' }}>{formatCurrency(subtotal)}</span>
-            </div>
-            
-            {/* الشحن */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 8px', borderBottom: '1px solid #f3f4f6' }}>
-              <span style={{ fontSize: '10px', color: '#6b7280' }}>الشحن:</span>
-              <span style={{ fontSize: '10px', fontWeight: '600' }}>{formatCurrency(shipping)}</span>
-            </div>
-            
-            {/* الخصم */}
-            {discount > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 8px', borderBottom: '1px solid #f3f4f6' }}>
-                <span style={{ fontSize: '10px', color: '#6b7280' }}>الخصم:</span>
-                <span style={{ fontSize: '10px', fontWeight: '600', color: '#dc2626' }}>- {formatCurrency(discount)}</span>
-              </div>
-            )}
-            
-            {/* المجموع */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px', borderBottom: '1px solid #f3f4f6', backgroundColor: '#dbeafe' }}>
-              <span style={{ backgroundColor: '#3b82f6', color: '#ffffff', padding: '3px 10px', borderRadius: '4px', fontWeight: 'bold', fontSize: '9px' }}>المجموع</span>
-              <span style={{ fontSize: '12px', fontWeight: 'bold' }}>{formatCurrency(total)}</span>
-            </div>
-            
-            {/* المدفوع */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 8px', borderBottom: '1px solid #f3f4f6' }}>
-              <span style={{ fontSize: '10px', color: '#6b7280' }}>المدفوع:</span>
-              <span style={{ fontSize: '10px', fontWeight: '600', color: '#16a34a' }}>{formatCurrency(-paid)}</span>
-            </div>
-            
-            {/* المتبقي */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px', backgroundColor: '#fee2e2' }}>
-              <span style={{ backgroundColor: '#dc2626', color: '#ffffff', padding: '3px 10px', borderRadius: '4px', fontWeight: 'bold', fontSize: '9px' }}>المتبقي</span>
-              <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#dc2626' }}>{formatCurrency(remaining)}</span>
-            </div>
-          </div>
+          <table style={{ width: '180px', marginRight: 'auto', marginLeft: '0', borderCollapse: 'collapse', border: '1px solid #e5e7eb', borderRadius: '8px' }}>
+            <thead>
+              <tr>
+                <th colSpan={2} style={{ backgroundColor: '#f9fafb', padding: '6px', textAlign: 'center', borderBottom: '1px solid #e5e7eb', fontSize: '10px', fontWeight: 'bold', color: '#374151' }}>
+                  ملخص الفاتورة
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style={{ borderBottom: '1px solid #f3f4f6' }}>
+                <td style={{ padding: '6px 8px', fontSize: '10px', color: '#6b7280', textAlign: 'right' }}>إجمالي المنتجات:</td>
+                <td style={{ padding: '6px 8px', fontSize: '10px', fontWeight: '600', textAlign: 'left' }}>{formatCurrency(subtotal)}</td>
+              </tr>
+              <tr style={{ borderBottom: '1px solid #f3f4f6' }}>
+                <td style={{ padding: '6px 8px', fontSize: '10px', color: '#6b7280', textAlign: 'right' }}>الشحن:</td>
+                <td style={{ padding: '6px 8px', fontSize: '10px', fontWeight: '600', textAlign: 'left' }}>{formatCurrency(shipping)}</td>
+              </tr>
+              {discount > 0 && (
+                <tr style={{ borderBottom: '1px solid #f3f4f6' }}>
+                  <td style={{ padding: '6px 8px', fontSize: '10px', color: '#6b7280', textAlign: 'right' }}>الخصم:</td>
+                  <td style={{ padding: '6px 8px', fontSize: '10px', fontWeight: '600', textAlign: 'left', color: '#dc2626' }}>- {formatCurrency(discount)}</td>
+                </tr>
+              )}
+              <tr style={{ borderBottom: '1px solid #f3f4f6', backgroundColor: '#dbeafe' }}>
+                <td style={{ padding: '8px', fontSize: '10px', fontWeight: 'bold', color: '#3b82f6', textAlign: 'right' }}>المجموع:</td>
+                <td style={{ padding: '8px', fontSize: '12px', fontWeight: 'bold', textAlign: 'left' }}>{formatCurrency(total)}</td>
+              </tr>
+              <tr style={{ borderBottom: '1px solid #f3f4f6' }}>
+                <td style={{ padding: '6px 8px', fontSize: '10px', color: '#6b7280', textAlign: 'right' }}>المدفوع:</td>
+                <td style={{ padding: '6px 8px', fontSize: '10px', fontWeight: '600', textAlign: 'left', color: '#16a34a' }}>{formatCurrency(-paid)}</td>
+              </tr>
+              <tr style={{ backgroundColor: '#fee2e2' }}>
+                <td style={{ padding: '8px', fontSize: '10px', fontWeight: 'bold', color: '#dc2626', textAlign: 'right' }}>المتبقي:</td>
+                <td style={{ padding: '8px', fontSize: '12px', fontWeight: 'bold', textAlign: 'left', color: '#dc2626' }}>{formatCurrency(remaining)}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
         {/* Notes */}
