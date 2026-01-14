@@ -26,32 +26,30 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
     if (!invoiceRef.current) return;
     
     try {
-      // Clone the element to avoid modifying the original
       const element = invoiceRef.current;
       
+      // Force a reflow to ensure proper rendering
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       const canvas = await html2canvas(element, {
-        scale: 3,
+        scale: 2,
         useCORS: true,
         backgroundColor: '#ffffff',
         logging: false,
         allowTaint: true,
-        width: element.scrollWidth,
-        height: element.scrollHeight,
-        windowWidth: element.scrollWidth,
-        windowHeight: element.scrollHeight,
-        onclone: (clonedDoc) => {
-          const clonedElement = clonedDoc.querySelector('[data-invoice-ref]') as HTMLElement;
-          if (clonedElement) {
-            clonedElement.style.width = '400px';
-            clonedElement.style.maxWidth = '400px';
-          }
-        }
+        scrollX: 0,
+        scrollY: 0,
+        x: 0,
+        y: 0,
       });
       
+      // Create download link
       const link = document.createElement('a');
       link.download = `فاتورة-${order.serial}.png`;
       link.href = canvas.toDataURL('image/png', 1.0);
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
       toast.success('تم حفظ صورة الفاتورة');
     } catch (error) {
       console.error('Screenshot error:', error);
@@ -205,7 +203,7 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
                 const itemTotal = (price * qty) - itemDiscount;
                 return (
                   <tr key={index} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                    <td style={{ padding: '5px 2px', textAlign: 'right', color: '#dc2626', fontWeight: '500', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <td style={{ padding: '5px 2px', textAlign: 'right', color: '#dc2626', fontWeight: '500', wordBreak: 'break-word', whiteSpace: 'normal', lineHeight: '1.4' }}>
                       {item.product_type || item.product_name}
                     </td>
                     <td style={{ padding: '5px 2px', textAlign: 'center' }}>
