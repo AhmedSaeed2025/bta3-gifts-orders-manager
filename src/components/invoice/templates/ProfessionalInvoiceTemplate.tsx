@@ -26,20 +26,35 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
     if (!invoiceRef.current) return;
     
     try {
-      const canvas = await html2canvas(invoiceRef.current, {
-        scale: 2,
+      // Clone the element to avoid modifying the original
+      const element = invoiceRef.current;
+      
+      const canvas = await html2canvas(element, {
+        scale: 3,
         useCORS: true,
         backgroundColor: '#ffffff',
         logging: false,
         allowTaint: true,
+        width: element.scrollWidth,
+        height: element.scrollHeight,
+        windowWidth: element.scrollWidth,
+        windowHeight: element.scrollHeight,
+        onclone: (clonedDoc) => {
+          const clonedElement = clonedDoc.querySelector('[data-invoice-ref]') as HTMLElement;
+          if (clonedElement) {
+            clonedElement.style.width = '400px';
+            clonedElement.style.maxWidth = '400px';
+          }
+        }
       });
       
       const link = document.createElement('a');
       link.download = `فاتورة-${order.serial}.png`;
-      link.href = canvas.toDataURL('image/png');
+      link.href = canvas.toDataURL('image/png', 1.0);
       link.click();
       toast.success('تم حفظ صورة الفاتورة');
     } catch (error) {
+      console.error('Screenshot error:', error);
       toast.error('حدث خطأ أثناء حفظ الصورة');
     }
   };
@@ -61,15 +76,17 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
 
       <div 
         ref={invoiceRef}
+        data-invoice-ref="true"
         style={{
           backgroundColor: '#ffffff',
           color: '#1f2937',
           padding: '16px',
           fontFamily: 'Tajawal, Arial, sans-serif',
           direction: 'rtl',
-          width: '100%',
+          width: '400px',
           maxWidth: '400px',
           margin: '0 auto',
+          boxSizing: 'border-box',
         }}
       >
         {/* Header */}
@@ -169,14 +186,15 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
             <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#dc2626', verticalAlign: 'middle' }}>تفاصيل الطلب</span>
           </div>
           
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '9px', tableLayout: 'fixed' }}>
             <thead>
               <tr style={{ backgroundColor: '#dc2626', color: '#ffffff' }}>
-                <th style={{ padding: '6px 4px', textAlign: 'right', fontWeight: '500' }}>المنتج</th>
-                <th style={{ padding: '6px 4px', textAlign: 'center', fontWeight: '500' }}>المقاس</th>
-                <th style={{ padding: '6px 4px', textAlign: 'center', fontWeight: '500' }}>العدد</th>
-                <th style={{ padding: '6px 4px', textAlign: 'center', fontWeight: '500' }}>السعر</th>
-                <th style={{ padding: '6px 4px', textAlign: 'left', fontWeight: '500' }}>الإجمالي</th>
+                <th style={{ padding: '5px 2px', textAlign: 'right', fontWeight: '500', width: '30%' }}>المنتج</th>
+                <th style={{ padding: '5px 2px', textAlign: 'center', fontWeight: '500', width: '15%' }}>المقاس</th>
+                <th style={{ padding: '5px 2px', textAlign: 'center', fontWeight: '500', width: '10%' }}>العدد</th>
+                <th style={{ padding: '5px 2px', textAlign: 'center', fontWeight: '500', width: '15%' }}>السعر</th>
+                <th style={{ padding: '5px 2px', textAlign: 'center', fontWeight: '500', width: '15%' }}>الخصم</th>
+                <th style={{ padding: '5px 2px', textAlign: 'left', fontWeight: '500', width: '15%' }}>الإجمالي</th>
               </tr>
             </thead>
             <tbody>
@@ -187,22 +205,25 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
                 const itemTotal = (price * qty) - itemDiscount;
                 return (
                   <tr key={index} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                    <td style={{ padding: '6px 4px', textAlign: 'right', color: '#dc2626', fontWeight: '500' }}>
+                    <td style={{ padding: '5px 2px', textAlign: 'right', color: '#dc2626', fontWeight: '500', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {item.product_type || item.product_name}
                     </td>
-                    <td style={{ padding: '6px 4px', textAlign: 'center' }}>
-                      <span style={{ backgroundColor: '#f3f4f6', padding: '2px 6px', borderRadius: '4px', fontSize: '9px' }}>
+                    <td style={{ padding: '5px 2px', textAlign: 'center' }}>
+                      <span style={{ backgroundColor: '#f3f4f6', padding: '2px 4px', borderRadius: '4px', fontSize: '8px' }}>
                         {item.size || item.product_size}
                       </span>
                     </td>
-                    <td style={{ padding: '6px 4px', textAlign: 'center', fontWeight: 'bold' }}>{item.quantity}</td>
-                    <td style={{ padding: '6px 4px', textAlign: 'center' }}>{formatCurrency(price)}</td>
-                    <td style={{ padding: '6px 4px', textAlign: 'left', fontWeight: '600' }}>{formatCurrency(itemTotal)}</td>
+                    <td style={{ padding: '5px 2px', textAlign: 'center', fontWeight: 'bold' }}>{item.quantity}</td>
+                    <td style={{ padding: '5px 2px', textAlign: 'center' }}>{formatCurrency(price)}</td>
+                    <td style={{ padding: '5px 2px', textAlign: 'center', color: itemDiscount > 0 ? '#dc2626' : '#9ca3af' }}>
+                      {itemDiscount > 0 ? `-${formatCurrency(itemDiscount)}` : '-'}
+                    </td>
+                    <td style={{ padding: '5px 2px', textAlign: 'left', fontWeight: '600' }}>{formatCurrency(itemTotal)}</td>
                   </tr>
                 );
               }) : (
                 <tr>
-                  <td colSpan={5} style={{ padding: '12px', textAlign: 'center', color: '#6b7280', fontSize: '10px' }}>لا توجد أصناف</td>
+                  <td colSpan={6} style={{ padding: '12px', textAlign: 'center', color: '#6b7280', fontSize: '10px' }}>لا توجد أصناف</td>
                 </tr>
               )}
             </tbody>

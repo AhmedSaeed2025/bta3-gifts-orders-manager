@@ -69,6 +69,7 @@ const InvoiceItemsTable = ({ items }: InvoiceItemsTableProps) => {
                 <th className="text-center p-3 sm:p-4 font-bold text-xs sm:text-sm lg:text-base text-gray-800">المقاس</th>
                 <th className="text-center p-3 sm:p-4 font-bold text-xs sm:text-sm lg:text-base text-gray-800">العدد</th>
                 <th className="text-right p-3 sm:p-4 font-bold text-xs sm:text-sm lg:text-base text-gray-800">السعر</th>
+                <th className="text-center p-3 sm:p-4 font-bold text-xs sm:text-sm lg:text-base text-gray-800">الخصم</th>
                 <th className="text-right p-3 sm:p-4 font-bold text-xs sm:text-sm lg:text-base text-gray-800 rounded-tl-lg">الإجمالي</th>
               </tr>
             </thead>
@@ -79,6 +80,9 @@ const InvoiceItemsTable = ({ items }: InvoiceItemsTableProps) => {
                   <td className="p-3 sm:p-4 text-center text-xs sm:text-sm lg:text-base text-gray-700">{item.size}</td>
                   <td className="p-3 sm:p-4 text-center text-xs sm:text-sm lg:text-base text-gray-700">{item.quantity}</td>
                   <td className="p-3 sm:p-4 text-xs sm:text-sm lg:text-base text-gray-700">{formatCurrency(item.price)}</td>
+                  <td className="p-3 sm:p-4 text-center text-xs sm:text-sm lg:text-base text-red-600">
+                    {item.item_discount > 0 ? `-${formatCurrency(item.item_discount)}` : '-'}
+                  </td>
                   <td className="p-3 sm:p-4 font-bold text-xs sm:text-sm lg:text-base text-green-600">
                     {formatCurrency(item.quantity * item.price - item.item_discount)}
                   </td>
