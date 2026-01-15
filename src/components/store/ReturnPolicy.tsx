@@ -1,9 +1,9 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, XCircle, Calendar, Truck, DollarSign, Package, Phone, Mail } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import DOMPurify from 'dompurify';
 
 const ReturnPolicy = () => {
   // Fetch store settings to get custom return policy if available
@@ -46,7 +46,7 @@ const ReturnPolicy = () => {
           
           <CardContent className="p-6">
             <div className="prose prose-lg max-w-none text-right" dir="rtl">
-              <div dangerouslySetInnerHTML={{ __html: returnPolicyContent.replace(/\n/g, '<br />') }} />
+              <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(returnPolicyContent.replace(/\n/g, '<br />')) }} />
             </div>
             
             {/* Contact Info */}
