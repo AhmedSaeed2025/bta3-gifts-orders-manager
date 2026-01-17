@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,8 +12,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { formatCurrency } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
-import { Calendar, TrendingUp, TrendingDown, Wallet, Plus, ArrowRightLeft, DollarSign } from 'lucide-react';
+import { Calendar, TrendingUp, TrendingDown, Wallet, Plus, ArrowRightLeft, DollarSign, Edit, Trash2 } from 'lucide-react';
 import { useDateFilter } from '@/components/tabs/StyledIndexTabs';
+import AddTransactionDialog from '@/components/AddTransactionDialog';
 
 interface Transaction {
   id: string;
@@ -36,7 +36,7 @@ const EnhancedAccountStatement = () => {
   const [transferDescription, setTransferDescription] = useState('');
 
   // Fetch transactions
-  const { data: allTransactions = [], isLoading } = useQuery({
+  const { data: allTransactions = [], isLoading, refetch: refetchTransactions } = useQuery({
     queryKey: ['transactions'],
     queryFn: async () => {
       if (!user) return [];
@@ -57,6 +57,27 @@ const EnhancedAccountStatement = () => {
     enabled: !!user
   });
 
+  // Fetch workshop payments for paid expenses calculation
+  const { data: workshopPayments = [] } = useQuery({
+    queryKey: ['workshop-payments-statement'],
+    queryFn: async () => {
+      if (!user) return [];
+      
+      const { data, error } = await supabase
+        .from('workshop_payments')
+        .select('*')
+        .eq('user_id', user.id);
+      
+      if (error) {
+        console.error('Error fetching workshop payments:', error);
+        return [];
+      }
+      
+      return data || [];
+    },
+    enabled: !!user
+  });
+
   // Filter transactions by date
   const transactions = useMemo(() => {
     return allTransactions.filter(transaction => {
@@ -67,20 +88,38 @@ const EnhancedAccountStatement = () => {
     });
   }, [allTransactions, startDate, endDate]);
 
-  // Calculate balance
-  const balance = transactions.reduce((total, transaction) => {
-    return transaction.transaction_type === 'income' 
-      ? total + transaction.amount 
-      : total - transaction.amount;
-  }, 0);
+  // Filter workshop payments by date
+  const filteredWorkshopPayments = useMemo(() => {
+    return workshopPayments.filter(payment => {
+      const paymentDate = new Date(payment.created_at || payment.actual_payment_date || '');
+      const matchesDateFrom = !startDate || paymentDate >= startDate;
+      const matchesDateTo = !endDate || paymentDate <= endDate;
+      return matchesDateFrom && matchesDateTo;
+    });
+  }, [workshopPayments, startDate, endDate]);
 
+  // Calculate paid and due workshop costs
+  const paidWorkshopCosts = filteredWorkshopPayments
+    .filter(p => p.payment_status === 'Paid')
+    .reduce((sum, p) => sum + Number(p.cost_amount), 0);
+  
+  const dueWorkshopCosts = filteredWorkshopPayments
+    .filter(p => p.payment_status !== 'Paid')
+    .reduce((sum, p) => sum + Number(p.cost_amount), 0);
+
+  // Calculate balance - using paid costs only
   const totalIncome = transactions
-    .filter(t => t.transaction_type === 'income')
+    .filter(t => t.transaction_type === 'income' || t.transaction_type === 'other_income')
     .reduce((sum, t) => sum + t.amount, 0);
 
-  const totalExpenses = transactions
+  const totalTransactionExpenses = transactions
     .filter(t => t.transaction_type === 'expense')
     .reduce((sum, t) => sum + t.amount, 0);
+
+  // Total paid expenses = transaction expenses + paid workshop costs
+  const totalPaidExpenses = totalTransactionExpenses + paidWorkshopCosts;
+
+  const balance = totalIncome - totalPaidExpenses;
 
   // Transfer mutation
   const transferMutation = useMutation({
@@ -164,8 +203,13 @@ const EnhancedAccountStatement = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-rose-700 mb-2">إجمالي المصروفات</p>
-                <p className="text-3xl font-bold text-rose-900">{formatCurrency(totalExpenses)}</p>
+                <p className="text-sm font-medium text-rose-700 mb-2">المصروفات المسددة</p>
+                <p className="text-3xl font-bold text-rose-900">{formatCurrency(totalPaidExpenses)}</p>
+                {dueWorkshopCosts > 0 && (
+                  <p className="text-xs text-rose-600 mt-1">
+                    مستحقات غير مسددة: {formatCurrency(dueWorkshopCosts)}
+                  </p>
+                )}
               </div>
               <div className="bg-rose-100 p-3 rounded-full">
                 <TrendingDown className="h-8 w-8 text-rose-600" />
@@ -195,57 +239,68 @@ const EnhancedAccountStatement = () => {
       {/* Transfer Section */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-3">
             <CardTitle className="flex items-center gap-2">
               <DollarSign className="h-5 w-5" />
               إدارة الخزينة
             </CardTitle>
-            <Dialog open={transferDialog} onOpenChange={setTransferDialog}>
-              <DialogTrigger asChild>
+            <div className="flex items-center gap-2 flex-wrap">
+              <AddTransactionDialog onTransactionAdded={() => refetchTransactions()}>
                 <Button 
-                  className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-sm"
-                  disabled={balance <= 0}
+                  className="bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white shadow-sm"
                 >
-                  <ArrowRightLeft className="h-4 w-4 ml-2" />
-                  تحويل مبلغ
+                  <Plus className="h-4 w-4 ml-2" />
+                  تسجيل معاملة
                 </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>تحويل مبلغ إلى خزينة أخرى</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label>المبلغ المتاح: {formatCurrency(balance)}</Label>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>المبلغ المراد تحويله</Label>
-                    <Input
-                      type="number"
-                      value={transferAmount}
-                      onChange={(e) => setTransferAmount(e.target.value)}
-                      placeholder="أدخل المبلغ"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>وصف التحويل</Label>
-                    <Textarea
-                      value={transferDescription}
-                      onChange={(e) => setTransferDescription(e.target.value)}
-                      placeholder="وصف التحويل (اختياري)"
-                      rows={3}
-                    />
-                  </div>
+              </AddTransactionDialog>
+              
+              <Dialog open={transferDialog} onOpenChange={setTransferDialog}>
+                <DialogTrigger asChild>
                   <Button 
-                    onClick={handleTransfer}
-                    disabled={transferMutation.isPending}
-                    className="w-full"
+                    className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-sm"
+                    disabled={balance <= 0}
                   >
-                    {transferMutation.isPending ? 'جاري التحويل...' : 'تأكيد التحويل'}
+                    <ArrowRightLeft className="h-4 w-4 ml-2" />
+                    تحويل مبلغ
                   </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>تحويل مبلغ إلى خزينة أخرى</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label>المبلغ المتاح: {formatCurrency(balance)}</Label>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>المبلغ المراد تحويله</Label>
+                      <Input
+                        type="number"
+                        value={transferAmount}
+                        onChange={(e) => setTransferAmount(e.target.value)}
+                        placeholder="أدخل المبلغ"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>وصف التحويل</Label>
+                      <Textarea
+                        value={transferDescription}
+                        onChange={(e) => setTransferDescription(e.target.value)}
+                        placeholder="وصف التحويل (اختياري)"
+                        rows={3}
+                      />
+                    </div>
+                    <Button 
+                      onClick={handleTransfer}
+                      disabled={transferMutation.isPending}
+                      className="w-full"
+                    >
+                      {transferMutation.isPending ? 'جاري التحويل...' : 'تأكيد التحويل'}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
         </CardHeader>
       </Card>
