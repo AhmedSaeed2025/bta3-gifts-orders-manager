@@ -15,34 +15,43 @@ import { useIsMobile } from '@/hooks/use-mobile';
 const StorePage = () => {
   const isMobile = useIsMobile();
   
-  const { data: storeSettings, isLoading: storeLoading } = useQuery({
+  const { data: storeSettings, isLoading: storeLoading, isError: storeError } = useQuery({
     queryKey: ['store-settings'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('store_settings')
         .select('*')
         .eq('is_active', true)
-        .single();
+        .maybeSingle();
       
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
         console.error('Error fetching store settings:', error);
+        // Return default settings on error
+        return null;
       }
       
-      return data || {
-        store_name: 'متجر بتاع هدايا الأصلى',
-        primary_color: '#10B981',
-        secondary_color: '#059669',
-        accent_color: '#F59E0B',
-        text_color: '#1F2937',
-        show_product_prices: true,
-        show_product_sizes: true,
-        hero_banner_url: null,
-        customer_reviews_enabled: true,
-        show_back_to_top: true,
-        enable_banners: true
-      };
-    }
+      return data;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 1,
   });
+
+  // Default store settings
+  const defaultSettings = {
+    store_name: 'متجر بتاع هدايا الأصلى',
+    primary_color: '#10B981',
+    secondary_color: '#059669',
+    accent_color: '#F59E0B',
+    text_color: '#1F2937',
+    show_product_prices: true,
+    show_product_sizes: true,
+    hero_banner_url: null,
+    customer_reviews_enabled: true,
+    show_back_to_top: true,
+    enable_banners: true
+  };
+
+  const activeSettings = storeSettings || defaultSettings;
 
   const { data: categoriesWithProducts, isLoading: productsLoading } = useQuery({
     queryKey: ['categories-with-products'],
@@ -102,22 +111,22 @@ const StorePage = () => {
 
   // Apply custom colors to CSS variables
   React.useEffect(() => {
-    if (storeSettings) {
+    if (activeSettings) {
       const root = document.documentElement;
-      if (storeSettings.primary_color) {
-        root.style.setProperty('--primary-color', storeSettings.primary_color);
+      if (activeSettings.primary_color) {
+        root.style.setProperty('--primary-color', activeSettings.primary_color);
       }
-      if (storeSettings.secondary_color) {
-        root.style.setProperty('--secondary-color', storeSettings.secondary_color);
+      if (activeSettings.secondary_color) {
+        root.style.setProperty('--secondary-color', activeSettings.secondary_color);
       }
-      if (storeSettings.accent_color) {
-        root.style.setProperty('--accent-color', storeSettings.accent_color);
+      if (activeSettings.accent_color) {
+        root.style.setProperty('--accent-color', activeSettings.accent_color);
       }
-      if (storeSettings.text_color) {
-        root.style.setProperty('--text-color', storeSettings.text_color);
+      if (activeSettings.text_color) {
+        root.style.setProperty('--text-color', activeSettings.text_color);
       }
     }
-  }, [storeSettings]);
+  }, [activeSettings]);
 
   if (storeLoading || productsLoading) {
     return (
@@ -132,14 +141,14 @@ const StorePage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
-      <StoreHeader storeSettings={storeSettings} />
+      <StoreHeader storeSettings={activeSettings} />
       
       <main>
         {/* Hero Section */}
-        <HeroSection storeSettings={storeSettings} />
+        <HeroSection storeSettings={activeSettings} />
         
         {/* Promotional Banners Section */}
-        <BannersSection storeSettings={storeSettings} />
+        <BannersSection storeSettings={activeSettings} />
         
         {/* Products Section by Categories */}
         <section className={`${isMobile ? 'py-6 px-3' : 'py-12 px-4'}`}>
@@ -188,16 +197,16 @@ const StorePage = () => {
         </section>
 
         {/* Customer Reviews Section */}
-        <CustomerReviews storeSettings={storeSettings} />
+        <CustomerReviews storeSettings={activeSettings} />
         
         {/* Social Media Section */}
-        <SocialMediaSection storeSettings={storeSettings} />
+        <SocialMediaSection storeSettings={activeSettings} />
       </main>
       
       <StoreFooter />
       
       {/* Back to Top Button */}
-      {storeSettings?.show_back_to_top && <BackToTop />}
+      {activeSettings?.show_back_to_top && <BackToTop />}
     </div>
   );
 };
