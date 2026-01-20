@@ -119,7 +119,8 @@ const EnhancedAccountStatement = () => {
   // Total paid expenses = transaction expenses + paid workshop costs
   const totalPaidExpenses = totalTransactionExpenses + paidWorkshopCosts;
 
-  const balance = totalIncome - totalPaidExpenses;
+  // Balance based on actual transaction expenses only (not workshop costs)
+  const balance = totalIncome - totalTransactionExpenses;
 
   // Transfer mutation
   const transferMutation = useMutation({
@@ -203,11 +204,11 @@ const EnhancedAccountStatement = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-rose-700 mb-2">المصروفات المسددة</p>
-                <p className="text-3xl font-bold text-rose-900">{formatCurrency(totalPaidExpenses)}</p>
-                {dueWorkshopCosts > 0 && (
+                <p className="text-sm font-medium text-rose-700 mb-2">المصروفات الفعلية</p>
+                <p className="text-3xl font-bold text-rose-900">{formatCurrency(totalTransactionExpenses)}</p>
+                {(paidWorkshopCosts + dueWorkshopCosts) > 0 && (
                   <p className="text-xs text-rose-600 mt-1">
-                    مستحقات غير مسددة: {formatCurrency(dueWorkshopCosts)}
+                    إجمالي التكاليف: {formatCurrency(paidWorkshopCosts + dueWorkshopCosts)}
                   </p>
                 )}
               </div>
