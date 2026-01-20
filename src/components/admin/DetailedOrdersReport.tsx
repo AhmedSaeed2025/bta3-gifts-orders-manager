@@ -159,7 +159,7 @@ const DetailedOrdersReport = () => {
     navigate(`/edit-order/${order.serial}`);
   };
 
-  const handlePayment = async (amount: number, notes?: string) => {
+  const handlePayment = async (amount: number, notes?: string, updateOrderCost?: boolean) => {
     if (!selectedOrder) return;
 
     try {
@@ -174,11 +174,41 @@ const DetailedOrdersReport = () => {
           .eq('id', selectedOrder.id);
 
         if (orderError) throw orderError;
+
+        // Also update admin_orders
+        await supabase
+          .from('admin_orders')
+          .update({ deposit: newDeposit })
+          .eq('serial', selectedOrder.serial)
+          .eq('user_id', user?.id);
+      }
+
+      // إذا كان سداد تكلفة وتم تعديل المبلغ، نحدث تكلفة الطلب
+      if (paymentType === 'cost' && updateOrderCost) {
+        // حساب الربح الجديد بناءً على التكلفة الجديدة
+        // الربح = إجمالي المبلغ - التكلفة الجديدة - الشحن
+        const newProfit = (selectedOrder.total || 0) - amount - (selectedOrder.shipping_cost || 0);
+        
+        const { error: orderError } = await supabase
+          .from('orders')
+          .update({ profit: newProfit })
+          .eq('id', selectedOrder.id);
+
+        if (orderError) throw orderError;
+
+        // Also update admin_orders
+        await supabase
+          .from('admin_orders')
+          .update({ profit: newProfit })
+          .eq('serial', selectedOrder.serial)
+          .eq('user_id', user?.id);
+
+        toast.success('تم تحديث تكلفة الطلب وحساب الربح الجديد');
       }
 
       // Add transaction record
-      const transactionType = paymentType === 'collection' ? 'order_collection' :
-                             paymentType === 'shipping' ? 'shipping_payment' : 'cost_payment';
+      const transactionType = paymentType === 'collection' ? 'income' :
+                             paymentType === 'shipping' ? 'expense' : 'expense';
       
       const description = paymentType === 'collection' ? `تحصيل من الطلب ${selectedOrder.serial}` :
                          paymentType === 'shipping' ? `سداد شحن للطلب ${selectedOrder.serial}` :
@@ -199,6 +229,9 @@ const DetailedOrdersReport = () => {
       toast.success('تم تسجيل المعاملة بنجاح');
       refetch();
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-orders-enhanced'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-orders-for-modern-statement'] });
       setPaymentDialogOpen(false);
     } catch (error) {
       console.error('Error adding payment:', error);
