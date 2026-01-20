@@ -131,7 +131,7 @@ const ModernAccountStatement = () => {
 
   // Calculate financial summary
   const financialSummary: FinancialSummary = useMemo(() => {
-    // Calculate orders summary
+    // Calculate orders summary (for costs reference only)
     const ordersSummary = orders.reduce((acc, order: OrderData) => {
       const orderCost = order.total_amount - order.profit - order.shipping_cost;
       const collectedAmount = order.payments_received || 0;
@@ -147,8 +147,8 @@ const ModernAccountStatement = () => {
       netProfit: 0
     });
 
-    // Calculate manual transactions
-    const manualTransactions = transactions.reduce((acc, transaction) => {
+    // Calculate actual recorded transactions only
+    const transactionSummary = transactions.reduce((acc, transaction) => {
       const amount = Math.abs(transaction.amount);
       
       // تحديد نوع المعاملة بناءً على الوصف والنوع
@@ -169,27 +169,32 @@ const ModernAccountStatement = () => {
                        transaction.transaction_type === 'expense';
       
       if (isExpense) {
-        acc.totalExpenses += amount;
+        acc.actualExpenses += amount;
       } else if (transaction.transaction_type === 'income' || isOrderPayment) {
         acc.totalIncome += amount;
       } else {
-        acc.totalExpenses += amount;
+        acc.actualExpenses += amount;
       }
       
       return acc;
     }, {
       totalIncome: 0,
-      totalExpenses: 0
+      actualExpenses: 0
     });
 
-    const totalIncome = ordersSummary.totalOrderRevenue + manualTransactions.totalIncome;
-    const totalExpenses = ordersSummary.totalProductCosts + manualTransactions.totalExpenses;
-    const currentBalance = totalIncome - totalExpenses;
+    // المصروفات الفعلية = المعاملات المسجلة فقط (ليس تكاليف الأوردرات)
+    const actualExpenses = transactionSummary.actualExpenses;
+    
+    // إجمالي التحصيلات من المعاملات
+    const totalIncome = transactionSummary.totalIncome;
+    
+    // الرصيد الحالي = التحصيلات - المصروفات الفعلية المسجلة
+    const currentBalance = totalIncome - actualExpenses;
     
     return {
       totalIncome,
-      totalExpenses,
-      totalProductCosts: ordersSummary.totalProductCosts,
+      totalExpenses: actualExpenses, // المصروفات الفعلية المسجلة
+      totalProductCosts: ordersSummary.totalProductCosts, // إجمالي التكاليف من الأوردرات (مرجعي)
       netProfit: ordersSummary.netProfit,
       currentBalance,
       totalOrderRevenue: ordersSummary.totalOrderRevenue
@@ -372,8 +377,13 @@ const ModernAccountStatement = () => {
               <TrendingDown className="h-6 w-6 text-red-600" />
               <Badge className="bg-red-100 text-red-800">المصروفات</Badge>
             </div>
-            <h3 className="text-sm font-medium text-red-700 mb-1">إجمالي المصروفات</h3>
+            <h3 className="text-sm font-medium text-red-700 mb-1">المصروفات الفعلية</h3>
             <p className="text-xl font-bold text-red-800">{formatCurrency(financialSummary.totalExpenses)}</p>
+            {financialSummary.totalProductCosts > 0 && (
+              <p className="text-xs text-red-600 mt-1">
+                إجمالي التكاليف: {formatCurrency(financialSummary.totalProductCosts)}
+              </p>
+            )}
           </CardContent>
         </Card>
 
