@@ -52,6 +52,9 @@ interface OrderData {
 interface FinancialSummary {
   totalIncome: number;
   totalExpenses: number;
+  shippingExpenses: number;
+  costExpenses: number;
+  otherExpenses: number;
   totalProductCosts: number;
   netProfit: number;
   currentBalance: number;
@@ -129,8 +132,8 @@ const ModernAccountStatement = () => {
     });
   }, [allOrders, startDate, endDate]);
 
-  // Calculate financial summary
-  const financialSummary: FinancialSummary = useMemo(() => {
+  // Calculate financial summary with expense breakdown
+  const financialSummary = useMemo(() => {
     // Calculate orders summary (for costs reference only)
     const ordersSummary = orders.reduce((acc, order: OrderData) => {
       const orderCost = order.total_amount - order.profit - order.shipping_cost;
@@ -147,7 +150,7 @@ const ModernAccountStatement = () => {
       netProfit: 0
     });
 
-    // Calculate actual recorded transactions only
+    // Calculate actual recorded transactions with expense breakdown
     const transactionSummary = transactions.reduce((acc, transaction) => {
       const amount = Math.abs(transaction.amount);
       
@@ -156,30 +159,50 @@ const ModernAccountStatement = () => {
                             transaction.description?.includes('دفعة') ||
                             transaction.description?.includes('عربون') ||
                             transaction.description?.includes('سداد من عميل') ||
-                            transaction.order_serial?.includes('INV-');
+                            transaction.transaction_type === 'order_collection' ||
+                            (transaction.order_serial?.includes('INV-') && 
+                             !transaction.description?.includes('تكلفة') && 
+                             !transaction.description?.includes('شحن'));
       
-      // تحديد المصروفات بناءً على الوصف
-      const isExpense = transaction.description?.includes('تكلفة إنتاج') ||
-                       transaction.description?.includes('شحن للمنزل') ||
-                       transaction.description?.includes('مصروفات إعلانات') ||
-                       transaction.description?.includes('تكلفة') ||
-                       transaction.description?.includes('مصروف') ||
-                       transaction.description?.includes('شحن') ||
-                       transaction.description?.includes('إعلان') ||
-                       transaction.transaction_type === 'expense';
+      // تحديد نوع المصروف
+      const isShippingExpense = transaction.description?.includes('شحن') ||
+                               transaction.description?.includes('شحن للمنزل') ||
+                               transaction.transaction_type === 'shipping_payment';
       
-      if (isExpense) {
+      const isCostExpense = transaction.description?.includes('تكلفة') ||
+                           transaction.description?.includes('تكلفة إنتاج') ||
+                           transaction.description?.includes('سداد تكلفة') ||
+                           transaction.transaction_type === 'cost_payment';
+      
+      const isOtherExpense = (transaction.description?.includes('مصروف') ||
+                             transaction.description?.includes('إعلان') ||
+                             transaction.description?.includes('مصروفات') ||
+                             transaction.transaction_type === 'expense') &&
+                             !isShippingExpense && !isCostExpense;
+      
+      if (isShippingExpense) {
+        acc.shippingExpenses += amount;
         acc.actualExpenses += amount;
-      } else if (transaction.transaction_type === 'income' || isOrderPayment) {
+      } else if (isCostExpense) {
+        acc.costExpenses += amount;
+        acc.actualExpenses += amount;
+      } else if (isOtherExpense) {
+        acc.otherExpenses += amount;
+        acc.actualExpenses += amount;
+      } else if (isOrderPayment || transaction.transaction_type === 'income' || transaction.transaction_type === 'other_income') {
         acc.totalIncome += amount;
-      } else {
+      } else if (transaction.transaction_type === 'expense') {
+        acc.otherExpenses += amount;
         acc.actualExpenses += amount;
       }
       
       return acc;
     }, {
       totalIncome: 0,
-      actualExpenses: 0
+      actualExpenses: 0,
+      shippingExpenses: 0,
+      costExpenses: 0,
+      otherExpenses: 0
     });
 
     // المصروفات الفعلية = المعاملات المسجلة فقط (ليس تكاليف الأوردرات)
@@ -193,8 +216,11 @@ const ModernAccountStatement = () => {
     
     return {
       totalIncome,
-      totalExpenses: actualExpenses, // المصروفات الفعلية المسجلة
-      totalProductCosts: ordersSummary.totalProductCosts, // إجمالي التكاليف من الأوردرات (مرجعي)
+      totalExpenses: actualExpenses,
+      shippingExpenses: transactionSummary.shippingExpenses,
+      costExpenses: transactionSummary.costExpenses,
+      otherExpenses: transactionSummary.otherExpenses,
+      totalProductCosts: ordersSummary.totalProductCosts,
       netProfit: ordersSummary.netProfit,
       currentBalance,
       totalOrderRevenue: ordersSummary.totalOrderRevenue
@@ -370,7 +396,7 @@ const ModernAccountStatement = () => {
           </CardContent>
         </Card>
 
-        {/* Total Expenses */}
+        {/* Total Expenses with Breakdown */}
         <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
@@ -379,9 +405,41 @@ const ModernAccountStatement = () => {
             </div>
             <h3 className="text-sm font-medium text-red-700 mb-1">المصروفات الفعلية</h3>
             <p className="text-xl font-bold text-red-800">{formatCurrency(financialSummary.totalExpenses)}</p>
+            
+            {/* Expense Breakdown */}
+            <div className="mt-3 pt-3 border-t border-red-200 space-y-1.5">
+              {financialSummary.costExpenses > 0 && (
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-red-600 flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-orange-500"></span>
+                    تكاليف الإنتاج
+                  </span>
+                  <span className="font-semibold text-red-700">{formatCurrency(financialSummary.costExpenses)}</span>
+                </div>
+              )}
+              {financialSummary.shippingExpenses > 0 && (
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-red-600 flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                    مصاريف الشحن
+                  </span>
+                  <span className="font-semibold text-red-700">{formatCurrency(financialSummary.shippingExpenses)}</span>
+                </div>
+              )}
+              {financialSummary.otherExpenses > 0 && (
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-red-600 flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-gray-500"></span>
+                    مصروفات أخرى
+                  </span>
+                  <span className="font-semibold text-red-700">{formatCurrency(financialSummary.otherExpenses)}</span>
+                </div>
+              )}
+            </div>
+            
             {financialSummary.totalProductCosts > 0 && (
-              <p className="text-xs text-red-600 mt-1">
-                إجمالي التكاليف: {formatCurrency(financialSummary.totalProductCosts)}
+              <p className="text-xs text-red-500 mt-2 pt-2 border-t border-red-200">
+                💡 تكاليف متوقعة من الطلبات: {formatCurrency(financialSummary.totalProductCosts)}
               </p>
             )}
           </CardContent>
