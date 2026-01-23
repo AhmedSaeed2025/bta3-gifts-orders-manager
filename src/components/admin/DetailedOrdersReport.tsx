@@ -207,8 +207,8 @@ const DetailedOrdersReport = () => {
       }
 
       // Add transaction record
-      const transactionType = paymentType === 'collection' ? 'income' :
-                             paymentType === 'shipping' ? 'expense' : 'expense';
+      const transactionType = paymentType === 'collection' ? 'order_collection' :
+                             paymentType === 'shipping' ? 'shipping_payment' : 'cost_payment';
       
       const description = paymentType === 'collection' ? `تحصيل من الطلب ${selectedOrder.serial}` :
                          paymentType === 'shipping' ? `سداد شحن للطلب ${selectedOrder.serial}` :
