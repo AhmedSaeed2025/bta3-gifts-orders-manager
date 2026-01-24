@@ -59,6 +59,10 @@ interface FinancialSummary {
   netProfit: number;
   currentBalance: number;
   totalOrderRevenue: number;
+  // Income breakdown
+  depositIncome: number;
+  salesIncome: number;
+  otherIncome: number;
 }
 
 const ModernAccountStatement = () => {
@@ -150,16 +154,22 @@ const ModernAccountStatement = () => {
       netProfit: 0
     });
 
-    // Calculate actual recorded transactions with expense breakdown
+    // Calculate actual recorded transactions with expense breakdown AND income breakdown
     const transactionSummary = transactions.reduce((acc, transaction) => {
       const amount = Math.abs(transaction.amount);
       
       // تحديد نوع المعاملة بناءً على الوصف والنوع
-      const isOrderPayment = transaction.description?.includes('تحصيل') || 
+      const isDepositPayment = transaction.description?.includes('عربون') ||
+                              transaction.description?.includes('مقدم') ||
+                              transaction.description?.includes('deposit');
+      
+      const isSalesPayment = transaction.description?.includes('تحصيل') || 
                             transaction.description?.includes('دفعة') ||
-                            transaction.description?.includes('عربون') ||
                             transaction.description?.includes('سداد من عميل') ||
-                            transaction.transaction_type === 'order_collection' ||
+                            transaction.description?.includes('باقي المبلغ') ||
+                            transaction.transaction_type === 'order_collection';
+      
+      const isOrderPayment = isDepositPayment || isSalesPayment ||
                             (transaction.order_serial?.includes('INV-') && 
                              !transaction.description?.includes('تكلفة') && 
                              !transaction.description?.includes('شحن'));
@@ -191,6 +201,14 @@ const ModernAccountStatement = () => {
         acc.actualExpenses += amount;
       } else if (isOrderPayment || transaction.transaction_type === 'income' || transaction.transaction_type === 'other_income') {
         acc.totalIncome += amount;
+        // تصنيف نوع الإيراد
+        if (isDepositPayment) {
+          acc.depositIncome += amount;
+        } else if (isSalesPayment || transaction.transaction_type === 'order_collection') {
+          acc.salesIncome += amount;
+        } else {
+          acc.otherIncome += amount;
+        }
       } else if (transaction.transaction_type === 'expense') {
         acc.otherExpenses += amount;
         acc.actualExpenses += amount;
@@ -202,7 +220,10 @@ const ModernAccountStatement = () => {
       actualExpenses: 0,
       shippingExpenses: 0,
       costExpenses: 0,
-      otherExpenses: 0
+      otherExpenses: 0,
+      depositIncome: 0,
+      salesIncome: 0,
+      otherIncome: 0
     });
 
     // المصروفات الفعلية = المعاملات المسجلة فقط (ليس تكاليف الأوردرات)
@@ -223,7 +244,10 @@ const ModernAccountStatement = () => {
       totalProductCosts: ordersSummary.totalProductCosts,
       netProfit: ordersSummary.netProfit,
       currentBalance,
-      totalOrderRevenue: ordersSummary.totalOrderRevenue
+      totalOrderRevenue: ordersSummary.totalOrderRevenue,
+      depositIncome: transactionSummary.depositIncome,
+      salesIncome: transactionSummary.salesIncome,
+      otherIncome: transactionSummary.otherIncome
     };
   }, [transactions, orders]);
 
@@ -384,7 +408,7 @@ const ModernAccountStatement = () => {
 
       {/* Financial Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Total Collections */}
+        {/* Total Collections with Breakdown */}
         <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
@@ -393,6 +417,37 @@ const ModernAccountStatement = () => {
             </div>
             <h3 className="text-sm font-medium text-green-700 mb-1">إجمالي التحصيلات</h3>
             <p className="text-xl font-bold text-green-800">{formatCurrency(financialSummary.totalIncome)}</p>
+            
+            {/* Income Breakdown */}
+            <div className="mt-3 pt-3 border-t border-green-200 space-y-1.5">
+              {financialSummary.depositIncome > 0 && (
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-green-600 flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                    العربون
+                  </span>
+                  <span className="font-semibold text-green-700">{formatCurrency(financialSummary.depositIncome)}</span>
+                </div>
+              )}
+              {financialSummary.salesIncome > 0 && (
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-green-600 flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    تحصيلات المبيعات
+                  </span>
+                  <span className="font-semibold text-green-700">{formatCurrency(financialSummary.salesIncome)}</span>
+                </div>
+              )}
+              {financialSummary.otherIncome > 0 && (
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-green-600 flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-teal-500"></span>
+                    إيرادات أخرى
+                  </span>
+                  <span className="font-semibold text-green-700">{formatCurrency(financialSummary.otherIncome)}</span>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
 

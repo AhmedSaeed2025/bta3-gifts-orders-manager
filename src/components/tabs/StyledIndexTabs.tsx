@@ -1,5 +1,5 @@
 
-import React, { useState, createContext, useContext } from "react";
+import React, { useState, createContext, useContext, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   BarChart3, 
@@ -49,13 +49,48 @@ export const DateFilterContext = createContext<DateFilterContextType>({
 
 export const useDateFilter = () => useContext(DateFilterContext);
 
+// LocalStorage key for persisting filter
+const FILTER_STORAGE_KEY = 'app_date_filter';
+
 const StyledIndexTabs = () => {
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
-  const [selectedYear, setSelectedYear] = useState<string>("");
-  const [selectedMonth, setSelectedMonth] = useState<string>("");
+  
+  // Load saved filter from localStorage
+  const getSavedFilter = () => {
+    try {
+      const saved = localStorage.getItem(FILTER_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return {
+          startDate: parsed.startDate ? new Date(parsed.startDate) : undefined,
+          endDate: parsed.endDate ? new Date(parsed.endDate) : undefined,
+          selectedYear: parsed.selectedYear || "",
+          selectedMonth: parsed.selectedMonth || ""
+        };
+      }
+    } catch (e) {
+      console.error('Error loading saved filter:', e);
+    }
+    return { startDate: undefined, endDate: undefined, selectedYear: "", selectedMonth: "" };
+  };
+
+  const savedFilter = getSavedFilter();
+  const [startDate, setStartDate] = useState<Date | undefined>(savedFilter.startDate);
+  const [endDate, setEndDate] = useState<Date | undefined>(savedFilter.endDate);
+  const [selectedYear, setSelectedYear] = useState<string>(savedFilter.selectedYear);
+  const [selectedMonth, setSelectedMonth] = useState<string>(savedFilter.selectedMonth);
+
+  // Save filter to localStorage whenever it changes
+  useEffect(() => {
+    const filterData = {
+      startDate: startDate?.toISOString(),
+      endDate: endDate?.toISOString(),
+      selectedYear,
+      selectedMonth
+    };
+    localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(filterData));
+  }, [startDate, endDate, selectedYear, selectedMonth]);
 
   const setDateRange = (start: Date | undefined, end: Date | undefined) => {
     setStartDate(start);
