@@ -33,6 +33,7 @@ import ModernAccountStatement from "@/components/admin/ModernAccountStatement";
 import ImprovedInvoiceTab from "@/components/ImprovedInvoiceTab";
 import AdminSettings from "@/pages/admin/AdminSettings";
 import PrintingReport from "@/components/admin/PrintingReport";
+import SummaryAccountReport from "@/components/admin/SummaryAccountReport";
 
 // Create date filter context
 interface DateFilterContextType {
@@ -165,15 +166,21 @@ const StyledIndexTabs = () => {
       component: <PrintingReport />
     },
     {
+      id: "summary-report",
+      label: "كشف ملخص",
+      icon: Calculator,
+      component: <SummaryAccountReport />
+    },
+    {
       id: "modern-account-statement",
-      label: "كشف حساب محدث",
+      label: "كشف محدث",
       icon: FileBarChart,
       component: <ModernAccountStatement />
     },
     {
       id: "account-statement",
       label: "كشف الحساب",
-      icon: Calculator,
+      icon: FileText,
       component: <ComprehensiveAccountStatement />
     },
     {
