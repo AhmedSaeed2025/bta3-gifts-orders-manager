@@ -103,6 +103,12 @@ const DetailedOrdersReport = () => {
   const totalProfit = filteredOrders.reduce((sum, order) => sum + (order.profit || 0), 0);
   const totalShipping = filteredOrders.reduce((sum, order) => sum + calculateOrderFinancials(order).shipping, 0);
   const totalDeposits = filteredOrders.reduce((sum, order) => sum + calculateOrderFinancials(order).paid, 0);
+  const totalCosts = filteredOrders.reduce((sum, order) => {
+    const financials = calculateOrderFinancials(order);
+    // التكلفة = الإجمالي - الربح - الشحن
+    return sum + (financials.total - (order.profit || 0) - financials.shipping);
+  }, 0);
+  const totalDiscounts = filteredOrders.reduce((sum, order) => sum + calculateOrderFinancials(order).discount, 0);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -337,71 +343,101 @@ const DetailedOrdersReport = () => {
       </div>
 
       {/* Summary Statistics */}
-      <div className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'grid-cols-5'}`}>
+      <div className={`grid gap-3 ${isMobile ? 'grid-cols-2' : 'grid-cols-4 lg:grid-cols-7'}`}>
         <Card className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50">
-          <CardContent className="p-4">
+          <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">إجمالي الطلبات</p>
-                <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{totalOrders}</p>
+                <p className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">إجمالي الطلبات</p>
+                <p className="text-xl font-bold text-blue-700 dark:text-blue-300">{totalOrders}</p>
               </div>
-              <Package className="h-8 w-8 text-blue-500" />
+              <Package className="h-6 w-6 text-blue-500" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-950/50 dark:to-green-900/50">
-          <CardContent className="p-4">
+          <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-green-600 dark:text-green-400 font-medium">إجمالي الإيرادات</p>
-                <p className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-green-700 dark:text-green-300`}>
+                <p className="text-[10px] text-green-600 dark:text-green-400 font-medium">إجمالي الإيرادات</p>
+                <p className={`${isMobile ? 'text-base' : 'text-xl'} font-bold text-green-700 dark:text-green-300`}>
                   {formatCurrency(totalRevenue)}
                 </p>
               </div>
-              <DollarSign className="h-8 w-8 text-green-500" />
+              <DollarSign className="h-6 w-6 text-green-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-r from-red-50 to-red-100 dark:from-red-950/50 dark:to-red-900/50">
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] text-red-600 dark:text-red-400 font-medium">إجمالي التكاليف</p>
+                <p className={`${isMobile ? 'text-base' : 'text-xl'} font-bold text-red-700 dark:text-red-300`}>
+                  {formatCurrency(totalCosts)}
+                </p>
+              </div>
+              <AlertCircle className="h-6 w-6 text-red-500" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-950/50 dark:to-purple-900/50">
-          <CardContent className="p-4">
+          <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-purple-600 dark:text-purple-400 font-medium">صافي الربح</p>
-                <p className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-purple-700 dark:text-purple-300`}>
+                <p className="text-[10px] text-purple-600 dark:text-purple-400 font-medium">صافي الربح</p>
+                <p className={`${isMobile ? 'text-base' : 'text-xl'} font-bold text-purple-700 dark:text-purple-300`}>
                   {formatCurrency(totalProfit)}
                 </p>
               </div>
-              <TrendingUp className="h-8 w-8 text-purple-500" />
+              <TrendingUp className="h-6 w-6 text-purple-500" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-950/50 dark:to-orange-900/50">
-          <CardContent className="p-4">
+          <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-orange-600 dark:text-orange-400 font-medium">الشحن</p>
-                <p className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-orange-700 dark:text-orange-300`}>
+                <p className="text-[10px] text-orange-600 dark:text-orange-400 font-medium">الشحن</p>
+                <p className={`${isMobile ? 'text-base' : 'text-xl'} font-bold text-orange-700 dark:text-orange-300`}>
                   {formatCurrency(totalShipping)}
                 </p>
               </div>
-              <Truck className="h-8 w-8 text-orange-500" />
+              <Truck className="h-6 w-6 text-orange-500" />
             </div>
           </CardContent>
         </Card>
 
+        {totalDiscounts > 0 && (
+          <Card className="bg-gradient-to-r from-pink-50 to-pink-100 dark:from-pink-950/50 dark:to-pink-900/50">
+            <CardContent className="p-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] text-pink-600 dark:text-pink-400 font-medium">الخصومات</p>
+                  <p className={`${isMobile ? 'text-base' : 'text-xl'} font-bold text-pink-700 dark:text-pink-300`}>
+                    {formatCurrency(totalDiscounts)}
+                  </p>
+                </div>
+                <Receipt className="h-6 w-6 text-pink-500" />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <Card className="bg-gradient-to-r from-teal-50 to-teal-100 dark:from-teal-950/50 dark:to-teal-900/50">
-          <CardContent className="p-4">
+          <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-teal-600 dark:text-teal-400 font-medium">العربون المسدد</p>
-                <p className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-teal-700 dark:text-teal-300`}>
+                <p className="text-[10px] text-teal-600 dark:text-teal-400 font-medium">العربون المسدد</p>
+                <p className={`${isMobile ? 'text-base' : 'text-xl'} font-bold text-teal-700 dark:text-teal-300`}>
                   {formatCurrency(totalDeposits)}
                 </p>
               </div>
-              <CreditCard className="h-8 w-8 text-teal-500" />
+              <CreditCard className="h-6 w-6 text-teal-500" />
             </div>
           </CardContent>
         </Card>
@@ -418,7 +454,9 @@ const DetailedOrdersReport = () => {
         <CardContent>
           <div className="space-y-4">
             {filteredOrders.map((order) => {
-              const { total, paid, remaining, shipping } = calculateOrderFinancials(order);
+              const { total, paid, remaining, shipping, discount } = calculateOrderFinancials(order);
+              // حساب التكلفة = الإجمالي - الربح - الشحن
+              const orderCost = total - (order.profit || 0) - shipping;
               
               return (
                 <Card key={order.id} className="border-l-4 border-l-primary">
@@ -462,24 +500,51 @@ const DetailedOrdersReport = () => {
                         </div>
                       </div>
 
-                      {/* Financial Info */}
+                      {/* Financial Info - Enhanced */}
                       <div className={`${isMobile ? 'col-span-1' : 'col-span-4'}`}>
-                        <div className="grid grid-cols-2 gap-4 text-sm">
-                          <div className="space-y-1">
-                            <div className="text-xs text-muted-foreground">المبلغ الإجمالي</div>
-                            <div className="font-bold text-green-600">{formatCurrency(total)}</div>
+                        <div className="space-y-3">
+                          {/* Main Financial Row */}
+                          <div className="grid grid-cols-2 gap-3 text-sm">
+                            <div className="space-y-0.5">
+                              <div className="text-xs text-muted-foreground">المبلغ الإجمالي</div>
+                              <div className="font-bold text-green-600">{formatCurrency(total)}</div>
+                            </div>
+                            <div className="space-y-0.5">
+                              <div className="text-xs text-muted-foreground">الربح</div>
+                              <div className="font-bold text-blue-600">{formatCurrency(order.profit || 0)}</div>
+                            </div>
+                            <div className="space-y-0.5">
+                              <div className="text-xs text-muted-foreground">العربون</div>
+                              <div className="font-bold text-purple-600">{formatCurrency(-paid)}</div>
+                            </div>
+                            <div className="space-y-0.5">
+                              <div className="text-xs text-muted-foreground">المتبقي</div>
+                              <div className="font-bold text-orange-600">{formatCurrency(remaining)}</div>
+                            </div>
                           </div>
-                          <div className="space-y-1">
-                            <div className="text-xs text-muted-foreground">الربح</div>
-                            <div className="font-bold text-blue-600">{formatCurrency(order.profit || 0)}</div>
-                          </div>
-                          <div className="space-y-1">
-                            <div className="text-xs text-muted-foreground">العربون</div>
-                            <div className="font-bold text-purple-600">{formatCurrency(-paid)}</div>
-                          </div>
-                          <div className="space-y-1">
-                            <div className="text-xs text-muted-foreground">المتبقي</div>
-                            <div className="font-bold text-orange-600">{formatCurrency(remaining)}</div>
+                          
+                          {/* Cost Breakdown - Professional Summary */}
+                          <div className="bg-muted/50 rounded-md p-2 border border-border/50">
+                            <div className="text-[10px] text-muted-foreground font-medium mb-1.5">ملخص التكاليف</div>
+                            <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px]">
+                              <div className="flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                                <span className="text-muted-foreground">التكلفة:</span>
+                                <span className="font-semibold text-red-600">{formatCurrency(orderCost)}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-orange-500"></span>
+                                <span className="text-muted-foreground">الشحن:</span>
+                                <span className="font-semibold text-orange-600">{formatCurrency(shipping)}</span>
+                              </div>
+                              {discount > 0 && (
+                                <div className="flex items-center gap-1">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-pink-500"></span>
+                                  <span className="text-muted-foreground">خصم:</span>
+                                  <span className="font-semibold text-pink-600">-{formatCurrency(discount)}</span>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
