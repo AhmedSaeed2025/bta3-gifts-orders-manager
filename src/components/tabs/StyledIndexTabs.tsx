@@ -224,82 +224,94 @@ const StyledIndexTabs = () => {
   return (
     <DateFilterContext.Provider value={{ startDate, endDate, setDateRange }}>
       <div className="w-full" dir="rtl">
-        {/* Date Filters */}
-        <div className={`mb-4 flex flex-wrap items-center gap-2 p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm ${isMobile ? 'flex-col' : ''}`}>
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-medium">فلتر التاريخ:</span>
+        {/* Date Filters - Enhanced Responsive Design */}
+        <div className={`mb-4 p-4 bg-card rounded-xl shadow-sm border border-border/50 ${isMobile ? 'space-y-3' : ''}`}>
+          <div className={`flex items-center gap-3 ${isMobile ? 'flex-col' : 'flex-wrap'}`}>
+            <div className="flex items-center gap-2 text-primary">
+              <Calendar className="h-4 w-4" />
+              <span className={`font-semibold ${isMobile ? 'text-sm' : 'text-sm'}`}>فلتر التاريخ:</span>
+            </div>
+            
+            <div className={`flex items-center gap-2 ${isMobile ? 'w-full flex-col' : 'flex-wrap'}`}>
+              <Select value={selectedYear} onValueChange={handleYearChange}>
+                <SelectTrigger className={`${isMobile ? 'w-full' : 'w-[130px]'} h-10 bg-background border-border/60 focus:ring-2 focus:ring-primary/20`}>
+                  <SelectValue placeholder="السنة" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">كل السنوات</SelectItem>
+                  {years.map((year) => (
+                    <SelectItem key={year} value={year.toString()}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {selectedYear && selectedYear !== "all" && (
+                <Select value={selectedMonth} onValueChange={handleMonthChange}>
+                  <SelectTrigger className={`${isMobile ? 'w-full' : 'w-[130px]'} h-10 bg-background border-border/60 focus:ring-2 focus:ring-primary/20`}>
+                    <SelectValue placeholder="الشهر" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {months.map((month) => (
+                      <SelectItem key={month.value} value={month.value}>
+                        {month.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="default" className={`${isMobile ? 'w-full' : ''} h-10 border-border/60 hover:bg-accent`}>
+                    <Calendar className="h-4 w-4 ml-2" />
+                    {startDate && endDate 
+                      ? `${format(startDate, 'dd/MM/yyyy')} - ${format(endDate, 'dd/MM/yyyy')}`
+                      : "تاريخ مخصص"
+                    }
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <CalendarComponent
+                    mode="range"
+                    selected={{ from: startDate, to: endDate }}
+                    onSelect={(range) => {
+                      setStartDate(range?.from);
+                      setEndDate(range?.to);
+                      setSelectedYear("");
+                      setSelectedMonth("");
+                    }}
+                    locale={ar}
+                    numberOfMonths={isMobile ? 1 : 2}
+                  />
+                </PopoverContent>
+              </Popover>
+
+              {(startDate || endDate) && (
+                <Button 
+                  variant="ghost" 
+                  size="default" 
+                  onClick={clearFilters}
+                  className={`${isMobile ? 'w-full' : ''} h-10 text-destructive hover:text-destructive hover:bg-destructive/10`}
+                >
+                  إلغاء الفلتر
+                </Button>
+              )}
+            </div>
           </div>
-          
-          <Select value={selectedYear} onValueChange={handleYearChange}>
-            <SelectTrigger className="w-[120px]">
-              <SelectValue placeholder="السنة" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">كل السنوات</SelectItem>
-              {years.map((year) => (
-                <SelectItem key={year} value={year.toString()}>
-                  {year}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          {selectedYear && selectedYear !== "all" && (
-            <Select value={selectedMonth} onValueChange={handleMonthChange}>
-              <SelectTrigger className="w-[120px]">
-                <SelectValue placeholder="الشهر" />
-              </SelectTrigger>
-              <SelectContent>
-                {months.map((month) => (
-                  <SelectItem key={month.value} value={month.value}>
-                    {month.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Calendar className="h-4 w-4 ml-2" />
-                {startDate && endDate 
-                  ? `${format(startDate, 'dd/MM/yyyy')} - ${format(endDate, 'dd/MM/yyyy')}`
-                  : "تاريخ مخصص"
-                }
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <CalendarComponent
-                mode="range"
-                selected={{ from: startDate, to: endDate }}
-                onSelect={(range) => {
-                  setStartDate(range?.from);
-                  setEndDate(range?.to);
-                  setSelectedYear("");
-                  setSelectedMonth("");
-                }}
-                locale={ar}
-                numberOfMonths={isMobile ? 1 : 2}
-              />
-            </PopoverContent>
-          </Popover>
-
-          {(startDate || endDate) && (
-            <Button variant="ghost" size="sm" onClick={clearFilters}>
-              إلغاء الفلتر
-            </Button>
-          )}
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          {/* Enhanced TabsList - Responsive & Professional */}
           <TabsList 
             className={`
-              grid w-full mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 
-              dark:from-blue-900/20 dark:to-indigo-900/20 p-1 rounded-xl
-              ${isMobile ? 'grid-cols-3 gap-1' : 'grid-cols-11 gap-2'}
-              ${isMobile ? 'h-auto' : 'h-14'}
+              w-full mb-6 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 
+              dark:from-primary/10 dark:via-primary/20 dark:to-primary/10 
+              p-2 rounded-xl border border-border/30 shadow-sm
+              ${isMobile 
+                ? 'grid grid-cols-4 gap-1 h-auto' 
+                : 'flex flex-wrap justify-center gap-1 h-auto min-h-[56px]'}
             `}
           >
             {tabs.map((tab) => {
@@ -309,15 +321,17 @@ const StyledIndexTabs = () => {
                   key={tab.id}
                   value={tab.id}
                   className={`
-                    flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 rounded-lg transition-all duration-200
-                    data-[state=active]:bg-white data-[state=active]:shadow-md
-                    data-[state=active]:text-blue-600 hover:bg-white/50
-                    ${isMobile ? 'flex-col text-[9px] min-h-[50px]' : 'flex-row text-sm min-h-[48px]'}
-                    font-medium
+                    flex items-center justify-center gap-1.5 rounded-lg transition-all duration-200
+                    data-[state=active]:bg-primary data-[state=active]:text-primary-foreground 
+                    data-[state=active]:shadow-md data-[state=active]:shadow-primary/20
+                    hover:bg-accent/80 font-medium
+                    ${isMobile 
+                      ? 'flex-col text-[8px] p-2 min-h-[52px]' 
+                      : 'flex-row text-xs px-3 py-2.5 min-w-[90px]'}
                   `}
                 >
-                  <Icon className={isMobile ? "h-3.5 w-3.5" : "h-5 w-5"} />
-                  <span className={isMobile ? "text-[8px] leading-tight text-center line-clamp-2" : "text-sm"}>
+                  <Icon className={isMobile ? "h-4 w-4" : "h-4 w-4"} />
+                  <span className={`${isMobile ? "leading-tight text-center" : ""} truncate`}>
                     {tab.label}
                   </span>
                 </TabsTrigger>
@@ -329,7 +343,7 @@ const StyledIndexTabs = () => {
             <TabsContent 
               key={tab.id} 
               value={tab.id} 
-              className="mt-0 space-y-4"
+              className="mt-0 space-y-4 animate-in fade-in-50 duration-300"
             >
               {tab.component}
             </TabsContent>

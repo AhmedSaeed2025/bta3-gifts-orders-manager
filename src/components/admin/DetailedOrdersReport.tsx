@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { formatCurrency } from "@/lib/utils";
@@ -33,7 +33,8 @@ import {
   CheckCircle,
   XCircle,
   Edit,
-  Receipt
+  Receipt,
+  Trash2
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
@@ -153,6 +154,61 @@ const DetailedOrdersReport = () => {
     } catch (error) {
       console.error('Error updating status:', error);
       toast.error('حدث خطأ في تحديث حالة الطلب');
+    }
+  };
+
+  // Delete order mutation with sync
+  const deleteOrderMutation = useMutation({
+    mutationFn: async ({ orderId, serial }: { orderId: string; serial: string }) => {
+      if (!user) throw new Error('يجب تسجيل الدخول أولاً');
+      
+      // Delete from orders table
+      const { error: ordersError } = await supabase
+        .from('orders')
+        .delete()
+        .eq('id', orderId)
+        .eq('user_id', user.id);
+      
+      if (ordersError) throw ordersError;
+
+      // Also delete from admin_orders to keep in sync
+      const { error: adminError } = await supabase
+        .from('admin_orders')
+        .delete()
+        .eq('serial', serial)
+        .eq('user_id', user.id);
+
+      if (adminError) {
+        console.error('Error syncing admin_orders delete:', adminError);
+      }
+
+      // Delete related transactions
+      await supabase
+        .from('transactions')
+        .delete()
+        .eq('order_serial', serial)
+        .eq('user_id', user.id);
+    },
+    onSuccess: () => {
+      // Invalidate all order-related queries to sync across all screens
+      queryClient.invalidateQueries({ queryKey: ['detailed-orders-report'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-orders-enhanced'] });
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['orders-invoice'] });
+      queryClient.invalidateQueries({ queryKey: ['printing-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['summary-orders'] });
+      toast.success('تم حذف الطلب بنجاح');
+    },
+    onError: (error: any) => {
+      console.error('Delete order error:', error);
+      toast.error('حدث خطأ في حذف الطلب');
+    }
+  });
+
+  const handleDeleteOrder = (order: any) => {
+    if (window.confirm(`هل أنت متأكد من حذف الطلب ${order.serial}؟ سيتم حذف جميع البيانات المرتبطة به.`)) {
+      deleteOrderMutation.mutate({ orderId: order.id, serial: order.serial });
     }
   };
 
@@ -593,6 +649,15 @@ const DetailedOrdersReport = () => {
                             <Edit className="h-3 w-3 ml-1" />
                             تعديل
                           </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteOrder(order)}
+                            className="text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+                            disabled={deleteOrderMutation.isPending}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
                         </div>
                         
                         {/* Payment Actions */}
@@ -601,7 +666,7 @@ const DetailedOrdersReport = () => {
                             variant="outline"
                             size="sm"
                             onClick={() => openPaymentDialog(order, 'collection')}
-                            className="text-xs bg-green-50 hover:bg-green-100"
+                            className="text-xs bg-green-50 hover:bg-green-100 dark:bg-green-950/30 dark:hover:bg-green-950/50"
                           >
                             <Receipt className="h-3 w-3 ml-1" />
                             تحصيل
@@ -611,7 +676,7 @@ const DetailedOrdersReport = () => {
                               variant="outline"
                               size="sm"
                               onClick={() => openPaymentDialog(order, 'shipping')}
-                              className="text-xs bg-orange-50 hover:bg-orange-100"
+                              className="text-xs bg-orange-50 hover:bg-orange-100 dark:bg-orange-950/30 dark:hover:bg-orange-950/50"
                             >
                               <Truck className="h-3 w-3 ml-1" />
                               شحن
@@ -621,7 +686,7 @@ const DetailedOrdersReport = () => {
                             variant="outline"
                             size="sm"
                             onClick={() => openPaymentDialog(order, 'cost')}
-                            className="text-xs bg-red-50 hover:bg-red-100"
+                            className="text-xs bg-red-50 hover:bg-red-100 dark:bg-red-950/30 dark:hover:bg-red-950/50"
                           >
                             <DollarSign className="h-3 w-3 ml-1" />
                             تكلفة
