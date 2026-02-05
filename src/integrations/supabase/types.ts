@@ -71,6 +71,7 @@ export type Database = {
           customer_email: string | null
           customer_name: string
           customer_phone: string
+          customer_phone2: string | null
           delivery_method: string
           deposit: number | null
           discount: number | null
@@ -97,6 +98,7 @@ export type Database = {
           customer_email?: string | null
           customer_name: string
           customer_phone: string
+          customer_phone2?: string | null
           delivery_method: string
           deposit?: number | null
           discount?: number | null
@@ -123,6 +125,7 @@ export type Database = {
           customer_email?: string | null
           customer_name?: string
           customer_phone?: string
+          customer_phone2?: string | null
           delivery_method?: string
           deposit?: number | null
           discount?: number | null
@@ -401,6 +404,7 @@ export type Database = {
           payment_method: string
           payments_received: number | null
           phone: string
+          phone2: string | null
           profit: number
           remaining_amount: number | null
           serial: string
@@ -425,6 +429,7 @@ export type Database = {
           payment_method: string
           payments_received?: number | null
           phone: string
+          phone2?: string | null
           profit: number
           remaining_amount?: number | null
           serial: string
@@ -449,6 +454,7 @@ export type Database = {
           payment_method?: string
           payments_received?: number | null
           phone?: string
+          phone2?: string | null
           profit?: number
           remaining_amount?: number | null
           serial?: string

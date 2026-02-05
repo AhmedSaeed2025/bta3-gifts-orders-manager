@@ -131,6 +131,9 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
                 </td>
                 <td style={{ fontSize: '10px', padding: '2px 0' }}>
                   <span style={{ color: '#6b7280' }}>التليفون:</span> <span style={{ fontWeight: '500' }}>{order.phone || order.customer_phone}</span>
+                  {(order.phone2 || order.customer_phone2) && (
+                    <span style={{ marginRight: '4px', fontWeight: '500' }}> / {order.phone2 || order.customer_phone2}</span>
+                  )}
                 </td>
               </tr>
               <tr>
