@@ -13,6 +13,7 @@ export interface Order {
   paymentMethod: string;
   clientName: string;
   phone: string;
+  phone2?: string; // رقم إضافي للعميل
   deliveryMethod: string;
   address: string;
   governorate: string;

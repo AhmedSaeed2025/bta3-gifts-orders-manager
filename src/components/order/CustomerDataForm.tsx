@@ -11,6 +11,7 @@ interface CustomerDataFormProps {
     paymentMethod: string;
     clientName: string;
     phone: string;
+    phone2?: string;
     deliveryMethod: string;
     address: string;
     governorate: string;
@@ -54,6 +55,18 @@ const CustomerDataForm: React.FC<CustomerDataFormProps> = ({
               value={customerData.phone}
               onChange={onCustomerDataChange}
               required
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="phone2">رقم إضافي (اختياري)</Label>
+            <Input
+              type="tel"
+              id="phone2"
+              name="phone2"
+              value={customerData.phone2 || ""}
+              onChange={onCustomerDataChange}
+              placeholder="رقم تليفون إضافي"
             />
           </div>
         </div>

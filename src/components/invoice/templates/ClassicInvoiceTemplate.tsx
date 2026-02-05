@@ -107,7 +107,12 @@ const ClassicInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, storeSe
                   </div>
                   <div style={{ fontSize: '10px', lineHeight: '1.6' }}>
                     <div><span style={{ color: '#6b7280' }}>الاسم:</span> <span style={{ fontWeight: '500' }}>{order.customer_name || order.client_name}</span></div>
-                    <div><span style={{ color: '#6b7280' }}>الهاتف:</span> <span style={{ fontWeight: '500' }}>{order.customer_phone || order.phone}</span></div>
+                    <div>
+                      <span style={{ color: '#6b7280' }}>الهاتف:</span> <span style={{ fontWeight: '500' }}>{order.customer_phone || order.phone}</span>
+                      {(order.phone2 || order.customer_phone2) && (
+                        <span style={{ fontWeight: '500' }}> / {order.phone2 || order.customer_phone2}</span>
+                      )}
+                    </div>
                     {(order.shipping_address || order.address) && (
                       <div><span style={{ color: '#6b7280' }}>العنوان:</span> <span style={{ fontWeight: '500' }}>{order.shipping_address || order.address}</span></div>
                     )}
