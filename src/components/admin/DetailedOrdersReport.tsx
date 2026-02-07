@@ -50,7 +50,7 @@ const DetailedOrdersReport = () => {
   const { startDate, endDate } = useDateFilter();
   
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilters, setStatusFilters] = useState<string[]>([]);
   const [paymentFilter, setPaymentFilter] = useState("all");
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
@@ -87,7 +87,7 @@ const DetailedOrdersReport = () => {
                          order.serial?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          order.phone?.includes(searchTerm);
     
-    const matchesStatus = statusFilter === "all" || order.status === statusFilter;
+    const matchesStatus = statusFilters.length === 0 || statusFilters.includes(order.status);
     const matchesPayment = paymentFilter === "all" || order.payment_method === paymentFilter;
     
     // Apply date filter from context
@@ -358,17 +358,34 @@ const DetailedOrdersReport = () => {
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">حالة الطلب</label>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">جميع الحالات</SelectItem>
-                    {statusOptions.map(status => (
-                      <SelectItem key={status.value} value={status.value}>{status.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex flex-wrap gap-1.5">
+                  {statusOptions.map(status => {
+                    const isActive = statusFilters.includes(status.value);
+                    return (
+                      <Badge
+                        key={status.value}
+                        variant={isActive ? "default" : "outline"}
+                        className={`cursor-pointer text-xs transition-all ${isActive ? '' : 'opacity-60 hover:opacity-100'}`}
+                        onClick={() => {
+                          setStatusFilters(prev =>
+                            isActive ? prev.filter(s => s !== status.value) : [...prev, status.value]
+                          );
+                        }}
+                      >
+                        {status.label}
+                      </Badge>
+                    );
+                  })}
+                  {statusFilters.length > 0 && (
+                    <Badge
+                      variant="secondary"
+                      className="cursor-pointer text-xs"
+                      onClick={() => setStatusFilters([])}
+                    >
+                      مسح الكل ✕
+                    </Badge>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-2">
