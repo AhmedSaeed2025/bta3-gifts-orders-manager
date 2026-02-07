@@ -653,28 +653,28 @@ const DetailedOrdersReport = () => {
                             variant="outline"
                             size="sm"
                             onClick={() => openOrderDetails(order)}
-                            className="text-xs flex-1 h-8"
+                            className="text-xs flex-1 h-9 font-medium"
                           >
-                            <Eye className="h-3.5 w-3.5 ml-1" />
+                            <Eye className="h-4 w-4 ml-1" />
                             التفاصيل
                           </Button>
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => handleEditOrder(order)}
-                            className="text-xs flex-1 h-8"
+                            className="text-xs flex-1 h-9 font-medium"
                           >
-                            <Edit className="h-3.5 w-3.5 ml-1" />
+                            <Edit className="h-4 w-4 ml-1" />
                             تعديل
                           </Button>
                           <Button
                             variant="outline"
                             size="icon"
                             onClick={() => handleDeleteOrder(order)}
-                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
+                            className="h-9 w-9 text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
                             disabled={deleteOrderMutation.isPending}
                           >
-                            <Trash2 className="h-3.5 w-3.5" />
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                         
@@ -684,52 +684,36 @@ const DetailedOrdersReport = () => {
                             variant="outline"
                             size="sm"
                             onClick={() => openPaymentDialog(order, 'collection')}
-                            className="text-xs flex-1 h-8 border-green-200 text-green-700 hover:bg-green-50 dark:border-green-800 dark:text-green-400 dark:hover:bg-green-950/50"
+                            className="text-xs flex-1 h-9 font-medium border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-950/50"
                           >
-                            <Receipt className="h-3.5 w-3.5 ml-1" />
+                            <Receipt className="h-4 w-4 ml-1" />
                             تحصيل
                           </Button>
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => openPaymentDialog(order, 'cost')}
-                            className="text-xs flex-1 h-8 border-red-200 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/50"
+                            className="text-xs flex-1 h-9 font-medium border-rose-300 text-rose-700 hover:bg-rose-50 dark:border-rose-700 dark:text-rose-400 dark:hover:bg-rose-950/50"
                           >
-                            <DollarSign className="h-3.5 w-3.5 ml-1" />
+                            <DollarSign className="h-4 w-4 ml-1" />
                             تكلفة
                           </Button>
                         </div>
                       </div>
                     </div>
 
-                    {/* Items Summary - Enhanced */}
+                    {/* Items Summary - Simple List */}
                     <div className="mt-3 pt-3 border-t">
                       <div className="text-xs font-medium text-muted-foreground mb-2">المنتجات:</div>
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-xs border-collapse">
-                          <thead>
-                            <tr className="bg-muted/60">
-                              <th className="text-right px-2 py-1.5 font-medium text-muted-foreground rounded-tr-md">المنتج</th>
-                              <th className="text-center px-2 py-1.5 font-medium text-muted-foreground">المقاس</th>
-                              <th className="text-center px-2 py-1.5 font-medium text-muted-foreground">الكمية</th>
-                              <th className="text-center px-2 py-1.5 font-medium text-muted-foreground">السعر</th>
-                              <th className="text-center px-2 py-1.5 font-medium text-muted-foreground rounded-tl-md">الإجمالي</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {order.order_items?.map((item: any, index: number) => (
-                              <tr key={index} className="border-b border-border/30 last:border-0">
-                                <td className="px-2 py-1.5 font-medium">{item.product_type}</td>
-                                <td className="px-2 py-1.5 text-center">
-                                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{item.size}</Badge>
-                                </td>
-                                <td className="px-2 py-1.5 text-center">{item.quantity}</td>
-                                <td className="px-2 py-1.5 text-center">{formatCurrency(item.price)}</td>
-                                <td className="px-2 py-1.5 text-center font-semibold">{formatCurrency(item.price * item.quantity)}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                      <div className="flex flex-wrap gap-2">
+                        {order.order_items?.map((item: any, index: number) => (
+                          <div key={index} className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-1.5 border border-border/50">
+                            <span className="text-sm font-medium">{item.product_type}</span>
+                            <Badge variant="outline" className="text-[11px] font-normal bg-background">{item.size}</Badge>
+                            <span className="text-xs text-muted-foreground">× {item.quantity}</span>
+                            <span className="text-xs font-semibold">{formatCurrency(item.price * item.quantity)}</span>
+                          </div>
+                        ))}
                       </div>
                     </div>
 

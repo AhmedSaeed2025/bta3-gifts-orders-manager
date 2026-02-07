@@ -29,8 +29,8 @@ const statusColors: Record<string, string> = {
   readyForDelivery: 'bg-indigo-100 text-indigo-800 border-indigo-200',
   printing_received: 'bg-indigo-100 text-indigo-800 border-indigo-200',
   shipped: 'bg-cyan-100 text-cyan-800 border-cyan-200',
-  delivered: 'bg-green-100 text-green-800 border-green-200',
-  completed: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+  delivered: 'bg-emerald-100 text-emerald-900 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-200',
+  completed: 'bg-emerald-100 text-emerald-900 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-200',
   cancelled: 'bg-red-100 text-red-800 border-red-200',
   returned: 'bg-gray-100 text-gray-800 border-gray-200'
 };
