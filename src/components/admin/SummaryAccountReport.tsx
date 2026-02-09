@@ -235,10 +235,20 @@ const SummaryAccountReport = () => {
   // Calculate financial summary
   const summary = useMemo(() => {
     // حساب المبيعات من تقرير الطلبات - الإجمالي الكامل شامل الشحن والخصم
-    const totalSales = orders.reduce((sum, order) => {
-      const { total } = calculateOrderFinancials(order);
-      return sum + total;
-    }, 0);
+    let totalSales = 0;
+    let expectedProductionCost = 0;
+    let expectedShippingCost = 0;
+
+    orders.forEach(order => {
+      const financials = calculateOrderFinancials(order);
+      totalSales += financials.total;
+      expectedShippingCost += financials.shipping;
+      // Calculate expected production cost from items
+      const items = order.order_items || [];
+      items.forEach((item: any) => {
+        expectedProductionCost += (Number(item.cost ?? 0)) * (Number(item.quantity ?? 1));
+      });
+    });
     
     const orderCount = orders.length;
 
@@ -295,7 +305,9 @@ const SummaryAccountReport = () => {
       totalManualIncome,
       totalExpenses,
       totalIncome,
-      netProfit
+      netProfit,
+      expectedProductionCost,
+      expectedShippingCost
     };
   }, [orders, transactions]);
 
@@ -572,6 +584,27 @@ const SummaryAccountReport = () => {
                 <span>{formatCurrency(summary.expensesByCategory.other)}</span>
               </div>
             </div>
+            {(summary.expectedProductionCost > 0 || summary.expectedShippingCost > 0) && (
+              <div className="mt-3 pt-3 border-t border-white/20 space-y-1">
+                <p className="text-red-200 text-[10px] font-medium mb-1">المتوقع من الطلبات (للمقارنة):</p>
+                {summary.expectedProductionCost > 0 && (
+                  <div className="flex justify-between text-[11px]">
+                    <span className="text-red-200/80 flex items-center gap-1">
+                      <Wrench className="h-2.5 w-2.5" /> تكلفة إنتاج متوقعة
+                    </span>
+                    <span className="text-red-200/80">{formatCurrency(summary.expectedProductionCost)}</span>
+                  </div>
+                )}
+                {summary.expectedShippingCost > 0 && (
+                  <div className="flex justify-between text-[11px]">
+                    <span className="text-red-200/80 flex items-center gap-1">
+                      <Truck className="h-2.5 w-2.5" /> تكلفة شحن متوقعة
+                    </span>
+                    <span className="text-red-200/80">{formatCurrency(summary.expectedShippingCost)}</span>
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 
