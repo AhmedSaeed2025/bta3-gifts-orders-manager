@@ -34,11 +34,13 @@ import {
   XCircle,
   Edit,
   Receipt,
-  Trash2
+  Trash2,
+  Printer
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
 import OrderPaymentDialog from "./OrderPaymentDialog";
+import InvoiceTemplateSelector from "@/components/invoice/InvoiceTemplateSelector";
 import { toast } from "sonner";
 
 const DetailedOrdersReport = () => {
@@ -56,6 +58,7 @@ const DetailedOrdersReport = () => {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [paymentType, setPaymentType] = useState<'collection' | 'shipping' | 'cost'>('collection');
+  const [invoiceOrder, setInvoiceOrder] = useState<any>(null);
 
   const selectedFinancials = selectedOrder ? calculateOrderFinancials(selectedOrder) : null;
   const statusOptions = getStatusOptions();
@@ -647,7 +650,7 @@ const DetailedOrdersReport = () => {
 
                       {/* Actions */}
                       <div className={`${isMobile ? 'col-span-1' : 'col-span-2'} space-y-2`}>
-                        {/* Row 1: Details, Edit, Delete */}
+                        {/* Row 1: Details, Edit, Invoice, Delete */}
                         <div className="flex gap-1.5">
                           <Button
                             variant="outline"
@@ -666,6 +669,15 @@ const DetailedOrdersReport = () => {
                           >
                             <Edit className="h-4 w-4 ml-1" />
                             تعديل
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setInvoiceOrder(order)}
+                            className="text-xs flex-1 h-9 font-medium border-indigo-300 text-indigo-700 hover:bg-indigo-50 dark:border-indigo-700 dark:text-indigo-400 dark:hover:bg-indigo-950/50"
+                          >
+                            <Printer className="h-4 w-4 ml-1" />
+                            فاتورة
                           </Button>
                           <Button
                             variant="outline"
@@ -860,6 +872,36 @@ const DetailedOrdersReport = () => {
         paymentType={paymentType}
         onConfirm={handlePayment}
       />
+
+      {/* Invoice Dialog */}
+      <Dialog open={!!invoiceOrder} onOpenChange={(open) => !open && setInvoiceOrder(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
+          {invoiceOrder && (
+            <InvoiceTemplateSelector 
+              order={{
+                ...invoiceOrder,
+                clientName: invoiceOrder.client_name,
+                phone: invoiceOrder.phone,
+                address: invoiceOrder.address,
+                dateCreated: invoiceOrder.date_created,
+                deliveryMethod: invoiceOrder.delivery_method,
+                paymentMethod: invoiceOrder.payment_method,
+                shippingCost: invoiceOrder.shipping_cost,
+                items: invoiceOrder.order_items?.map((item: any) => ({
+                  productType: item.product_type,
+                  size: item.size,
+                  quantity: item.quantity,
+                  price: item.price,
+                  cost: item.cost,
+                  profit: item.profit,
+                  item_discount: item.item_discount
+                })) || []
+              }}
+              onClose={() => setInvoiceOrder(null)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
