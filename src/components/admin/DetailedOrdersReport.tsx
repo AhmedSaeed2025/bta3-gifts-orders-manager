@@ -535,20 +535,21 @@ const DetailedOrdersReport = () => {
               const orderCost = total - (order.profit || 0) - shipping;
               
               return (
-                <Card key={order.id} className="border-l-4 border-l-primary">
-                  <CardContent className="p-4">
-                    <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-12'}`}>
-                      {/* Order Info */}
-                      <div className={`${isMobile ? 'col-span-1' : 'col-span-3'} space-y-2`}>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <Badge variant="outline" className="text-xs">
+                <Card key={order.id} className="border-l-4 border-l-primary overflow-hidden">
+                  <CardContent className="p-0">
+                    {/* Top Section: Header + Actions */}
+                    <div className={`flex ${isMobile ? 'flex-col' : 'flex-row items-start justify-between'} gap-3 p-4 pb-3`}>
+                      {/* Left: Order header info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-2">
+                          <Badge variant="outline" className="text-xs font-mono">
                             {order.serial}
                           </Badge>
                           <Select 
                             value={order.status} 
                             onValueChange={(value) => handleStatusChange(order.id, order.serial, value)}
                           >
-                            <SelectTrigger className={`h-7 w-auto min-w-[90px] text-xs ${getStatusColor(order.status)}`}>
+                            <SelectTrigger className={`h-7 w-auto min-w-[100px] text-xs ${getStatusColor(order.status)}`}>
                               <SelectValue>{getStatusLabel(order.status)}</SelectValue>
                             </SelectTrigger>
                             <SelectContent>
@@ -560,180 +561,99 @@ const DetailedOrdersReport = () => {
                             </SelectContent>
                           </Select>
                         </div>
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-1 text-sm">
-                            <User className="h-3 w-3" />
-                            <span className="font-medium">{order.client_name}</span>
-                          </div>
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+                          <span className="flex items-center gap-1 font-medium">
+                            <User className="h-3.5 w-3.5 text-muted-foreground" />
+                            {order.client_name}
+                          </span>
+                          <span className="flex items-center gap-1 text-muted-foreground text-xs">
                             <Phone className="h-3 w-3" />
-                            <span>{order.phone}</span>
-                          </div>
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                            {order.phone}
+                          </span>
+                          <span className="flex items-center gap-1 text-muted-foreground text-xs">
                             <Calendar className="h-3 w-3" />
-                            <span>{new Date(order.date_created).toLocaleDateString('ar-EG')}</span>
-                          </div>
+                            {new Date(order.date_created).toLocaleDateString('ar-EG')}
+                          </span>
                         </div>
                       </div>
 
-                      {/* Financial Info - Enhanced */}
-                      <div className={`${isMobile ? 'col-span-1' : 'col-span-4'}`}>
-                        <div className="space-y-3">
-                          {/* Main Financial Row */}
-                          <div className="grid grid-cols-2 gap-3 text-sm">
-                            <div className="space-y-0.5">
-                              <div className="text-xs text-muted-foreground">المبلغ الإجمالي</div>
-                              <div className="font-bold text-green-600">{formatCurrency(total)}</div>
-                            </div>
-                            <div className="space-y-0.5">
-                              <div className="text-xs text-muted-foreground">الربح</div>
-                              <div className="font-bold text-blue-600">{formatCurrency(order.profit || 0)}</div>
-                            </div>
-                            <div className="space-y-0.5">
-                              <div className="text-xs text-muted-foreground">العربون</div>
-                              <div className="font-bold text-purple-600">{formatCurrency(-paid)}</div>
-                            </div>
-                            <div className="space-y-0.5">
-                              <div className="text-xs text-muted-foreground">المتبقي</div>
-                              <div className="font-bold text-orange-600">{formatCurrency(remaining)}</div>
-                            </div>
-                          </div>
-                          
-                          {/* Cost Breakdown - Professional Summary */}
-                          <div className="bg-muted/50 rounded-md p-2 border border-border/50">
-                            <div className="text-[10px] text-muted-foreground font-medium mb-1.5">ملخص التكاليف</div>
-                            <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px]">
-                              <div className="flex items-center gap-1">
-                                <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-                                <span className="text-muted-foreground">التكلفة:</span>
-                                <span className="font-semibold text-red-600">{formatCurrency(orderCost)}</span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <span className="w-1.5 h-1.5 rounded-full bg-orange-500"></span>
-                                <span className="text-muted-foreground">الشحن:</span>
-                                <span className="font-semibold text-orange-600">{formatCurrency(shipping)}</span>
-                              </div>
-                              {discount > 0 && (
-                                <div className="flex items-center gap-1">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-pink-500"></span>
-                                  <span className="text-muted-foreground">خصم:</span>
-                                  <span className="font-semibold text-pink-600">-{formatCurrency(discount)}</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Delivery Info */}
-                      <div className={`${isMobile ? 'col-span-1' : 'col-span-3'} space-y-2`}>
-                        <div className="flex items-center gap-1 text-sm">
-                          <CreditCard className="h-3 w-3" />
-                          <span className="text-xs">{order.payment_method}</span>
-                        </div>
-                        <div className="flex items-center gap-1 text-sm">
-                          <Truck className="h-3 w-3" />
-                          <span className="text-xs">{order.delivery_method}</span>
-                        </div>
-                        {shipping > 0 && (
-                          <div className="text-xs text-muted-foreground">
-                            شحن: {formatCurrency(shipping)}
-                          </div>
-                        )}
-                        {order.governorate && (
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <MapPin className="h-3 w-3" />
-                            <span>{order.governorate}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Actions */}
-                      <div className={`${isMobile ? 'col-span-1' : 'col-span-2'} space-y-2`}>
-                        {/* Row 1: Details, Edit, Invoice, Delete */}
-                        <div className="flex gap-1.5">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => openOrderDetails(order)}
-                            className="text-xs flex-1 h-9 font-medium"
-                          >
-                            <Eye className="h-4 w-4 ml-1" />
-                            التفاصيل
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEditOrder(order)}
-                            className="text-xs flex-1 h-9 font-medium"
-                          >
-                            <Edit className="h-4 w-4 ml-1" />
-                            تعديل
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setInvoiceOrder(order)}
-                            className="text-xs flex-1 h-9 font-medium border-indigo-300 text-indigo-700 hover:bg-indigo-50 dark:border-indigo-700 dark:text-indigo-400 dark:hover:bg-indigo-950/50"
-                          >
-                            <Printer className="h-4 w-4 ml-1" />
-                            فاتورة
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handleDeleteOrder(order)}
-                            className="h-9 w-9 text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
-                            disabled={deleteOrderMutation.isPending}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        
-                        {/* Row 2: Payment Actions */}
-                        <div className="flex gap-1.5">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => openPaymentDialog(order, 'collection')}
-                            className="text-xs flex-1 h-9 font-medium border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-950/50"
-                          >
-                            <Receipt className="h-4 w-4 ml-1" />
-                            تحصيل
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => openPaymentDialog(order, 'cost')}
-                            className="text-xs flex-1 h-9 font-medium border-rose-300 text-rose-700 hover:bg-rose-50 dark:border-rose-700 dark:text-rose-400 dark:hover:bg-rose-950/50"
-                          >
-                            <DollarSign className="h-4 w-4 ml-1" />
-                            تكلفة
-                          </Button>
-                        </div>
+                      {/* Right: Action Buttons */}
+                      <div className={`flex flex-wrap gap-1.5 ${isMobile ? 'w-full' : 'shrink-0'}`}>
+                        <Button variant="outline" size="sm" onClick={() => openOrderDetails(order)} className="text-xs h-8 gap-1 font-medium">
+                          <Eye className="h-3.5 w-3.5" /> التفاصيل
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => handleEditOrder(order)} className="text-xs h-8 gap-1 font-medium">
+                          <Edit className="h-3.5 w-3.5" /> تعديل
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => setInvoiceOrder(order)} className="text-xs h-8 gap-1 font-medium border-indigo-300 text-indigo-700 hover:bg-indigo-50 dark:border-indigo-700 dark:text-indigo-400 dark:hover:bg-indigo-950/50">
+                          <Printer className="h-3.5 w-3.5" /> فاتورة
+                        </Button>
+                        <Button variant="outline" size="icon" onClick={() => handleDeleteOrder(order)} className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10" disabled={deleteOrderMutation.isPending}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => openPaymentDialog(order, 'collection')} className="text-xs h-8 gap-1 font-medium border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-950/50">
+                          <Receipt className="h-3.5 w-3.5" /> تحصيل
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => openPaymentDialog(order, 'cost')} className="text-xs h-8 gap-1 font-medium border-rose-300 text-rose-700 hover:bg-rose-50 dark:border-rose-700 dark:text-rose-400 dark:hover:bg-rose-950/50">
+                          <DollarSign className="h-3.5 w-3.5" /> تكلفة
+                        </Button>
                       </div>
                     </div>
 
-                    {/* Items Summary - Simple List */}
-                    <div className="mt-3 pt-3 border-t">
-                      <div className="text-xs font-medium text-muted-foreground mb-2">المنتجات:</div>
+                    {/* Middle Section: Financial + Delivery */}
+                    <div className={`grid gap-4 px-4 pb-3 ${isMobile ? 'grid-cols-2' : 'grid-cols-5'}`}>
+                      <div className="text-center p-2 bg-muted/30 rounded-lg">
+                        <div className="text-[10px] text-muted-foreground mb-0.5">الإجمالي</div>
+                        <div className="font-bold text-sm text-green-600 dark:text-green-400">{formatCurrency(total)}</div>
+                      </div>
+                      <div className="text-center p-2 bg-muted/30 rounded-lg">
+                        <div className="text-[10px] text-muted-foreground mb-0.5">الربح</div>
+                        <div className="font-bold text-sm text-blue-600 dark:text-blue-400">{formatCurrency(order.profit || 0)}</div>
+                      </div>
+                      <div className="text-center p-2 bg-muted/30 rounded-lg">
+                        <div className="text-[10px] text-muted-foreground mb-0.5">المدفوع</div>
+                        <div className="font-bold text-sm text-purple-600 dark:text-purple-400">{formatCurrency(paid)}</div>
+                      </div>
+                      <div className="text-center p-2 bg-muted/30 rounded-lg">
+                        <div className="text-[10px] text-muted-foreground mb-0.5">المتبقي</div>
+                        <div className={`font-bold text-sm ${remaining > 0 ? 'text-orange-600 dark:text-orange-400' : 'text-muted-foreground'}`}>{formatCurrency(remaining)}</div>
+                      </div>
+                      <div className={`${isMobile ? 'col-span-2' : ''} flex items-center justify-center gap-3 text-xs text-muted-foreground p-2 bg-muted/30 rounded-lg`}>
+                        <span className="flex items-center gap-1"><CreditCard className="h-3 w-3" />{order.payment_method}</span>
+                        <span className="flex items-center gap-1"><Truck className="h-3 w-3" />{order.delivery_method}</span>
+                        {order.governorate && <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{order.governorate}</span>}
+                      </div>
+                    </div>
+
+                    {/* Cost Summary Bar */}
+                    <div className="px-4 pb-3">
+                      <div className="flex flex-wrap items-center gap-3 text-[11px] bg-muted/40 rounded-md px-3 py-1.5 border border-border/40">
+                        <span className="text-[10px] font-medium text-muted-foreground">التكاليف:</span>
+                        <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-red-500"></span> التكلفة: <b className="text-red-600 dark:text-red-400">{formatCurrency(orderCost)}</b></span>
+                        <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-orange-500"></span> الشحن: <b className="text-orange-600 dark:text-orange-400">{formatCurrency(shipping)}</b></span>
+                        {discount > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-pink-500"></span> خصم: <b className="text-pink-600 dark:text-pink-400">-{formatCurrency(discount)}</b></span>}
+                      </div>
+                    </div>
+
+                    {/* Bottom Section: Products + Notes */}
+                    <div className="border-t px-4 py-3 bg-muted/20">
+                      <div className="text-[10px] font-medium text-muted-foreground mb-2">المنتجات:</div>
                       <div className="flex flex-wrap gap-2">
                         {order.order_items?.map((item: any, index: number) => (
-                          <div key={index} className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-1.5 border border-border/50">
-                            <span className="text-sm font-medium">{item.product_type}</span>
-                            <Badge variant="outline" className="text-[11px] font-normal bg-background">{item.size}</Badge>
-                            <span className="text-xs text-muted-foreground">× {item.quantity}</span>
-                            <span className="text-xs font-semibold">{formatCurrency(item.price * item.quantity)}</span>
+                          <div key={index} className="flex items-center gap-1.5 bg-background rounded-md px-2.5 py-1 border text-sm">
+                            <span className="font-medium">{item.product_type}</span>
+                            <Badge variant="secondary" className="text-[10px] h-5 font-normal">{item.size}</Badge>
+                            <span className="text-muted-foreground text-xs">×{item.quantity}</span>
+                            <span className="font-semibold text-xs">{formatCurrency(item.price * item.quantity)}</span>
                           </div>
                         ))}
                       </div>
+                      {order.notes && (
+                        <div className="mt-2 text-xs text-muted-foreground bg-background/60 p-2 rounded-md border border-border/30">
+                          {order.notes}
+                        </div>
+                      )}
                     </div>
-
-                    {order.notes && (
-                      <div className="mt-2 pt-2 border-t">
-                        <div className="text-xs text-muted-foreground bg-muted/40 p-2 rounded-md">{order.notes}</div>
-                      </div>
-                    )}
                   </CardContent>
                 </Card>
               );
