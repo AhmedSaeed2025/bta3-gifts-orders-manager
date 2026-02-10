@@ -4,8 +4,7 @@ import { calculateOrderFinancials } from '@/lib/orderFinancials';
 import { useOrderStatuses } from '@/hooks/useOrderStatuses';
 import { Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import html2canvas from 'html2canvas';
-import { toast } from 'sonner';
+import { captureInvoiceScreenshot } from '@/lib/invoiceScreenshot';
 
 interface InvoiceTemplateProps {
   order: any;
@@ -19,18 +18,9 @@ const MinimalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, storeSe
 
   const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString('ar-EG');
 
-  const handleScreenshot = async () => {
+  const handleScreenshot = () => {
     if (!invoiceRef.current) return;
-    try {
-      const canvas = await html2canvas(invoiceRef.current, {
-        scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false, allowTaint: true,
-      });
-      const link = document.createElement('a');
-      link.download = `فاتورة-${order.serial}.png`;
-      link.href = canvas.toDataURL('image/png', 1.0);
-      link.click();
-      toast.success('تم حفظ صورة الفاتورة');
-    } catch { toast.error('حدث خطأ أثناء حفظ الصورة'); }
+    captureInvoiceScreenshot(invoiceRef.current, order.serial);
   };
 
   return (
