@@ -4,8 +4,7 @@ import { calculateOrderFinancials } from '@/lib/orderFinancials';
 import { useOrderStatuses } from '@/hooks/useOrderStatuses';
 import { Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import html2canvas from 'html2canvas';
-import { toast } from 'sonner';
+import { captureInvoiceScreenshot } from '@/lib/invoiceScreenshot';
 
 interface InvoiceTemplateProps {
   order: any;
@@ -22,39 +21,9 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
     return date.toLocaleDateString('ar-EG');
   };
 
-  const handleScreenshot = async () => {
+  const handleScreenshot = () => {
     if (!invoiceRef.current) return;
-    
-    try {
-      const element = invoiceRef.current;
-      
-      // Force a reflow to ensure proper rendering
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        logging: false,
-        allowTaint: true,
-        scrollX: 0,
-        scrollY: 0,
-        x: 0,
-        y: 0,
-      });
-      
-      // Create download link
-      const link = document.createElement('a');
-      link.download = `فاتورة-${order.serial}.png`;
-      link.href = canvas.toDataURL('image/png', 1.0);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      toast.success('تم حفظ صورة الفاتورة');
-    } catch (error) {
-      console.error('Screenshot error:', error);
-      toast.error('حدث خطأ أثناء حفظ الصورة');
-    }
+    captureInvoiceScreenshot(invoiceRef.current, order.serial);
   };
 
   return (
