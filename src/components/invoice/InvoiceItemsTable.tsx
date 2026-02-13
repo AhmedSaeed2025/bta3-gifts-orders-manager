@@ -33,7 +33,7 @@ const InvoiceItemsTable = ({ items }: InvoiceItemsTableProps) => {
               <div className="flex justify-between items-start mb-2 sm:mb-3">
                 <h4 className="font-bold text-sm sm:text-base text-gray-800">{item.product_type}</h4>
                 <span className="text-sm sm:text-base lg:text-lg font-bold text-green-600">
-                  {formatCurrency(item.quantity * item.price - item.item_discount)}
+                  {formatCurrency((item.price - item.item_discount) * item.quantity)}
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-2 sm:gap-3 text-xs sm:text-sm">
@@ -84,7 +84,7 @@ const InvoiceItemsTable = ({ items }: InvoiceItemsTableProps) => {
                     {item.item_discount > 0 ? `-${formatCurrency(item.item_discount)}` : '-'}
                   </td>
                   <td className="p-3 sm:p-4 font-bold text-xs sm:text-sm lg:text-base text-green-600">
-                    {formatCurrency(item.quantity * item.price - item.item_discount)}
+                    {formatCurrency((item.price - item.item_discount) * item.quantity)}
                   </td>
                 </tr>
               ))}

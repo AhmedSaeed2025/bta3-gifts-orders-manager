@@ -16,9 +16,10 @@ export function calculateOrderFinancials(order: OrderLike) {
     const itemDiscount = Number(item?.item_discount ?? 0);
     const explicitTotal = item?.total_price;
 
+    // item_discount is a PER-PIECE discount, so: (unit - itemDiscount) * qty
     const itemTotal = explicitTotal != null
       ? Number(explicitTotal)
-      : unit * qty - itemDiscount;
+      : (unit - itemDiscount) * qty;
 
     return sum + itemTotal;
   }, 0);
