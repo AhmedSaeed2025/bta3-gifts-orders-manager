@@ -639,14 +639,20 @@ const DetailedOrdersReport = () => {
                     <div className="border-t px-4 py-3 bg-muted/20">
                       <div className="text-[10px] font-medium text-muted-foreground mb-2">المنتجات:</div>
                       <div className="flex flex-wrap gap-2">
-                        {order.order_items?.map((item: any, index: number) => (
-                          <div key={index} className="flex items-center gap-1.5 bg-background rounded-md px-2.5 py-1 border text-sm">
-                            <span className="font-medium">{item.product_type}</span>
-                            <Badge variant="secondary" className="text-[10px] h-5 font-normal">{item.size}</Badge>
-                            <span className="text-muted-foreground text-xs">×{item.quantity}</span>
-                            <span className="font-semibold text-xs">{formatCurrency(item.price * item.quantity)}</span>
-                          </div>
-                        ))}
+                        {order.order_items?.map((item: any, index: number) => {
+                          const itemTotal = (item.price - (item.item_discount || 0)) * item.quantity;
+                          return (
+                            <div key={index} className="flex items-center gap-1.5 bg-background rounded-md px-2.5 py-1 border text-sm">
+                              <span className="font-medium">{item.product_type}</span>
+                              <Badge variant="secondary" className="text-[10px] h-5 font-normal">{item.size}</Badge>
+                              <span className="text-muted-foreground text-xs">×{item.quantity}</span>
+                              {item.item_discount > 0 && (
+                                <Badge variant="outline" className="text-[10px] h-5 font-normal text-red-600 border-red-200">-{formatCurrency(item.item_discount)}/قطعة</Badge>
+                              )}
+                              <span className="font-semibold text-xs">{formatCurrency(itemTotal)}</span>
+                            </div>
+                          );
+                        })}
                       </div>
                       {order.notes && (
                         <div className="mt-2 text-xs text-muted-foreground bg-background/60 p-2 rounded-md border border-border/30">
@@ -710,18 +716,24 @@ const DetailedOrdersReport = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {selectedOrder.order_items?.map((item: any, index: number) => (
-                      <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                        <div>
-                          <p className="font-medium">{item.product_type}</p>
-                          <p className="text-sm text-muted-foreground">المقاس: {item.size} | الكمية: {item.quantity}</p>
+                    {selectedOrder.order_items?.map((item: any, index: number) => {
+                      const itemTotal = (item.price - (item.item_discount || 0)) * item.quantity;
+                      return (
+                        <div key={index} className="flex justify-between items-center p-3 bg-muted/30 rounded-lg">
+                          <div>
+                            <p className="font-medium">{item.product_type}</p>
+                            <p className="text-sm text-muted-foreground">المقاس: {item.size} | الكمية: {item.quantity} | السعر: {formatCurrency(item.price)}</p>
+                            {item.item_discount > 0 && (
+                              <p className="text-sm text-red-600">خصم القطعة: -{formatCurrency(item.item_discount)}</p>
+                            )}
+                          </div>
+                          <div className="text-right">
+                            <p className="font-bold">{formatCurrency(itemTotal)}</p>
+                            <p className="text-sm text-muted-foreground">ربح: {formatCurrency(item.profit || 0)}</p>
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <p className="font-bold">{formatCurrency(item.price * item.quantity)}</p>
-                          <p className="text-sm text-muted-foreground">ربح: {formatCurrency(item.profit || 0)}</p>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>
