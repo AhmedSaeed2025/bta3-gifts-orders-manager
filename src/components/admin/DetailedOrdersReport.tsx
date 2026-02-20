@@ -677,59 +677,121 @@ const DetailedOrdersReport = () => {
 
       {/* Order Details Dialog */}
       <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>تفاصيل الطلب - {selectedOrder?.serial}</DialogTitle>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="border-b pb-4">
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                <FileText className="h-5 w-5 text-primary" />
+                تفاصيل الطلب
+              </DialogTitle>
+              {selectedOrder && (
+                <Badge variant="outline" className="text-base font-mono px-3 py-1">
+                  {selectedOrder.serial}
+                </Badge>
+              )}
+            </div>
           </DialogHeader>
           
           {selectedOrder && (
-            <div className="space-y-6">
+            <div className="space-y-4 pt-2">
+
+              {/* Order Status + Date Bar */}
+              <div className="flex flex-wrap items-center justify-between gap-2 px-1">
+                <div className="flex items-center gap-2">
+                  {getStatusIcon(selectedOrder.status)}
+                  <Badge className={`${getStatusColor(selectedOrder.status)} text-white text-sm px-3`}>
+                    {getStatusLabel(selectedOrder.status)}
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <Calendar className="h-4 w-4" />
+                  {new Date(selectedOrder.date_created).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' })}
+                </div>
+              </div>
+
               {/* Customer Info */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">بيانات العميل</CardTitle>
+              <Card className="border-2 border-primary/10">
+                <CardHeader className="py-3 px-4 bg-primary/5 rounded-t-lg">
+                  <CardTitle className="text-base font-semibold flex items-center gap-2">
+                    <User className="h-4 w-4 text-primary" />
+                    بيانات العميل
+                  </CardTitle>
                 </CardHeader>
-                <CardContent className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium">الاسم</label>
-                    <p className="text-sm">{selectedOrder.client_name}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">الهاتف</label>
-                    <p className="text-sm">{selectedOrder.phone}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">المحافظة</label>
-                    <p className="text-sm">{selectedOrder.governorate || '-'}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">العنوان</label>
-                    <p className="text-sm">{selectedOrder.address || '-'}</p>
+                <CardContent className="p-4">
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-0.5">الاسم</p>
+                      <p className="font-semibold text-sm">{selectedOrder.client_name}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-0.5">الهاتف</p>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-semibold text-sm flex items-center gap-1">
+                          <Phone className="h-3 w-3 text-primary" />
+                          {selectedOrder.phone}
+                        </span>
+                        {selectedOrder.phone2 && (
+                          <span className="font-semibold text-sm flex items-center gap-1 text-muted-foreground">
+                            <Phone className="h-3 w-3 text-muted-foreground" />
+                            {selectedOrder.phone2}
+                            <Badge variant="secondary" className="text-[10px] h-4 px-1">إضافي</Badge>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    {selectedOrder.governorate && selectedOrder.governorate !== '-' && (
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-0.5">المحافظة</p>
+                        <p className="font-semibold text-sm flex items-center gap-1">
+                          <MapPin className="h-3 w-3 text-primary" />
+                          {selectedOrder.governorate}
+                        </p>
+                      </div>
+                    )}
+                    {selectedOrder.address && selectedOrder.address !== '-' && (
+                      <div className={!selectedOrder.governorate || selectedOrder.governorate === '-' ? 'col-span-2' : ''}>
+                        <p className="text-xs text-muted-foreground mb-0.5">العنوان</p>
+                        <p className="font-semibold text-sm leading-relaxed">{selectedOrder.address}</p>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Order Items */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">المنتجات</CardTitle>
+              {/* Products */}
+              <Card className="border-2 border-blue-100 dark:border-blue-900/40">
+                <CardHeader className="py-3 px-4 bg-blue-50 dark:bg-blue-950/30 rounded-t-lg">
+                  <CardTitle className="text-base font-semibold flex items-center gap-2">
+                    <Package className="h-4 w-4 text-blue-600" />
+                    المنتجات
+                    <Badge variant="secondary" className="mr-auto text-xs">
+                      {selectedOrder.order_items?.length || 0} صنف
+                    </Badge>
+                  </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
+                <CardContent className="p-4">
+                  <div className="space-y-2">
                     {selectedOrder.order_items?.map((item: any, index: number) => {
-                      const itemTotal = (item.price - (item.item_discount || 0)) * item.quantity;
+                      const discountedPrice = item.price - (item.item_discount || 0);
+                      const itemTotal = discountedPrice * item.quantity;
                       return (
-                        <div key={index} className="flex justify-between items-center p-3 bg-muted/30 rounded-lg">
-                          <div>
-                            <p className="font-medium">{item.product_type}</p>
-                            <p className="text-sm text-muted-foreground">المقاس: {item.size} | الكمية: {item.quantity} | السعر: {formatCurrency(item.price)}</p>
-                            {item.item_discount > 0 && (
-                              <p className="text-sm text-red-600">خصم القطعة: -{formatCurrency(item.item_discount)}</p>
-                            )}
+                        <div key={index} className="flex items-start justify-between p-3 bg-muted/30 rounded-lg border border-border/40 hover:bg-muted/50 transition-colors">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-sm">{item.product_type}</p>
+                            <div className="flex flex-wrap items-center gap-2 mt-1">
+                              <Badge variant="outline" className="text-[10px] h-5">{item.size}</Badge>
+                              <span className="text-xs text-muted-foreground">× {item.quantity}</span>
+                              <span className="text-xs text-muted-foreground">سعر الوحدة: {formatCurrency(item.price)}</span>
+                              {item.item_discount > 0 && (
+                                <Badge variant="outline" className="text-[10px] h-5 text-red-600 border-red-200 bg-red-50">
+                                  خصم: -{formatCurrency(item.item_discount)}/قطعة
+                                </Badge>
+                              )}
+                            </div>
                           </div>
-                          <div className="text-right">
-                            <p className="font-bold">{formatCurrency(itemTotal)}</p>
-                            <p className="text-sm text-muted-foreground">ربح: {formatCurrency(item.profit || 0)}</p>
+                          <div className="text-right shrink-0 ml-3">
+                            <p className="font-bold text-sm">{formatCurrency(itemTotal)}</p>
+                            <p className="text-[11px] text-muted-foreground">ربح: {formatCurrency(item.profit || 0)}</p>
                           </div>
                         </div>
                       );
@@ -739,55 +801,86 @@ const DetailedOrdersReport = () => {
               </Card>
 
               {/* Financial Summary */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">الملخص المالي</CardTitle>
+              <Card className="border-2 border-green-100 dark:border-green-900/40">
+                <CardHeader className="py-3 px-4 bg-green-50 dark:bg-green-950/30 rounded-t-lg">
+                  <CardTitle className="text-base font-semibold flex items-center gap-2">
+                    <DollarSign className="h-4 w-4 text-green-600" />
+                    الملخص المالي
+                  </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span>المجموع الفرعي:</span>
-                        <span>{formatCurrency(selectedFinancials?.subtotal ?? 0)}</span>
+                <CardContent className="p-4">
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between items-center py-1.5 border-b border-dashed border-border/50">
+                      <span className="text-muted-foreground">المجموع الفرعي</span>
+                      <span className="font-semibold">{formatCurrency(selectedFinancials?.subtotal ?? 0)}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-1.5 border-b border-dashed border-border/50">
+                      <span className="text-muted-foreground flex items-center gap-1"><Truck className="h-3 w-3" />الشحن</span>
+                      <span className="font-semibold text-orange-600">+{formatCurrency(selectedFinancials?.shipping ?? 0)}</span>
+                    </div>
+                    {(selectedFinancials?.discount ?? 0) > 0 && (
+                      <div className="flex justify-between items-center py-1.5 border-b border-dashed border-border/50">
+                        <span className="text-muted-foreground">الخصم</span>
+                        <span className="font-semibold text-pink-600">-{formatCurrency(selectedFinancials?.discount ?? 0)}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span>الشحن:</span>
-                        <span>{formatCurrency(selectedFinancials?.shipping ?? 0)}</span>
+                    )}
+                    <div className="flex justify-between items-center py-2 bg-muted/40 rounded-lg px-3 mt-1">
+                      <span className="font-bold">الإجمالي</span>
+                      <span className="font-bold text-base text-foreground">{formatCurrency(selectedFinancials?.total ?? 0)}</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 pt-1">
+                      <div className="flex justify-between items-center py-1.5 bg-green-50 dark:bg-green-950/30 rounded-lg px-3">
+                        <span className="text-muted-foreground text-xs">العربون المسدد</span>
+                        <span className="font-semibold text-green-600">{formatCurrency(selectedFinancials?.paid ?? 0)}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span>الخصم:</span>
-                        <span>{formatCurrency(selectedFinancials?.discount ?? 0)}</span>
-                      </div>
-                      <div className="flex justify-between font-bold border-t pt-2">
-                        <span>الإجمالي:</span>
-                        <span>{formatCurrency(selectedFinancials?.total ?? 0)}</span>
+                      <div className="flex justify-between items-center py-1.5 bg-orange-50 dark:bg-orange-950/30 rounded-lg px-3">
+                        <span className="text-muted-foreground text-xs">المتبقي</span>
+                        <span className="font-semibold text-orange-600">{formatCurrency(selectedFinancials?.remaining ?? 0)}</span>
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span>العربون المسدد:</span>
-                        <span className="text-green-600">{formatCurrency(-(selectedFinancials?.paid ?? 0))}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>المتبقي:</span>
-                        <span className="text-orange-600">{formatCurrency(selectedFinancials?.remaining ?? 0)}</span>
-                      </div>
-                      <div className="flex justify-between font-bold border-t pt-2">
-                        <span>صافي الربح:</span>
-                        <span className="text-blue-600">{formatCurrency(selectedOrder.profit || 0)}</span>
-                      </div>
+                    <div className="flex justify-between items-center py-2 bg-blue-50 dark:bg-blue-950/30 rounded-lg px-3">
+                      <span className="font-bold flex items-center gap-1"><TrendingUp className="h-4 w-4 text-blue-600" />صافي الربح</span>
+                      <span className="font-bold text-base text-blue-600">{formatCurrency(selectedOrder.profit || 0)}</span>
+                    </div>
+                  </div>
+
+                  {/* Payment + Delivery Methods */}
+                  <div className="mt-3 pt-3 border-t border-dashed border-border/50 flex flex-wrap gap-3">
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/40 rounded-md px-3 py-1.5">
+                      <CreditCard className="h-3.5 w-3.5" />
+                      <span className="font-medium">{selectedOrder.payment_method}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/40 rounded-md px-3 py-1.5">
+                      <Truck className="h-3.5 w-3.5" />
+                      <span className="font-medium">{selectedOrder.delivery_method}</span>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
+              {/* Notes */}
               {selectedOrder.notes && (
+                <Card className="border-2 border-yellow-100 dark:border-yellow-900/40">
+                  <CardContent className="py-3 px-4">
+                    <p className="text-xs font-semibold text-muted-foreground mb-1.5 flex items-center gap-1">
+                      <AlertCircle className="h-3.5 w-3.5 text-yellow-600" />
+                      ملاحظات
+                    </p>
+                    <p className="text-sm leading-relaxed">{selectedOrder.notes}</p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Attached Image */}
+              {selectedOrder.attached_image_url && (
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">ملاحظات</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm">{selectedOrder.notes}</p>
+                  <CardContent className="p-4">
+                    <p className="text-xs font-semibold text-muted-foreground mb-2">الصورة المرفقة</p>
+                    <img
+                      src={selectedOrder.attached_image_url}
+                      alt="صورة مرفقة"
+                      className="max-w-full h-auto max-h-48 rounded-lg border object-contain"
+                    />
                   </CardContent>
                 </Card>
               )}
