@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Settings, Palette, Truck, CreditCard, FileText, Save, Star, ImageIcon, ListOrdered } from 'lucide-react';
+import { Loader2, Settings, Palette, Truck, CreditCard, FileText, Save, Star, ImageIcon, ListOrdered, PackageCheck } from 'lucide-react';
 import { Facebook } from 'lucide-react';
 
 // Import the component modules
@@ -17,6 +17,7 @@ import PolicySettings from '@/components/admin/settings/PolicySettings';
 import SocialMediaSettings from '@/components/admin/settings/SocialMediaSettings';
 import CustomerReviewsSettings from '@/components/admin/settings/CustomerReviewsSettings';
 import OrderStatusSettings from '@/components/admin/settings/OrderStatusSettings';
+import DeliveryMethodsSettings from '@/components/admin/settings/DeliveryMethodsSettings';
 
 // Import the custom hooks
 import { useAdminSettings } from '@/hooks/useAdminSettings';
@@ -103,7 +104,7 @@ const AdminSettings = () => {
       </div>
 
       <Tabs defaultValue="general" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-9">
+        <TabsList className="grid w-full grid-cols-10">
           <TabsTrigger value="general" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             عام
@@ -135,6 +136,10 @@ const AdminSettings = () => {
           <TabsTrigger value="order-status" className="flex items-center gap-2">
             <ListOrdered className="h-4 w-4" />
             حالات الطلبات
+          </TabsTrigger>
+          <TabsTrigger value="delivery-methods" className="flex items-center gap-2">
+            <PackageCheck className="h-4 w-4" />
+            طرق التوصيل
           </TabsTrigger>
           <TabsTrigger value="policies" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
@@ -206,6 +211,10 @@ const AdminSettings = () => {
 
         <TabsContent value="order-status">
           <OrderStatusSettings />
+        </TabsContent>
+
+        <TabsContent value="delivery-methods">
+          <DeliveryMethodsSettings />
         </TabsContent>
 
         <TabsContent value="policies">

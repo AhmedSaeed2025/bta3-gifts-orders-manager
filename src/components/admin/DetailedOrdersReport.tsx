@@ -35,7 +35,9 @@ import {
   Edit,
   Receipt,
   Trash2,
-  Printer
+  Printer,
+  Copy,
+  Check
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
@@ -50,6 +52,7 @@ const DetailedOrdersReport = () => {
   const queryClient = useQueryClient();
   const { getStatusOptions, getStatusLabel, getStatusColor } = useOrderStatuses();
   const { startDate, endDate } = useDateFilter();
+  const [copiedField, setCopiedField] = useState<string | null>(null);
   
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilters, setStatusFilters] = useState<string[]>([]);
@@ -62,6 +65,14 @@ const DetailedOrdersReport = () => {
 
   const selectedFinancials = selectedOrder ? calculateOrderFinancials(selectedOrder) : null;
   const statusOptions = getStatusOptions();
+
+  const copyToClipboard = (text: string, fieldKey: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedField(fieldKey);
+      toast.success('تم النسخ');
+      setTimeout(() => setCopiedField(null), 2000);
+    });
+  };
 
   // Fetch orders data
   const { data: orders = [], isLoading, refetch } = useQuery({
@@ -721,7 +732,12 @@ const DetailedOrdersReport = () => {
                   <div className="grid grid-cols-2 gap-x-6 gap-y-3">
                     <div>
                       <p className="text-xs text-muted-foreground mb-0.5">الاسم</p>
-                      <p className="font-semibold text-sm">{selectedOrder.client_name}</p>
+                      <div className="flex items-center gap-1">
+                        <p className="font-semibold text-sm">{selectedOrder.client_name}</p>
+                        <button onClick={() => copyToClipboard(selectedOrder.client_name, 'name')} className="p-1 rounded hover:bg-muted transition-colors" title="نسخ">
+                          {copiedField === 'name' ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3 text-muted-foreground" />}
+                        </button>
+                      </div>
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground mb-0.5">الهاتف</p>
@@ -729,11 +745,17 @@ const DetailedOrdersReport = () => {
                         <span className="font-semibold text-sm flex items-center gap-1">
                           <Phone className="h-3 w-3 text-primary" />
                           {selectedOrder.phone}
+                          <button onClick={() => copyToClipboard(selectedOrder.phone, 'phone')} className="p-1 rounded hover:bg-muted transition-colors" title="نسخ">
+                            {copiedField === 'phone' ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3 text-muted-foreground" />}
+                          </button>
                         </span>
                         {selectedOrder.phone2 && (
                           <span className="font-semibold text-sm flex items-center gap-1 text-muted-foreground">
                             <Phone className="h-3 w-3 text-muted-foreground" />
                             {selectedOrder.phone2}
+                            <button onClick={() => copyToClipboard(selectedOrder.phone2, 'phone2')} className="p-1 rounded hover:bg-muted transition-colors" title="نسخ">
+                              {copiedField === 'phone2' ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3 text-muted-foreground" />}
+                            </button>
                             <Badge variant="secondary" className="text-[10px] h-4 px-1">إضافي</Badge>
                           </span>
                         )}
@@ -742,16 +764,26 @@ const DetailedOrdersReport = () => {
                     {selectedOrder.governorate && selectedOrder.governorate !== '-' && (
                       <div>
                         <p className="text-xs text-muted-foreground mb-0.5">المحافظة</p>
-                        <p className="font-semibold text-sm flex items-center gap-1">
-                          <MapPin className="h-3 w-3 text-primary" />
-                          {selectedOrder.governorate}
-                        </p>
+                        <div className="flex items-center gap-1">
+                          <p className="font-semibold text-sm flex items-center gap-1">
+                            <MapPin className="h-3 w-3 text-primary" />
+                            {selectedOrder.governorate}
+                          </p>
+                          <button onClick={() => copyToClipboard(selectedOrder.governorate, 'gov')} className="p-1 rounded hover:bg-muted transition-colors" title="نسخ">
+                            {copiedField === 'gov' ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3 text-muted-foreground" />}
+                          </button>
+                        </div>
                       </div>
                     )}
                     {selectedOrder.address && selectedOrder.address !== '-' && (
                       <div className={!selectedOrder.governorate || selectedOrder.governorate === '-' ? 'col-span-2' : ''}>
                         <p className="text-xs text-muted-foreground mb-0.5">العنوان</p>
-                        <p className="font-semibold text-sm leading-relaxed">{selectedOrder.address}</p>
+                        <div className="flex items-start gap-1">
+                          <p className="font-semibold text-sm leading-relaxed">{selectedOrder.address}</p>
+                          <button onClick={() => copyToClipboard(selectedOrder.address, 'address')} className="p-1 rounded hover:bg-muted transition-colors shrink-0" title="نسخ">
+                            {copiedField === 'address' ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3 text-muted-foreground" />}
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>
