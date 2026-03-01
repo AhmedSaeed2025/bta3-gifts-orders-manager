@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useDeliveryMethods } from "@/components/admin/settings/DeliveryMethodsSettings";
 
 interface CustomerDataFormProps {
   customerData: {
@@ -27,6 +28,7 @@ const CustomerDataForm: React.FC<CustomerDataFormProps> = ({
   onCustomerDataChange,
   onSelectChange,
 }) => {
+  const { methods: deliveryMethods } = useDeliveryMethods();
   return (
     <Card>
       <CardHeader>
@@ -99,8 +101,9 @@ const CustomerDataForm: React.FC<CustomerDataFormProps> = ({
                 <SelectValue placeholder="اختر طريقة التوصيل" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="استلام من المعادي">استلام من المعادي</SelectItem>
-                <SelectItem value="شحن للمنزل">شحن للمنزل</SelectItem>
+                {deliveryMethods.map((method) => (
+                  <SelectItem key={method} value={method}>{method}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
