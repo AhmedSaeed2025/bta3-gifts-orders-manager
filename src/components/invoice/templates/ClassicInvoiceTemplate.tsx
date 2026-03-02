@@ -5,6 +5,7 @@ import { useOrderStatuses } from '@/hooks/useOrderStatuses';
 import { Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { captureInvoiceScreenshot } from '@/lib/invoiceScreenshot';
+import { useInvoicePolicy } from '@/components/admin/settings/InvoicePolicySettings';
 
 interface InvoiceTemplateProps {
   order: any;
@@ -16,6 +17,7 @@ const ClassicInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, storeSe
   const logoUrl = storeSettings?.logo_url;
   const { getStatusLabel } = useOrderStatuses();
   const invoiceRef = useRef<HTMLDivElement>(null);
+  const invoicePolicy = useInvoicePolicy();
 
   const { items, subtotal, shipping, discount, total, paid, remaining } = calculateOrderFinancials(order);
 
@@ -202,6 +204,13 @@ const ClassicInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, storeSe
             </tbody>
           </table>
         </div>
+
+        {invoicePolicy.enabled && invoicePolicy.content && (
+          <div style={{ padding: '10px 12px', borderTop: '1px dashed #d1d5db' }}>
+            <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#2563eb', marginBottom: '4px', textAlign: 'center' }}>📋 {invoicePolicy.title}</div>
+            <div style={{ fontSize: '8px', color: '#374151', lineHeight: '1.8', whiteSpace: 'pre-line' }}>{invoicePolicy.content}</div>
+          </div>
+        )}
 
         {/* Footer */}
         <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '12px', textAlign: 'center' }}>

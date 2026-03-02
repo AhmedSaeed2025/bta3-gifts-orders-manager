@@ -5,6 +5,7 @@ import { useOrderStatuses } from '@/hooks/useOrderStatuses';
 import { Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { captureInvoiceScreenshot } from '@/lib/invoiceScreenshot';
+import { useInvoicePolicy } from '@/components/admin/settings/InvoicePolicySettings';
 
 interface InvoiceTemplateProps {
   order: any;
@@ -15,6 +16,7 @@ const CompactInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, storeSe
   const { items, subtotal, shipping, discount, total, paid, remaining } = calculateOrderFinancials(order);
   const { getStatusLabel } = useOrderStatuses();
   const invoiceRef = useRef<HTMLDivElement>(null);
+  const invoicePolicy = useInvoicePolicy();
 
   const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString('ar-EG');
 
@@ -196,6 +198,15 @@ const CompactInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, storeSe
             </table>
           </div>
         </div>
+
+        {invoicePolicy.enabled && invoicePolicy.content && (
+          <div style={{ padding: '10px 16px' }}>
+            <div style={{ border: '1px solid #e0e7ff', borderRadius: '6px', padding: '10px', backgroundColor: '#eef2ff' }}>
+              <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#4338ca', marginBottom: '4px', textAlign: 'center' }}>📋 {invoicePolicy.title}</div>
+              <div style={{ fontSize: '8px', color: '#374151', lineHeight: '1.8', whiteSpace: 'pre-line' }}>{invoicePolicy.content}</div>
+            </div>
+          </div>
+        )}
 
         {/* Footer */}
         <div style={{ background: `linear-gradient(135deg, ${accentColor}, #818cf8)`, padding: '10px 16px', textAlign: 'center', color: '#ffffff', fontSize: '10px' }}>
