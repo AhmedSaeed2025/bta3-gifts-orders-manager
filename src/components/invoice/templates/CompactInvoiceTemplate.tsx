@@ -39,7 +39,7 @@ const CompactInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, storeSe
         style={{
           backgroundColor: '#ffffff', color: '#1f2937', padding: '0',
           fontFamily: 'Tajawal, Arial, sans-serif', direction: 'rtl',
-          width: '400px', maxWidth: '400px', margin: '0 auto',
+          width: '100%', maxWidth: '400px', margin: '0 auto',
           border: '1px solid #e5e7eb', borderRadius: '12px', overflow: 'hidden',
         }}
       >

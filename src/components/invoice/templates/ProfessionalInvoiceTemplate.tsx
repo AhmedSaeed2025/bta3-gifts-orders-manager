@@ -50,7 +50,7 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
           padding: '16px',
           fontFamily: 'Tajawal, Arial, sans-serif',
           direction: 'rtl',
-          width: '400px',
+          width: '100%',
           maxWidth: '400px',
           margin: '0 auto',
           boxSizing: 'border-box',
