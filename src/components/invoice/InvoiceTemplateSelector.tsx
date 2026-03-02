@@ -82,7 +82,7 @@ const InvoiceTemplateSelector: React.FC<InvoiceTemplateSelectorProps> = ({
           </Button>
           {onClose && <Button variant="outline" onClick={onClose}>إغلاق</Button>}
         </div>
-        <div ref={invoiceRef} className="overflow-auto">{renderTemplate()}</div>
+        <div ref={invoiceRef} className="overflow-x-auto flex justify-center">{renderTemplate()}</div>
       </div>
     );
   }
@@ -112,9 +112,11 @@ const InvoiceTemplateSelector: React.FC<InvoiceTemplateSelectorProps> = ({
 
           {templates.map(t => (
             <TabsContent key={t.key} value={t.key} className="mt-0">
-              <div className="border-2 border-border rounded-lg overflow-hidden">
-                <div className={`${isMobile ? 'scale-50 origin-top-right' : 'scale-75 origin-top'} transform`}>
-                  {renderTemplate()}
+              <div className="border-2 border-border rounded-lg overflow-x-auto">
+                <div className="flex justify-center">
+                  <div style={{ transform: isMobile ? 'scale(0.85)' : 'scale(0.9)', transformOrigin: 'top center', maxWidth: '100%' }}>
+                    {renderTemplate()}
+                  </div>
                 </div>
               </div>
             </TabsContent>

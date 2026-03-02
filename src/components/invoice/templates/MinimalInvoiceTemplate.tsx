@@ -37,7 +37,7 @@ const MinimalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, storeSe
         style={{
           backgroundColor: '#ffffff', color: '#111827', padding: '20px',
           fontFamily: 'Tajawal, Arial, sans-serif', direction: 'rtl',
-          width: '400px', maxWidth: '400px', margin: '0 auto',
+          width: '100%', maxWidth: '400px', margin: '0 auto',
         }}
       >
         {/* Header - Clean & Minimal */}
