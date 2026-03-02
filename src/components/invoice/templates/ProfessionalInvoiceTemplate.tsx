@@ -95,22 +95,22 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <tbody>
               <tr>
-                <td style={{ fontSize: '10px', padding: '2px 0' }}>
-                  <span style={{ color: '#6b7280' }}>الاسم:</span> <span style={{ fontWeight: '500' }}>{order.client_name || order.customer_name}</span>
+                <td style={{ fontSize: '10px', padding: '3px 0' }}>
+                  <span style={{ color: '#6b7280' }}>الاسم:</span> <span style={{ fontWeight: '600' }}>{order.client_name || order.customer_name}</span>
                 </td>
-                <td style={{ fontSize: '10px', padding: '2px 0' }}>
-                  <span style={{ color: '#6b7280' }}>التليفون:</span> <span style={{ fontWeight: '500' }}>{order.phone || order.customer_phone}</span>
+                <td style={{ fontSize: '10px', padding: '3px 0' }}>
+                  <span style={{ color: '#6b7280' }}>التليفون:</span> <span style={{ fontWeight: '600' }}>{order.phone || order.customer_phone}</span>
                   {(order.phone2 || order.customer_phone2) && (
-                    <span style={{ marginRight: '4px', fontWeight: '500' }}> / {order.phone2 || order.customer_phone2}</span>
+                    <span style={{ marginRight: '4px', fontWeight: '600' }}> / {order.phone2 || order.customer_phone2}</span>
                   )}
                 </td>
               </tr>
               <tr>
-                <td style={{ fontSize: '10px', padding: '2px 0' }}>
-                  <span style={{ color: '#6b7280' }}>السداد:</span> <span style={{ fontWeight: '500' }}>{order.payment_method}</span>
+                <td style={{ fontSize: '10px', padding: '3px 0' }}>
+                  <span style={{ color: '#6b7280' }}>السداد:</span> <span style={{ fontWeight: '600' }}>{order.payment_method}</span>
                 </td>
-                <td style={{ fontSize: '10px', padding: '2px 0' }}>
-                  <span style={{ color: '#6b7280' }}>التوصيل:</span> <span style={{ fontWeight: '500' }}>{order.delivery_method}</span>
+                <td style={{ fontSize: '10px', padding: '3px 0' }}>
+                  <span style={{ color: '#6b7280' }}>التوصيل:</span> <span style={{ fontWeight: '600' }}>{order.delivery_method}</span>
                 </td>
               </tr>
             </tbody>
@@ -126,22 +126,22 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <tbody>
               <tr>
-                <td style={{ fontSize: '10px', padding: '2px 0' }}>
+                <td style={{ fontSize: '10px', padding: '3px 0' }}>
                   <span style={{ color: '#6b7280' }}>الحالة:</span>
-                  <span style={{ marginRight: '4px', padding: '2px 8px', borderRadius: '10px', fontSize: '9px', backgroundColor: '#fee2e2', color: '#b91c1c', fontWeight: '500' }}>
+                  <span style={{ marginRight: '4px', padding: '2px 10px', borderRadius: '10px', fontSize: '10px', backgroundColor: '#fee2e2', color: '#dc2626', fontWeight: '600', display: 'inline-block', lineHeight: '1.6' }}>
                     {getStatusLabel(order.status)}
                   </span>
                 </td>
                 {order.governorate && (
-                  <td style={{ fontSize: '10px', padding: '2px 0' }}>
-                    <span style={{ color: '#6b7280' }}>المحافظة:</span> <span style={{ fontWeight: '500' }}>{order.governorate}</span>
+                  <td style={{ fontSize: '10px', padding: '3px 0' }}>
+                    <span style={{ color: '#6b7280' }}>المحافظة:</span> <span style={{ fontWeight: '600' }}>{order.governorate}</span>
                   </td>
                 )}
               </tr>
               {(order.address || order.shipping_address) && (
                 <tr>
-                  <td colSpan={2} style={{ fontSize: '10px', padding: '2px 0' }}>
-                    <span style={{ color: '#6b7280' }}>العنوان:</span> <span style={{ fontWeight: '500' }}>{order.address || order.shipping_address}</span>
+                  <td colSpan={2} style={{ fontSize: '10px', padding: '3px 0' }}>
+                    <span style={{ color: '#6b7280' }}>العنوان:</span> <span style={{ fontWeight: '600' }}>{order.address || order.shipping_address}</span>
                   </td>
                 </tr>
               )}
@@ -156,15 +156,15 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
             <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#dc2626', verticalAlign: 'middle' }}>تفاصيل الطلب</span>
           </div>
           
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '9px', tableLayout: 'fixed' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px', tableLayout: 'fixed' }}>
             <thead>
               <tr style={{ backgroundColor: '#dc2626', color: '#ffffff' }}>
-                <th style={{ padding: '5px 2px', textAlign: 'right', fontWeight: '500', width: '30%' }}>المنتج</th>
-                <th style={{ padding: '5px 2px', textAlign: 'center', fontWeight: '500', width: '15%' }}>المقاس</th>
-                <th style={{ padding: '5px 2px', textAlign: 'center', fontWeight: '500', width: '10%' }}>العدد</th>
-                <th style={{ padding: '5px 2px', textAlign: 'center', fontWeight: '500', width: '15%' }}>السعر</th>
-                <th style={{ padding: '5px 2px', textAlign: 'center', fontWeight: '500', width: '15%' }}>الخصم</th>
-                <th style={{ padding: '5px 2px', textAlign: 'left', fontWeight: '500', width: '15%' }}>الإجمالي</th>
+                <th style={{ padding: '6px 3px', textAlign: 'right', fontWeight: '600', width: '30%' }}>المنتج</th>
+                <th style={{ padding: '6px 3px', textAlign: 'center', fontWeight: '600', width: '15%' }}>المقاس</th>
+                <th style={{ padding: '6px 3px', textAlign: 'center', fontWeight: '600', width: '10%' }}>العدد</th>
+                <th style={{ padding: '6px 3px', textAlign: 'center', fontWeight: '600', width: '15%' }}>السعر</th>
+                <th style={{ padding: '6px 3px', textAlign: 'center', fontWeight: '600', width: '15%' }}>الخصم</th>
+                <th style={{ padding: '6px 3px', textAlign: 'left', fontWeight: '600', width: '15%' }}>الإجمالي</th>
               </tr>
             </thead>
             <tbody>
@@ -175,20 +175,20 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
                 const itemTotal = (price * qty) - itemDiscount;
                 return (
                   <tr key={index} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                    <td style={{ padding: '5px 2px', textAlign: 'right', color: '#dc2626', fontWeight: '500', wordBreak: 'break-word', whiteSpace: 'normal', lineHeight: '1.4' }}>
+                    <td style={{ padding: '6px 3px', textAlign: 'right', color: '#dc2626', fontWeight: '600', wordBreak: 'break-word', whiteSpace: 'normal', lineHeight: '1.4' }}>
                       {item.product_type || item.product_name}
                     </td>
-                    <td style={{ padding: '5px 2px', textAlign: 'center' }}>
-                      <span style={{ backgroundColor: '#f3f4f6', padding: '2px 4px', borderRadius: '4px', fontSize: '8px' }}>
+                    <td style={{ padding: '6px 3px', textAlign: 'center' }}>
+                      <span style={{ backgroundColor: '#f3f4f6', padding: '2px 4px', borderRadius: '4px', fontSize: '9px' }}>
                         {item.size || item.product_size}
                       </span>
                     </td>
-                    <td style={{ padding: '5px 2px', textAlign: 'center', fontWeight: 'bold' }}>{item.quantity}</td>
-                    <td style={{ padding: '5px 2px', textAlign: 'center' }}>{formatCurrency(price)}</td>
-                    <td style={{ padding: '5px 2px', textAlign: 'center', color: itemDiscount > 0 ? '#dc2626' : '#9ca3af' }}>
+                    <td style={{ padding: '6px 3px', textAlign: 'center', fontWeight: 'bold' }}>{item.quantity}</td>
+                    <td style={{ padding: '6px 3px', textAlign: 'center' }}>{formatCurrency(price)}</td>
+                    <td style={{ padding: '6px 3px', textAlign: 'center', color: itemDiscount > 0 ? '#dc2626' : '#9ca3af' }}>
                       {itemDiscount > 0 ? `-${formatCurrency(itemDiscount)}` : '-'}
                     </td>
-                    <td style={{ padding: '5px 2px', textAlign: 'left', fontWeight: '600' }}>{formatCurrency(itemTotal)}</td>
+                    <td style={{ padding: '6px 3px', textAlign: 'left', fontWeight: '600' }}>{formatCurrency(itemTotal)}</td>
                   </tr>
                 );
               }) : (
@@ -202,10 +202,10 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
 
         {/* Invoice Summary */}
         <div style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>
-          <table style={{ width: '180px', marginRight: 'auto', marginLeft: '0', borderCollapse: 'collapse', border: '1px solid #e5e7eb', borderRadius: '8px' }}>
+          <table style={{ width: '200px', marginRight: 'auto', marginLeft: '0', borderCollapse: 'collapse', border: '1px solid #e5e7eb', borderRadius: '8px', overflow: 'hidden' }}>
             <thead>
               <tr>
-                <th colSpan={2} style={{ backgroundColor: '#f9fafb', padding: '6px', textAlign: 'center', borderBottom: '1px solid #e5e7eb', fontSize: '10px', fontWeight: 'bold', color: '#374151' }}>
+                <th colSpan={2} style={{ backgroundColor: '#f9fafb', padding: '6px', textAlign: 'center', borderBottom: '1px solid #e5e7eb', fontSize: '11px', fontWeight: 'bold', color: '#374151' }}>
                   ملخص الفاتورة
                 </th>
               </tr>
@@ -226,16 +226,16 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
                 </tr>
               )}
               <tr style={{ borderBottom: '1px solid #f3f4f6', backgroundColor: '#dbeafe' }}>
-                <td style={{ padding: '8px', fontSize: '10px', fontWeight: 'bold', color: '#3b82f6', textAlign: 'right' }}>المجموع:</td>
-                <td style={{ padding: '8px', fontSize: '12px', fontWeight: 'bold', textAlign: 'left' }}>{formatCurrency(total)}</td>
+                <td style={{ padding: '7px 8px', fontSize: '11px', fontWeight: 'bold', color: '#2563eb', textAlign: 'right' }}>المجموع:</td>
+                <td style={{ padding: '7px 8px', fontSize: '11px', fontWeight: 'bold', textAlign: 'left' }}>{formatCurrency(total)}</td>
               </tr>
               <tr style={{ borderBottom: '1px solid #f3f4f6' }}>
-                <td style={{ padding: '6px 8px', fontSize: '10px', color: '#6b7280', textAlign: 'right' }}>المدفوع:</td>
-                <td style={{ padding: '6px 8px', fontSize: '10px', fontWeight: '600', textAlign: 'left', color: '#16a34a' }}>{formatCurrency(-paid)}</td>
+                <td style={{ padding: '6px 8px', fontSize: '10px', color: '#16a34a', fontWeight: '600', textAlign: 'right' }}>المدفوع:</td>
+                <td style={{ padding: '6px 8px', fontSize: '10px', fontWeight: '600', textAlign: 'left', color: '#16a34a' }}>-{formatCurrency(paid)}</td>
               </tr>
               <tr style={{ backgroundColor: '#fee2e2' }}>
-                <td style={{ padding: '8px', fontSize: '10px', fontWeight: 'bold', color: '#dc2626', textAlign: 'right' }}>المتبقي:</td>
-                <td style={{ padding: '8px', fontSize: '12px', fontWeight: 'bold', textAlign: 'left', color: '#dc2626' }}>{formatCurrency(remaining)}</td>
+                <td style={{ padding: '7px 8px', fontSize: '11px', fontWeight: 'bold', color: '#dc2626', textAlign: 'right' }}>المتبقي:</td>
+                <td style={{ padding: '7px 8px', fontSize: '11px', fontWeight: 'bold', textAlign: 'left', color: '#dc2626' }}>{formatCurrency(remaining)}</td>
               </tr>
             </tbody>
           </table>
