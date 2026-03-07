@@ -8,18 +8,33 @@ import { Plus, Trash2, Edit, Check, X, Truck } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 
-const defaultMethods = ['استلام من المعادي', 'شحن للمنزل'];
+export interface DeliveryMethod {
+  name: string;
+  requiresAddress: boolean;
+}
+
+const defaultMethods: DeliveryMethod[] = [
+  { name: 'استلام من المعادي', requiresAddress: false },
+  { name: 'شحن للمنزل', requiresAddress: true },
+];
 
 export const useDeliveryMethods = () => {
   const { user } = useAuth();
-  const [methods, setMethods] = useState<string[]>(defaultMethods);
+  const [methods, setMethods] = useState<DeliveryMethod[]>(defaultMethods);
 
   useEffect(() => {
     if (user) {
       const saved = localStorage.getItem(`delivery_methods_${user.id}`);
       if (saved) {
         try {
-          setMethods(JSON.parse(saved));
+          const parsed = JSON.parse(saved);
+          // migrate old string[] format
+          if (Array.isArray(parsed) && parsed.length > 0 && typeof parsed[0] === 'string') {
+            const migrated: DeliveryMethod[] = parsed.map((m: string) => ({ name: m, requiresAddress: false }));
+            setMethods(migrated);
+          } else {
+            setMethods(parsed);
+          }
         } catch {
           setMethods(defaultMethods);
         }
@@ -27,7 +42,7 @@ export const useDeliveryMethods = () => {
     }
   }, [user]);
 
-  const saveMethods = (newMethods: string[]) => {
+  const saveMethods = (newMethods: DeliveryMethod[]) => {
     setMethods(newMethods);
     if (user) {
       localStorage.setItem(`delivery_methods_${user.id}`, JSON.stringify(newMethods));
