@@ -104,7 +104,7 @@ const CustomerDataForm: React.FC<CustomerDataFormProps> = ({
               </SelectTrigger>
               <SelectContent>
                 {deliveryMethods.map((method) => (
-                  <SelectItem key={method} value={method}>{method}</SelectItem>
+                  <SelectItem key={method.name} value={method.name}>{method.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
