@@ -21,25 +21,31 @@ const defaultMethods: DeliveryMethod[] = [
 ];
 
 export const useDeliveryMethods = () => {
-  const { user } = useAuth();
+  let user: any = null;
+  try {
+    const auth = useAuth();
+    user = auth?.user;
+  } catch {
+    // useAuth may not be available in all contexts
+  }
   const [methods, setMethods] = useState<DeliveryMethod[]>(defaultMethods);
 
   useEffect(() => {
     if (user) {
-      const saved = localStorage.getItem(`delivery_methods_${user.id}`);
-      if (saved) {
-        try {
+      try {
+        const saved = localStorage.getItem(`delivery_methods_${user.id}`);
+        if (saved) {
           const parsed = JSON.parse(saved);
           // migrate old string[] format
           if (Array.isArray(parsed) && parsed.length > 0 && typeof parsed[0] === 'string') {
             const migrated: DeliveryMethod[] = parsed.map((m: string) => ({ name: m, requiresAddress: false }));
             setMethods(migrated);
-          } else {
+          } else if (Array.isArray(parsed)) {
             setMethods(parsed);
           }
-        } catch {
-          setMethods(defaultMethods);
         }
+      } catch {
+        setMethods(defaultMethods);
       }
     }
   }, [user]);
