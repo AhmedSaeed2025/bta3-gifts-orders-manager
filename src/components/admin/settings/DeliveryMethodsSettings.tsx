@@ -63,11 +63,11 @@ const DeliveryMethodsSettings = () => {
   const addMethod = () => {
     const trimmed = newMethod.trim();
     if (!trimmed) return;
-    if (methods.includes(trimmed)) {
+    if (methods.some(m => m.name === trimmed)) {
       toast.error('طريقة التوصيل موجودة بالفعل');
       return;
     }
-    saveMethods([...methods, trimmed]);
+    saveMethods([...methods, { name: trimmed, requiresAddress: false }]);
     setNewMethod('');
     toast.success('تم إضافة طريقة التوصيل');
   };
@@ -84,22 +84,28 @@ const DeliveryMethodsSettings = () => {
 
   const startEdit = (index: number) => {
     setEditingIndex(index);
-    setEditValue(methods[index]);
+    setEditValue(methods[index].name);
   };
 
   const confirmEdit = () => {
     if (editingIndex === null) return;
     const trimmed = editValue.trim();
     if (!trimmed) return;
-    if (methods.some((m, i) => m === trimmed && i !== editingIndex)) {
+    if (methods.some((m, i) => m.name === trimmed && i !== editingIndex)) {
       toast.error('طريقة التوصيل موجودة بالفعل');
       return;
     }
     const updated = [...methods];
-    updated[editingIndex] = trimmed;
+    updated[editingIndex] = { ...updated[editingIndex], name: trimmed };
     saveMethods(updated);
     setEditingIndex(null);
     toast.success('تم تعديل طريقة التوصيل');
+  };
+
+  const toggleRequiresAddress = (index: number) => {
+    const updated = [...methods];
+    updated[index] = { ...updated[index], requiresAddress: !updated[index].requiresAddress };
+    saveMethods(updated);
   };
 
   return (
@@ -126,39 +132,55 @@ const DeliveryMethodsSettings = () => {
 
         <div className="space-y-2">
           {methods.map((method, index) => (
-            <div key={index} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border border-border/40">
-              {editingIndex === index ? (
-                <div className="flex items-center gap-2 flex-1">
-                  <Input
-                    value={editValue}
-                    onChange={(e) => setEditValue(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && confirmEdit()}
-                    className="h-8"
-                    autoFocus
+            <div key={index} className="flex flex-col p-3 bg-muted/30 rounded-lg border border-border/40 gap-2">
+              <div className="flex items-center justify-between">
+                {editingIndex === index ? (
+                  <div className="flex items-center gap-2 flex-1">
+                    <Input
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && confirmEdit()}
+                      className="h-8"
+                      autoFocus
+                    />
+                    <Button size="icon" variant="ghost" className="h-8 w-8 text-primary" onClick={confirmEdit}>
+                      <Check className="h-4 w-4" />
+                    </Button>
+                    <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setEditingIndex(null)}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <Truck className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-medium text-sm">{method.name}</span>
+                      <Badge variant="secondary" className="text-[10px]">#{index + 1}</Badge>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => startEdit(index)}>
+                        <Edit className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => removeMethod(index)}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </div>
+              {editingIndex !== index && (
+                <div className="flex items-center gap-2 pr-6">
+                  <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Label htmlFor={`addr-${index}`} className="text-xs text-muted-foreground cursor-pointer">
+                    يتطلب عنوان
+                  </Label>
+                  <Switch
+                    id={`addr-${index}`}
+                    checked={method.requiresAddress}
+                    onCheckedChange={() => toggleRequiresAddress(index)}
+                    className="scale-75"
                   />
-                  <Button size="icon" variant="ghost" className="h-8 w-8 text-green-600" onClick={confirmEdit}>
-                    <Check className="h-4 w-4" />
-                  </Button>
-                  <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setEditingIndex(null)}>
-                    <X className="h-4 w-4" />
-                  </Button>
                 </div>
-              ) : (
-                <>
-                  <div className="flex items-center gap-2">
-                    <Truck className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium text-sm">{method}</span>
-                    <Badge variant="secondary" className="text-[10px]">#{index + 1}</Badge>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => startEdit(index)}>
-                      <Edit className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => removeMethod(index)}>
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                </>
               )}
             </div>
           ))}

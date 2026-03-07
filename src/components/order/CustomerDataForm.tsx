@@ -29,6 +29,8 @@ const CustomerDataForm: React.FC<CustomerDataFormProps> = ({
   onSelectChange,
 }) => {
   const { methods: deliveryMethods } = useDeliveryMethods();
+  const selectedMethod = deliveryMethods.find(m => m.name === customerData.deliveryMethod);
+  const showAddress = selectedMethod?.requiresAddress ?? false;
   return (
     <Card>
       <CardHeader>
