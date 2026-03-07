@@ -29,6 +29,8 @@ const CustomerDataForm: React.FC<CustomerDataFormProps> = ({
   onSelectChange,
 }) => {
   const { methods: deliveryMethods } = useDeliveryMethods();
+  const selectedMethod = deliveryMethods.find(m => m.name === customerData.deliveryMethod);
+  const showAddress = selectedMethod?.requiresAddress ?? false;
   return (
     <Card>
       <CardHeader>
@@ -102,14 +104,14 @@ const CustomerDataForm: React.FC<CustomerDataFormProps> = ({
               </SelectTrigger>
               <SelectContent>
                 {deliveryMethods.map((method) => (
-                  <SelectItem key={method} value={method}>{method}</SelectItem>
+                  <SelectItem key={method.name} value={method.name}>{method.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
         </div>
         
-        {customerData.deliveryMethod === "شحن للمنزل" && (
+        {showAddress && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="address">العنوان</Label>
