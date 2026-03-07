@@ -111,7 +111,7 @@ const CustomerDataForm: React.FC<CustomerDataFormProps> = ({
           </div>
         </div>
         
-        {customerData.deliveryMethod === "شحن للمنزل" && (
+        {showAddress && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="address">العنوان</Label>
