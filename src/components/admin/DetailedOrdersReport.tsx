@@ -98,7 +98,23 @@ const DetailedOrdersReport = () => {
     enabled: !!user
   });
 
-  // Get unique delivery methods for filter
+  // Scroll to the focused order after returning from edit
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const focusSerial = params.get('focusSerial');
+
+    if (focusSerial && !isLoading) {
+      setTimeout(() => {
+        const el = document.getElementById(`order-card-${focusSerial}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.classList.add('ring-2', 'ring-primary', 'ring-offset-2');
+          setTimeout(() => el.classList.remove('ring-2', 'ring-primary', 'ring-offset-2'), 3000);
+        }
+      }, 300);
+    }
+  }, [location.search, isLoading]);
+
   const deliveryMethods = [...new Set(orders.map(o => o.delivery_method).filter(Boolean))];
 
   // Filter orders with date filter support
