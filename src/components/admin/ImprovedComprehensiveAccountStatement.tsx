@@ -47,7 +47,7 @@ const ImprovedComprehensiveAccountStatement = () => {
   const [editTransactionDialog, setEditTransactionDialog] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [filterType, setFilterType] = useState<string>('all');
-  const [activeSection, setActiveSection] = useState<'summary' | 'orders' | 'comparison' | 'cashflow' | 'transactions'>('summary');
+  const [activeSection, setActiveSection] = useState<'summary' | 'orders' | 'comparison' | 'cashflow' | 'transactions' | 'register_cost'>('summary');
   const [orderSearch, setOrderSearch] = useState('');
   const [orderPaymentFilter, setOrderPaymentFilter] = useState<'all' | 'paid' | 'partial' | 'unpaid'>('all');
   const [orderSortBy, setOrderSortBy] = useState<'date' | 'remaining' | 'total'>('date');
@@ -55,6 +55,14 @@ const ImprovedComprehensiveAccountStatement = () => {
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentNotes, setPaymentNotes] = useState('');
   const [orderDetailsDialog, setOrderDetailsDialog] = useState<{ open: boolean; order: any }>({ open: false, order: null });
+  
+  // Cost/Shipping registration tab state
+  const [costRegType, setCostRegType] = useState<'cost' | 'shipping'>('cost');
+  const [costRegAmount, setCostRegAmount] = useState('');
+  const [costRegNotes, setCostRegNotes] = useState('');
+  const [costRegWorkshop, setCostRegWorkshop] = useState('');
+  const [costRegSelectedOrders, setCostRegSelectedOrders] = useState<string[]>([]);
+  const [costRegSearch, setCostRegSearch] = useState('');
   
   const [newTransaction, setNewTransaction] = useState({
     amount: '',
