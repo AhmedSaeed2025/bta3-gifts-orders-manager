@@ -75,7 +75,7 @@ const CustomerDataForm: React.FC<CustomerDataFormProps> = ({
                 id="phone"
                 name="phone"
                 value={customerData.phone}
-                onChange={onCustomerDataChange}
+                onChange={handlePhoneChange}
                 required
                 className="h-9 text-sm pr-9"
                 placeholder="01xxxxxxxxx"
