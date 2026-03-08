@@ -40,7 +40,7 @@ import {
   Check
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import OrderPaymentDialog from "./OrderPaymentDialog";
 import InvoiceTemplateSelector from "@/components/invoice/InvoiceTemplateSelector";
 import { toast } from "sonner";
