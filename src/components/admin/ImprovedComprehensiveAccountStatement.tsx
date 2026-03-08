@@ -852,7 +852,7 @@ const ImprovedComprehensiveAccountStatement = () => {
       });
     }
     return filtered.sort((a, b) => new Date(b.date_created).getTime() - new Date(a.date_created).getTime());
-  }, [orders, costRegSearch, costRegPaymentFilter, costRegType, allWorkshopPayments, allTransactions]);
+  }, [orders, costRegSearch, costRegPaymentFilter, allWorkshopPayments, allTransactions]);
 
   if (ordersLoading || transactionsLoading) {
     return (
