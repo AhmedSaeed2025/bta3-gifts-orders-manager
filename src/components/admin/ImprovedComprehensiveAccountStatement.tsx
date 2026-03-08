@@ -597,7 +597,7 @@ const ImprovedComprehensiveAccountStatement = () => {
   // Unlinked workshop payments (not linked to any valid order)
   const unlinkedWorkshopPayments = useMemo(() => {
     const orderIds = new Set(allOrders.map(o => o.id));
-    return allWorkshopPayments.filter(w => !orderIds.has(w.order_id) || !w.order_id);
+    return allWorkshopPayments.filter(w => !w.order_id || !orderIds.has(w.order_id));
   }, [allWorkshopPayments, allOrders]);
 
   // Filtered unlinked payments
