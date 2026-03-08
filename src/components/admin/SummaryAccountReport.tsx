@@ -246,7 +246,7 @@ const SummaryAccountReport = () => {
       const { error } = await supabase.from('transactions').insert({
         user_id: user.id,
         order_serial: `PROFIT-${Date.now()}`,
-        transaction_type: 'income',
+        transaction_type: 'other_income',
         amount: profit,
         description: `[sales] ترحيل أرباح ${periodLabel}`
       });

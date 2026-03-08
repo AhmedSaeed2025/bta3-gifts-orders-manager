@@ -55,7 +55,7 @@ const OrderPaymentManagement = ({
         .insert({
           user_id: userId,
           amount: amount,
-          transaction_type: 'income',
+          transaction_type: 'order_collection',
           description: `دفعة من طلب ${orderSerial} - ${description}`,
           order_serial: orderSerial
         });
