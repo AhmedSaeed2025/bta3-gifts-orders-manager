@@ -227,6 +227,86 @@ const ImprovedComprehensiveAccountStatement = () => {
     const cancelledOrders = orders.filter(o => o.status === 'cancelled').length;
     const activeOrders = orders.filter(o => o.status !== 'cancelled').length;
 
+    // === التنبيهات الذكية ===
+    const alerts: { type: 'danger' | 'warning' | 'info'; icon: string; message: string; count: number }[] = [];
+
+    // 1) طلبات تم توصيلها بدون تحصيل كامل
+    const deliveredNotFullyPaid = orders.filter(o => {
+      if (o.status !== 'delivered') return false;
+      const fin = calculateOrderFinancials(o);
+      return fin.remaining > 0;
+    });
+    if (deliveredNotFullyPaid.length > 0) {
+      const pendingAmount = deliveredNotFullyPaid.reduce((sum, o) => sum + calculateOrderFinancials(o).remaining, 0);
+      alerts.push({
+        type: 'danger',
+        icon: '🚨',
+        message: `${deliveredNotFullyPaid.length} طلب تم توصيله بدون تحصيل كامل (متبقي ${formatCurrency(pendingAmount)})`,
+        count: deliveredNotFullyPaid.length
+      });
+    }
+
+    // 2) طلبات تكلفة ورشتها أعلى من سعر البيع
+    const orderIds = new Set(orders.map(o => o.id));
+    const lossOrders = orders.filter(o => {
+      const orderWP = workshopPayments.filter(w => w.order_id === o.id);
+      const wpCost = orderWP.reduce((sum, w) => sum + Number(w.cost_amount), 0);
+      const fin = calculateOrderFinancials(o);
+      return wpCost > 0 && wpCost > fin.total;
+    });
+    if (lossOrders.length > 0) {
+      alerts.push({
+        type: 'danger',
+        icon: '📉',
+        message: `${lossOrders.length} طلب تكلفة الورشة فيه أعلى من سعر البيع (خسارة محتملة)`,
+        count: lossOrders.length
+      });
+    }
+
+    // 3) طلبات بدون تسجيل تكلفة ورشة
+    const activeNonCancelled = orders.filter(o => o.status !== 'cancelled');
+    const ordersWithoutWorkshop = activeNonCancelled.filter(o => {
+      const hasWP = workshopPayments.some(w => w.order_id === o.id);
+      return !hasWP;
+    });
+    if (ordersWithoutWorkshop.length > 0) {
+      alerts.push({
+        type: 'warning',
+        icon: '🏭',
+        message: `${ordersWithoutWorkshop.length} طلب بدون تسجيل تكلفة ورشة — سجّلها من الإدارة المالية`,
+        count: ordersWithoutWorkshop.length
+      });
+    }
+
+    // 4) طلبات بدون أي دفعات
+    const ordersWithoutPayments = activeNonCancelled.filter(o => {
+      const fin = calculateOrderFinancials(o);
+      return fin.paid === 0 && fin.total > 0;
+    });
+    if (ordersWithoutPayments.length > 0) {
+      alerts.push({
+        type: 'warning',
+        icon: '💳',
+        message: `${ordersWithoutPayments.length} طلب بدون أي دفعات مسجلة`,
+        count: ordersWithoutPayments.length
+      });
+    }
+
+    // 5) طلبات تم شحنها ولم يتم تحصيلها بالكامل
+    const shippedNotPaid = orders.filter(o => {
+      if (o.status !== 'shipped') return false;
+      const fin = calculateOrderFinancials(o);
+      return fin.remaining > 0;
+    });
+    if (shippedNotPaid.length > 0) {
+      alerts.push({
+        type: 'info',
+        icon: '🚚',
+        message: `${shippedNotPaid.length} طلب تم شحنه ولم يُحصّل بالكامل بعد`,
+        count: shippedNotPaid.length
+      });
+    }
+
     return {
       // Orders
       orderCount: orders.length,
@@ -267,6 +347,9 @@ const ImprovedComprehensiveAccountStatement = () => {
 
       // Customer payments
       actualCustomerPaid,
+
+      // Alerts
+      alerts,
     };
   }, [orders, transactions, workshopPayments, customerPayments]);
 
@@ -442,6 +525,39 @@ const ImprovedComprehensiveAccountStatement = () => {
       {/* ======= SECTION: الملخص المالي ======= */}
       {activeSection === 'summary' && (
         <div className="space-y-5">
+          {/* Smart Alerts */}
+          {financial.alerts.length > 0 && (
+            <div className="space-y-2">
+              {financial.alerts.map((alert, idx) => (
+                <div key={idx} className={`flex items-start gap-3 p-3 rounded-xl border transition-all
+                  ${alert.type === 'danger' 
+                    ? 'bg-destructive/10 border-destructive/30 dark:bg-destructive/5' 
+                    : alert.type === 'warning' 
+                      ? 'bg-amber-50 dark:bg-amber-950/20 border-amber-300 dark:border-amber-700' 
+                      : 'bg-blue-50 dark:bg-blue-950/20 border-blue-300 dark:border-blue-700'
+                  }`}>
+                  <span className="text-lg shrink-0 mt-0.5">{alert.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-medium ${
+                      alert.type === 'danger' ? 'text-destructive' 
+                        : alert.type === 'warning' ? 'text-amber-800 dark:text-amber-300' 
+                        : 'text-blue-800 dark:text-blue-300'
+                    }`}>
+                      {alert.message}
+                    </p>
+                  </div>
+                  <Badge variant="outline" className={`shrink-0 text-xs ${
+                    alert.type === 'danger' ? 'border-destructive/50 text-destructive' 
+                      : alert.type === 'warning' ? 'border-amber-400 text-amber-700 dark:text-amber-400' 
+                      : 'border-blue-400 text-blue-700 dark:text-blue-400'
+                  }`}>
+                    {alert.count}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Top KPI Cards */}
           <div className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'grid-cols-4'}`}>
             <Card className="border-l-4 border-l-emerald-500">
