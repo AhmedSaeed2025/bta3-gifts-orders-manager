@@ -65,12 +65,25 @@ const StyledIndexTabs = () => {
       const saved = localStorage.getItem(FILTER_STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        return {
-          startDate: parsed.startDate ? new Date(parsed.startDate) : undefined,
-          endDate: parsed.endDate ? new Date(parsed.endDate) : undefined,
-          selectedYear: parsed.selectedYear || "",
-          selectedMonth: parsed.selectedMonth || ""
-        };
+        let sd = parsed.startDate ? new Date(parsed.startDate) : undefined;
+        let ed = parsed.endDate ? new Date(parsed.endDate) : undefined;
+        const sy = parsed.selectedYear || "";
+        const sm = parsed.selectedMonth || "";
+        
+        // Recompute dates from year/month if dates are missing but year is set
+        if (!sd && !ed && sy && sy !== "all") {
+          const yearNum = parseInt(sy);
+          if (sm) {
+            const monthNum = parseInt(sm);
+            sd = startOfMonth(new Date(yearNum, monthNum, 1));
+            ed = endOfMonth(new Date(yearNum, monthNum, 1));
+          } else {
+            sd = startOfYear(new Date(yearNum, 0, 1));
+            ed = endOfYear(new Date(yearNum, 0, 1));
+          }
+        }
+        
+        return { startDate: sd, endDate: ed, selectedYear: sy, selectedMonth: sm };
       }
     } catch (e) {
       console.error('Error loading saved filter:', e);
@@ -213,7 +226,7 @@ const StyledIndexTabs = () => {
             </div>
             
             <div className={`flex items-center gap-2 ${isMobile ? 'w-full flex-col' : 'flex-wrap'}`}>
-              <Select value={selectedYear || undefined} onValueChange={handleYearChange}>
+              <Select value={selectedYear} onValueChange={handleYearChange}>
                 <SelectTrigger className={`${isMobile ? 'w-full' : 'w-[130px]'} h-10 bg-background border-border/60 focus:ring-2 focus:ring-primary/20`}>
                   <SelectValue placeholder="السنة" />
                 </SelectTrigger>
@@ -228,7 +241,7 @@ const StyledIndexTabs = () => {
               </Select>
 
               {selectedYear && selectedYear !== "all" && (
-                <Select value={selectedMonth || undefined} onValueChange={handleMonthChange}>
+                <Select value={selectedMonth} onValueChange={handleMonthChange}>
                   <SelectTrigger className={`${isMobile ? 'w-full' : 'w-[130px]'} h-10 bg-background border-border/60 focus:ring-2 focus:ring-primary/20`}>
                     <SelectValue placeholder="الشهر" />
                   </SelectTrigger>
