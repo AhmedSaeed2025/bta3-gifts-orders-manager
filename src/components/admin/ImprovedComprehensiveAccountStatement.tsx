@@ -515,6 +515,11 @@ const ImprovedComprehensiveAccountStatement = () => {
         if (orderPaymentFilter === 'paid') return fin.remaining === 0;
         if (orderPaymentFilter === 'unpaid') return fin.paid === 0 && fin.total > 0;
         if (orderPaymentFilter === 'partial') return fin.paid > 0 && fin.remaining > 0;
+        if (orderPaymentFilter === 'uncollected') return fin.remaining > 0;
+        if (orderPaymentFilter === 'unpaid_cost') {
+          const hasProductionPayment = allWorkshopPayments.some(w => w.order_id === o.id && w.product_name !== 'shipping_cost');
+          return !hasProductionPayment;
+        }
         return true;
       });
     }
