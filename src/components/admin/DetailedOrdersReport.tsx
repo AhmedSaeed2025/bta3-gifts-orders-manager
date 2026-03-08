@@ -710,9 +710,11 @@ const DetailedOrdersReport = () => {
                         <Button variant="outline" size="sm" onClick={() => openPaymentDialog(order, 'collection')} className="text-xs h-8 gap-1 font-medium border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-950/50">
                           <Receipt className="h-3.5 w-3.5" /> تحصيل
                         </Button>
-                        <Button variant="outline" size="sm" onClick={() => openPaymentDialog(order, 'cost')} className="text-xs h-8 gap-1 font-medium border-rose-300 text-rose-700 hover:bg-rose-50 dark:border-rose-700 dark:text-rose-400 dark:hover:bg-rose-950/50">
-                          <DollarSign className="h-3.5 w-3.5" /> تكلفة
-                        </Button>
+                        {wp.paidProduction <= 0 && (
+                          <Button variant="outline" size="sm" onClick={() => openPaymentDialog(order, 'cost')} className="text-xs h-8 gap-1 font-medium border-rose-300 text-rose-700 hover:bg-rose-50 dark:border-rose-700 dark:text-rose-400 dark:hover:bg-rose-950/50">
+                            <DollarSign className="h-3.5 w-3.5" /> تكلفة
+                          </Button>
+                        )}
                       </div>
                     </div>
 
