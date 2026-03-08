@@ -4,8 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDeliveryMethods } from "@/components/admin/settings/DeliveryMethodsSettings";
+import { User, Phone, CreditCard, Truck, MapPin, DollarSign } from "lucide-react";
 
 interface CustomerDataFormProps {
   customerData: {
@@ -32,15 +32,18 @@ const CustomerDataForm: React.FC<CustomerDataFormProps> = ({
   const { methods: deliveryMethods } = useDeliveryMethods();
   const selectedMethod = deliveryMethods.find(m => m.name === customerData.deliveryMethod);
   const showAddress = selectedMethod?.requiresAddress ?? false;
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">بيانات العميل</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="clientName">اسم العميل</Label>
+    <div className="space-y-5">
+      {/* Customer Info Section */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 text-primary">
+          <User size={18} />
+          <h3 className="font-semibold text-sm">بيانات العميل</h3>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="clientName" className="text-xs text-muted-foreground">اسم العميل *</Label>
             <Input
               type="text"
               id="clientName"
@@ -48,43 +51,64 @@ const CustomerDataForm: React.FC<CustomerDataFormProps> = ({
               value={customerData.clientName}
               onChange={onCustomerDataChange}
               required
+              className="h-9 text-sm"
+              placeholder="أدخل اسم العميل"
             />
           </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="phone">رقم التليفون</Label>
-            <Input
-              type="tel"
-              id="phone"
-              name="phone"
-              value={customerData.phone}
-              onChange={onCustomerDataChange}
-              required
-            />
+          <div className="space-y-1.5">
+            <Label htmlFor="phone" className="text-xs text-muted-foreground">رقم التليفون *</Label>
+            <div className="relative">
+              <Phone size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="tel"
+                id="phone"
+                name="phone"
+                value={customerData.phone}
+                onChange={onCustomerDataChange}
+                required
+                className="h-9 text-sm pr-9"
+                placeholder="01xxxxxxxxx"
+              />
+            </div>
           </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="phone2">رقم إضافي (اختياري)</Label>
-            <Input
-              type="tel"
-              id="phone2"
-              name="phone2"
-              value={customerData.phone2 || ""}
-              onChange={onCustomerDataChange}
-              placeholder="رقم تليفون إضافي"
-            />
+          <div className="space-y-1.5 sm:col-span-2">
+            <Label htmlFor="phone2" className="text-xs text-muted-foreground">رقم إضافي (اختياري)</Label>
+            <div className="relative">
+              <Phone size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="tel"
+                id="phone2"
+                name="phone2"
+                value={customerData.phone2 || ""}
+                onChange={onCustomerDataChange}
+                className="h-9 text-sm pr-9"
+                placeholder="رقم تليفون إضافي"
+              />
+            </div>
           </div>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="paymentMethod">طريقة الدفع</Label>
+      </div>
+
+      <div className="border-t border-border" />
+
+      {/* Payment & Delivery Section */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 text-primary">
+          <Truck size={18} />
+          <h3 className="font-semibold text-sm">الدفع والتوصيل</h3>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">طريقة الدفع</Label>
             <Select
               value={customerData.paymentMethod}
               onValueChange={(value) => onSelectChange("paymentMethod", value)}
             >
-              <SelectTrigger>
-                <SelectValue placeholder="اختر طريقة الدفع" />
+              <SelectTrigger className="h-9 text-sm">
+                <div className="flex items-center gap-2">
+                  <CreditCard size={14} className="text-muted-foreground" />
+                  <SelectValue placeholder="اختر طريقة الدفع" />
+                </div>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="نقدي عند الاستلام">نقدي عند الاستلام</SelectItem>
@@ -93,15 +117,17 @@ const CustomerDataForm: React.FC<CustomerDataFormProps> = ({
               </SelectContent>
             </Select>
           </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="deliveryMethod">طريقة التوصيل</Label>
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">طريقة التوصيل</Label>
             <Select
               value={customerData.deliveryMethod}
               onValueChange={(value) => onSelectChange("deliveryMethod", value)}
             >
-              <SelectTrigger>
-                <SelectValue placeholder="اختر طريقة التوصيل" />
+              <SelectTrigger className="h-9 text-sm">
+                <div className="flex items-center gap-2">
+                  <Truck size={14} className="text-muted-foreground" />
+                  <SelectValue placeholder="اختر طريقة التوصيل" />
+                </div>
               </SelectTrigger>
               <SelectContent>
                 {deliveryMethods.map((method) => (
@@ -111,36 +137,58 @@ const CustomerDataForm: React.FC<CustomerDataFormProps> = ({
             </Select>
           </div>
         </div>
-        
-        {showAddress && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="address">العنوان</Label>
-              <Textarea
-                id="address"
-                name="address"
-                value={customerData.address}
-                onChange={onCustomerDataChange}
-                rows={3}
-              />
+      </div>
+
+      {/* Address Section */}
+      {showAddress && (
+        <>
+          <div className="border-t border-border" />
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-primary">
+              <MapPin size={18} />
+              <h3 className="font-semibold text-sm">العنوان</h3>
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="governorate">المحافظة</Label>
-              <Input
-                type="text"
-                id="governorate"
-                name="governorate"
-                value={customerData.governorate}
-                onChange={onCustomerDataChange}
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label htmlFor="address" className="text-xs text-muted-foreground">العنوان التفصيلي</Label>
+                <Textarea
+                  id="address"
+                  name="address"
+                  value={customerData.address}
+                  onChange={onCustomerDataChange}
+                  rows={2}
+                  className="text-sm resize-none"
+                  placeholder="أدخل العنوان بالتفصيل"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="governorate" className="text-xs text-muted-foreground">المحافظة</Label>
+                <Input
+                  type="text"
+                  id="governorate"
+                  name="governorate"
+                  value={customerData.governorate}
+                  onChange={onCustomerDataChange}
+                  className="h-9 text-sm"
+                  placeholder="المحافظة"
+                />
+              </div>
             </div>
           </div>
-        )}
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="shippingCost">مصاريف الشحن</Label>
+        </>
+      )}
+
+      <div className="border-t border-border" />
+
+      {/* Financial Section */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 text-primary">
+          <DollarSign size={18} />
+          <h3 className="font-semibold text-sm">البيانات المالية</h3>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="shippingCost" className="text-xs text-muted-foreground">الشحن</Label>
             <Input
               type="number"
               id="shippingCost"
@@ -149,11 +197,11 @@ const CustomerDataForm: React.FC<CustomerDataFormProps> = ({
               onChange={onCustomerDataChange}
               step={0.01}
               min={0}
+              className="h-9 text-sm text-center"
             />
           </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="discount">خصم على الفاتورة</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="discount" className="text-xs text-muted-foreground">الخصم</Label>
             <Input
               type="number"
               id="discount"
@@ -162,12 +210,12 @@ const CustomerDataForm: React.FC<CustomerDataFormProps> = ({
               onChange={onCustomerDataChange}
               step={0.01}
               min={0}
+              className="h-9 text-sm text-center"
               placeholder="0"
             />
           </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="deposit">العربون المدفوع</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="deposit" className="text-xs text-muted-foreground">العربون</Label>
             <Input
               type="number"
               id="deposit"
@@ -176,11 +224,12 @@ const CustomerDataForm: React.FC<CustomerDataFormProps> = ({
               onChange={onCustomerDataChange}
               step={0.01}
               min={0}
+              className="h-9 text-sm text-center"
             />
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 
