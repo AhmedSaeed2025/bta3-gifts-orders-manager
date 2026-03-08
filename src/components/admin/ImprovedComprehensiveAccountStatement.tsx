@@ -2296,10 +2296,30 @@ const ImprovedComprehensiveAccountStatement = () => {
                             {w.notes && <span className="truncate max-w-[120px]">{w.notes}</span>}
                           </div>
                         </div>
-                        <span className="text-[10px] text-muted-foreground shrink-0">
-                          {w.actual_payment_date ? format(new Date(w.actual_payment_date), 'dd/MM/yy', { locale: ar }) : 
-                           w.created_at ? format(new Date(w.created_at), 'dd/MM/yy', { locale: ar }) : ''}
-                        </span>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-[10px] text-muted-foreground">
+                            {w.actual_payment_date ? format(new Date(w.actual_payment_date), 'dd/MM/yy', { locale: ar }) : 
+                             w.created_at ? format(new Date(w.created_at), 'dd/MM/yy', { locale: ar }) : ''}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (window.confirm('هل أنت متأكد من حذف هذه الدفعة؟')) {
+                                supabase.from('workshop_payments').delete().eq('id', w.id).then(({ error }) => {
+                                  if (error) { toast.error('حدث خطأ أثناء الحذف'); return; }
+                                  queryClient.invalidateQueries({ queryKey: ['comprehensive-workshop-payments'] });
+                                  toast.success('تم حذف الدفعة بنجاح');
+                                  setLinkSelectedPayments(prev => prev.filter(id => id !== w.id));
+                                });
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
                       </div>
                     );
                   })}
