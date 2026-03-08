@@ -560,7 +560,7 @@ const ImprovedComprehensiveAccountStatement = () => {
         const { error: txError } = await supabase.from('transactions').insert({
           user_id: user.id,
           order_serial: orderSerial,
-          transaction_type: 'income',
+          transaction_type: 'order_collection',
           amount,
           description: `[order_collection] ${methodLabel} - ${notes || 'دفعة من العميل'}`
         });
