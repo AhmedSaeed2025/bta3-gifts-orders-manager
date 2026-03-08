@@ -1078,7 +1078,7 @@ const ImprovedComprehensiveAccountStatement = () => {
                     </div>
 
                     {/* Financial Grid */}
-                    <div className={`grid gap-2 mb-3 ${isMobile ? 'grid-cols-2' : 'grid-cols-5'}`}>
+                    <div className={`grid gap-2 mb-3 ${isMobile ? 'grid-cols-3' : 'grid-cols-7'}`}>
                       <div className="bg-muted/40 rounded-lg p-2 text-center">
                         <p className="text-[10px] text-muted-foreground">الإجمالي</p>
                         <p className="text-sm font-bold">{fmt(fin.total)}</p>
@@ -1090,6 +1090,18 @@ const ImprovedComprehensiveAccountStatement = () => {
                           <p className="text-[10px] text-emerald-600">فعلي: {fmt(workshopCostPaid)}</p>
                         )}
                       </div>
+                      {fin.shipping > 0 && (
+                        <div className="bg-muted/40 rounded-lg p-2 text-center">
+                          <p className="text-[10px] text-muted-foreground">الشحن</p>
+                          <p className="text-sm font-bold">{fmt(fin.shipping)}</p>
+                        </div>
+                      )}
+                      {fin.discount > 0 && (
+                        <div className="bg-muted/40 rounded-lg p-2 text-center">
+                          <p className="text-[10px] text-muted-foreground">خصم</p>
+                          <p className="text-sm font-bold text-red-500">-{fmt(fin.discount)}</p>
+                        </div>
+                      )}
                       <div className="bg-emerald-50 dark:bg-emerald-950/20 rounded-lg p-2 text-center">
                         <p className="text-[10px] text-muted-foreground">المحصل</p>
                         <p className="text-sm font-bold text-emerald-600">{fmt(fin.paid)}</p>
@@ -1101,7 +1113,7 @@ const ImprovedComprehensiveAccountStatement = () => {
                           {fmt(fin.remaining)}
                         </p>
                       </div>
-                      <div className={`rounded-lg p-2 text-center ${isMobile ? 'col-span-2' : ''} ${actualProfit >= 0 ? 'bg-blue-50 dark:bg-blue-950/20' : 'bg-red-50 dark:bg-red-950/20'}`}>
+                      <div className={`rounded-lg p-2 text-center ${isMobile ? 'col-span-3' : ''} ${actualProfit >= 0 ? 'bg-blue-50 dark:bg-blue-950/20' : 'bg-red-50 dark:bg-red-950/20'}`}>
                         <p className="text-[10px] text-muted-foreground">الربح الفعلي</p>
                         <p className={`text-sm font-bold ${actualProfit >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
                           {fmt(actualProfit)}
