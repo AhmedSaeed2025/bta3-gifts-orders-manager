@@ -341,6 +341,8 @@ const DetailedOrdersReport = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
       queryClient.invalidateQueries({ queryKey: ['admin-orders-enhanced'] });
       queryClient.invalidateQueries({ queryKey: ['admin-orders-for-modern-statement'] });
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-transactions'] });
       setPaymentDialogOpen(false);
     } catch (error) {
       console.error('Error adding payment:', error);
