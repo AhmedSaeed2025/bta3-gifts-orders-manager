@@ -823,17 +823,6 @@ const ImprovedComprehensiveAccountStatement = () => {
   // Orders filtered for cost registration tab
   const costRegFilteredOrders = useMemo(() => {
     let filtered = orders.filter(o => o.status !== 'cancelled');
-    
-    // Base filter: hide orders that already have linked payments of the current type
-    filtered = filtered.filter(o => {
-      const orderWP = allWorkshopPayments.filter(w => w.order_id === o.id);
-      if (costRegType === 'cost') {
-        return !orderWP.some(w => w.product_name !== 'shipping_cost');
-      } else {
-        const fin = calculateOrderFinancials(o);
-        return fin.shipping > 0 && !orderWP.some(w => w.product_name === 'shipping_cost');
-      }
-    });
 
     if (costRegSearch) {
       const s = costRegSearch.toLowerCase();
