@@ -22,7 +22,8 @@ import {
   Clock, Edit, Trash2, Filter, Truck, Target, FileText, Calendar,
   Receipt, CreditCard, ArrowUpDown, Factory, AlertTriangle, 
   ArrowDownLeft, ArrowUpRight, Package, CheckCircle2, XCircle,
-  BarChart3, Banknote, Scale
+  BarChart3, Banknote, Scale, Search, Eye, Phone, MapPin,
+  Smartphone, Building2, ChevronDown, ChevronUp, ListOrdered
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
@@ -46,7 +47,14 @@ const ImprovedComprehensiveAccountStatement = () => {
   const [editTransactionDialog, setEditTransactionDialog] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [filterType, setFilterType] = useState<string>('all');
-  const [activeSection, setActiveSection] = useState<'summary' | 'comparison' | 'cashflow' | 'transactions'>('summary');
+  const [activeSection, setActiveSection] = useState<'summary' | 'orders' | 'comparison' | 'cashflow' | 'transactions'>('summary');
+  const [orderSearch, setOrderSearch] = useState('');
+  const [orderPaymentFilter, setOrderPaymentFilter] = useState<'all' | 'paid' | 'partial' | 'unpaid'>('all');
+  const [orderSortBy, setOrderSortBy] = useState<'date' | 'remaining' | 'total'>('date');
+  const [paymentDialog, setPaymentDialog] = useState<{ open: boolean; order: any; type: 'collection' | 'cost' | 'instapay' | 'wallet' | 'shipping_company' }>({ open: false, order: null, type: 'collection' });
+  const [paymentAmount, setPaymentAmount] = useState('');
+  const [paymentNotes, setPaymentNotes] = useState('');
+  const [orderDetailsDialog, setOrderDetailsDialog] = useState<{ open: boolean; order: any }>({ open: false, order: null });
   
   const [newTransaction, setNewTransaction] = useState({
     amount: '',
@@ -411,10 +419,120 @@ const ImprovedComprehensiveAccountStatement = () => {
     });
   }, [transactions, filterType]);
 
+  // Filtered & sorted orders for the orders tab
+  const displayOrders = useMemo(() => {
+    let filtered = orders.filter(o => o.status !== 'cancelled');
+    
+    // Search
+    if (orderSearch) {
+      const s = orderSearch.toLowerCase();
+      filtered = filtered.filter(o => 
+        o.serial?.toLowerCase().includes(s) ||
+        o.client_name?.toLowerCase().includes(s) ||
+        o.phone?.includes(s)
+      );
+    }
+
+    // Payment filter
+    if (orderPaymentFilter !== 'all') {
+      filtered = filtered.filter(o => {
+        const fin = calculateOrderFinancials(o);
+        if (orderPaymentFilter === 'paid') return fin.remaining === 0;
+        if (orderPaymentFilter === 'unpaid') return fin.paid === 0 && fin.total > 0;
+        if (orderPaymentFilter === 'partial') return fin.paid > 0 && fin.remaining > 0;
+        return true;
+      });
+    }
+
+    // Sort
+    filtered.sort((a, b) => {
+      if (orderSortBy === 'remaining') {
+        return calculateOrderFinancials(b).remaining - calculateOrderFinancials(a).remaining;
+      }
+      if (orderSortBy === 'total') {
+        return calculateOrderFinancials(b).total - calculateOrderFinancials(a).total;
+      }
+      return new Date(b.date_created).getTime() - new Date(a.date_created).getTime();
+    });
+
+    return filtered;
+  }, [orders, orderSearch, orderPaymentFilter, orderSortBy]);
+
+  // Payment mutation for orders tab
+  const orderPaymentMutation = useMutation({
+    mutationFn: async ({ orderId, orderSerial, amount, type, notes }: { orderId: string; orderSerial: string; amount: number; type: string; notes: string }) => {
+      if (!user) throw new Error('Not authenticated');
+      
+      // Find the order
+      const order = orders.find(o => o.id === orderId);
+      if (!order) throw new Error('Order not found');
+
+      if (type === 'collection' || type === 'instapay' || type === 'wallet' || type === 'shipping_company') {
+        // Update order payments_received
+        const currentPaid = Number(order.payments_received || 0);
+        const newPaid = currentPaid + amount;
+        const fin = calculateOrderFinancials(order);
+        const newRemaining = Math.max(0, fin.total - Number(order.deposit || 0) - newPaid);
+
+        const { error: orderError } = await supabase
+          .from('orders')
+          .update({ payments_received: newPaid, remaining_amount: newRemaining })
+          .eq('id', orderId);
+        if (orderError) throw orderError;
+
+        // Add transaction
+        const methodLabel = type === 'instapay' ? 'انستا باي' : type === 'wallet' ? 'محفظة' : type === 'shipping_company' ? 'شركة شحن' : 'تحصيل';
+        const { error: txError } = await supabase.from('transactions').insert({
+          user_id: user.id,
+          order_serial: orderSerial,
+          transaction_type: 'income',
+          amount,
+          description: `[order_collection] ${methodLabel} - ${notes || 'دفعة من العميل'}`
+        });
+        if (txError) throw txError;
+
+      } else if (type === 'cost') {
+        // Register workshop payment
+        const { error: wpError } = await supabase.from('workshop_payments').insert({
+          user_id: user.id,
+          order_id: orderId,
+          workshop_name: notes || 'ورشة',
+          product_name: 'تكلفة إنتاج',
+          cost_amount: amount,
+          payment_status: 'Paid',
+          actual_payment_date: new Date().toISOString().split('T')[0]
+        });
+        if (wpError) throw wpError;
+
+        // Add expense transaction
+        const { error: txError } = await supabase.from('transactions').insert({
+          user_id: user.id,
+          order_serial: orderSerial,
+          transaction_type: 'expense',
+          amount,
+          description: `[cost] تكلفة ورشة - ${notes || ''}`
+        });
+        if (txError) throw txError;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-workshop-payments'] });
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-customer-payments'] });
+      toast.success('تم تسجيل الدفعة بنجاح');
+      setPaymentDialog({ open: false, order: null, type: 'collection' });
+      setPaymentAmount('');
+      setPaymentNotes('');
+    },
+    onError: () => toast.error('حدث خطأ في تسجيل الدفعة')
+  });
+
   const fmt = (n: number) => formatCurrency(n);
 
   const sections = [
     { id: 'summary', label: 'الملخص', icon: BarChart3 },
+    { id: 'orders', label: 'تفاصيل الطلبات', icon: ListOrdered },
     { id: 'comparison', label: 'متوقع vs فعلي', icon: Scale },
     { id: 'cashflow', label: 'حركة النقدية', icon: ArrowUpDown },
     { id: 'transactions', label: 'المعاملات', icon: FileText },
@@ -853,6 +971,184 @@ const ImprovedComprehensiveAccountStatement = () => {
         </div>
       )}
 
+      {/* ======= SECTION: تفاصيل الطلبات ======= */}
+      {activeSection === 'orders' && (
+        <div className="space-y-4">
+          {/* Filters */}
+          <Card>
+            <CardContent className="p-4">
+              <div className={`flex ${isMobile ? 'flex-col' : 'items-center'} gap-3`}>
+                <div className="relative flex-1">
+                  <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="بحث بالسيريال أو اسم العميل أو الموبايل..."
+                    value={orderSearch}
+                    onChange={e => setOrderSearch(e.target.value)}
+                    className="pr-10"
+                  />
+                </div>
+                <Select value={orderPaymentFilter} onValueChange={(v: any) => setOrderPaymentFilter(v)}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="حالة الدفع" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">الكل</SelectItem>
+                    <SelectItem value="paid">مدفوع بالكامل</SelectItem>
+                    <SelectItem value="partial">مدفوع جزئياً</SelectItem>
+                    <SelectItem value="unpaid">لم يُدفع</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={orderSortBy} onValueChange={(v: any) => setOrderSortBy(v)}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="ترتيب" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="date">بالتاريخ</SelectItem>
+                    <SelectItem value="remaining">بالمتبقي</SelectItem>
+                    <SelectItem value="total">بالإجمالي</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex gap-2 mt-2 text-xs text-muted-foreground">
+                <Badge variant="secondary">{displayOrders.length} طلب</Badge>
+                <Badge variant="outline" className="text-emerald-600 border-emerald-300">
+                  محصل: {fmt(displayOrders.reduce((s, o) => s + calculateOrderFinancials(o).paid, 0))}
+                </Badge>
+                <Badge variant="outline" className="text-amber-600 border-amber-300">
+                  متبقي: {fmt(displayOrders.reduce((s, o) => s + calculateOrderFinancials(o).remaining, 0))}
+                </Badge>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Orders List */}
+          <div className="space-y-3 max-h-[600px] overflow-y-auto">
+            {displayOrders.length === 0 ? (
+              <Card>
+                <CardContent className="py-10 text-center text-muted-foreground">
+                  <Package className="h-12 w-12 mx-auto mb-3 opacity-40" />
+                  <p>لا توجد طلبات مطابقة</p>
+                </CardContent>
+              </Card>
+            ) : displayOrders.map(order => {
+              const fin = calculateOrderFinancials(order);
+              const orderWP = workshopPayments.filter(w => w.order_id === order.id);
+              const workshopCostPaid = orderWP.filter(w => w.payment_status === 'Paid').reduce((s, w) => s + Number(w.cost_amount), 0);
+              const workshopCostDue = orderWP.filter(w => w.payment_status !== 'Paid').reduce((s, w) => s + Number(w.cost_amount), 0);
+              const expectedCost = (order.order_items || []).reduce((s: number, i: any) => s + (Number(i.cost || 0) * Number(i.quantity || 1)), 0);
+              const actualProfit = fin.paid - workshopCostPaid;
+              const paymentPercent = fin.total > 0 ? Math.min(100, (fin.paid / fin.total) * 100) : 0;
+              const paymentStatus = fin.remaining === 0 ? 'paid' : fin.paid > 0 ? 'partial' : 'unpaid';
+
+              return (
+                <Card key={order.id} className={`transition-all hover:shadow-md border-r-4 ${
+                  paymentStatus === 'paid' ? 'border-r-emerald-500' 
+                    : paymentStatus === 'partial' ? 'border-r-amber-500' 
+                    : 'border-r-red-500'
+                }`}>
+                  <CardContent className="p-4">
+                    {/* Header */}
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="font-mono text-xs">{order.serial}</Badge>
+                        <Badge className={`text-[10px] ${
+                          order.status === 'delivered' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' 
+                            : order.status === 'shipped' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                            : 'bg-muted text-muted-foreground'
+                        }`}>
+                          {order.status === 'delivered' ? 'تم التوصيل' : order.status === 'shipped' ? 'تم الشحن' 
+                            : order.status === 'printing' ? 'في المطبعة' : order.status === 'pending' ? 'قيد الانتظار' : order.status}
+                        </Badge>
+                      </div>
+                      <span className="text-xs text-muted-foreground">
+                        {format(new Date(order.date_created), 'dd/MM/yyyy', { locale: ar })}
+                      </span>
+                    </div>
+
+                    {/* Customer */}
+                    <div className="flex items-center gap-2 mb-3 text-sm">
+                      <span className="font-semibold text-foreground">{order.client_name}</span>
+                      {order.phone && (
+                        <span className="text-muted-foreground text-xs flex items-center gap-1">
+                          <Phone className="h-3 w-3" />{order.phone}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Financial Grid */}
+                    <div className={`grid gap-2 mb-3 ${isMobile ? 'grid-cols-2' : 'grid-cols-5'}`}>
+                      <div className="bg-muted/40 rounded-lg p-2 text-center">
+                        <p className="text-[10px] text-muted-foreground">الإجمالي</p>
+                        <p className="text-sm font-bold">{fmt(fin.total)}</p>
+                      </div>
+                      <div className="bg-muted/40 rounded-lg p-2 text-center">
+                        <p className="text-[10px] text-muted-foreground">التكلفة</p>
+                        <p className="text-sm font-bold">{fmt(expectedCost)}</p>
+                        {workshopCostPaid > 0 && (
+                          <p className="text-[10px] text-emerald-600">فعلي: {fmt(workshopCostPaid)}</p>
+                        )}
+                      </div>
+                      <div className="bg-emerald-50 dark:bg-emerald-950/20 rounded-lg p-2 text-center">
+                        <p className="text-[10px] text-muted-foreground">المحصل</p>
+                        <p className="text-sm font-bold text-emerald-600">{fmt(fin.paid)}</p>
+                        {fin.deposit > 0 && <p className="text-[10px] text-muted-foreground">عربون: {fmt(fin.deposit)}</p>}
+                      </div>
+                      <div className={`rounded-lg p-2 text-center ${fin.remaining > 0 ? 'bg-red-50 dark:bg-red-950/20' : 'bg-emerald-50 dark:bg-emerald-950/20'}`}>
+                        <p className="text-[10px] text-muted-foreground">المتبقي</p>
+                        <p className={`text-sm font-bold ${fin.remaining > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                          {fmt(fin.remaining)}
+                        </p>
+                      </div>
+                      <div className={`rounded-lg p-2 text-center ${isMobile ? 'col-span-2' : ''} ${actualProfit >= 0 ? 'bg-blue-50 dark:bg-blue-950/20' : 'bg-red-50 dark:bg-red-950/20'}`}>
+                        <p className="text-[10px] text-muted-foreground">الربح الفعلي</p>
+                        <p className={`text-sm font-bold ${actualProfit >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                          {fmt(actualProfit)}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Progress bar */}
+                    <Progress value={paymentPercent} className="h-1.5 mb-3" />
+
+                    {/* Actions */}
+                    <div className={`flex ${isMobile ? 'flex-col' : 'flex-wrap'} gap-2`}>
+                      {fin.remaining > 0 && (
+                        <>
+                          <Button size="sm" variant="outline" className="gap-1 text-xs h-8 border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-400"
+                            onClick={() => { setPaymentDialog({ open: true, order, type: 'collection' }); setPaymentAmount(String(fin.remaining)); }}>
+                            <DollarSign className="h-3 w-3" /> تحصيل
+                          </Button>
+                          <Button size="sm" variant="outline" className="gap-1 text-xs h-8 border-purple-300 text-purple-700 hover:bg-purple-50 dark:border-purple-700 dark:text-purple-400"
+                            onClick={() => { setPaymentDialog({ open: true, order, type: 'instapay' }); setPaymentAmount(String(fin.remaining)); }}>
+                            <Smartphone className="h-3 w-3" /> انستا باي
+                          </Button>
+                          <Button size="sm" variant="outline" className="gap-1 text-xs h-8 border-orange-300 text-orange-700 hover:bg-orange-50 dark:border-orange-700 dark:text-orange-400"
+                            onClick={() => { setPaymentDialog({ open: true, order, type: 'wallet' }); setPaymentAmount(String(fin.remaining)); }}>
+                            <Wallet className="h-3 w-3" /> محفظة
+                          </Button>
+                          <Button size="sm" variant="outline" className="gap-1 text-xs h-8 border-blue-300 text-blue-700 hover:bg-blue-50 dark:border-blue-700 dark:text-blue-400"
+                            onClick={() => { setPaymentDialog({ open: true, order, type: 'shipping_company' }); setPaymentAmount(String(fin.remaining)); }}>
+                            <Truck className="h-3 w-3" /> شركة شحن
+                          </Button>
+                        </>
+                      )}
+                      <Button size="sm" variant="outline" className="gap-1 text-xs h-8 border-red-300 text-red-700 hover:bg-red-50 dark:border-red-700 dark:text-red-400"
+                        onClick={() => { setPaymentDialog({ open: true, order, type: 'cost' }); setPaymentAmount(String(expectedCost)); }}>
+                        <Factory className="h-3 w-3" /> تكلفة ورشة
+                      </Button>
+                      <Button size="sm" variant="ghost" className="gap-1 text-xs h-8"
+                        onClick={() => setOrderDetailsDialog({ open: true, order })}>
+                        <Eye className="h-3 w-3" /> تفاصيل
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* ======= SECTION: مقارنة المتوقع vs الفعلي ======= */}
       {activeSection === 'comparison' && (
         <div className="space-y-5">
@@ -1178,6 +1474,169 @@ const ImprovedComprehensiveAccountStatement = () => {
               </DialogFooter>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Payment Dialog */}
+      <Dialog open={paymentDialog.open} onOpenChange={(open) => { if (!open) setPaymentDialog({ open: false, order: null, type: 'collection' }); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {paymentDialog.type === 'cost' ? 'تسجيل تكلفة ورشة' 
+                : paymentDialog.type === 'instapay' ? 'تحصيل عبر انستا باي'
+                : paymentDialog.type === 'wallet' ? 'تحصيل عبر محفظة'
+                : paymentDialog.type === 'shipping_company' ? 'تحصيل عبر شركة شحن'
+                : 'تحصيل من العميل'}
+            </DialogTitle>
+          </DialogHeader>
+          {paymentDialog.order && (
+            <div className="space-y-4">
+              <div className="bg-muted/50 rounded-lg p-3 text-sm space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">الطلب</span>
+                  <span className="font-mono font-bold">{paymentDialog.order.serial}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">العميل</span>
+                  <span className="font-medium">{paymentDialog.order.client_name}</span>
+                </div>
+                {paymentDialog.type !== 'cost' && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">المتبقي</span>
+                    <span className="font-bold text-red-600">{fmt(calculateOrderFinancials(paymentDialog.order).remaining)}</span>
+                  </div>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label>المبلغ (ج.م)</Label>
+                <Input type="number" value={paymentAmount} onChange={e => setPaymentAmount(e.target.value)} placeholder="أدخل المبلغ" />
+              </div>
+              <div className="space-y-2">
+                <Label>{paymentDialog.type === 'cost' ? 'اسم الورشة / ملاحظات' : 'ملاحظات (اختياري)'}</Label>
+                <Input value={paymentNotes} onChange={e => setPaymentNotes(e.target.value)} 
+                  placeholder={paymentDialog.type === 'cost' ? 'اسم الورشة' : 'ملاحظات'} />
+              </div>
+              <DialogFooter className="gap-2">
+                <Button variant="outline" onClick={() => setPaymentDialog({ open: false, order: null, type: 'collection' })}>إلغاء</Button>
+                <Button 
+                  disabled={!paymentAmount || orderPaymentMutation.isPending}
+                  onClick={() => {
+                    orderPaymentMutation.mutate({
+                      orderId: paymentDialog.order.id,
+                      orderSerial: paymentDialog.order.serial,
+                      amount: parseFloat(paymentAmount),
+                      type: paymentDialog.type,
+                      notes: paymentNotes
+                    });
+                  }}>
+                  {orderPaymentMutation.isPending ? 'جاري...' : 'تأكيد'}
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Order Details Dialog */}
+      <Dialog open={orderDetailsDialog.open} onOpenChange={(open) => { if (!open) setOrderDetailsDialog({ open: false, order: null }); }}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              تفاصيل الطلب {orderDetailsDialog.order?.serial}
+            </DialogTitle>
+          </DialogHeader>
+          {orderDetailsDialog.order && (() => {
+            const o = orderDetailsDialog.order;
+            const fin = calculateOrderFinancials(o);
+            const orderWP = workshopPayments.filter(w => w.order_id === o.id);
+            const wpPaid = orderWP.filter(w => w.payment_status === 'Paid').reduce((s: number, w: any) => s + Number(w.cost_amount), 0);
+            const expectedCost = (o.order_items || []).reduce((s: number, i: any) => s + (Number(i.cost || 0) * Number(i.quantity || 1)), 0);
+            return (
+              <div className="space-y-4 text-sm" dir="rtl">
+                {/* Customer Info */}
+                <div className="bg-muted/30 rounded-lg p-3 space-y-2">
+                  <h4 className="font-semibold flex items-center gap-2"><Phone className="h-4 w-4" /> بيانات العميل</h4>
+                  <div className="grid grid-cols-2 gap-2 mr-6">
+                    <div><span className="text-muted-foreground">الاسم:</span> <span className="font-medium">{o.client_name}</span></div>
+                    <div><span className="text-muted-foreground">الموبايل:</span> <span className="font-medium">{o.phone}</span></div>
+                    {o.phone2 && <div><span className="text-muted-foreground">موبايل 2:</span> <span className="font-medium">{o.phone2}</span></div>}
+                    {o.governorate && <div><span className="text-muted-foreground">المحافظة:</span> <span className="font-medium">{o.governorate}</span></div>}
+                    {o.address && <div className="col-span-2"><span className="text-muted-foreground">العنوان:</span> <span className="font-medium">{o.address}</span></div>}
+                  </div>
+                </div>
+
+                {/* Items */}
+                <div className="bg-muted/30 rounded-lg p-3 space-y-2">
+                  <h4 className="font-semibold flex items-center gap-2"><Package className="h-4 w-4" /> المنتجات</h4>
+                  <div className="space-y-1.5 mr-6">
+                    {(o.order_items || []).map((item: any, idx: number) => (
+                      <div key={idx} className="flex justify-between items-center bg-card rounded p-2 border">
+                        <div>
+                          <span className="font-medium">{item.product_type}</span>
+                          <span className="text-muted-foreground text-xs mr-2">({item.size}) × {item.quantity}</span>
+                        </div>
+                        <div className="text-left">
+                          <p className="font-medium">{fmt(Number(item.price || 0) * Number(item.quantity || 1))}</p>
+                          <p className="text-[10px] text-muted-foreground">تكلفة: {fmt(Number(item.cost || 0) * Number(item.quantity || 1))}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Financial Summary */}
+                <div className="bg-muted/30 rounded-lg p-3 space-y-2">
+                  <h4 className="font-semibold flex items-center gap-2"><Calculator className="h-4 w-4" /> الملخص المالي</h4>
+                  <div className="space-y-1.5 mr-6">
+                    <div className="flex justify-between"><span className="text-muted-foreground">إجمالي الفاتورة</span><span className="font-bold">{fmt(fin.total)}</span></div>
+                    {fin.shipping > 0 && <div className="flex justify-between"><span className="text-muted-foreground">الشحن</span><span>{fmt(fin.shipping)}</span></div>}
+                    {fin.discount > 0 && <div className="flex justify-between"><span className="text-muted-foreground">خصم</span><span className="text-red-600">-{fmt(fin.discount)}</span></div>}
+                    <Separator />
+                    <div className="flex justify-between"><span className="text-muted-foreground">تكلفة الإنتاج (متوقعة)</span><span>{fmt(expectedCost)}</span></div>
+                    {wpPaid > 0 && <div className="flex justify-between"><span className="text-muted-foreground">تكلفة ورشة (مدفوعة)</span><span className="text-red-600">{fmt(wpPaid)}</span></div>}
+                    <Separator />
+                    <div className="flex justify-between"><span className="text-emerald-600">المحصل</span><span className="font-bold text-emerald-600">{fmt(fin.paid)}</span></div>
+                    {fin.deposit > 0 && <div className="flex justify-between text-xs"><span className="text-muted-foreground mr-4">↳ عربون</span><span>{fmt(fin.deposit)}</span></div>}
+                    {fin.paymentsReceived > 0 && <div className="flex justify-between text-xs"><span className="text-muted-foreground mr-4">↳ دفعات</span><span>{fmt(fin.paymentsReceived)}</span></div>}
+                    <div className="flex justify-between"><span className={fin.remaining > 0 ? 'text-red-600' : 'text-emerald-600'}>المتبقي</span><span className={`font-bold ${fin.remaining > 0 ? 'text-red-600' : 'text-emerald-600'}`}>{fmt(fin.remaining)}</span></div>
+                    <Separator />
+                    <div className="flex justify-between font-bold"><span>الربح الفعلي</span><span className={fin.paid - wpPaid >= 0 ? 'text-emerald-600' : 'text-red-600'}>{fmt(fin.paid - wpPaid)}</span></div>
+                  </div>
+                </div>
+
+                {/* Workshop Payments */}
+                {orderWP.length > 0 && (
+                  <div className="bg-muted/30 rounded-lg p-3 space-y-2">
+                    <h4 className="font-semibold flex items-center gap-2"><Factory className="h-4 w-4" /> مدفوعات الورش</h4>
+                    <div className="space-y-1.5 mr-6">
+                      {orderWP.map((w: any) => (
+                        <div key={w.id} className="flex justify-between items-center bg-card rounded p-2 border">
+                          <div>
+                            <span className="font-medium">{w.workshop_name}</span>
+                            <span className="text-muted-foreground text-xs mr-2">{w.product_name}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant={w.payment_status === 'Paid' ? 'default' : 'secondary'} className="text-[10px]">
+                              {w.payment_status === 'Paid' ? 'مدفوع' : 'مستحق'}
+                            </Badge>
+                            <span className="font-medium">{fmt(Number(w.cost_amount))}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {o.notes && (
+                  <div className="bg-amber-50 dark:bg-amber-950/20 rounded-lg p-3">
+                    <p className="text-xs text-muted-foreground mb-1">ملاحظات:</p>
+                    <p className="text-sm">{o.notes}</p>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
         </DialogContent>
       </Dialog>
     </div>
