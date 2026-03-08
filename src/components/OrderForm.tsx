@@ -19,6 +19,7 @@ interface OrderFormProps {
 const OrderForm = ({ editingOrder }: OrderFormProps) => {
   const { addOrder, updateOrder } = useSupabaseOrders();
   const navigate = useNavigate();
+  const location = useLocation();
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   
