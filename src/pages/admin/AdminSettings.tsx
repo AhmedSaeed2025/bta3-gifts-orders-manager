@@ -147,6 +147,10 @@ const AdminSettings = () => {
             <Receipt className="h-4 w-4" />
             سياسة الفاتورة
           </TabsTrigger>
+          <TabsTrigger value="tabs-management" className="flex items-center gap-2">
+            <LayoutList className="h-4 w-4" />
+            القوائم
+          </TabsTrigger>
           <TabsTrigger value="policies" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
             السياسات
