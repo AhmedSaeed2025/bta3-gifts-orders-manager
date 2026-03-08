@@ -169,7 +169,7 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
         remaining_amount: remainingAmount,
         profit: netProfit,
         status: editingOrder?.status || "pending",
-        discount: 0,
+        discount: customerData.discount,
         notes: notes.trim() || undefined
       };
 
