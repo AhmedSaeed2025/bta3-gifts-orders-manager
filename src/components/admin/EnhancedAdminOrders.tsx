@@ -141,47 +141,58 @@ const EnhancedAdminOrders = () => {
 
   // Delete order mutation
   const deleteOrderMutation = useMutation({
-    mutationFn: async ({ orderId, serial }: { orderId: string; serial: string }) => {
+    mutationFn: async ({ adminOrderId, serial }: { adminOrderId: string; serial: string }) => {
       if (!user) throw new Error('يجب تسجيل الدخول أولاً');
 
-      // Delete dependent records first (in case FK cascade is not configured)
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .delete()
-        .eq('order_id', orderId);
-
-      if (itemsError) throw itemsError;
-
-      const { error: customerPaymentsError } = await supabase
-        .from('customer_payments')
-        .delete()
-        .eq('order_id', orderId)
-        .eq('user_id', user.id);
-
-      if (customerPaymentsError) throw customerPaymentsError;
-
-      const { error: workshopPaymentsError } = await supabase
-        .from('workshop_payments')
-        .delete()
-        .eq('order_id', orderId)
-        .eq('user_id', user.id);
-
-      if (workshopPaymentsError) throw workshopPaymentsError;
-
-      // Delete from orders table (source for expected cost/shipping)
-      const { error: ordersError } = await supabase
+      // Resolve real order id from orders table by serial (admin_orders.id is different)
+      const { data: orderRow, error: orderLookupError } = await supabase
         .from('orders')
-        .delete()
-        .eq('id', orderId)
-        .eq('user_id', user.id);
+        .select('id')
+        .eq('serial', serial)
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-      if (ordersError) throw ordersError;
+      if (orderLookupError) throw orderLookupError;
+
+      if (orderRow?.id) {
+        // Delete dependent records first (in case FK cascade is not configured)
+        const { error: itemsError } = await supabase
+          .from('order_items')
+          .delete()
+          .eq('order_id', orderRow.id);
+
+        if (itemsError) throw itemsError;
+
+        const { error: customerPaymentsError } = await supabase
+          .from('customer_payments')
+          .delete()
+          .eq('order_id', orderRow.id)
+          .eq('user_id', user.id);
+
+        if (customerPaymentsError) throw customerPaymentsError;
+
+        const { error: workshopPaymentsError } = await supabase
+          .from('workshop_payments')
+          .delete()
+          .eq('order_id', orderRow.id)
+          .eq('user_id', user.id);
+
+        if (workshopPaymentsError) throw workshopPaymentsError;
+
+        const { error: ordersError } = await supabase
+          .from('orders')
+          .delete()
+          .eq('id', orderRow.id)
+          .eq('user_id', user.id);
+
+        if (ordersError) throw ordersError;
+      }
 
       // Keep admin_orders in sync
       const { error: adminError } = await supabase
         .from('admin_orders')
         .delete()
-        .eq('id', orderId)
+        .eq('id', adminOrderId)
         .eq('serial', serial)
         .eq('user_id', user.id);
 
@@ -219,7 +230,7 @@ const EnhancedAdminOrders = () => {
 
   const handleDeleteOrder = (order: Order) => {
     if (window.confirm(`هل أنت متأكد من حذف الطلب ${order.serial}؟`)) {
-      deleteOrderMutation.mutate({ orderId: order.id, serial: order.serial });
+      deleteOrderMutation.mutate({ adminOrderId: order.id, serial: order.serial });
     }
   };
 
