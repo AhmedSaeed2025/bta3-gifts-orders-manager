@@ -57,6 +57,7 @@ const DetailedOrdersReport = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilters, setStatusFilters] = useState<string[]>([]);
   const [paymentFilter, setPaymentFilter] = useState("all");
+  const [deliveryFilter, setDeliveryFilter] = useState("all");
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
