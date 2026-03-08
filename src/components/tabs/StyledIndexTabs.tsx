@@ -56,9 +56,9 @@ const FILTER_STORAGE_KEY = 'app_date_filter';
 
 const StyledIndexTabs = () => {
   const isMobile = useIsMobile();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState("dashboard");
-  
-  // Load saved filter from localStorage
+
   const getSavedFilter = () => {
     try {
       const saved = localStorage.getItem(FILTER_STORAGE_KEY);
