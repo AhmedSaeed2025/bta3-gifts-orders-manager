@@ -46,7 +46,14 @@ const ImprovedComprehensiveAccountStatement = () => {
   const [editTransactionDialog, setEditTransactionDialog] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [filterType, setFilterType] = useState<string>('all');
-  const [activeSection, setActiveSection] = useState<'summary' | 'comparison' | 'cashflow' | 'transactions'>('summary');
+  const [activeSection, setActiveSection] = useState<'summary' | 'orders' | 'comparison' | 'cashflow' | 'transactions'>('summary');
+  const [orderSearch, setOrderSearch] = useState('');
+  const [orderPaymentFilter, setOrderPaymentFilter] = useState<'all' | 'paid' | 'partial' | 'unpaid'>('all');
+  const [orderSortBy, setOrderSortBy] = useState<'date' | 'remaining' | 'total'>('date');
+  const [paymentDialog, setPaymentDialog] = useState<{ open: boolean; order: any; type: 'collection' | 'cost' | 'instapay' | 'wallet' | 'shipping_company' }>({ open: false, order: null, type: 'collection' });
+  const [paymentAmount, setPaymentAmount] = useState('');
+  const [paymentNotes, setPaymentNotes] = useState('');
+  const [orderDetailsDialog, setOrderDetailsDialog] = useState<{ open: boolean; order: any }>({ open: false, order: null });
   
   const [newTransaction, setNewTransaction] = useState({
     amount: '',
