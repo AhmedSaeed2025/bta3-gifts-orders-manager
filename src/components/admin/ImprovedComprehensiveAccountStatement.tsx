@@ -971,6 +971,184 @@ const ImprovedComprehensiveAccountStatement = () => {
         </div>
       )}
 
+      {/* ======= SECTION: تفاصيل الطلبات ======= */}
+      {activeSection === 'orders' && (
+        <div className="space-y-4">
+          {/* Filters */}
+          <Card>
+            <CardContent className="p-4">
+              <div className={`flex ${isMobile ? 'flex-col' : 'items-center'} gap-3`}>
+                <div className="relative flex-1">
+                  <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="بحث بالسيريال أو اسم العميل أو الموبايل..."
+                    value={orderSearch}
+                    onChange={e => setOrderSearch(e.target.value)}
+                    className="pr-10"
+                  />
+                </div>
+                <Select value={orderPaymentFilter} onValueChange={(v: any) => setOrderPaymentFilter(v)}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="حالة الدفع" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">الكل</SelectItem>
+                    <SelectItem value="paid">مدفوع بالكامل</SelectItem>
+                    <SelectItem value="partial">مدفوع جزئياً</SelectItem>
+                    <SelectItem value="unpaid">لم يُدفع</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={orderSortBy} onValueChange={(v: any) => setOrderSortBy(v)}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="ترتيب" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="date">بالتاريخ</SelectItem>
+                    <SelectItem value="remaining">بالمتبقي</SelectItem>
+                    <SelectItem value="total">بالإجمالي</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex gap-2 mt-2 text-xs text-muted-foreground">
+                <Badge variant="secondary">{displayOrders.length} طلب</Badge>
+                <Badge variant="outline" className="text-emerald-600 border-emerald-300">
+                  محصل: {fmt(displayOrders.reduce((s, o) => s + calculateOrderFinancials(o).paid, 0))}
+                </Badge>
+                <Badge variant="outline" className="text-amber-600 border-amber-300">
+                  متبقي: {fmt(displayOrders.reduce((s, o) => s + calculateOrderFinancials(o).remaining, 0))}
+                </Badge>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Orders List */}
+          <div className="space-y-3 max-h-[600px] overflow-y-auto">
+            {displayOrders.length === 0 ? (
+              <Card>
+                <CardContent className="py-10 text-center text-muted-foreground">
+                  <Package className="h-12 w-12 mx-auto mb-3 opacity-40" />
+                  <p>لا توجد طلبات مطابقة</p>
+                </CardContent>
+              </Card>
+            ) : displayOrders.map(order => {
+              const fin = calculateOrderFinancials(order);
+              const orderWP = workshopPayments.filter(w => w.order_id === order.id);
+              const workshopCostPaid = orderWP.filter(w => w.payment_status === 'Paid').reduce((s, w) => s + Number(w.cost_amount), 0);
+              const workshopCostDue = orderWP.filter(w => w.payment_status !== 'Paid').reduce((s, w) => s + Number(w.cost_amount), 0);
+              const expectedCost = (order.order_items || []).reduce((s: number, i: any) => s + (Number(i.cost || 0) * Number(i.quantity || 1)), 0);
+              const actualProfit = fin.paid - workshopCostPaid;
+              const paymentPercent = fin.total > 0 ? Math.min(100, (fin.paid / fin.total) * 100) : 0;
+              const paymentStatus = fin.remaining === 0 ? 'paid' : fin.paid > 0 ? 'partial' : 'unpaid';
+
+              return (
+                <Card key={order.id} className={`transition-all hover:shadow-md border-r-4 ${
+                  paymentStatus === 'paid' ? 'border-r-emerald-500' 
+                    : paymentStatus === 'partial' ? 'border-r-amber-500' 
+                    : 'border-r-red-500'
+                }`}>
+                  <CardContent className="p-4">
+                    {/* Header */}
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="font-mono text-xs">{order.serial}</Badge>
+                        <Badge className={`text-[10px] ${
+                          order.status === 'delivered' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' 
+                            : order.status === 'shipped' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                            : 'bg-muted text-muted-foreground'
+                        }`}>
+                          {order.status === 'delivered' ? 'تم التوصيل' : order.status === 'shipped' ? 'تم الشحن' 
+                            : order.status === 'printing' ? 'في المطبعة' : order.status === 'pending' ? 'قيد الانتظار' : order.status}
+                        </Badge>
+                      </div>
+                      <span className="text-xs text-muted-foreground">
+                        {format(new Date(order.date_created), 'dd/MM/yyyy', { locale: ar })}
+                      </span>
+                    </div>
+
+                    {/* Customer */}
+                    <div className="flex items-center gap-2 mb-3 text-sm">
+                      <span className="font-semibold text-foreground">{order.client_name}</span>
+                      {order.phone && (
+                        <span className="text-muted-foreground text-xs flex items-center gap-1">
+                          <Phone className="h-3 w-3" />{order.phone}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Financial Grid */}
+                    <div className={`grid gap-2 mb-3 ${isMobile ? 'grid-cols-2' : 'grid-cols-5'}`}>
+                      <div className="bg-muted/40 rounded-lg p-2 text-center">
+                        <p className="text-[10px] text-muted-foreground">الإجمالي</p>
+                        <p className="text-sm font-bold">{fmt(fin.total)}</p>
+                      </div>
+                      <div className="bg-muted/40 rounded-lg p-2 text-center">
+                        <p className="text-[10px] text-muted-foreground">التكلفة</p>
+                        <p className="text-sm font-bold">{fmt(expectedCost)}</p>
+                        {workshopCostPaid > 0 && (
+                          <p className="text-[10px] text-emerald-600">فعلي: {fmt(workshopCostPaid)}</p>
+                        )}
+                      </div>
+                      <div className="bg-emerald-50 dark:bg-emerald-950/20 rounded-lg p-2 text-center">
+                        <p className="text-[10px] text-muted-foreground">المحصل</p>
+                        <p className="text-sm font-bold text-emerald-600">{fmt(fin.paid)}</p>
+                        {fin.deposit > 0 && <p className="text-[10px] text-muted-foreground">عربون: {fmt(fin.deposit)}</p>}
+                      </div>
+                      <div className={`rounded-lg p-2 text-center ${fin.remaining > 0 ? 'bg-red-50 dark:bg-red-950/20' : 'bg-emerald-50 dark:bg-emerald-950/20'}`}>
+                        <p className="text-[10px] text-muted-foreground">المتبقي</p>
+                        <p className={`text-sm font-bold ${fin.remaining > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                          {fmt(fin.remaining)}
+                        </p>
+                      </div>
+                      <div className={`rounded-lg p-2 text-center ${isMobile ? 'col-span-2' : ''} ${actualProfit >= 0 ? 'bg-blue-50 dark:bg-blue-950/20' : 'bg-red-50 dark:bg-red-950/20'}`}>
+                        <p className="text-[10px] text-muted-foreground">الربح الفعلي</p>
+                        <p className={`text-sm font-bold ${actualProfit >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                          {fmt(actualProfit)}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Progress bar */}
+                    <Progress value={paymentPercent} className="h-1.5 mb-3" />
+
+                    {/* Actions */}
+                    <div className={`flex ${isMobile ? 'flex-col' : 'flex-wrap'} gap-2`}>
+                      {fin.remaining > 0 && (
+                        <>
+                          <Button size="sm" variant="outline" className="gap-1 text-xs h-8 border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-400"
+                            onClick={() => { setPaymentDialog({ open: true, order, type: 'collection' }); setPaymentAmount(String(fin.remaining)); }}>
+                            <DollarSign className="h-3 w-3" /> تحصيل
+                          </Button>
+                          <Button size="sm" variant="outline" className="gap-1 text-xs h-8 border-purple-300 text-purple-700 hover:bg-purple-50 dark:border-purple-700 dark:text-purple-400"
+                            onClick={() => { setPaymentDialog({ open: true, order, type: 'instapay' }); setPaymentAmount(String(fin.remaining)); }}>
+                            <Smartphone className="h-3 w-3" /> انستا باي
+                          </Button>
+                          <Button size="sm" variant="outline" className="gap-1 text-xs h-8 border-orange-300 text-orange-700 hover:bg-orange-50 dark:border-orange-700 dark:text-orange-400"
+                            onClick={() => { setPaymentDialog({ open: true, order, type: 'wallet' }); setPaymentAmount(String(fin.remaining)); }}>
+                            <Wallet className="h-3 w-3" /> محفظة
+                          </Button>
+                          <Button size="sm" variant="outline" className="gap-1 text-xs h-8 border-blue-300 text-blue-700 hover:bg-blue-50 dark:border-blue-700 dark:text-blue-400"
+                            onClick={() => { setPaymentDialog({ open: true, order, type: 'shipping_company' }); setPaymentAmount(String(fin.remaining)); }}>
+                            <Truck className="h-3 w-3" /> شركة شحن
+                          </Button>
+                        </>
+                      )}
+                      <Button size="sm" variant="outline" className="gap-1 text-xs h-8 border-red-300 text-red-700 hover:bg-red-50 dark:border-red-700 dark:text-red-400"
+                        onClick={() => { setPaymentDialog({ open: true, order, type: 'cost' }); setPaymentAmount(String(expectedCost)); }}>
+                        <Factory className="h-3 w-3" /> تكلفة ورشة
+                      </Button>
+                      <Button size="sm" variant="ghost" className="gap-1 text-xs h-8"
+                        onClick={() => setOrderDetailsDialog({ open: true, order })}>
+                        <Eye className="h-3 w-3" /> تفاصيل
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* ======= SECTION: مقارنة المتوقع vs الفعلي ======= */}
       {activeSection === 'comparison' && (
         <div className="space-y-5">
