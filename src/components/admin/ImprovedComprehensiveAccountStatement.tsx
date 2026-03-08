@@ -595,6 +595,7 @@ const ImprovedComprehensiveAccountStatement = () => {
       queryClient.invalidateQueries({ queryKey: ['comprehensive-transactions'] });
       queryClient.invalidateQueries({ queryKey: ['comprehensive-workshop-payments'] });
       queryClient.invalidateQueries({ queryKey: ['comprehensive-customer-payments'] });
+      queryClient.invalidateQueries({ queryKey: ['detailed-report-workshop-payments'] });
       toast.success('تم تسجيل الدفعة بنجاح');
       setPaymentDialog({ open: false, order: null, type: 'collection' });
       setPaymentAmount('');
@@ -736,6 +737,7 @@ const ImprovedComprehensiveAccountStatement = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comprehensive-workshop-payments'] });
       queryClient.invalidateQueries({ queryKey: ['comprehensive-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['detailed-report-workshop-payments'] });
       toast.success(`تم ربط ${linkSelectedPayments.length} دفعة بـ ${linkSelectedOrders.length} طلب بنجاح`);
       setLinkSelectedPayments([]);
       setLinkSelectedOrders([]);
@@ -756,6 +758,7 @@ const ImprovedComprehensiveAccountStatement = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comprehensive-workshop-payments'] });
       queryClient.invalidateQueries({ queryKey: ['comprehensive-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['detailed-report-workshop-payments'] });
       toast.success('تم فك الربط بنجاح');
     },
     onError: () => toast.error('حدث خطأ في فك الربط')
@@ -862,6 +865,7 @@ const ImprovedComprehensiveAccountStatement = () => {
       queryClient.invalidateQueries({ queryKey: ['comprehensive-orders'] });
       queryClient.invalidateQueries({ queryKey: ['comprehensive-transactions'] });
       queryClient.invalidateQueries({ queryKey: ['comprehensive-workshop-payments'] });
+      queryClient.invalidateQueries({ queryKey: ['detailed-report-workshop-payments'] });
       const hasOrders = costRegSelectedOrders.length > 0;
       toast.success(hasOrders 
         ? `تم تسجيل ${costRegType === 'cost' ? 'التكلفة' : 'الشحن'} بنجاح على ${costRegSelectedOrders.length} طلب`
