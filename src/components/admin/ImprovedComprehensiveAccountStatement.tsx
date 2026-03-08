@@ -568,6 +568,30 @@ const ImprovedComprehensiveAccountStatement = () => {
                 </div>
                 <p className="text-xl font-bold text-foreground">{fmt(financial.expectedRevenue)}</p>
                 <p className="text-xs text-muted-foreground mt-1">{financial.activeOrders} طلب</p>
+                <div className="mt-3 pt-2 border-t border-border/50 space-y-1.5">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">قيمة المنتجات</span>
+                    <span className="font-medium">{fmt(financial.expectedRevenue - financial.expectedShippingCost)}</span>
+                  </div>
+                  {financial.expectedShippingCost > 0 && (
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">رسوم الشحن</span>
+                      <span className="font-medium">{fmt(financial.expectedShippingCost)}</span>
+                    </div>
+                  )}
+                  {financial.totalDiscount > 0 && (
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">خصومات</span>
+                      <span className="font-medium text-red-500">-{fmt(financial.totalDiscount)}</span>
+                    </div>
+                  )}
+                  {financial.cancelledOrders > 0 && (
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">طلبات ملغية</span>
+                      <span className="font-medium text-red-500">{financial.cancelledOrders}</span>
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
 
@@ -634,6 +658,38 @@ const ImprovedComprehensiveAccountStatement = () => {
                 </div>
                 <p className="text-xl font-bold text-foreground">{fmt(financial.totalPaidOut)}</p>
                 <p className="text-xs text-muted-foreground mt-1">ورش + شحن + مصاريف</p>
+                <div className="mt-3 pt-2 border-t border-border/50 space-y-1.5">
+                  {financial.actualWorkshopPaid > 0 && (
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground flex items-center gap-1">
+                        <Factory className="h-3 w-3" /> ورش
+                      </span>
+                      <span className="font-medium">{fmt(financial.actualWorkshopPaid)}</span>
+                    </div>
+                  )}
+                  {financial.manualShippingExpenses > 0 && (
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground flex items-center gap-1">
+                        <Truck className="h-3 w-3" /> شحن
+                      </span>
+                      <span className="font-medium">{fmt(financial.manualShippingExpenses)}</span>
+                    </div>
+                  )}
+                  {financial.manualOtherExpenses > 0 && (
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground flex items-center gap-1">
+                        <FileText className="h-3 w-3" /> مصاريف أخرى
+                      </span>
+                      <span className="font-medium">{fmt(financial.manualOtherExpenses)}</span>
+                    </div>
+                  )}
+                  {financial.pendingToWorkshops > 0 && (
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground text-amber-600">مستحق للورش</span>
+                      <span className="font-medium text-amber-600">{fmt(financial.pendingToWorkshops)}</span>
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
 
@@ -647,6 +703,22 @@ const ImprovedComprehensiveAccountStatement = () => {
                   {fmt(financial.cashBalance)}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">المحصل - المدفوع</p>
+                <div className="mt-3 pt-2 border-t border-border/50 space-y-1.5">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-emerald-600">+ المحصل</span>
+                    <span className="font-medium text-emerald-600">{fmt(financial.totalCollected)}</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-red-500">- المدفوع</span>
+                    <span className="font-medium text-red-500">{fmt(financial.totalPaidOut)}</span>
+                  </div>
+                  {financial.pendingFromCustomers > 0 && (
+                    <div className="flex justify-between text-xs border-t border-border/30 pt-1">
+                      <span className="text-amber-600">متبقي عند العملاء</span>
+                      <span className="font-medium text-amber-600">{fmt(financial.pendingFromCustomers)}</span>
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
           </div>
