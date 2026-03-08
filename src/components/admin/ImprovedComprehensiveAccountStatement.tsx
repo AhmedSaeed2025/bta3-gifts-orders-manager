@@ -224,7 +224,7 @@ const ImprovedComprehensiveAccountStatement = () => {
 
     transactions.forEach(t => {
       const desc = t.description || '';
-      if (t.transaction_type === 'income') {
+      if (t.transaction_type === 'income' || t.transaction_type === 'other_income') {
         manualIncome += t.amount;
       } else if (t.transaction_type === 'expense') {
         // Transactions prefixed with [cost] or [shipping] are ALREADY counted
@@ -488,8 +488,8 @@ const ImprovedComprehensiveAccountStatement = () => {
   const filteredTransactions = useMemo(() => {
     if (filterType === 'all') return transactions;
     return transactions.filter(t => {
-      if (filterType === 'income') return t.transaction_type === 'income';
-      if (filterType === 'expense') return t.transaction_type === 'expense';
+      if (filterType === 'income') return t.transaction_type === 'income' || t.transaction_type === 'other_income' || t.transaction_type === 'order_collection' || t.transaction_type === 'deposit';
+      if (filterType === 'expense') return t.transaction_type === 'expense' || t.transaction_type === 'cost_payment' || t.transaction_type === 'shipping_payment';
       return true;
     });
   }, [transactions, filterType]);
@@ -555,12 +555,19 @@ const ImprovedComprehensiveAccountStatement = () => {
           .eq('id', orderId);
         if (orderError) throw orderError;
 
+        // Also update admin_orders
+        await supabase
+          .from('admin_orders')
+          .update({ payments_received: newPaid, remaining_amount: newRemaining })
+          .eq('serial', orderSerial)
+          .eq('user_id', user.id);
+
         // Add transaction
         const methodLabel = type === 'instapay' ? 'انستا باي' : type === 'wallet' ? 'محفظة' : type === 'shipping_company' ? 'شركة شحن' : 'تحصيل';
         const { error: txError } = await supabase.from('transactions').insert({
           user_id: user.id,
           order_serial: orderSerial,
-          transaction_type: 'income',
+          transaction_type: 'order_collection',
           amount,
           description: `[order_collection] ${methodLabel} - ${notes || 'دفعة من العميل'}`
         });
@@ -601,7 +608,10 @@ const ImprovedComprehensiveAccountStatement = () => {
       setPaymentAmount('');
       setPaymentNotes('');
     },
-    onError: () => toast.error('حدث خطأ في تسجيل الدفعة')
+    onError: (error: any) => {
+      console.error('Payment mutation error:', error);
+      toast.error(`حدث خطأ في تسجيل الدفعة: ${error?.message || 'خطأ غير معروف'}`);
+    }
   });
 
   const fmt = (n: number) => formatCurrency(n);
@@ -959,7 +969,7 @@ const ImprovedComprehensiveAccountStatement = () => {
                 <Select value={newTransaction.type} onValueChange={v => setNewTransaction(p => ({ ...p, type: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="income">إيراد</SelectItem>
+                    <SelectItem value="other_income">إيراد</SelectItem>
                     <SelectItem value="expense">مصروف</SelectItem>
                   </SelectContent>
                 </Select>
@@ -1889,7 +1899,7 @@ const ImprovedComprehensiveAccountStatement = () => {
             ) : (
               <div className="space-y-2 max-h-[500px] overflow-y-auto">
                 {filteredTransactions.map(t => {
-                  const isIncome = t.transaction_type === 'income';
+                  const isIncome = t.transaction_type === 'income' || t.transaction_type === 'other_income' || t.transaction_type === 'order_collection' || t.transaction_type === 'deposit';
                   return (
                     <div key={t.id} className={`flex items-center justify-between p-3 rounded-lg border transition-colors
                       ${isIncome 

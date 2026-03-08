@@ -603,7 +603,7 @@ const ModernAccountStatement = () => {
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="income">إيراد</SelectItem>
+                              <SelectItem value="other_income">إيراد</SelectItem>
                               <SelectItem value="expense">مصروف</SelectItem>
                             </SelectContent>
                           </Select>

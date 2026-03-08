@@ -295,7 +295,7 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
           .insert({
             user_id: user.id,
             amount: newOrder.deposit,
-            transaction_type: 'income',
+            transaction_type: 'deposit',
             description: `عربون - طلب ${serial} - ${newOrder.clientName}`,
             order_serial: serial
           });
@@ -452,7 +452,7 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
             .insert({
               user_id: user.id,
               amount: newDeposit,
-              transaction_type: 'income',
+              transaction_type: 'deposit',
               description: `عربون - طلب ${serial} - ${updatedOrder.clientName}`,
               order_serial: serial
             });
