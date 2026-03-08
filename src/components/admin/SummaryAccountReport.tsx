@@ -120,6 +120,33 @@ const SummaryAccountReport = () => {
     }
   });
 
+  // Fetch paid workshop/shipping records (system source of truth for production + shipping costs)
+  const { data: workshopPayments = [] } = useQuery({
+    queryKey: ['summary-workshop-payments', startDate?.toISOString(), endDate?.toISOString()],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+
+      let query = supabase
+        .from('workshop_payments')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('payment_status', 'Paid')
+        .order('created_at', { ascending: false });
+
+      if (startDate) {
+        query = query.gte('created_at', startDate.toISOString());
+      }
+      if (endDate) {
+        query = query.lte('created_at', endDate.toISOString());
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
   // Add expense mutation
   const addExpenseMutation = useMutation({
     mutationFn: async (expense: { category: string; description: string; amount: number }) => {
