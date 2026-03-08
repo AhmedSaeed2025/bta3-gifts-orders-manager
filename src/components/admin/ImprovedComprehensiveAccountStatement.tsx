@@ -1892,7 +1892,7 @@ const ImprovedComprehensiveAccountStatement = () => {
             ) : (
               <div className="space-y-2 max-h-[500px] overflow-y-auto">
                 {filteredTransactions.map(t => {
-                  const isIncome = t.transaction_type === 'income';
+                  const isIncome = t.transaction_type === 'income' || t.transaction_type === 'other_income' || t.transaction_type === 'order_collection' || t.transaction_type === 'deposit';
                   return (
                     <div key={t.id} className={`flex items-center justify-between p-3 rounded-lg border transition-colors
                       ${isIncome 
