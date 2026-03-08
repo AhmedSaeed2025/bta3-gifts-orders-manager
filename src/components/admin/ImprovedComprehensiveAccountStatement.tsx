@@ -1434,6 +1434,7 @@ const ImprovedComprehensiveAccountStatement = () => {
               const fin = calculateOrderFinancials(order);
               const orderWP = workshopPayments.filter(w => w.order_id === order.id);
               const workshopCostPaid = orderWP.filter(w => w.payment_status === 'Paid').reduce((s, w) => s + Number(w.cost_amount), 0);
+              const productionCostPaid = orderWP.filter(w => w.payment_status === 'Paid' && w.product_name !== 'shipping_cost').reduce((s, w) => s + Number(w.cost_amount), 0);
               const expectedCost = (order.order_items || []).reduce((s: number, i: any) => s + (Number(i.cost || 0) * Number(i.quantity || 1)), 0);
               const costUsed = workshopCostPaid > 0 ? workshopCostPaid : expectedCost;
               const actualProfit = fin.total - costUsed - fin.shipping;
