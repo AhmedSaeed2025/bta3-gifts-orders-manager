@@ -1411,6 +1411,8 @@ const ImprovedComprehensiveAccountStatement = () => {
                     <SelectItem value="paid">مدفوع بالكامل</SelectItem>
                     <SelectItem value="partial">مدفوع جزئياً</SelectItem>
                     <SelectItem value="unpaid">لم يُدفع</SelectItem>
+                    <SelectItem value="uncollected">تحصيل متبقي</SelectItem>
+                    <SelectItem value="unpaid_cost">تكلفة غير مسددة</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select value={orderSortBy} onValueChange={(v: any) => setOrderSortBy(v)}>
