@@ -539,7 +539,7 @@ const DetailedOrdersReport = () => {
             </div>
 
             {/* Active filters summary */}
-            {(statusFilters.length > 0 || paymentFilter !== "all" || deliveryFilter !== "all" || searchTerm) && (
+            {(statusFilters.length > 0 || paymentFilter !== "all" || deliveryFilter !== "all" || financialFilter !== "all" || searchTerm) && (
               <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border">
                 <Filter className="h-4 w-4 text-muted-foreground" />
                 <span className="text-xs text-muted-foreground">فلاتر نشطة</span>
@@ -552,6 +552,7 @@ const DetailedOrdersReport = () => {
                     setStatusFilters([]);
                     setPaymentFilter("all");
                     setDeliveryFilter("all");
+                    setFinancialFilter("all");
                   }}
                 >
                   مسح الكل
