@@ -175,7 +175,7 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
         await updateOrder(editingOrder.serial, orderData);
         queryClient.invalidateQueries({ queryKey: ['detailed-orders-report'] });
         queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
-        navigate("/legacy-admin");
+        navigate(-1);
       } else {
         await addOrder(orderData);
         queryClient.invalidateQueries({ queryKey: ['detailed-orders-report'] });
