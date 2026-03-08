@@ -555,6 +555,13 @@ const ImprovedComprehensiveAccountStatement = () => {
           .eq('id', orderId);
         if (orderError) throw orderError;
 
+        // Also update admin_orders
+        await supabase
+          .from('admin_orders')
+          .update({ payments_received: newPaid, remaining_amount: newRemaining })
+          .eq('serial', orderSerial)
+          .eq('user_id', user.id);
+
         // Add transaction
         const methodLabel = type === 'instapay' ? 'انستا باي' : type === 'wallet' ? 'محفظة' : type === 'shipping_company' ? 'شركة شحن' : 'تحصيل';
         const { error: txError } = await supabase.from('transactions').insert({
