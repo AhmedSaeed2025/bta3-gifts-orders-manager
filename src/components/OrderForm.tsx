@@ -241,7 +241,7 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
             onUpdateItem={updateItem}
             subtotal={subtotal}
             shippingCost={customerData.shippingCost}
-            discount={0}
+            discount={customerData.discount}
             deposit={customerData.deposit}
             totalAmount={totalAmount}
             remainingAmount={remainingAmount}
