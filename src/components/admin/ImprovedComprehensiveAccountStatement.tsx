@@ -64,6 +64,7 @@ const ImprovedComprehensiveAccountStatement = () => {
   const [costRegSelectedOrders, setCostRegSelectedOrders] = useState<string[]>([]);
   const [costRegSearch, setCostRegSearch] = useState('');
   const [costRegPaymentFilter, setCostRegPaymentFilter] = useState<'all' | 'cost_paid' | 'cost_unpaid' | 'shipping_paid' | 'shipping_unpaid'>('all');
+  const [costRegDate, setCostRegDate] = useState(new Date().toISOString().split('T')[0]);
   
   const [newTransaction, setNewTransaction] = useState({
     amount: '',
@@ -609,25 +610,37 @@ const ImprovedComprehensiveAccountStatement = () => {
             product_name: 'تكلفة إنتاج',
             cost_amount: perOrderAmount,
             payment_status: 'Paid',
-            actual_payment_date: new Date().toISOString().split('T')[0]
+            actual_payment_date: costRegDate
           });
 
-          // Add expense transaction
+          // Add expense transaction with custom date
           await supabase.from('transactions').insert({
             user_id: user.id,
             order_serial: order.serial,
             transaction_type: 'expense',
             amount: perOrderAmount,
-            description: `[cost] ${costRegWorkshop || 'ورشة'} - ${costRegNotes || 'تكلفة إنتاج'}`
+            description: `[cost] ${costRegWorkshop || 'ورشة'} - ${costRegNotes || 'تكلفة إنتاج'}`,
+            created_at: new Date(costRegDate + 'T12:00:00').toISOString()
           });
         } else {
           // Shipping expense
+          await supabase.from('workshop_payments').insert({
+            user_id: user.id,
+            order_id: orderId,
+            workshop_name: costRegWorkshop || 'شحن',
+            product_name: 'shipping_cost',
+            cost_amount: perOrderAmount,
+            payment_status: 'Paid',
+            actual_payment_date: costRegDate
+          });
+
           await supabase.from('transactions').insert({
             user_id: user.id,
             order_serial: order.serial,
             transaction_type: 'expense',
             amount: perOrderAmount,
-            description: `[shipping] شحن - ${costRegNotes || 'مصاريف شحن'}`
+            description: `[shipping] شحن - ${costRegNotes || 'مصاريف شحن'}`,
+            created_at: new Date(costRegDate + 'T12:00:00').toISOString()
           });
         }
       }
@@ -641,6 +654,7 @@ const ImprovedComprehensiveAccountStatement = () => {
       setCostRegNotes('');
       setCostRegWorkshop('');
       setCostRegSelectedOrders([]);
+      setCostRegDate(new Date().toISOString().split('T')[0]);
     },
     onError: () => toast.error('حدث خطأ في التسجيل')
   });
@@ -1732,7 +1746,19 @@ const ImprovedComprehensiveAccountStatement = () => {
                     />
                   </div>
                 )}
-                <div className={`space-y-2 ${costRegType === 'shipping' ? '' : 'sm:col-span-2'}`}>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium flex items-center gap-1.5">
+                    <Calendar className="h-3.5 w-3.5" />
+                    تاريخ التسجيل
+                  </Label>
+                  <Input 
+                    type="date" 
+                    value={costRegDate}
+                    onChange={e => setCostRegDate(e.target.value)}
+                    className="h-12"
+                  />
+                </div>
+                <div className={`space-y-2 ${costRegType === 'shipping' ? '' : ''}`}>
                   <Label className="text-sm font-medium">ملاحظات</Label>
                   <Input 
                     placeholder={costRegType === 'cost' ? 'تفاصيل التكلفة...' : 'تفاصيل الشحن...'}
