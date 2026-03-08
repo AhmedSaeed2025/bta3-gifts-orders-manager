@@ -47,7 +47,7 @@ const ImprovedComprehensiveAccountStatement = () => {
   const [editTransactionDialog, setEditTransactionDialog] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [filterType, setFilterType] = useState<string>('all');
-  const [activeSection, setActiveSection] = useState<'summary' | 'orders' | 'comparison' | 'cashflow' | 'transactions' | 'register_cost'>('summary');
+  const [activeSection, setActiveSection] = useState<'summary' | 'orders' | 'comparison' | 'cashflow' | 'transactions' | 'register_cost' | 'link_payments'>('summary');
   const [orderSearch, setOrderSearch] = useState('');
   const [orderPaymentFilter, setOrderPaymentFilter] = useState<'all' | 'paid' | 'partial' | 'unpaid'>('all');
   const [orderSortBy, setOrderSortBy] = useState<'date' | 'remaining' | 'total'>('date');
