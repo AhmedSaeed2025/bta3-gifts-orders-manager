@@ -616,8 +616,28 @@ const ImprovedComprehensiveAccountStatement = () => {
         o.client_name?.toLowerCase().includes(s)
       );
     }
+    // Payment filter for cost/shipping registration
+    if (costRegPaymentFilter !== 'all') {
+      filtered = filtered.filter(o => {
+        const orderWP = allWorkshopPayments.filter(w => w.order_id === o.id);
+        const hasCostPayment = orderWP.some(w => w.product_name !== 'shipping_cost');
+        const hasShippingPayment = orderWP.some(w => w.product_name === 'shipping_cost');
+        
+        // Also check transactions for shipping
+        const orderShippingTx = allTransactions.filter(t => t.order_serial === o.serial && t.transaction_type === 'shipping_expense');
+        const hasShippingTx = hasShippingPayment || orderShippingTx.length > 0;
+        
+        switch (costRegPaymentFilter) {
+          case 'cost_paid': return hasCostPayment;
+          case 'cost_unpaid': return !hasCostPayment;
+          case 'shipping_paid': return hasShippingTx;
+          case 'shipping_unpaid': return !hasShippingTx;
+          default: return true;
+        }
+      });
+    }
     return filtered.sort((a, b) => new Date(b.date_created).getTime() - new Date(a.date_created).getTime());
-  }, [orders, costRegSearch]);
+  }, [orders, costRegSearch, costRegPaymentFilter, allWorkshopPayments, allTransactions]);
 
   if (ordersLoading || transactionsLoading) {
     return (
