@@ -1839,8 +1839,8 @@ const ImprovedComprehensiveAccountStatement = () => {
                           <span>الإجمالي: <span className="font-medium text-foreground">{fmt(fin.total)}</span></span>
                           {costRegType === 'cost' && (
                             <>
-                              <span>متوقع: <span className="font-medium text-blue-600">{fmt(expectedCost)}</span></span>
-                              {wpTotal > 0 && <span>مسجل: <span className="font-medium text-purple-600">{fmt(wpTotal)}</span></span>}
+                              <span>بالطلب: <span className="font-medium text-blue-600">{fmt(expectedCost)}</span></span>
+                              {wpTotal > 0 && <span>مدفوع للورش: <span className="font-medium text-purple-600">{fmt(wpTotal)}</span></span>}
                             </>
                           )}
                           {costRegType === 'shipping' && fin.shipping > 0 && (
