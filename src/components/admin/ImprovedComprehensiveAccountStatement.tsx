@@ -410,11 +410,50 @@ const ImprovedComprehensiveAccountStatement = () => {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
+      // Find the transaction to check if it's a cost transaction
+      const transaction = allTransactions.find(t => t.id === id);
+      
+      // Delete the transaction
       const { error } = await supabase.from('transactions').delete().eq('id', id);
       if (error) throw error;
+
+      // If it's a cost expense, also delete the matching workshop_payment
+      if (transaction && transaction.transaction_type === 'expense' && transaction.description?.includes('[cost]')) {
+        const orderSerial = transaction.order_serial;
+        const amount = transaction.amount;
+        
+        // Find the order to get the order_id
+        const order = allOrders.find(o => o.serial === orderSerial);
+        if (order) {
+          // Find matching workshop payment by order_id and amount
+          const matchingWP = allWorkshopPayments.find(w => 
+            w.order_id === order.id && Number(w.cost_amount) === amount
+          );
+          if (matchingWP) {
+            await supabase.from('workshop_payments').delete().eq('id', matchingWP.id);
+          }
+        }
+      }
+
+      // If it's a shipping expense, also delete matching workshop_payment for shipping
+      if (transaction && transaction.transaction_type === 'expense' && transaction.description?.includes('[shipping]')) {
+        const orderSerial = transaction.order_serial;
+        const amount = transaction.amount;
+        const order = allOrders.find(o => o.serial === orderSerial);
+        if (order) {
+          const matchingWP = allWorkshopPayments.find(w => 
+            w.order_id === order.id && w.product_name === 'shipping_cost' && Number(w.cost_amount) === amount
+          );
+          if (matchingWP) {
+            await supabase.from('workshop_payments').delete().eq('id', matchingWP.id);
+          }
+        }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comprehensive-transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-workshop-payments'] });
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-orders'] });
       toast.success('تم الحذف');
     }
   });
@@ -2086,6 +2125,36 @@ const ImprovedComprehensiveAccountStatement = () => {
                               {w.payment_status === 'Paid' ? 'مدفوع' : 'مستحق'}
                             </Badge>
                             <span className="font-medium">{fmt(Number(w.cost_amount))}</span>
+                            <Button 
+                              variant="ghost" size="icon" 
+                              className="h-6 w-6 text-destructive hover:text-destructive hover:bg-destructive/10"
+                              onClick={async () => {
+                                if (!confirm('حذف هذه الدفعة والمعاملة المرتبطة؟')) return;
+                                try {
+                                  // Delete workshop payment
+                                  await supabase.from('workshop_payments').delete().eq('id', w.id);
+                                  // Delete matching transaction
+                                  const matchingTx = allTransactions.find(t => 
+                                    t.order_serial === o.serial && 
+                                    t.transaction_type === 'expense' && 
+                                    t.description?.includes('[cost]') &&
+                                    Number(t.amount) === Number(w.cost_amount)
+                                  );
+                                  if (matchingTx) {
+                                    await supabase.from('transactions').delete().eq('id', matchingTx.id);
+                                  }
+                                  queryClient.invalidateQueries({ queryKey: ['comprehensive-workshop-payments'] });
+                                  queryClient.invalidateQueries({ queryKey: ['comprehensive-transactions'] });
+                                  queryClient.invalidateQueries({ queryKey: ['comprehensive-orders'] });
+                                  toast.success('تم حذف الدفعة بنجاح');
+                                  setOrderDetailsDialog({ open: false, order: null });
+                                } catch {
+                                  toast.error('حدث خطأ في الحذف');
+                                }
+                              }}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
                           </div>
                         </div>
                       ))}
