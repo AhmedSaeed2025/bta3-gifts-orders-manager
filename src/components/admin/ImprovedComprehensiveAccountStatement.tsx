@@ -7,36 +7,25 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Separator } from '@/components/ui/separator';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { formatCurrency, exportToExcel } from '@/lib/utils';
+import { Progress } from '@/components/ui/progress';
+import { formatCurrency } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
 import { useDateFilter } from '@/components/tabs/StyledIndexTabs';
+import { calculateOrderFinancials } from '@/lib/orderFinancials';
 import { 
-  Plus, 
-  Minus,
-  DollarSign,
-  TrendingUp,
-  TrendingDown,
-  Calculator,
-  Wallet,
-  AlertTriangle,
-  Clock,
-  Edit,
-  Trash2,
-  Filter,
-  Download,
-  BarChart3,
-  Calendar,
-  Receipt,
-  CreditCard,
-  Truck,
-  Target,
-  PiggyBank,
-  FileSpreadsheet
+  Plus, DollarSign, TrendingUp, TrendingDown, Calculator, Wallet,
+  Clock, Edit, Trash2, Filter, Truck, Target, FileText, Calendar,
+  Receipt, CreditCard, ArrowUpDown, Factory, AlertTriangle, 
+  ArrowDownLeft, ArrowUpRight, Package, CheckCircle2, XCircle,
+  BarChart3, Banknote, Scale
 } from 'lucide-react';
+import { format } from 'date-fns';
+import { ar } from 'date-fns/locale';
 
 interface Transaction {
   id: string;
@@ -45,43 +34,6 @@ interface Transaction {
   description?: string;
   order_serial: string;
   created_at: string;
-}
-
-interface OrderData {
-  id: string;
-  total_amount: number;
-  shipping_cost: number;
-  profit: number;
-  payments_received: number;
-  remaining_amount: number;
-  status: string;
-  deposit: number;
-  created_at: string;
-}
-
-interface FinancialSummary {
-  // المبيعات
-  totalSales: number;
-  collectedSales: number;
-  
-  // التكاليف
-  totalProductCosts: number;
-  paidProductCosts: number;
-  
-  // الشحن
-  totalShippingCosts: number;
-  collectedShipping: number;
-  paidShipping: number;
-  
-  // أخرى
-  otherIncome: number;
-  otherExpenses: number;
-  
-  // الإجماليات
-  totalCollections: number;
-  totalPayments: number;
-  netProfit: number;
-  currentBalance: number;
 }
 
 const ImprovedComprehensiveAccountStatement = () => {
@@ -94,498 +46,328 @@ const ImprovedComprehensiveAccountStatement = () => {
   const [editTransactionDialog, setEditTransactionDialog] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [filterType, setFilterType] = useState<string>('all');
+  const [activeSection, setActiveSection] = useState<'summary' | 'comparison' | 'cashflow' | 'transactions'>('summary');
   
-  // New transaction form
   const [newTransaction, setNewTransaction] = useState({
     amount: '',
     type: 'expense',
+    category: 'other',
     description: ''
   });
 
-  // Fetch transactions
-  const { data: allTransactions = [], isLoading: transactionsLoading } = useQuery({
-    queryKey: ['transactions'],
+  // Fetch orders with items
+  const { data: allOrders = [], isLoading: ordersLoading } = useQuery({
+    queryKey: ['comprehensive-orders'],
     queryFn: async () => {
       if (!user) return [];
-      
       const { data, error } = await supabase
-        .from('transactions')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        console.error('Error fetching transactions:', error);
-        return [];
-      }
-      
+        .from('orders')
+        .select('*, order_items(*)')
+        .eq('user_id', user.id);
+      if (error) throw error;
       return data || [];
     },
     enabled: !!user
   });
 
-  // Fetch orders data
-  const { data: allOrders = [], isLoading: ordersLoading } = useQuery({
-    queryKey: ['admin-orders-for-financial-summary'],
+  // Fetch transactions
+  const { data: allTransactions = [], isLoading: transactionsLoading } = useQuery({
+    queryKey: ['comprehensive-transactions'],
     queryFn: async () => {
       if (!user) return [];
-      
       const { data, error } = await supabase
-        .from('admin_orders')
+        .from('transactions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user
+  });
+
+  // Fetch workshop payments (actual costs paid)
+  const { data: allWorkshopPayments = [] } = useQuery({
+    queryKey: ['comprehensive-workshop-payments'],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from('workshop_payments')
         .select('*')
         .eq('user_id', user.id);
-      
-      if (error) {
-        console.error('Error fetching orders:', error);
-        return [];
-      }
-      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user
+  });
+
+  // Fetch customer payments
+  const { data: allCustomerPayments = [] } = useQuery({
+    queryKey: ['comprehensive-customer-payments'],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from('customer_payments')
+        .select('*')
+        .eq('user_id', user.id);
+      if (error) throw error;
       return data || [];
     },
     enabled: !!user
   });
 
   // Filter by date
-  const transactions = useMemo(() => {
-    return allTransactions.filter(transaction => {
-      const transactionDate = new Date(transaction.created_at);
-      const matchesDateFrom = !startDate || transactionDate >= startDate;
-      const matchesDateTo = !endDate || transactionDate <= endDate;
-      return matchesDateFrom && matchesDateTo;
-    });
-  }, [allTransactions, startDate, endDate]);
+  const orders = useMemo(() => allOrders.filter(o => {
+    const d = new Date(o.date_created);
+    return (!startDate || d >= startDate) && (!endDate || d <= endDate);
+  }), [allOrders, startDate, endDate]);
 
-  const orders = useMemo(() => {
-    return allOrders.filter(order => {
-      const orderDate = new Date(order.created_at);
-      const matchesDateFrom = !startDate || orderDate >= startDate;
-      const matchesDateTo = !endDate || orderDate <= endDate;
-      return matchesDateFrom && matchesDateTo;
-    });
-  }, [allOrders, startDate, endDate]);
+  const transactions = useMemo(() => allTransactions.filter(t => {
+    const d = new Date(t.created_at);
+    return (!startDate || d >= startDate) && (!endDate || d <= endDate);
+  }), [allTransactions, startDate, endDate]);
 
-  // Calculate comprehensive financial summary
-  const financialSummary: FinancialSummary = useMemo(() => {
-    // حساب بيانات الطلبات
-    const ordersSummary = orders.reduce((acc, order: OrderData) => {
-      const orderCost = order.total_amount - order.profit - order.shipping_cost;
-      const collectedAmount = order.payments_received || 0; // فقط ما تم تحصيله فعلياً
-      
-      return {
-        totalSales: acc.totalSales + order.total_amount,
-        collectedSales: acc.collectedSales + collectedAmount,
-        totalProductCosts: acc.totalProductCosts + orderCost,
-        totalShippingCosts: acc.totalShippingCosts + order.shipping_cost,
-        collectedShipping: acc.collectedShipping + (collectedAmount > 0 ? order.shipping_cost : 0),
-        netProfit: acc.netProfit + order.profit
-      };
-    }, {
-      totalSales: 0,
-      collectedSales: 0,
-      totalProductCosts: 0,
-      totalShippingCosts: 0,
-      collectedShipping: 0,
-      netProfit: 0
-    });
+  const workshopPayments = useMemo(() => allWorkshopPayments.filter(w => {
+    const d = new Date(w.created_at || '');
+    return (!startDate || d >= startDate) && (!endDate || d <= endDate);
+  }), [allWorkshopPayments, startDate, endDate]);
 
-  // حساب المعاملات اليدوية وتوجيهها للأقسام المناسبة
-    const manualTransactions = transactions.reduce((acc, transaction) => {
-      const amount = Math.abs(transaction.amount);
-      
-      // تحديد نوع المعاملة بناءً على الوصف والنوع
-      const isOrderPayment = transaction.description?.includes('تحصيل') || 
-                            transaction.description?.includes('دفعة') ||
-                            transaction.description?.includes('عربون') ||
-                            transaction.description?.includes('سداد من عميل') ||
-                            transaction.order_serial?.includes('INV-');
-      
-      const isProductCost = transaction.description?.includes('تكلفة') || 
-                           transaction.description?.includes('سداد تكلفة') ||
-                           transaction.description?.includes('شراء') ||
-                           transaction.description?.includes('مواد خام') ||
-                           transaction.description?.includes('إنتاج');
-      
-      const isShippingExpense = transaction.description?.includes('شحن') && !isOrderPayment;
-      
-      // التوجيه المحاسبي الصحيح
-      if (transaction.transaction_type === 'income' || isOrderPayment) {
-        // الإيرادات والتحصيلات
-        if (isOrderPayment) {
-          acc.collectedSales += amount;
-        } else {
-          acc.otherIncome += amount;
-        }
-        acc.totalCollections += amount;
-      } else {
-        // المصروفات
-        if (isProductCost) {
-          acc.paidProductCosts += amount;
-        } else if (isShippingExpense) {
-          acc.paidShipping += amount;
-        } else {
-          acc.otherExpenses += amount;
-        }
-        acc.totalPayments += amount;
-      }
-      
-      return acc;
-    }, {
-      collectedSales: ordersSummary.collectedSales,
-      otherIncome: 0,
-      paidProductCosts: 0,
-      otherExpenses: 0,
-      paidShipping: 0,
-      totalCollections: ordersSummary.collectedSales,
-      totalPayments: 0
+  const customerPayments = useMemo(() => allCustomerPayments.filter(c => {
+    const d = new Date(c.created_at || '');
+    return (!startDate || d >= startDate) && (!endDate || d <= endDate);
+  }), [allCustomerPayments, startDate, endDate]);
+
+  // Comprehensive financial calculations
+  const financial = useMemo(() => {
+    // === من الطلبات (المتوقع) ===
+    let expectedRevenue = 0;
+    let expectedProductionCost = 0;
+    let expectedShippingCost = 0;
+    let totalDiscount = 0;
+    let totalDeposits = 0;
+    let totalOrderPaymentsReceived = 0;
+
+    orders.forEach(order => {
+      const fin = calculateOrderFinancials(order);
+      expectedRevenue += fin.total;
+      expectedShippingCost += fin.shipping;
+      totalDiscount += fin.discount;
+      totalDeposits += fin.deposit;
+      totalOrderPaymentsReceived += fin.paid;
+
+      // Expected production cost from items
+      const items = order.order_items || [];
+      items.forEach((item: any) => {
+        expectedProductionCost += Number(item.cost ?? 0) * Number(item.quantity ?? 1);
+      });
     });
 
-    // الحسابات النهائية مع التأكد من التوجيه الصحيح
-    const totalProductCostsIncludingManual = ordersSummary.totalProductCosts + manualTransactions.paidProductCosts;
-    const totalCollections = manualTransactions.totalCollections;
-    const totalPayments = manualTransactions.totalPayments;
-    const currentBalance = totalCollections - totalPayments;
+    // === الفعلي (من المدفوعات) ===
+    const actualWorkshopPaid = workshopPayments
+      .filter(w => w.payment_status === 'Paid')
+      .reduce((sum, w) => sum + Number(w.cost_amount), 0);
     
-    return {
-      ...ordersSummary,
-      // تحديث القيم بالمعاملات اليدوية
-      collectedSales: manualTransactions.collectedSales,
-      totalProductCosts: totalProductCostsIncludingManual,
-      paidProductCosts: manualTransactions.paidProductCosts,
-      otherIncome: manualTransactions.otherIncome,
-      otherExpenses: manualTransactions.otherExpenses,
-      paidShipping: manualTransactions.paidShipping,
-      currentBalance,
-      totalCollections,
-      totalPayments
-    };
-  }, [transactions, orders]);
+    const actualWorkshopDue = workshopPayments
+      .filter(w => w.payment_status !== 'Paid')
+      .reduce((sum, w) => sum + Number(w.cost_amount), 0);
 
-  // Filter transactions
+    const totalWorkshopCost = workshopPayments
+      .reduce((sum, w) => sum + Number(w.cost_amount), 0);
+
+    const actualCustomerPaid = customerPayments
+      .filter(p => p.payment_status === 'Paid' || p.payment_status === 'Partial')
+      .reduce((sum, p) => sum + Number(p.amount), 0);
+
+    // === من المعاملات اليدوية ===
+    let manualIncome = 0;
+    let manualExpenses = 0;
+    let manualShippingExpenses = 0;
+    let manualProductionExpenses = 0;
+    let manualOtherExpenses = 0;
+
+    transactions.forEach(t => {
+      const desc = t.description || '';
+      if (t.transaction_type === 'income') {
+        manualIncome += t.amount;
+      } else if (t.transaction_type === 'expense') {
+        manualExpenses += t.amount;
+        if (desc.includes('[shipping]') || desc.includes('شحن')) {
+          manualShippingExpenses += t.amount;
+        } else if (desc.includes('[cost]') || desc.includes('تكلفة') || desc.includes('إنتاج')) {
+          manualProductionExpenses += t.amount;
+        } else {
+          manualOtherExpenses += t.amount;
+        }
+      }
+    });
+
+    // === الحسابات النهائية ===
+    // إجمالي المحصل فعلياً (عربون + دفعات + تحصيلات يدوية)
+    const totalCollected = totalOrderPaymentsReceived + manualIncome;
+    
+    // إجمالي المدفوع فعلياً (ورش + شحن + مصاريف)
+    const totalPaidOut = actualWorkshopPaid + manualExpenses;
+    
+    // الرصيد النقدي = المحصل - المدفوع
+    const cashBalance = totalCollected - totalPaidOut;
+    
+    // صافي الربح المتوقع = الإيرادات - تكلفة الإنتاج المتوقعة - الخصومات
+    const expectedProfit = expectedRevenue - expectedProductionCost - totalDiscount;
+    
+    // صافي الربح الفعلي = المحصل - المدفوع
+    const actualProfit = totalCollected - totalPaidOut;
+
+    // فرق التكلفة (المتوقع vs الفعلي)
+    const costDifference = expectedProductionCost - totalWorkshopCost;
+
+    // المبالغ المعلقة
+    const pendingFromCustomers = expectedRevenue - totalOrderPaymentsReceived;
+    const pendingToWorkshops = actualWorkshopDue;
+
+    const cancelledOrders = orders.filter(o => o.status === 'cancelled').length;
+    const activeOrders = orders.filter(o => o.status !== 'cancelled').length;
+
+    return {
+      // Orders
+      orderCount: orders.length,
+      activeOrders,
+      cancelledOrders,
+      
+      // Revenue
+      expectedRevenue,
+      totalCollected,
+      totalOrderPaymentsReceived,
+      totalDeposits,
+      manualIncome,
+      pendingFromCustomers,
+      
+      // Costs - Expected
+      expectedProductionCost,
+      expectedShippingCost,
+      totalDiscount,
+      
+      // Costs - Actual
+      actualWorkshopPaid,
+      actualWorkshopDue,
+      totalWorkshopCost,
+      manualShippingExpenses,
+      manualProductionExpenses,
+      manualOtherExpenses,
+      manualExpenses,
+      totalPaidOut,
+      pendingToWorkshops,
+      
+      // Comparison
+      costDifference,
+      
+      // Profit
+      expectedProfit,
+      actualProfit,
+      cashBalance,
+
+      // Customer payments
+      actualCustomerPaid,
+    };
+  }, [orders, transactions, workshopPayments, customerPayments]);
+
+  // Mutations
+  const addMutation = useMutation({
+    mutationFn: async (t: typeof newTransaction) => {
+      if (!user) throw new Error('Not authenticated');
+      const { error } = await supabase.from('transactions').insert({
+        user_id: user.id,
+        order_serial: `MANUAL-${Date.now()}`,
+        transaction_type: t.type,
+        amount: parseFloat(t.amount),
+        description: t.category !== 'other' ? `[${t.category}] ${t.description}` : t.description
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-transactions'] });
+      toast.success('تم إضافة المعاملة بنجاح');
+      setAddTransactionDialog(false);
+      setNewTransaction({ amount: '', type: 'expense', category: 'other', description: '' });
+    },
+    onError: () => toast.error('حدث خطأ')
+  });
+
+  const editMutation = useMutation({
+    mutationFn: async (t: Transaction) => {
+      const { error } = await supabase.from('transactions')
+        .update({ amount: t.amount, description: t.description })
+        .eq('id', t.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-transactions'] });
+      toast.success('تم التحديث');
+      setEditTransactionDialog(false);
+    },
+    onError: () => toast.error('حدث خطأ')
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('transactions').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-transactions'] });
+      toast.success('تم الحذف');
+    }
+  });
+
   const filteredTransactions = useMemo(() => {
     if (filterType === 'all') return transactions;
     return transactions.filter(t => {
-      switch (filterType) {
-        case 'income':
-          return t.transaction_type === 'income';
-        case 'expense':
-          return t.transaction_type === 'expense';
-        case 'shipping':
-          return t.description?.includes('شحن');
-        case 'advertising':
-          return t.description?.includes('إعلان') || t.description?.includes('دعاية');
-        default:
-          return true;
-      }
+      if (filterType === 'income') return t.transaction_type === 'income';
+      if (filterType === 'expense') return t.transaction_type === 'expense';
+      return true;
     });
   }, [transactions, filterType]);
 
-  // Add transaction mutation
-  const addTransactionMutation = useMutation({
-    mutationFn: async (transaction: typeof newTransaction) => {
-      if (!user) throw new Error('يجب تسجيل الدخول أولاً');
-      
-      const { error } = await supabase
-        .from('transactions')
-        .insert({
-          user_id: user.id,
-          amount: parseFloat(transaction.amount),
-          transaction_type: transaction.type,
-          description: transaction.description,
-          order_serial: `MANUAL-${Date.now()}`
-        });
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      toast.success('تم إضافة المعاملة بنجاح');
-      setAddTransactionDialog(false);
-      setNewTransaction({ amount: '', type: 'expense', description: '' });
-    },
-    onError: (error: any) => {
-      console.error('Add transaction error:', error);
-      toast.error('حدث خطأ في إضافة المعاملة');
-    }
-  });
+  const fmt = (n: number) => formatCurrency(n);
 
-  // Edit transaction mutation
-  const editTransactionMutation = useMutation({
-    mutationFn: async (transaction: Transaction) => {
-      const { error } = await supabase
-        .from('transactions')
-        .update({
-          amount: transaction.amount,
-          description: transaction.description
-        })
-        .eq('id', transaction.id);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      toast.success('تم تحديث المعاملة بنجاح');
-      setEditTransactionDialog(false);
-      setSelectedTransaction(null);
-    },
-    onError: (error: any) => {
-      console.error('Edit error:', error);
-      toast.error('حدث خطأ في تحديث المعاملة');
-    }
-  });
+  const sections = [
+    { id: 'summary', label: 'الملخص', icon: BarChart3 },
+    { id: 'comparison', label: 'متوقع vs فعلي', icon: Scale },
+    { id: 'cashflow', label: 'حركة النقدية', icon: ArrowUpDown },
+    { id: 'transactions', label: 'المعاملات', icon: FileText },
+  ];
 
-  // Delete transaction mutation
-  const deleteTransactionMutation = useMutation({
-    mutationFn: async (transactionId: string) => {
-      const { error } = await supabase
-        .from('transactions')
-        .delete()
-        .eq('id', transactionId);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      toast.success('تم حذف المعاملة بنجاح');
-    },
-    onError: (error: any) => {
-      console.error('Delete error:', error);
-      toast.error('حدث خطأ في حذف المعاملة');
-    }
-  });
-
-  // Helper function to determine transaction type and styling
-  const getTransactionStyle = (transaction: Transaction) => {
-    // تحديد نوع المعاملة بناءً على الوصف والنوع
-    const isOrderPayment = transaction.description?.includes('تحصيل') || 
-                          transaction.description?.includes('دفعة') ||
-                          transaction.description?.includes('عربون') ||
-                          transaction.description?.includes('سداد من عميل') ||
-                          transaction.order_serial?.includes('INV-');
-    
-    const isIncome = transaction.transaction_type === 'income' || isOrderPayment;
-    
-    if (isIncome) {
-      return {
-        bgColor: 'bg-green-50 border-green-200',
-        badgeStyle: 'bg-green-100 text-green-800',
-        textColor: 'text-green-800',
-        amountColor: 'text-green-600',
-        icon: '💰',
-        label: isOrderPayment ? 'تحصيل' : 'إيراد',
-        sign: '+'
-      };
-    } else {
-      return {
-        bgColor: 'bg-red-50 border-red-200',
-        badgeStyle: 'bg-red-100 text-red-800',
-        textColor: 'text-red-800',
-        amountColor: 'text-red-600',
-        icon: '💸',
-        label: 'مصروف',
-        sign: '-'
-      };
-    }
-  };
-
-  const handleAddTransaction = () => {
-    const amount = parseFloat(newTransaction.amount);
-    if (!amount || amount <= 0) {
-      toast.error('يرجى إدخال مبلغ صحيح');
-      return;
-    }
-    
-    if (!newTransaction.description.trim()) {
-      toast.error('يرجى إدخال وصف للمعاملة');
-      return;
-    }
-    
-    addTransactionMutation.mutate(newTransaction);
-  };
-
-  const handleEditTransaction = (transaction: Transaction) => {
-    setSelectedTransaction({ ...transaction });
-    setEditTransactionDialog(true);
-  };
-
-  const handleDeleteTransaction = (transactionId: string) => {
-    if (confirm('هل أنت متأكد من حذف هذه المعاملة؟')) {
-      deleteTransactionMutation.mutate(transactionId);
-    }
-  };
-
-  const handleSaveEdit = () => {
-    if (selectedTransaction) {
-      editTransactionMutation.mutate(selectedTransaction);
-    }
-  };
-
-  const handleExportToExcel = () => {
-    // تحضير البيانات للتصدير
-    const exportData = [
-      {
-        'نوع المعاملة': 'إجمالي المبيعات',
-        'المبلغ': financialSummary.totalSales,
-        'التحصيل/الدفع': financialSummary.collectedSales,
-        'المتبقي': financialSummary.totalSales - financialSummary.collectedSales
-      },
-      {
-        'نوع المعاملة': 'تكلفة المنتجات',
-        'المبلغ': financialSummary.totalProductCosts,
-        'التحصيل/الدفع': financialSummary.paidProductCosts,
-        'المتبقي': financialSummary.totalProductCosts - financialSummary.paidProductCosts
-      },
-      {
-        'نوع المعاملة': 'مصاريف الشحن',
-        'المبلغ': financialSummary.totalShippingCosts,
-        'التحصيل/الدفع': financialSummary.paidShipping,
-        'المتبقي': financialSummary.totalShippingCosts - financialSummary.paidShipping
-      },
-      {
-        'نوع المعاملة': 'الإيرادات الأخرى',
-        'المبلغ': financialSummary.otherIncome,
-        'التحصيل/الدفع': financialSummary.otherIncome,
-        'المتبقي': 0
-      },
-      {
-        'نوع المعاملة': 'المصاريف الأخرى',
-        'المبلغ': financialSummary.otherExpenses,
-        'التحصيل/الدفع': financialSummary.otherExpenses,
-        'المتبقي': 0
-      }
-    ];
-
-    // تصدير البيانات
-    toast.success('تم تصدير كشف الحساب بنجاح');
-  };
-
-  if (transactionsLoading || ordersLoading) {
+  if (ordersLoading || transactionsLoading) {
     return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="animate-pulse space-y-4">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="h-16 bg-gray-200 rounded"></div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <div className="space-y-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="h-24 bg-muted animate-pulse rounded-xl" />
+        ))}
+      </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* العنوان */}
-      <Card>
-        <CardHeader className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-          <CardTitle className="text-center text-xl font-bold flex items-center justify-center gap-2">
-            <Calculator className="h-6 w-6" />
+    <div className="space-y-5" dir="rtl">
+      {/* Header */}
+      <div className={`flex ${isMobile ? 'flex-col gap-3' : 'items-center justify-between'}`}>
+        <div>
+          <h2 className={`font-bold text-foreground ${isMobile ? 'text-xl' : 'text-2xl'}`}>
             كشف الحساب الشامل
-          </CardTitle>
-        </CardHeader>
-      </Card>
-
-      {/* الملخص المالي الشامل */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* إجمالي المبيعات */}
-        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <Receipt className="h-6 w-6 text-green-600" />
-              <Badge className="bg-green-100 text-green-800">مبيعات</Badge>
-            </div>
-            <h3 className="text-sm font-medium text-green-700 mb-1">إجمالي المبيعات</h3>
-            <p className="text-xl font-bold text-green-800">{formatCurrency(financialSummary.totalSales)}</p>
-            <p className="text-xs text-green-600">المحصل: {formatCurrency(financialSummary.collectedSales)}</p>
-          </CardContent>
-        </Card>
-
-        {/* تكلفة المنتجات */}
-        <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <Target className="h-6 w-6 text-red-600" />
-              <Badge className="bg-red-100 text-red-800">تكاليف</Badge>
-            </div>
-            <h3 className="text-sm font-medium text-red-700 mb-1">تكلفة المنتجات</h3>
-            <p className="text-xl font-bold text-red-800">{formatCurrency(financialSummary.totalProductCosts)}</p>
-            <p className="text-xs text-red-600">المدفوع: {formatCurrency(financialSummary.paidProductCosts)}</p>
-          </CardContent>
-        </Card>
-
-        {/* مصاريف الشحن */}
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <Truck className="h-6 w-6 text-blue-600" />
-              <Badge className="bg-blue-100 text-blue-800">شحن</Badge>
-            </div>
-            <h3 className="text-sm font-medium text-blue-700 mb-1">مصاريف الشحن</h3>
-            <p className="text-xl font-bold text-blue-800">{formatCurrency(financialSummary.totalShippingCosts)}</p>
-            <div className="text-xs text-blue-600 flex justify-between">
-              <span>محصل: {formatCurrency(financialSummary.collectedShipping)}</span>
-              <span>مدفوع: {formatCurrency(financialSummary.paidShipping)}</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* الرصيد الحالي */}
-        <Card className={`bg-gradient-to-br ${financialSummary.currentBalance >= 0 ? 'from-purple-50 to-purple-100 border-purple-200' : 'from-orange-50 to-orange-100 border-orange-200'}`}>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <Wallet className={`h-6 w-6 ${financialSummary.currentBalance >= 0 ? 'text-purple-600' : 'text-orange-600'}`} />
-              <Badge className={`${financialSummary.currentBalance >= 0 ? 'bg-purple-100 text-purple-800' : 'bg-orange-100 text-orange-800'}`}>
-                {financialSummary.currentBalance >= 0 ? 'موجب' : 'سالب'}
-              </Badge>
-            </div>
-            <h3 className={`text-sm font-medium mb-1 ${financialSummary.currentBalance >= 0 ? 'text-purple-700' : 'text-orange-700'}`}>الرصيد الحالي</h3>
-            <p className={`text-xl font-bold ${financialSummary.currentBalance >= 0 ? 'text-purple-800' : 'text-orange-800'}`}>
-              {formatCurrency(financialSummary.currentBalance)}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* المؤشرات الإضافية */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200">
-          <CardContent className="p-4 text-center">
-            <DollarSign className="h-6 w-6 text-yellow-600 mx-auto mb-2" />
-            <h3 className="text-sm font-medium text-yellow-700 mb-1">الإيرادات الأخرى</h3>
-            <p className="text-lg font-bold text-yellow-800">{formatCurrency(financialSummary.otherIncome)}</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-pink-50 to-pink-100 border-pink-200">
-          <CardContent className="p-4 text-center">
-            <CreditCard className="h-6 w-6 text-pink-600 mx-auto mb-2" />
-            <h3 className="text-sm font-medium text-pink-700 mb-1">المصاريف الأخرى</h3>
-            <p className="text-lg font-bold text-pink-800">{formatCurrency(financialSummary.otherExpenses)}</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200">
-          <CardContent className="p-4 text-center">
-            <TrendingUp className="h-6 w-6 text-emerald-600 mx-auto mb-2" />
-            <h3 className="text-sm font-medium text-emerald-700 mb-1">إجمالي التحصيلات</h3>
-            <p className="text-lg font-bold text-emerald-800">{formatCurrency(financialSummary.totalCollections)}</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-rose-50 to-rose-100 border-rose-200">
-          <CardContent className="p-4 text-center">
-            <TrendingDown className="h-6 w-6 text-rose-600 mx-auto mb-2" />
-            <h3 className="text-sm font-medium text-rose-700 mb-1">إجمالي المدفوعات</h3>
-            <p className="text-lg font-bold text-rose-800">{formatCurrency(financialSummary.totalPayments)}</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* أزرار الإجراءات */}
-      <div className="flex flex-wrap gap-3">
+          </h2>
+          <div className="flex items-center gap-2 mt-1 text-muted-foreground">
+            <Calendar className="h-4 w-4" />
+            <span className="text-sm">
+              {startDate && endDate 
+                ? `${format(startDate, 'dd MMMM yyyy', { locale: ar })} - ${format(endDate, 'dd MMMM yyyy', { locale: ar })}`
+                : 'جميع الفترات'}
+            </span>
+            <Badge variant="secondary" className="text-xs">{financial.activeOrders} طلب نشط</Badge>
+          </div>
+        </div>
         <Dialog open={addTransactionDialog} onOpenChange={setAddTransactionDialog}>
           <DialogTrigger asChild>
-            <Button className="bg-green-600 hover:bg-green-700 text-white">
-              <Plus className="h-4 w-4 ml-2" />
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
               إضافة معاملة
             </Button>
           </DialogTrigger>
@@ -593,198 +375,578 @@ const ImprovedComprehensiveAccountStatement = () => {
             <DialogHeader>
               <DialogTitle>إضافة معاملة جديدة</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="amount">المبلغ</Label>
-                <Input
-                  id="amount"
-                  type="number"
-                  placeholder="0.00"
-                  value={newTransaction.amount}
-                  onChange={(e) => setNewTransaction(prev => ({ ...prev, amount: e.target.value }))}
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="type">نوع المعاملة</Label>
-                <Select value={newTransaction.type} onValueChange={(value) => setNewTransaction(prev => ({ ...prev, type: value }))}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
+            <div className="space-y-4 pt-2">
+              <div className="space-y-2">
+                <Label>النوع</Label>
+                <Select value={newTransaction.type} onValueChange={v => setNewTransaction(p => ({ ...p, type: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="income">إيراد</SelectItem>
                     <SelectItem value="expense">مصروف</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              
-              <div>
-                <Label htmlFor="description">الوصف</Label>
-                <Textarea
-                  id="description"
-                  placeholder="وصف المعاملة"
-                  value={newTransaction.description}
-                  onChange={(e) => setNewTransaction(prev => ({ ...prev, description: e.target.value }))}
-                />
+              {newTransaction.type === 'expense' && (
+                <div className="space-y-2">
+                  <Label>التصنيف</Label>
+                  <Select value={newTransaction.category} onValueChange={v => setNewTransaction(p => ({ ...p, category: v }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="cost">تكلفة إنتاج (ورشة)</SelectItem>
+                      <SelectItem value="shipping">مصاريف شحن</SelectItem>
+                      <SelectItem value="materials">خامات</SelectItem>
+                      <SelectItem value="other">مصروفات أخرى</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label>الوصف</Label>
+                <Input placeholder="وصف المعاملة" value={newTransaction.description}
+                  onChange={e => setNewTransaction(p => ({ ...p, description: e.target.value }))} />
               </div>
-              
-              <Button 
-                onClick={handleAddTransaction} 
-                disabled={addTransactionMutation.isPending}
-                className="w-full"
-              >
-                {addTransactionMutation.isPending ? 'جاري الإضافة...' : 'إضافة المعاملة'}
+              <div className="space-y-2">
+                <Label>المبلغ (ج.م)</Label>
+                <Input type="number" placeholder="0" value={newTransaction.amount}
+                  onChange={e => setNewTransaction(p => ({ ...p, amount: e.target.value }))} />
+              </div>
+              <Button onClick={() => {
+                if (!newTransaction.amount || !newTransaction.description) { toast.error('يرجى ملء جميع الحقول'); return; }
+                addMutation.mutate(newTransaction);
+              }} className="w-full" disabled={addMutation.isPending}>
+                {addMutation.isPending ? 'جاري الإضافة...' : 'إضافة'}
               </Button>
             </div>
           </DialogContent>
         </Dialog>
-
-        <Button onClick={handleExportToExcel} variant="outline">
-          <FileSpreadsheet className="h-4 w-4 ml-2" />
-          تصدير Excel
-        </Button>
       </div>
 
-      {/* فلاتر وجدول المعاملات */}
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              كشف المعاملات المفصل
-            </CardTitle>
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4" />
-              <Select value={filterType} onValueChange={setFilterType}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">جميع المعاملات</SelectItem>
-                  <SelectItem value="income">الإيرادات</SelectItem>
-                  <SelectItem value="expense">المصروفات</SelectItem>
-                  <SelectItem value="shipping">مصاريف الشحن</SelectItem>
-                  <SelectItem value="advertising">الدعاية والإعلان</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+      {/* Section Navigation */}
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+        {sections.map(s => {
+          const Icon = s.icon;
+          const isActive = activeSection === s.id;
+          return (
+            <button key={s.id} onClick={() => setActiveSection(s.id as any)}
+              className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all border
+                ${isActive 
+                  ? 'bg-primary text-primary-foreground border-primary shadow-md' 
+                  : 'bg-card text-muted-foreground border-border hover:bg-accent'}`}>
+              <Icon className="h-4 w-4" />
+              {s.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ======= SECTION: الملخص المالي ======= */}
+      {activeSection === 'summary' && (
+        <div className="space-y-5">
+          {/* Top KPI Cards */}
+          <div className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'grid-cols-4'}`}>
+            <Card className="border-l-4 border-l-emerald-500">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Receipt className="h-4 w-4 text-emerald-600" />
+                  <span className="text-xs text-muted-foreground font-medium">إجمالي المبيعات</span>
+                </div>
+                <p className="text-xl font-bold text-foreground">{fmt(financial.expectedRevenue)}</p>
+                <p className="text-xs text-muted-foreground mt-1">{financial.activeOrders} طلب</p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-l-4 border-l-blue-500">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Banknote className="h-4 w-4 text-blue-600" />
+                  <span className="text-xs text-muted-foreground font-medium">إجمالي المحصل</span>
+                </div>
+                <p className="text-xl font-bold text-foreground">{fmt(financial.totalCollected)}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {financial.expectedRevenue > 0 
+                    ? `${((financial.totalOrderPaymentsReceived / financial.expectedRevenue) * 100).toFixed(0)}% من المبيعات`
+                    : '—'}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-l-4 border-l-red-500">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <CreditCard className="h-4 w-4 text-red-600" />
+                  <span className="text-xs text-muted-foreground font-medium">إجمالي المدفوع</span>
+                </div>
+                <p className="text-xl font-bold text-foreground">{fmt(financial.totalPaidOut)}</p>
+                <p className="text-xs text-muted-foreground mt-1">ورش + شحن + مصاريف</p>
+              </CardContent>
+            </Card>
+
+            <Card className={`border-l-4 ${financial.cashBalance >= 0 ? 'border-l-emerald-500' : 'border-l-amber-500'}`}>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Wallet className={`h-4 w-4 ${financial.cashBalance >= 0 ? 'text-emerald-600' : 'text-amber-600'}`} />
+                  <span className="text-xs text-muted-foreground font-medium">الرصيد النقدي</span>
+                </div>
+                <p className={`text-xl font-bold ${financial.cashBalance >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                  {fmt(financial.cashBalance)}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">المحصل - المدفوع</p>
+              </CardContent>
+            </Card>
           </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
+
+          {/* Calculation Breakdown */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Calculator className="h-5 w-5 text-primary" />
+                ملخص الحساب
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="bg-muted/30 rounded-xl p-4 space-y-3">
+                {/* Income */}
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold text-emerald-600 flex items-center gap-2">
+                    <ArrowDownLeft className="h-4 w-4" /> الإيرادات
+                  </p>
+                  <div className="mr-6 space-y-1.5">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">مبيعات الطلبات (شامل الشحن)</span>
+                      <span className="font-medium">{fmt(financial.expectedRevenue)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">المحصل من العملاء (عربون + دفعات)</span>
+                      <span className="font-medium text-emerald-600">{fmt(financial.totalOrderPaymentsReceived)}</span>
+                    </div>
+                    {financial.manualIncome > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">إيرادات أخرى مسجلة</span>
+                        <span className="font-medium text-emerald-600">+ {fmt(financial.manualIncome)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-sm font-semibold border-t border-border/50 pt-1.5">
+                      <span>إجمالي المحصل</span>
+                      <span className="text-emerald-600">{fmt(financial.totalCollected)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Expenses */}
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold text-red-600 flex items-center gap-2">
+                    <ArrowUpRight className="h-4 w-4" /> المصروفات الفعلية
+                  </p>
+                  <div className="mr-6 space-y-1.5">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground flex items-center gap-1">
+                        <Factory className="h-3 w-3" /> مدفوعات الورش
+                      </span>
+                      <span className="font-medium text-red-600">{fmt(financial.actualWorkshopPaid)}</span>
+                    </div>
+                    {financial.manualShippingExpenses > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground flex items-center gap-1">
+                          <Truck className="h-3 w-3" /> مصاريف شحن مسجلة
+                        </span>
+                        <span className="font-medium text-red-600">{fmt(financial.manualShippingExpenses)}</span>
+                      </div>
+                    )}
+                    {financial.manualProductionExpenses > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground flex items-center gap-1">
+                          <Package className="h-3 w-3" /> تكاليف إنتاج مسجلة
+                        </span>
+                        <span className="font-medium text-red-600">{fmt(financial.manualProductionExpenses)}</span>
+                      </div>
+                    )}
+                    {financial.manualOtherExpenses > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground flex items-center gap-1">
+                          <FileText className="h-3 w-3" /> مصروفات أخرى
+                        </span>
+                        <span className="font-medium text-red-600">{fmt(financial.manualOtherExpenses)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-sm font-semibold border-t border-border/50 pt-1.5">
+                      <span>إجمالي المدفوع</span>
+                      <span className="text-red-600">{fmt(financial.totalPaidOut)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator className="border-2" />
+
+                {/* Net */}
+                <div className="flex justify-between items-center text-lg">
+                  <span className="font-bold">الرصيد النقدي (المحصل - المدفوع)</span>
+                  <span className={`font-bold ${financial.cashBalance >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                    {fmt(financial.cashBalance)}
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Pending Amounts */}
+          <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'}`}>
+            <Card className="border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-950/20">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <AlertTriangle className="h-5 w-5 text-amber-600" />
+                  <span className="font-semibold text-amber-800 dark:text-amber-400">مبالغ معلقة من العملاء</span>
+                </div>
+                <p className="text-2xl font-bold text-amber-700 dark:text-amber-300">{fmt(financial.pendingFromCustomers)}</p>
+                <p className="text-xs text-amber-600 dark:text-amber-500 mt-1">المبيعات - المحصل من الطلبات</p>
+                {financial.expectedRevenue > 0 && (
+                  <Progress value={(financial.totalOrderPaymentsReceived / financial.expectedRevenue) * 100} 
+                    className="mt-3 h-2" />
+                )}
+              </CardContent>
+            </Card>
+            <Card className="border-orange-200 dark:border-orange-800 bg-orange-50/50 dark:bg-orange-950/20">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Factory className="h-5 w-5 text-orange-600" />
+                  <span className="font-semibold text-orange-800 dark:text-orange-400">مستحقات للورش (لم تُدفع)</span>
+                </div>
+                <p className="text-2xl font-bold text-orange-700 dark:text-orange-300">{fmt(financial.pendingToWorkshops)}</p>
+                <p className="text-xs text-orange-600 dark:text-orange-500 mt-1">مدفوعات ورش بحالة "مستحقة"</p>
+                {financial.totalWorkshopCost > 0 && (
+                  <Progress value={(financial.actualWorkshopPaid / financial.totalWorkshopCost) * 100} 
+                    className="mt-3 h-2" />
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )}
+
+      {/* ======= SECTION: مقارنة المتوقع vs الفعلي ======= */}
+      {activeSection === 'comparison' && (
+        <div className="space-y-5">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Scale className="h-5 w-5 text-primary" />
+                مقارنة التكاليف: المتوقع من الطلبات vs الفعلي المدفوع
+              </CardTitle>
+              <p className="text-xs text-muted-foreground mt-1">
+                التكلفة المتوقعة هي المسجلة في كل طلب. التكلفة الفعلية هي ما تم دفعه للورش فعلياً.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              {/* Production Cost Comparison */}
+              <div className="bg-muted/30 rounded-xl p-4 space-y-4">
+                <h4 className="font-semibold flex items-center gap-2">
+                  <Factory className="h-4 w-4 text-primary" /> تكلفة الإنتاج (الورش)
+                </h4>
+                <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-3'}`}>
+                  <div className="bg-card rounded-lg p-4 border">
+                    <p className="text-xs text-muted-foreground mb-1">المتوقع (من الطلبات)</p>
+                    <p className="text-xl font-bold">{fmt(financial.expectedProductionCost)}</p>
+                  </div>
+                  <div className="bg-card rounded-lg p-4 border">
+                    <p className="text-xs text-muted-foreground mb-1">الفعلي (مدفوعات الورش)</p>
+                    <p className="text-xl font-bold text-red-600">{fmt(financial.totalWorkshopCost)}</p>
+                    <div className="flex gap-2 mt-1 text-xs">
+                      <span className="text-emerald-600">مدفوع: {fmt(financial.actualWorkshopPaid)}</span>
+                      <span className="text-amber-600">مستحق: {fmt(financial.actualWorkshopDue)}</span>
+                    </div>
+                  </div>
+                  <div className={`rounded-lg p-4 border-2 ${
+                    financial.costDifference > 0 
+                      ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-700' 
+                      : financial.costDifference < 0 
+                        ? 'bg-red-50 dark:bg-red-950/20 border-red-300 dark:border-red-700'
+                        : 'bg-card border-border'
+                  }`}>
+                    <p className="text-xs text-muted-foreground mb-1">الفرق</p>
+                    <p className={`text-xl font-bold ${
+                      financial.costDifference > 0 ? 'text-emerald-600' : financial.costDifference < 0 ? 'text-red-600' : ''
+                    }`}>
+                      {financial.costDifference > 0 ? '+' : ''}{fmt(financial.costDifference)}
+                    </p>
+                    <p className="text-xs mt-1">
+                      {financial.costDifference > 0 ? (
+                        <span className="text-emerald-600 flex items-center gap-1">
+                          <CheckCircle2 className="h-3 w-3" /> التكلفة الفعلية أقل من المتوقع ✓
+                        </span>
+                      ) : financial.costDifference < 0 ? (
+                        <span className="text-red-600 flex items-center gap-1">
+                          <XCircle className="h-3 w-3" /> التكلفة الفعلية أعلى من المتوقع ⚠
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">متطابق</span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Shipping Cost Comparison */}
+              <div className="bg-muted/30 rounded-xl p-4 space-y-4">
+                <h4 className="font-semibold flex items-center gap-2">
+                  <Truck className="h-4 w-4 text-primary" /> مصاريف الشحن
+                </h4>
+                <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                  <div className="bg-card rounded-lg p-4 border">
+                    <p className="text-xs text-muted-foreground mb-1">المضاف على الفواتير</p>
+                    <p className="text-xl font-bold">{fmt(financial.expectedShippingCost)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">يتم تحصيله من العميل ضمن الفاتورة</p>
+                  </div>
+                  <div className="bg-card rounded-lg p-4 border">
+                    <p className="text-xs text-muted-foreground mb-1">المدفوع لشركة الشحن</p>
+                    <p className="text-xl font-bold text-red-600">{fmt(financial.manualShippingExpenses)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">المسجل كمصروف شحن في المعاملات</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Summary */}
+              <div className="bg-primary/5 rounded-xl p-4 border border-primary/20">
+                <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                  <Target className="h-4 w-4 text-primary" /> خلاصة المقارنة
+                </h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">صافي الربح المتوقع (من أسعار الطلبات)</span>
+                    <span className="font-semibold">{fmt(financial.expectedProfit)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">صافي الربح الفعلي (محصل - مدفوع)</span>
+                    <span className={`font-semibold ${financial.actualProfit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                      {fmt(financial.actualProfit)}
+                    </span>
+                  </div>
+                  {financial.totalWorkshopCost === 0 && financial.expectedProductionCost > 0 && (
+                    <div className="flex items-center gap-2 text-amber-600 bg-amber-50 dark:bg-amber-950/30 rounded-lg p-2 mt-2">
+                      <AlertTriangle className="h-4 w-4" />
+                      <span className="text-xs">لم يتم تسجيل أي مدفوعات ورش بعد - سجّل مدفوعات الورش من تبويب "الإدارة المالية" لمقارنة دقيقة</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* ======= SECTION: حركة النقدية ======= */}
+      {activeSection === 'cashflow' && (
+        <div className="space-y-5">
+          <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'}`}>
+            {/* Money In */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base text-emerald-600">
+                  <ArrowDownLeft className="h-5 w-5" />
+                  الأموال الداخلة (تحصيلات)
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex justify-between p-3 bg-emerald-50 dark:bg-emerald-950/20 rounded-lg">
+                  <span className="text-sm flex items-center gap-2">
+                    <DollarSign className="h-4 w-4" /> عربون + دفعات من الطلبات
+                  </span>
+                  <span className="font-semibold text-emerald-700 dark:text-emerald-400">{fmt(financial.totalOrderPaymentsReceived)}</span>
+                </div>
+                {financial.actualCustomerPaid > 0 && (
+                  <div className="flex justify-between p-3 bg-emerald-50 dark:bg-emerald-950/20 rounded-lg">
+                    <span className="text-sm flex items-center gap-2">
+                      <Banknote className="h-4 w-4" /> مدفوعات العملاء (الإدارة المالية)
+                    </span>
+                    <span className="font-semibold text-emerald-700 dark:text-emerald-400">{fmt(financial.actualCustomerPaid)}</span>
+                  </div>
+                )}
+                {financial.manualIncome > 0 && (
+                  <div className="flex justify-between p-3 bg-emerald-50 dark:bg-emerald-950/20 rounded-lg">
+                    <span className="text-sm flex items-center gap-2">
+                      <TrendingUp className="h-4 w-4" /> إيرادات أخرى
+                    </span>
+                    <span className="font-semibold text-emerald-700 dark:text-emerald-400">{fmt(financial.manualIncome)}</span>
+                  </div>
+                )}
+                <Separator />
+                <div className="flex justify-between p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg font-bold">
+                  <span>الإجمالي</span>
+                  <span className="text-emerald-700 dark:text-emerald-300">{fmt(financial.totalCollected)}</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Money Out */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base text-red-600">
+                  <ArrowUpRight className="h-5 w-5" />
+                  الأموال الخارجة (مدفوعات)
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex justify-between p-3 bg-red-50 dark:bg-red-950/20 rounded-lg">
+                  <span className="text-sm flex items-center gap-2">
+                    <Factory className="h-4 w-4" /> مدفوعات الورش
+                  </span>
+                  <span className="font-semibold text-red-700 dark:text-red-400">{fmt(financial.actualWorkshopPaid)}</span>
+                </div>
+                {financial.manualShippingExpenses > 0 && (
+                  <div className="flex justify-between p-3 bg-red-50 dark:bg-red-950/20 rounded-lg">
+                    <span className="text-sm flex items-center gap-2">
+                      <Truck className="h-4 w-4" /> مصاريف شحن
+                    </span>
+                    <span className="font-semibold text-red-700 dark:text-red-400">{fmt(financial.manualShippingExpenses)}</span>
+                  </div>
+                )}
+                {financial.manualProductionExpenses > 0 && (
+                  <div className="flex justify-between p-3 bg-red-50 dark:bg-red-950/20 rounded-lg">
+                    <span className="text-sm flex items-center gap-2">
+                      <Package className="h-4 w-4" /> تكاليف إنتاج مسجلة
+                    </span>
+                    <span className="font-semibold text-red-700 dark:text-red-400">{fmt(financial.manualProductionExpenses)}</span>
+                  </div>
+                )}
+                {financial.manualOtherExpenses > 0 && (
+                  <div className="flex justify-between p-3 bg-red-50 dark:bg-red-950/20 rounded-lg">
+                    <span className="text-sm flex items-center gap-2">
+                      <FileText className="h-4 w-4" /> مصروفات أخرى
+                    </span>
+                    <span className="font-semibold text-red-700 dark:text-red-400">{fmt(financial.manualOtherExpenses)}</span>
+                  </div>
+                )}
+                <Separator />
+                <div className="flex justify-between p-3 bg-red-100 dark:bg-red-900/30 rounded-lg font-bold">
+                  <span>الإجمالي</span>
+                  <span className="text-red-700 dark:text-red-300">{fmt(financial.totalPaidOut)}</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Cash Balance */}
+          <Card className={`border-2 ${financial.cashBalance >= 0 ? 'border-emerald-300 dark:border-emerald-700' : 'border-red-300 dark:border-red-700'}`}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`p-3 rounded-xl ${financial.cashBalance >= 0 ? 'bg-emerald-100 dark:bg-emerald-900/40' : 'bg-red-100 dark:bg-red-900/40'}`}>
+                    <Wallet className={`h-6 w-6 ${financial.cashBalance >= 0 ? 'text-emerald-600' : 'text-red-600'}`} />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground font-medium">صافي الرصيد النقدي</p>
+                    <p className="text-xs text-muted-foreground">الأموال الداخلة - الأموال الخارجة</p>
+                  </div>
+                </div>
+                <p className={`text-3xl font-bold ${financial.cashBalance >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                  {fmt(financial.cashBalance)}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* ======= SECTION: المعاملات ======= */}
+      {activeSection === 'transactions' && (
+        <Card>
+          <CardHeader>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <FileText className="h-5 w-5" />
+                سجل المعاملات
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <Select value={filterType} onValueChange={setFilterType}>
+                  <SelectTrigger className="w-[160px] h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">الكل</SelectItem>
+                    <SelectItem value="income">إيرادات</SelectItem>
+                    <SelectItem value="expense">مصروفات</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
             {filteredTransactions.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                لا توجد معاملات متطابقة مع الفلتر المحدد
+              <div className="text-center py-10 text-muted-foreground">
+                <FileText className="h-12 w-12 mx-auto mb-3 opacity-40" />
+                <p>لا توجد معاملات</p>
               </div>
             ) : (
-              filteredTransactions.map((transaction) => {
-                const style = getTransactionStyle(transaction);
-                
-                return (
-                  <div 
-                    key={transaction.id} 
-                    className={`flex items-center justify-between p-4 border rounded-lg hover:shadow-sm transition-all ${style.bgColor}`}
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <Badge className={`px-3 py-1 text-sm font-medium ${style.badgeStyle}`}>
-                          {style.icon} {style.label}
-                        </Badge>
-                        <span className="text-sm text-gray-500 bg-white px-2 py-1 rounded border">
-                          {transaction.order_serial}
+              <div className="space-y-2 max-h-[500px] overflow-y-auto">
+                {filteredTransactions.map(t => {
+                  const isIncome = t.transaction_type === 'income';
+                  return (
+                    <div key={t.id} className={`flex items-center justify-between p-3 rounded-lg border transition-colors
+                      ${isIncome 
+                        ? 'bg-emerald-50/50 dark:bg-emerald-950/10 border-emerald-200 dark:border-emerald-800' 
+                        : 'bg-red-50/50 dark:bg-red-950/10 border-red-200 dark:border-red-800'
+                      } hover:shadow-sm`}>
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className={`p-2 rounded-lg shrink-0 ${isIncome ? 'bg-emerald-100 dark:bg-emerald-900/40' : 'bg-red-100 dark:bg-red-900/40'}`}>
+                          {isIncome ? <ArrowDownLeft className="h-4 w-4 text-emerald-600" /> : <ArrowUpRight className="h-4 w-4 text-red-600" />}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium truncate">{t.description || (isIncome ? 'إيراد' : 'مصروف')}</p>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Clock className="h-3 w-3" />
+                            {format(new Date(t.created_at), 'dd/MM/yyyy', { locale: ar })}
+                            <Badge variant="outline" className="text-[10px] h-5">{t.order_serial}</Badge>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className={`font-bold ${isIncome ? 'text-emerald-600' : 'text-red-600'}`}>
+                          {isIncome ? '+' : '-'}{fmt(Math.abs(t.amount))}
                         </span>
-                      </div>
-                      
-                      {transaction.description && (
-                        <p className={`text-sm mb-1 font-medium ${style.textColor}`}>
-                          {transaction.description}
-                        </p>
-                      )}
-                      
-                      <p className="text-xs text-gray-500 flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {new Date(transaction.created_at).toLocaleString('ar-EG', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </p>
-                    </div>
-                    
-                    <div className="flex items-center gap-4">
-                      <div className="text-right">
-                        <p className={`text-xl font-bold ${style.amountColor}`}>
-                          {style.sign}{formatCurrency(Math.abs(transaction.amount))}
-                        </p>
-                      </div>
-                      
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleEditTransaction(transaction)}
-                          className="h-8 w-8 p-0 hover:bg-blue-50"
-                        >
+                        <Button variant="ghost" size="icon" className="h-7 w-7"
+                          onClick={() => { setSelectedTransaction({ ...t }); setEditTransactionDialog(true); }}>
                           <Edit className="h-3 w-3" />
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleDeleteTransaction(transaction.id)}
-                          className="h-8 w-8 p-0"
-                        >
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive"
+                          onClick={() => { if (confirm('حذف هذه المعاملة؟')) deleteMutation.mutate(t.id); }}>
                           <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>
                     </div>
-                  </div>
-                );
-              })
+                  );
+                })}
+              </div>
             )}
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Edit Transaction Dialog */}
+      {/* Edit Dialog */}
       <Dialog open={editTransactionDialog} onOpenChange={setEditTransactionDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>تعديل المعاملة</DialogTitle>
           </DialogHeader>
           {selectedTransaction && (
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="edit-amount">المبلغ</Label>
-                <Input
-                  id="edit-amount"
-                  type="number"
-                  value={selectedTransaction.amount}
-                  onChange={(e) => setSelectedTransaction(prev => 
-                    prev ? { ...prev, amount: parseFloat(e.target.value) || 0 } : null
-                  )}
-                />
+            <div className="space-y-4 pt-2">
+              <div className="space-y-2">
+                <Label>الوصف</Label>
+                <Input value={selectedTransaction.description || ''}
+                  onChange={e => setSelectedTransaction(p => p ? { ...p, description: e.target.value } : null)} />
               </div>
-              
-              <div>
-                <Label htmlFor="edit-description">الوصف</Label>
-                <Textarea
-                  id="edit-description"
-                  value={selectedTransaction.description || ''}
-                  onChange={(e) => setSelectedTransaction(prev => 
-                    prev ? { ...prev, description: e.target.value } : null
-                  )}
-                />
+              <div className="space-y-2">
+                <Label>المبلغ (ج.م)</Label>
+                <Input type="number" value={selectedTransaction.amount}
+                  onChange={e => setSelectedTransaction(p => p ? { ...p, amount: parseFloat(e.target.value) || 0 } : null)} />
               </div>
-              
-              <Button 
-                onClick={handleSaveEdit} 
-                disabled={editTransactionMutation.isPending}
-                className="w-full"
-              >
-                {editTransactionMutation.isPending ? 'جاري الحفظ...' : 'حفظ التعديلات'}
-              </Button>
+              <DialogFooter className="gap-2">
+                <Button variant="outline" onClick={() => setEditTransactionDialog(false)}>إلغاء</Button>
+                <Button onClick={() => selectedTransaction && editMutation.mutate(selectedTransaction)}
+                  disabled={editMutation.isPending}>
+                  {editMutation.isPending ? 'جاري الحفظ...' : 'حفظ'}
+                </Button>
+              </DialogFooter>
             </div>
           )}
         </DialogContent>
