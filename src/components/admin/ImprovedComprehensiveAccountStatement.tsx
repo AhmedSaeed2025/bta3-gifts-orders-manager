@@ -885,7 +885,7 @@ const ImprovedComprehensiveAccountStatement = () => {
                     </div>
                     <div className="flex justify-between text-xs">
                       <span className="text-purple-600 flex items-center gap-1">
-                        <Factory className="h-3 w-3" /> تكلفة مسجلة (ورش)
+                        <Factory className="h-3 w-3" /> مدفوع للورش
                       </span>
                       <span className="font-medium text-purple-600">{fmt(financial.totalWorkshopCost)}</span>
                     </div>
