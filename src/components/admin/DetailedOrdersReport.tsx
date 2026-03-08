@@ -188,6 +188,7 @@ const DetailedOrdersReport = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
       queryClient.invalidateQueries({ queryKey: ['admin-orders-enhanced'] });
       queryClient.invalidateQueries({ queryKey: ['printing-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-orders'] });
     } catch (error) {
       console.error('Error updating status:', error);
       toast.error('حدث خطأ في تحديث حالة الطلب');
