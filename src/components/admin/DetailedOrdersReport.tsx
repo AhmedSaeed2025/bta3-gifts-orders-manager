@@ -68,6 +68,15 @@ const DetailedOrdersReport = () => {
   const selectedFinancials = selectedOrder ? calculateOrderFinancials(selectedOrder) : null;
   const statusOptions = getStatusOptions();
 
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const focusSerial = params.get('focusSerial');
+
+    if (focusSerial) {
+      setSearchTerm(focusSerial);
+    }
+  }, [location.search]);
+
   const copyToClipboard = (text: string, fieldKey: string) => {
     navigator.clipboard.writeText(text).then(() => {
       setCopiedField(fieldKey);
