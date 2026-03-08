@@ -1005,7 +1005,7 @@ export type Database = {
           expected_payment_date: string | null
           id: string
           notes: string | null
-          order_id: string
+          order_id: string | null
           payment_status: string
           product_name: string
           size_or_variant: string | null
@@ -1019,7 +1019,7 @@ export type Database = {
           expected_payment_date?: string | null
           id?: string
           notes?: string | null
-          order_id: string
+          order_id?: string | null
           payment_status?: string
           product_name: string
           size_or_variant?: string | null
@@ -1033,7 +1033,7 @@ export type Database = {
           expected_payment_date?: string | null
           id?: string
           notes?: string | null
-          order_id?: string
+          order_id?: string | null
           payment_status?: string
           product_name?: string
           size_or_variant?: string | null

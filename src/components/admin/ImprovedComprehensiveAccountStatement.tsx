@@ -597,7 +597,7 @@ const ImprovedComprehensiveAccountStatement = () => {
   // Unlinked workshop payments (not linked to any valid order)
   const unlinkedWorkshopPayments = useMemo(() => {
     const orderIds = new Set(allOrders.map(o => o.id));
-    return allWorkshopPayments.filter(w => !orderIds.has(w.order_id) || !w.order_id);
+    return allWorkshopPayments.filter(w => !w.order_id || !orderIds.has(w.order_id));
   }, [allWorkshopPayments, allOrders]);
 
   // Filtered unlinked payments
@@ -649,53 +649,93 @@ const ImprovedComprehensiveAccountStatement = () => {
     mutationFn: async () => {
       if (!user) throw new Error('Not authenticated');
       const amount = parseFloat(costRegAmount);
-      if (!amount || costRegSelectedOrders.length === 0) throw new Error('Missing data');
+      if (!amount) throw new Error('Missing data');
       
-      const perOrderAmount = amount / costRegSelectedOrders.length;
+      const hasOrders = costRegSelectedOrders.length > 0;
+      
+      if (hasOrders) {
+        const perOrderAmount = amount / costRegSelectedOrders.length;
 
-      for (const orderId of costRegSelectedOrders) {
-        const order = orders.find(o => o.id === orderId);
-        if (!order) continue;
+        for (const orderId of costRegSelectedOrders) {
+          const order = orders.find(o => o.id === orderId);
+          if (!order) continue;
 
+          if (costRegType === 'cost') {
+            await supabase.from('workshop_payments').insert({
+              user_id: user.id,
+              order_id: orderId,
+              workshop_name: costRegWorkshop || 'ورشة',
+              product_name: 'تكلفة إنتاج',
+              cost_amount: perOrderAmount,
+              payment_status: 'Paid',
+              actual_payment_date: costRegDate
+            });
+            await supabase.from('transactions').insert({
+              user_id: user.id,
+              order_serial: order.serial,
+              transaction_type: 'expense',
+              amount: perOrderAmount,
+              description: `[cost] ${costRegWorkshop || 'ورشة'} - ${costRegNotes || 'تكلفة إنتاج'}`,
+              created_at: new Date(costRegDate + 'T12:00:00').toISOString()
+            });
+          } else {
+            await supabase.from('workshop_payments').insert({
+              user_id: user.id,
+              order_id: orderId,
+              workshop_name: costRegWorkshop || 'شحن',
+              product_name: 'shipping_cost',
+              cost_amount: perOrderAmount,
+              payment_status: 'Paid',
+              actual_payment_date: costRegDate
+            });
+            await supabase.from('transactions').insert({
+              user_id: user.id,
+              order_serial: order.serial,
+              transaction_type: 'expense',
+              amount: perOrderAmount,
+              description: `[shipping] شحن - ${costRegNotes || 'مصاريف شحن'}`,
+              created_at: new Date(costRegDate + 'T12:00:00').toISOString()
+            });
+          }
+        }
+      } else {
+        // Register without linking to orders
         if (costRegType === 'cost') {
-          // Register workshop payment
           await supabase.from('workshop_payments').insert({
             user_id: user.id,
-            order_id: orderId,
+            order_id: null,
             workshop_name: costRegWorkshop || 'ورشة',
             product_name: 'تكلفة إنتاج',
-            cost_amount: perOrderAmount,
+            cost_amount: amount,
             payment_status: 'Paid',
-            actual_payment_date: costRegDate
+            actual_payment_date: costRegDate,
+            notes: costRegNotes || null
           });
-
-          // Add expense transaction with custom date
           await supabase.from('transactions').insert({
             user_id: user.id,
-            order_serial: order.serial,
+            order_serial: 'UNLINKED',
             transaction_type: 'expense',
-            amount: perOrderAmount,
-            description: `[cost] ${costRegWorkshop || 'ورشة'} - ${costRegNotes || 'تكلفة إنتاج'}`,
+            amount: amount,
+            description: `[cost] ${costRegWorkshop || 'ورشة'} - ${costRegNotes || 'تكلفة إنتاج (غير مربوط)'}`,
             created_at: new Date(costRegDate + 'T12:00:00').toISOString()
           });
         } else {
-          // Shipping expense
           await supabase.from('workshop_payments').insert({
             user_id: user.id,
-            order_id: orderId,
+            order_id: null,
             workshop_name: costRegWorkshop || 'شحن',
             product_name: 'shipping_cost',
-            cost_amount: perOrderAmount,
+            cost_amount: amount,
             payment_status: 'Paid',
-            actual_payment_date: costRegDate
+            actual_payment_date: costRegDate,
+            notes: costRegNotes || null
           });
-
           await supabase.from('transactions').insert({
             user_id: user.id,
-            order_serial: order.serial,
+            order_serial: 'UNLINKED',
             transaction_type: 'expense',
-            amount: perOrderAmount,
-            description: `[shipping] شحن - ${costRegNotes || 'مصاريف شحن'}`,
+            amount: amount,
+            description: `[shipping] شحن - ${costRegNotes || 'مصاريف شحن (غير مربوط)'}`,
             created_at: new Date(costRegDate + 'T12:00:00').toISOString()
           });
         }
@@ -705,7 +745,11 @@ const ImprovedComprehensiveAccountStatement = () => {
       queryClient.invalidateQueries({ queryKey: ['comprehensive-orders'] });
       queryClient.invalidateQueries({ queryKey: ['comprehensive-transactions'] });
       queryClient.invalidateQueries({ queryKey: ['comprehensive-workshop-payments'] });
-      toast.success(`تم تسجيل ${costRegType === 'cost' ? 'التكلفة' : 'الشحن'} بنجاح على ${costRegSelectedOrders.length} طلب`);
+      const hasOrders = costRegSelectedOrders.length > 0;
+      toast.success(hasOrders 
+        ? `تم تسجيل ${costRegType === 'cost' ? 'التكلفة' : 'الشحن'} بنجاح على ${costRegSelectedOrders.length} طلب`
+        : `تم تسجيل ${costRegType === 'cost' ? 'التكلفة' : 'الشحن'} بنجاح (غير مربوط) - يمكنك ربطه لاحقاً من تبويب "ربط المدفوعات"`
+      );
       setCostRegAmount('');
       setCostRegNotes('');
       setCostRegWorkshop('');
@@ -1886,13 +1930,16 @@ const ImprovedComprehensiveAccountStatement = () => {
 
               <Button 
                 onClick={() => costRegMutation.mutate()}
-                disabled={costRegMutation.isPending || !costRegAmount || costRegSelectedOrders.length === 0}
+                disabled={costRegMutation.isPending || !costRegAmount}
                 className="w-full h-12 text-base font-bold"
               >
                 {costRegMutation.isPending ? 'جاري التسجيل...' : (
                   <>
                     {costRegType === 'cost' ? <Factory className="h-5 w-5 ml-2" /> : <Truck className="h-5 w-5 ml-2" />}
-                    تسجيل {costRegType === 'cost' ? 'التكلفة' : 'الشحن'} على {costRegSelectedOrders.length || '...'} طلب
+                    {costRegSelectedOrders.length > 0 
+                      ? `تسجيل ${costRegType === 'cost' ? 'التكلفة' : 'الشحن'} على ${costRegSelectedOrders.length} طلب`
+                      : `تسجيل ${costRegType === 'cost' ? 'التكلفة' : 'الشحن'} بدون ربط (يمكن ربطه لاحقاً)`
+                    }
                   </>
                 )}
               </Button>

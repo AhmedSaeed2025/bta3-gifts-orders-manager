@@ -1,0 +1,1 @@
+ALTER TABLE public.workshop_payments ALTER COLUMN order_id DROP NOT NULL;
