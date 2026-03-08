@@ -2165,7 +2165,7 @@ const ImprovedComprehensiveAccountStatement = () => {
         </div>
       )}
 
-
+      <Dialog open={editTransactionDialog} onOpenChange={setEditTransactionDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>تعديل المعاملة</DialogTitle>
