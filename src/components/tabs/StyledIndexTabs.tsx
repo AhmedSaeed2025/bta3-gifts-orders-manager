@@ -213,7 +213,7 @@ const StyledIndexTabs = () => {
             </div>
             
             <div className={`flex items-center gap-2 ${isMobile ? 'w-full flex-col' : 'flex-wrap'}`}>
-              <Select value={selectedYear} onValueChange={handleYearChange}>
+              <Select value={selectedYear || undefined} onValueChange={handleYearChange}>
                 <SelectTrigger className={`${isMobile ? 'w-full' : 'w-[130px]'} h-10 bg-background border-border/60 focus:ring-2 focus:ring-primary/20`}>
                   <SelectValue placeholder="السنة" />
                 </SelectTrigger>
