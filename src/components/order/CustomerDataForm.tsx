@@ -138,7 +138,7 @@ const CustomerDataForm: React.FC<CustomerDataFormProps> = ({
           </div>
         )}
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
             <Label htmlFor="shippingCost">مصاريف الشحن</Label>
             <Input
@@ -149,6 +149,20 @@ const CustomerDataForm: React.FC<CustomerDataFormProps> = ({
               onChange={onCustomerDataChange}
               step={0.01}
               min={0}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="discount">خصم على الفاتورة</Label>
+            <Input
+              type="number"
+              id="discount"
+              name="discount"
+              value={customerData.discount}
+              onChange={onCustomerDataChange}
+              step={0.01}
+              min={0}
+              placeholder="0"
             />
           </div>
           
