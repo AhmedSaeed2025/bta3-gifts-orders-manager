@@ -22,7 +22,8 @@ import {
   Clock, Edit, Trash2, Filter, Truck, Target, FileText, Calendar,
   Receipt, CreditCard, ArrowUpDown, Factory, AlertTriangle, 
   ArrowDownLeft, ArrowUpRight, Package, CheckCircle2, XCircle,
-  BarChart3, Banknote, Scale
+  BarChart3, Banknote, Scale, Search, Eye, Phone, MapPin,
+  Smartphone, Building2, ChevronDown, ChevronUp, ListOrdered
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
