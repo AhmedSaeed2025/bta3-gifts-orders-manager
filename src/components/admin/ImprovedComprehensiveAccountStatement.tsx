@@ -488,8 +488,8 @@ const ImprovedComprehensiveAccountStatement = () => {
   const filteredTransactions = useMemo(() => {
     if (filterType === 'all') return transactions;
     return transactions.filter(t => {
-      if (filterType === 'income') return t.transaction_type === 'income';
-      if (filterType === 'expense') return t.transaction_type === 'expense';
+      if (filterType === 'income') return t.transaction_type === 'income' || t.transaction_type === 'other_income' || t.transaction_type === 'order_collection' || t.transaction_type === 'deposit';
+      if (filterType === 'expense') return t.transaction_type === 'expense' || t.transaction_type === 'cost_payment' || t.transaction_type === 'shipping_payment';
       return true;
     });
   }, [transactions, filterType]);
