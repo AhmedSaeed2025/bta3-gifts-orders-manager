@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Settings, Palette, Truck, CreditCard, FileText, Save, Star, ImageIcon, ListOrdered, PackageCheck, Receipt } from 'lucide-react';
+import { Loader2, Settings, Palette, Truck, CreditCard, FileText, Save, Star, ImageIcon, ListOrdered, PackageCheck, Receipt, LayoutList } from 'lucide-react';
 import { Facebook } from 'lucide-react';
 
 // Import the component modules
