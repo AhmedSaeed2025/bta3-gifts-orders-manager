@@ -188,15 +188,26 @@ const ImprovedComprehensiveAccountStatement = () => {
     });
 
     // === الفعلي (من المدفوعات) ===
-    const actualWorkshopPaid = workshopPayments
+    // Separate workshop payments into production vs shipping
+    const productionWP = workshopPayments.filter(w => w.product_name !== 'shipping_cost');
+    const shippingWP = workshopPayments.filter(w => w.product_name === 'shipping_cost');
+
+    const actualWorkshopPaid = productionWP
       .filter(w => w.payment_status === 'Paid')
       .reduce((sum, w) => sum + Number(w.cost_amount), 0);
     
-    const actualWorkshopDue = workshopPayments
+    const actualWorkshopDue = productionWP
       .filter(w => w.payment_status !== 'Paid')
       .reduce((sum, w) => sum + Number(w.cost_amount), 0);
 
-    const totalWorkshopCost = workshopPayments
+    const totalWorkshopCost = productionWP
+      .reduce((sum, w) => sum + Number(w.cost_amount), 0);
+
+    const actualShippingWPPaid = shippingWP
+      .filter(w => w.payment_status === 'Paid')
+      .reduce((sum, w) => sum + Number(w.cost_amount), 0);
+
+    const totalShippingWPCost = shippingWP
       .reduce((sum, w) => sum + Number(w.cost_amount), 0);
 
     const actualCustomerPaid = customerPayments
