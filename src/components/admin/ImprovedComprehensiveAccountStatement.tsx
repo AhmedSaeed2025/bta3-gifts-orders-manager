@@ -649,14 +649,47 @@ const ImprovedComprehensiveAccountStatement = () => {
   // Link payment mutation - distributes selected payments across selected orders
   const linkPaymentMutation = useMutation({
     mutationFn: async ({ paymentIds, orderIds }: { paymentIds: string[]; orderIds: string[] }) => {
-      // Distribute payments evenly across orders
-      for (const paymentId of paymentIds) {
-        const targetOrderId = orderIds.length === 1 
-          ? orderIds[0] 
-          : orderIds[paymentIds.indexOf(paymentId) % orderIds.length];
+      if (!user) throw new Error('Not authenticated');
+      
+      // Calculate total amount from all selected payments
+      const selectedPayments = paymentIds
+        .map(id => allWorkshopPayments.find(w => w.id === id))
+        .filter(Boolean);
+      const totalAmount = selectedPayments.reduce((sum, w) => sum + Number(w!.cost_amount), 0);
+      const perOrderAmount = totalAmount / orderIds.length;
+
+      // If single payment & single order, just update the existing record
+      if (paymentIds.length === 1 && orderIds.length === 1) {
         const { error } = await supabase
           .from('workshop_payments')
-          .update({ order_id: targetOrderId })
+          .update({ order_id: orderIds[0] })
+          .eq('id', paymentIds[0]);
+        if (error) throw error;
+        return;
+      }
+
+      // For multiple orders: delete original payments, create new split records
+      const firstPayment = selectedPayments[0]!;
+      
+      for (const orderId of orderIds) {
+        const { error } = await supabase.from('workshop_payments').insert({
+          user_id: user.id,
+          order_id: orderId,
+          workshop_name: firstPayment.workshop_name || 'ورشة',
+          product_name: firstPayment.product_name,
+          cost_amount: perOrderAmount,
+          payment_status: 'Paid',
+          actual_payment_date: firstPayment.actual_payment_date || new Date().toISOString().split('T')[0],
+          notes: firstPayment.notes || null
+        });
+        if (error) throw error;
+      }
+
+      // Delete original unlinked payments
+      for (const paymentId of paymentIds) {
+        const { error } = await supabase
+          .from('workshop_payments')
+          .delete()
           .eq('id', paymentId);
         if (error) throw error;
       }
