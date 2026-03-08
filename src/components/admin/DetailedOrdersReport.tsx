@@ -749,6 +749,17 @@ const DetailedOrdersReport = () => {
                         <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-orange-500"></span> الشحن: <b className="text-orange-600 dark:text-orange-400">{formatCurrency(shipping)}</b></span>
                         {discount > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-pink-500"></span> خصم: <b className="text-pink-600 dark:text-pink-400">-{formatCurrency(discount)}</b></span>}
                       </div>
+                      {(wp.paidProduction > 0 || wp.paidShipping > 0) && (
+                        <div className="flex flex-wrap items-center gap-3 text-[11px] bg-emerald-50 dark:bg-emerald-950/30 rounded-md px-3 py-1.5 border border-emerald-200 dark:border-emerald-800/40 mt-1">
+                          <span className="text-[10px] font-medium text-muted-foreground">المدفوع:</span>
+                          {wp.paidProduction > 0 && (
+                            <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-teal-500"></span> مدفوع إنتاج: <b className="text-teal-600 dark:text-teal-400">{formatCurrency(wp.paidProduction)}</b></span>
+                          )}
+                          {wp.paidShipping > 0 && (
+                            <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-cyan-500"></span> مدفوع شحن: <b className="text-cyan-600 dark:text-cyan-400">{formatCurrency(wp.paidShipping)}</b></span>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {/* Bottom Section: Products + Notes */}
