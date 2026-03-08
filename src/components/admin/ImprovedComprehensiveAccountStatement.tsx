@@ -610,16 +610,17 @@ const ImprovedComprehensiveAccountStatement = () => {
             product_name: 'تكلفة إنتاج',
             cost_amount: perOrderAmount,
             payment_status: 'Paid',
-            actual_payment_date: new Date().toISOString().split('T')[0]
+            actual_payment_date: costRegDate
           });
 
-          // Add expense transaction
+          // Add expense transaction with custom date
           await supabase.from('transactions').insert({
             user_id: user.id,
             order_serial: order.serial,
             transaction_type: 'expense',
             amount: perOrderAmount,
-            description: `[cost] ${costRegWorkshop || 'ورشة'} - ${costRegNotes || 'تكلفة إنتاج'}`
+            description: `[cost] ${costRegWorkshop || 'ورشة'} - ${costRegNotes || 'تكلفة إنتاج'}`,
+            created_at: new Date(costRegDate + 'T12:00:00').toISOString()
           });
         } else {
           // Shipping expense
