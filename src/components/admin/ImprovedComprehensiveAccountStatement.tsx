@@ -63,6 +63,7 @@ const ImprovedComprehensiveAccountStatement = () => {
   const [costRegWorkshop, setCostRegWorkshop] = useState('');
   const [costRegSelectedOrders, setCostRegSelectedOrders] = useState<string[]>([]);
   const [costRegSearch, setCostRegSearch] = useState('');
+  const [costRegPaymentFilter, setCostRegPaymentFilter] = useState<'all' | 'cost_paid' | 'cost_unpaid' | 'shipping_paid' | 'shipping_unpaid'>('all');
   
   const [newTransaction, setNewTransaction] = useState({
     amount: '',
