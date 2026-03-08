@@ -98,10 +98,15 @@ const DetailedOrdersReport = () => {
     enabled: !!user
   });
 
-  // Scroll to the focused order after returning from edit (one-time only)
+  // Scroll to top on mount, or to focused order after edit
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const focusSerial = params.get('focusSerial');
+
+    if (!focusSerial) {
+      window.scrollTo({ top: 0 });
+      return;
+    }
 
     if (focusSerial && !isLoading) {
       setTimeout(() => {
