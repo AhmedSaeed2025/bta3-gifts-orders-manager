@@ -1711,7 +1711,7 @@ const ImprovedComprehensiveAccountStatement = () => {
                       {costRegType === 'cost' ? (
                         <>
                           <div className="bg-card rounded-lg p-2 border border-border/50">
-                            <span className="text-muted-foreground block">تكلفة متوقعة</span>
+                            <span className="text-muted-foreground block">تكلفة بالطلبات</span>
                             <span className="font-bold text-blue-600">{fmt(totalExpectedCost)}</span>
                           </div>
                           <div className="bg-card rounded-lg p-2 border border-border/50">
