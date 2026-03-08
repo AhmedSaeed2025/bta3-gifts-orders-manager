@@ -106,7 +106,7 @@ const AdminSettings = () => {
       </div>
 
       <Tabs defaultValue="general" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-11">
+        <TabsList className="grid w-full grid-cols-12">
           <TabsTrigger value="general" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             عام
