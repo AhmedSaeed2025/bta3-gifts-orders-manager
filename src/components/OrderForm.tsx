@@ -201,6 +201,7 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
           governorate: "",
           shippingCost: 0,
           deposit: 0,
+          discount: 0,
         });
         setItems([]);
         setNotes("");
