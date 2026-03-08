@@ -626,20 +626,27 @@ const ImprovedComprehensiveAccountStatement = () => {
     return filtered.sort((a, b) => new Date(b.date_created).getTime() - new Date(a.date_created).getTime());
   }, [orders, linkOrderSearch]);
 
-  // Link payment mutation
+  // Link payment mutation - distributes selected payments across selected orders
   const linkPaymentMutation = useMutation({
-    mutationFn: async ({ paymentId, orderId }: { paymentId: string; orderId: string }) => {
-      const { error } = await supabase
-        .from('workshop_payments')
-        .update({ order_id: orderId })
-        .eq('id', paymentId);
-      if (error) throw error;
+    mutationFn: async ({ paymentIds, orderIds }: { paymentIds: string[]; orderIds: string[] }) => {
+      // Distribute payments evenly across orders
+      for (const paymentId of paymentIds) {
+        const targetOrderId = orderIds.length === 1 
+          ? orderIds[0] 
+          : orderIds[paymentIds.indexOf(paymentId) % orderIds.length];
+        const { error } = await supabase
+          .from('workshop_payments')
+          .update({ order_id: targetOrderId })
+          .eq('id', paymentId);
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comprehensive-workshop-payments'] });
       queryClient.invalidateQueries({ queryKey: ['comprehensive-orders'] });
-      toast.success('تم ربط الدفعة بالطلب بنجاح');
-      setLinkSelectedPayment(null);
+      toast.success(`تم ربط ${linkSelectedPayments.length} دفعة بـ ${linkSelectedOrders.length} طلب بنجاح`);
+      setLinkSelectedPayments([]);
+      setLinkSelectedOrders([]);
       setLinkOrderSearch('');
     },
     onError: () => toast.error('حدث خطأ في ربط الدفعة')
