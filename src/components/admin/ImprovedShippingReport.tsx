@@ -58,7 +58,8 @@ const ImprovedShippingReport = () => {
 
   // Filter orders based on search, filters, and date context
   const filteredOrders = useMemo(() => {
-    return allOrders.filter(order => {
+    console.log('Shipping filter - startDate:', startDate, 'endDate:', endDate, 'totalOrders:', allOrders.length);
+    const result = allOrders.filter(order => {
       const matchesSearch = !searchTerm || 
         order.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         order.customer_phone.includes(searchTerm) ||
@@ -74,6 +75,8 @@ const ImprovedShippingReport = () => {
       
       return matchesSearch && matchesStatus && matchesGovernorate && matchesDateFrom && matchesDateTo;
     });
+    console.log('Shipping filter - filtered:', result.length);
+    return result;
   }, [allOrders, searchTerm, statusFilter, governorateFilter, startDate, endDate]);
 
   // Calculate shipping statistics from filteredOrders
