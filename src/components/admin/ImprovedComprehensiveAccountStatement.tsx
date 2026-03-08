@@ -224,7 +224,7 @@ const ImprovedComprehensiveAccountStatement = () => {
 
     transactions.forEach(t => {
       const desc = t.description || '';
-      if (t.transaction_type === 'income') {
+      if (t.transaction_type === 'income' || t.transaction_type === 'other_income') {
         manualIncome += t.amount;
       } else if (t.transaction_type === 'expense') {
         // Transactions prefixed with [cost] or [shipping] are ALREADY counted
