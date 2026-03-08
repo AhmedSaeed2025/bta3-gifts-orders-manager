@@ -13,6 +13,7 @@ export const useOrderSync = () => {
     queryClient.invalidateQueries({ queryKey: ['detailed-orders-report'] });
     queryClient.invalidateQueries({ queryKey: ['shipping-report'] });
     queryClient.invalidateQueries({ queryKey: ['transactions'] });
+    queryClient.invalidateQueries({ queryKey: ['detailed-report-workshop-payments'] });
     queryClient.invalidateQueries({ queryKey: ['invoice-data'] });
     queryClient.invalidateQueries({ queryKey: ['printing-orders'] });
   };
