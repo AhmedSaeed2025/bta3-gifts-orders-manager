@@ -681,143 +681,168 @@ const DetailedOrdersReport = () => {
               const wp = workshopByOrder[order.id] || { paidProduction: 0, paidShipping: 0 };
               
               return (
-                <Card key={order.id} id={`order-card-${order.serial}`} className="border-l-4 border-l-primary overflow-hidden transition-all duration-500">
+                <Card 
+                  key={order.id} 
+                  id={`order-card-${order.serial}`} 
+                  className={`overflow-hidden transition-all duration-500 border ${
+                    remaining > 0 ? 'border-orange-200 dark:border-orange-800/40' : 'border-border'
+                  }`}
+                >
                   <CardContent className="p-0">
-                    {/* Top Section: Header + Actions */}
-                    <div className={`flex ${isMobile ? 'flex-col' : 'flex-row items-start justify-between'} gap-3 p-4 pb-3`}>
-                      {/* Left: Order header info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap mb-2">
-                          <Badge variant="outline" className="text-xs font-mono">
-                            {order.serial}
-                          </Badge>
-                          <Select 
-                            value={order.status} 
-                            onValueChange={(value) => handleStatusChange(order.id, order.serial, value)}
-                          >
-                            <SelectTrigger className={`h-7 w-auto min-w-[100px] text-xs ${getStatusColor(order.status)}`}>
-                              <SelectValue>{getStatusLabel(order.status)}</SelectValue>
-                            </SelectTrigger>
-                            <SelectContent>
-                              {statusOptions.map(status => (
-                                <SelectItem key={status.value} value={status.value}>
-                                  {status.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-                          <span className="flex items-center gap-1 font-medium">
-                            <User className="h-3.5 w-3.5 text-muted-foreground" />
-                            {order.client_name}
-                          </span>
-                          <span className="flex items-center gap-1 text-muted-foreground text-xs">
-                            <Phone className="h-3 w-3" />
-                            {order.phone}
-                          </span>
-                          <span className="flex items-center gap-1 text-muted-foreground text-xs">
-                            <Calendar className="h-3 w-3" />
-                            {new Date(order.date_created).toLocaleDateString('ar-EG')}
-                          </span>
-                        </div>
+                    {/* === Header Bar === */}
+                    <div className={`flex items-center justify-between gap-2 px-4 py-2.5 ${
+                      remaining > 0 
+                        ? 'bg-gradient-to-l from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/20' 
+                        : 'bg-gradient-to-l from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/20'
+                    }`}>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Badge variant="outline" className="text-xs font-mono font-bold bg-background">
+                          #{order.serial}
+                        </Badge>
+                        <Select 
+                          value={order.status} 
+                          onValueChange={(value) => handleStatusChange(order.id, order.serial, value)}
+                        >
+                          <SelectTrigger className={`h-7 w-auto min-w-[100px] text-xs ${getStatusColor(order.status)}`}>
+                            <SelectValue>{getStatusLabel(order.status)}</SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {statusOptions.map(status => (
+                              <SelectItem key={status.value} value={status.value}>
+                                {status.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          {new Date(order.date_created).toLocaleDateString('ar-EG')}
+                        </span>
                       </div>
-
-                      {/* Right: Action Buttons */}
-                      <div className={`flex flex-wrap gap-1.5 ${isMobile ? 'w-full' : 'shrink-0'}`}>
-                        <Button variant="outline" size="sm" onClick={() => openOrderDetails(order)} className="text-xs h-8 gap-1 font-medium">
-                          <Eye className="h-3.5 w-3.5" /> التفاصيل
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={() => handleEditOrder(order)} className="text-xs h-8 gap-1 font-medium">
-                          <Edit className="h-3.5 w-3.5" /> تعديل
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={() => setInvoiceOrder(order)} className="text-xs h-8 gap-1 font-medium border-indigo-300 text-indigo-700 hover:bg-indigo-50 dark:border-indigo-700 dark:text-indigo-400 dark:hover:bg-indigo-950/50">
-                          <Printer className="h-3.5 w-3.5" /> فاتورة
-                        </Button>
-                        <Button variant="outline" size="icon" onClick={() => handleDeleteOrder(order)} className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10" disabled={deleteOrderMutation.isPending}>
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={() => openPaymentDialog(order, 'collection')} className="text-xs h-8 gap-1 font-medium border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-950/50">
-                          <Receipt className="h-3.5 w-3.5" /> تحصيل
-                        </Button>
-                        {wp.paidProduction <= 0 && (
-                          <Button variant="outline" size="sm" onClick={() => openPaymentDialog(order, 'cost')} className="text-xs h-8 gap-1 font-medium border-rose-300 text-rose-700 hover:bg-rose-50 dark:border-rose-700 dark:text-rose-400 dark:hover:bg-rose-950/50">
-                            <DollarSign className="h-3.5 w-3.5" /> تكلفة
-                          </Button>
+                      <div className="text-left">
+                        <div className={`text-base font-bold ${remaining > 0 ? 'text-orange-600 dark:text-orange-400' : 'text-green-600 dark:text-green-400'}`}>
+                          {formatCurrency(total)}
+                        </div>
+                        {remaining > 0 && (
+                          <div className="text-[10px] text-orange-500">متبقي: {formatCurrency(remaining)}</div>
                         )}
                       </div>
                     </div>
 
-                    {/* Middle Section: Financial + Delivery */}
-                    <div className={`grid gap-4 px-4 pb-3 ${isMobile ? 'grid-cols-2' : 'grid-cols-5'}`}>
-                      <div className="text-center p-2 bg-muted/30 rounded-lg">
-                        <div className="text-[10px] text-muted-foreground mb-0.5">الإجمالي</div>
+                    {/* === Customer & Delivery Info === */}
+                    <div className="px-4 py-3 flex flex-wrap items-center gap-x-5 gap-y-1.5 border-b border-border/40">
+                      <span className="flex items-center gap-1.5 font-semibold text-sm">
+                        <User className="h-3.5 w-3.5 text-primary" />
+                        {order.client_name}
+                      </span>
+                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Phone className="h-3 w-3" />
+                        <span dir="ltr">{order.phone}</span>
+                      </span>
+                      {order.governorate && order.governorate !== '-' && (
+                        <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <MapPin className="h-3 w-3" />
+                          {order.governorate}
+                        </span>
+                      )}
+                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <CreditCard className="h-3 w-3" />
+                        {order.payment_method}
+                      </span>
+                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Truck className="h-3 w-3" />
+                        {order.delivery_method}
+                      </span>
+                    </div>
+
+                    {/* === Financial Grid === */}
+                    <div className={`grid gap-px bg-border/30 ${isMobile ? 'grid-cols-2' : 'grid-cols-4'}`}>
+                      <div className="bg-background text-center py-2.5 px-2">
+                        <div className="text-[10px] text-muted-foreground">الإجمالي</div>
                         <div className="font-bold text-sm text-green-600 dark:text-green-400">{formatCurrency(total)}</div>
                       </div>
-                      <div className="text-center p-2 bg-muted/30 rounded-lg">
-                        <div className="text-[10px] text-muted-foreground mb-0.5">الربح</div>
+                      <div className="bg-background text-center py-2.5 px-2">
+                        <div className="text-[10px] text-muted-foreground">الربح</div>
                         <div className="font-bold text-sm text-blue-600 dark:text-blue-400">{formatCurrency(order.profit || 0)}</div>
                       </div>
-                      <div className="text-center p-2 bg-muted/30 rounded-lg">
-                        <div className="text-[10px] text-muted-foreground mb-0.5">المدفوع</div>
+                      <div className="bg-background text-center py-2.5 px-2">
+                        <div className="text-[10px] text-muted-foreground">المدفوع</div>
                         <div className="font-bold text-sm text-purple-600 dark:text-purple-400">{formatCurrency(paid)}</div>
                       </div>
-                      <div className="text-center p-2 bg-muted/30 rounded-lg">
-                        <div className="text-[10px] text-muted-foreground mb-0.5">المتبقي</div>
+                      <div className="bg-background text-center py-2.5 px-2">
+                        <div className="text-[10px] text-muted-foreground">المتبقي</div>
                         <div className={`font-bold text-sm ${remaining > 0 ? 'text-orange-600 dark:text-orange-400' : 'text-muted-foreground'}`}>{formatCurrency(remaining)}</div>
                       </div>
-                      <div className={`${isMobile ? 'col-span-2' : ''} flex items-center justify-center gap-3 text-xs text-muted-foreground p-2 bg-muted/30 rounded-lg`}>
-                        <span className="flex items-center gap-1"><CreditCard className="h-3 w-3" />{order.payment_method}</span>
-                        <span className="flex items-center gap-1"><Truck className="h-3 w-3" />{order.delivery_method}</span>
-                        {order.governorate && <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{order.governorate}</span>}
-                      </div>
                     </div>
 
-                    {/* Cost Summary Bar */}
-                    <div className="px-4 pb-3">
-                      <div className="flex flex-wrap items-center gap-3 text-[11px] bg-muted/40 rounded-md px-3 py-1.5 border border-border/40">
+                    {/* === Cost Bar === */}
+                    <div className="px-4 py-2 border-t border-border/30">
+                      <div className="flex flex-wrap items-center gap-3 text-[11px]">
                         <span className="text-[10px] font-medium text-muted-foreground">التكاليف:</span>
-                        <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-red-500"></span> التكلفة: <b className="text-red-600 dark:text-red-400">{formatCurrency(orderCost)}</b></span>
-                        <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-orange-500"></span> الشحن: <b className="text-orange-600 dark:text-orange-400">{formatCurrency(shipping)}</b></span>
+                        <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-red-500"></span> إنتاج: <b className="text-red-600 dark:text-red-400">{formatCurrency(orderCost)}</b></span>
+                        <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-orange-500"></span> شحن: <b className="text-orange-600 dark:text-orange-400">{formatCurrency(shipping)}</b></span>
                         {discount > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-pink-500"></span> خصم: <b className="text-pink-600 dark:text-pink-400">-{formatCurrency(discount)}</b></span>}
+                        {wp.paidProduction > 0 && (
+                          <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                            <CheckCircle className="h-3 w-3" /> مسدد إنتاج: <b>{formatCurrency(wp.paidProduction)}</b>
+                          </span>
+                        )}
+                        {wp.paidShipping > 0 && (
+                          <span className="flex items-center gap-1 text-teal-600 dark:text-teal-400">
+                            <CheckCircle className="h-3 w-3" /> مسدد شحن: <b>{formatCurrency(wp.paidShipping)}</b>
+                          </span>
+                        )}
                       </div>
-                      {(wp.paidProduction > 0 || wp.paidShipping > 0) && (
-                        <div className="flex flex-wrap items-center gap-3 text-[11px] bg-emerald-50 dark:bg-emerald-950/30 rounded-md px-3 py-1.5 border border-emerald-200 dark:border-emerald-800/40 mt-1">
-                          <span className="text-[10px] font-medium text-muted-foreground">المدفوع:</span>
-                          {wp.paidProduction > 0 && (
-                            <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-teal-500"></span> مدفوع إنتاج: <b className="text-teal-600 dark:text-teal-400">{formatCurrency(wp.paidProduction)}</b></span>
-                          )}
-                          {wp.paidShipping > 0 && (
-                            <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-cyan-500"></span> مدفوع شحن: <b className="text-cyan-600 dark:text-cyan-400">{formatCurrency(wp.paidShipping)}</b></span>
-                          )}
-                        </div>
-                      )}
                     </div>
 
-                    {/* Bottom Section: Products + Notes */}
-                    <div className="border-t px-4 py-3 bg-muted/20">
-                      <div className="text-[10px] font-medium text-muted-foreground mb-2">المنتجات:</div>
-                      <div className="flex flex-wrap gap-2">
+                    {/* === Products Chips === */}
+                    <div className="px-4 py-2.5 border-t border-border/30 bg-muted/15">
+                      <div className="flex flex-wrap gap-1.5">
                         {order.order_items?.map((item: any, index: number) => {
                           const itemTotal = (item.price - (item.item_discount || 0)) * item.quantity;
                           return (
-                            <div key={index} className="flex items-center gap-1.5 bg-background rounded-md px-2.5 py-1 border text-sm">
-                              <span className="font-medium">{item.product_type}</span>
-                              <Badge variant="secondary" className="text-[10px] h-5 font-normal">{item.size}</Badge>
-                              <span className="text-muted-foreground text-xs">×{item.quantity}</span>
+                            <div key={index} className="flex items-center gap-1.5 bg-background rounded-md px-2.5 py-1 border text-xs shadow-sm">
+                              <span className="font-semibold">{item.product_type}</span>
+                              <Badge variant="secondary" className="text-[10px] h-4 px-1 font-normal">{item.size}</Badge>
+                              <span className="text-muted-foreground">×{item.quantity}</span>
                               {item.item_discount > 0 && (
-                                <Badge variant="outline" className="text-[10px] h-5 font-normal text-red-600 border-red-200">-{formatCurrency(item.item_discount)}/قطعة</Badge>
+                                <Badge variant="outline" className="text-[9px] h-4 px-1 font-normal text-red-600 border-red-200">-{formatCurrency(item.item_discount)}</Badge>
                               )}
-                              <span className="font-semibold text-xs">{formatCurrency(itemTotal)}</span>
+                              <span className="font-bold text-primary">{formatCurrency(itemTotal)}</span>
                             </div>
                           );
                         })}
                       </div>
                       {order.notes && (
-                        <div className="mt-2 text-xs text-muted-foreground bg-background/60 p-2 rounded-md border border-border/30">
-                          {order.notes}
+                        <div className="mt-2 text-xs text-muted-foreground bg-background/60 p-2 rounded-md border border-border/30 flex items-start gap-1.5">
+                          <AlertCircle className="h-3 w-3 text-yellow-500 mt-0.5 shrink-0" />
+                          <span>{order.notes}</span>
                         </div>
                       )}
+                    </div>
+
+                    {/* === Actions Bar === */}
+                    <div className="px-4 py-2.5 border-t border-border/50 bg-muted/30 flex flex-wrap gap-1.5">
+                      <Button variant="outline" size="sm" onClick={() => openOrderDetails(order)} className="text-xs h-7 gap-1">
+                        <Eye className="h-3 w-3" /> عرض
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => handleEditOrder(order)} className="text-xs h-7 gap-1">
+                        <Edit className="h-3 w-3" /> تعديل
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => setInvoiceOrder(order)} className="text-xs h-7 gap-1 border-indigo-200 text-indigo-600 hover:bg-indigo-50 dark:border-indigo-800 dark:text-indigo-400 dark:hover:bg-indigo-950/50">
+                        <Printer className="h-3 w-3" /> فاتورة
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => openPaymentDialog(order, 'collection')} className="text-xs h-7 gap-1 border-emerald-200 text-emerald-600 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950/50">
+                        <Receipt className="h-3 w-3" /> تحصيل
+                      </Button>
+                      {wp.paidProduction <= 0 && (
+                        <Button variant="outline" size="sm" onClick={() => openPaymentDialog(order, 'cost')} className="text-xs h-7 gap-1 border-rose-200 text-rose-600 hover:bg-rose-50 dark:border-rose-800 dark:text-rose-400 dark:hover:bg-rose-950/50">
+                          <DollarSign className="h-3 w-3" /> تكلفة
+                        </Button>
+                      )}
+                      <Button variant="outline" size="icon" onClick={() => handleDeleteOrder(order)} className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10 mr-auto" disabled={deleteOrderMutation.isPending}>
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
