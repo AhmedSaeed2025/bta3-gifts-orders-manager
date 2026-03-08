@@ -63,6 +63,7 @@ const ImprovedComprehensiveAccountStatement = () => {
   const [costRegWorkshop, setCostRegWorkshop] = useState('');
   const [costRegSelectedOrders, setCostRegSelectedOrders] = useState<string[]>([]);
   const [costRegSearch, setCostRegSearch] = useState('');
+  const [costRegPaymentFilter, setCostRegPaymentFilter] = useState<'all' | 'cost_paid' | 'cost_unpaid' | 'shipping_paid' | 'shipping_unpaid'>('all');
   
   const [newTransaction, setNewTransaction] = useState({
     amount: '',
@@ -615,8 +616,28 @@ const ImprovedComprehensiveAccountStatement = () => {
         o.client_name?.toLowerCase().includes(s)
       );
     }
+    // Payment filter for cost/shipping registration
+    if (costRegPaymentFilter !== 'all') {
+      filtered = filtered.filter(o => {
+        const orderWP = allWorkshopPayments.filter(w => w.order_id === o.id);
+        const hasCostPayment = orderWP.some(w => w.product_name !== 'shipping_cost');
+        const hasShippingPayment = orderWP.some(w => w.product_name === 'shipping_cost');
+        
+        // Also check transactions for shipping
+        const orderShippingTx = allTransactions.filter(t => t.order_serial === o.serial && t.transaction_type === 'shipping_expense');
+        const hasShippingTx = hasShippingPayment || orderShippingTx.length > 0;
+        
+        switch (costRegPaymentFilter) {
+          case 'cost_paid': return hasCostPayment;
+          case 'cost_unpaid': return !hasCostPayment;
+          case 'shipping_paid': return hasShippingTx;
+          case 'shipping_unpaid': return !hasShippingTx;
+          default: return true;
+        }
+      });
+    }
     return filtered.sort((a, b) => new Date(b.date_created).getTime() - new Date(a.date_created).getTime());
-  }, [orders, costRegSearch]);
+  }, [orders, costRegSearch, costRegPaymentFilter, allWorkshopPayments, allTransactions]);
 
   if (ordersLoading || transactionsLoading) {
     return (
@@ -1791,6 +1812,33 @@ const ImprovedComprehensiveAccountStatement = () => {
                       : 'تحديد الكل'}
                   </Button>
                 </div>
+              </div>
+              {/* Payment Status Filter */}
+              <div className="flex gap-1.5 flex-wrap mt-2">
+                {[
+                  { value: 'all', label: 'الكل' },
+                  { value: 'cost_unpaid', label: 'لم تُسدد التكلفة', icon: XCircle },
+                  { value: 'cost_paid', label: 'سُددت التكلفة', icon: CheckCircle2 },
+                  { value: 'shipping_unpaid', label: 'لم يُسدد الشحن', icon: XCircle },
+                  { value: 'shipping_paid', label: 'سُدد الشحن', icon: CheckCircle2 },
+                ].map(f => {
+                  const Icon = (f as any).icon;
+                  const isActive = costRegPaymentFilter === f.value;
+                  return (
+                    <button
+                      key={f.value}
+                      onClick={() => setCostRegPaymentFilter(f.value as any)}
+                      className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium transition-all border ${
+                        isActive
+                          ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                          : 'bg-muted/50 text-muted-foreground border-border hover:bg-accent'
+                      }`}
+                    >
+                      {Icon && <Icon className="h-3 w-3" />}
+                      {f.label}
+                    </button>
+                  );
+                })}
               </div>
             </CardHeader>
             <CardContent className="pt-0">
