@@ -879,7 +879,7 @@ const ImprovedComprehensiveAccountStatement = () => {
                   <div className="pt-1.5 mt-1.5 border-t border-dashed border-border/50 space-y-1.5">
                     <div className="flex justify-between text-xs">
                       <span className="text-blue-600 flex items-center gap-1">
-                        <Target className="h-3 w-3" /> تكلفة متوقعة
+                        <Target className="h-3 w-3" /> تكلفة بالطلبات
                       </span>
                       <span className="font-medium text-blue-600">{fmt(financial.expectedProductionCost)}</span>
                     </div>
