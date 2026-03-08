@@ -176,7 +176,14 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
         await updateOrder(editingOrder.serial, orderData);
         queryClient.invalidateQueries({ queryKey: ['detailed-orders-report'] });
         queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
-        navigate(-1);
+
+        const navigationState = location.state as { returnTo?: string; focusSerial?: string } | null;
+        if (navigationState?.returnTo === 'orders-report') {
+          const focusSerial = navigationState.focusSerial || editingOrder.serial;
+          navigate(`/legacy-admin?tab=orders-report&focusSerial=${encodeURIComponent(focusSerial)}`, { replace: true });
+        } else {
+          navigate(-1);
+        }
       } else {
         await addOrder(orderData);
         queryClient.invalidateQueries({ queryKey: ['detailed-orders-report'] });

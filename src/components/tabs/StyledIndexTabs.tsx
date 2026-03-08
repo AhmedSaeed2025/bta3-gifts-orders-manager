@@ -192,6 +192,14 @@ const StyledIndexTabs = () => {
       component: componentMap[t.id].component,
     }));
 
+  // Open requested tab from URL (e.g. /legacy-admin?tab=orders-report)
+  useEffect(() => {
+    const tabFromUrl = new URLSearchParams(location.search).get("tab");
+    if (tabFromUrl && componentMap[tabFromUrl]) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [location.search]);
+
   return (
     <DateFilterContext.Provider value={{ startDate, endDate, setDateRange }}>
       <div className="w-full" dir="rtl">

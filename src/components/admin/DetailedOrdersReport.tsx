@@ -247,7 +247,12 @@ const DetailedOrdersReport = () => {
   };
 
   const handleEditOrder = (order: any) => {
-    navigate(`/edit-order/${order.serial}`);
+    navigate(`/edit-order/${order.serial}`, {
+      state: {
+        returnTo: 'orders-report',
+        focusSerial: order.serial,
+      },
+    });
   };
 
   const handlePayment = async (amount: number, notes?: string, updateOrderCost?: boolean) => {
