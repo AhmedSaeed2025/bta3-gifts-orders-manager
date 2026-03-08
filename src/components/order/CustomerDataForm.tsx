@@ -91,7 +91,7 @@ const CustomerDataForm: React.FC<CustomerDataFormProps> = ({
                 id="phone2"
                 name="phone2"
                 value={customerData.phone2 || ""}
-                onChange={onCustomerDataChange}
+                onChange={handlePhoneChange}
                 className="h-9 text-sm pr-9"
                 placeholder="رقم تليفون إضافي"
               />
