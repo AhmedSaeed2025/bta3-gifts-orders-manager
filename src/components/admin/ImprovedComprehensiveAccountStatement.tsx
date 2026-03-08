@@ -654,6 +654,7 @@ const ImprovedComprehensiveAccountStatement = () => {
       setCostRegNotes('');
       setCostRegWorkshop('');
       setCostRegSelectedOrders([]);
+      setCostRegDate(new Date().toISOString().split('T')[0]);
     },
     onError: () => toast.error('حدث خطأ في التسجيل')
   });
