@@ -1735,7 +1735,7 @@ const ImprovedComprehensiveAccountStatement = () => {
                     )}
                     
                     <p className="text-[10px] text-muted-foreground leading-relaxed">
-                      💡 يمكنك تسجيل أي مبلغ فعلي حتى لو اختلف عن {costRegType === 'cost' ? 'التكلفة المتوقعة بالطلب' : 'قيمة الشحن المسجلة بالطلب'}
+                      💡 يمكنك تسجيل أي مبلغ فعلي حتى لو اختلف عن {costRegType === 'cost' ? 'التكلفة المسجلة بالطلب' : 'قيمة الشحن المسجلة بالطلب'}
                     </p>
                   </div>
                 );
