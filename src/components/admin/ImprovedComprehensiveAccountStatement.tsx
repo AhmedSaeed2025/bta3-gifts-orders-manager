@@ -1476,6 +1476,169 @@ const ImprovedComprehensiveAccountStatement = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Payment Dialog */}
+      <Dialog open={paymentDialog.open} onOpenChange={(open) => { if (!open) setPaymentDialog({ open: false, order: null, type: 'collection' }); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {paymentDialog.type === 'cost' ? 'تسجيل تكلفة ورشة' 
+                : paymentDialog.type === 'instapay' ? 'تحصيل عبر انستا باي'
+                : paymentDialog.type === 'wallet' ? 'تحصيل عبر محفظة'
+                : paymentDialog.type === 'shipping_company' ? 'تحصيل عبر شركة شحن'
+                : 'تحصيل من العميل'}
+            </DialogTitle>
+          </DialogHeader>
+          {paymentDialog.order && (
+            <div className="space-y-4">
+              <div className="bg-muted/50 rounded-lg p-3 text-sm space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">الطلب</span>
+                  <span className="font-mono font-bold">{paymentDialog.order.serial}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">العميل</span>
+                  <span className="font-medium">{paymentDialog.order.client_name}</span>
+                </div>
+                {paymentDialog.type !== 'cost' && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">المتبقي</span>
+                    <span className="font-bold text-red-600">{fmt(calculateOrderFinancials(paymentDialog.order).remaining)}</span>
+                  </div>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label>المبلغ (ج.م)</Label>
+                <Input type="number" value={paymentAmount} onChange={e => setPaymentAmount(e.target.value)} placeholder="أدخل المبلغ" />
+              </div>
+              <div className="space-y-2">
+                <Label>{paymentDialog.type === 'cost' ? 'اسم الورشة / ملاحظات' : 'ملاحظات (اختياري)'}</Label>
+                <Input value={paymentNotes} onChange={e => setPaymentNotes(e.target.value)} 
+                  placeholder={paymentDialog.type === 'cost' ? 'اسم الورشة' : 'ملاحظات'} />
+              </div>
+              <DialogFooter className="gap-2">
+                <Button variant="outline" onClick={() => setPaymentDialog({ open: false, order: null, type: 'collection' })}>إلغاء</Button>
+                <Button 
+                  disabled={!paymentAmount || orderPaymentMutation.isPending}
+                  onClick={() => {
+                    orderPaymentMutation.mutate({
+                      orderId: paymentDialog.order.id,
+                      orderSerial: paymentDialog.order.serial,
+                      amount: parseFloat(paymentAmount),
+                      type: paymentDialog.type,
+                      notes: paymentNotes
+                    });
+                  }}>
+                  {orderPaymentMutation.isPending ? 'جاري...' : 'تأكيد'}
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Order Details Dialog */}
+      <Dialog open={orderDetailsDialog.open} onOpenChange={(open) => { if (!open) setOrderDetailsDialog({ open: false, order: null }); }}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              تفاصيل الطلب {orderDetailsDialog.order?.serial}
+            </DialogTitle>
+          </DialogHeader>
+          {orderDetailsDialog.order && (() => {
+            const o = orderDetailsDialog.order;
+            const fin = calculateOrderFinancials(o);
+            const orderWP = workshopPayments.filter(w => w.order_id === o.id);
+            const wpPaid = orderWP.filter(w => w.payment_status === 'Paid').reduce((s: number, w: any) => s + Number(w.cost_amount), 0);
+            const expectedCost = (o.order_items || []).reduce((s: number, i: any) => s + (Number(i.cost || 0) * Number(i.quantity || 1)), 0);
+            return (
+              <div className="space-y-4 text-sm" dir="rtl">
+                {/* Customer Info */}
+                <div className="bg-muted/30 rounded-lg p-3 space-y-2">
+                  <h4 className="font-semibold flex items-center gap-2"><Phone className="h-4 w-4" /> بيانات العميل</h4>
+                  <div className="grid grid-cols-2 gap-2 mr-6">
+                    <div><span className="text-muted-foreground">الاسم:</span> <span className="font-medium">{o.client_name}</span></div>
+                    <div><span className="text-muted-foreground">الموبايل:</span> <span className="font-medium">{o.phone}</span></div>
+                    {o.phone2 && <div><span className="text-muted-foreground">موبايل 2:</span> <span className="font-medium">{o.phone2}</span></div>}
+                    {o.governorate && <div><span className="text-muted-foreground">المحافظة:</span> <span className="font-medium">{o.governorate}</span></div>}
+                    {o.address && <div className="col-span-2"><span className="text-muted-foreground">العنوان:</span> <span className="font-medium">{o.address}</span></div>}
+                  </div>
+                </div>
+
+                {/* Items */}
+                <div className="bg-muted/30 rounded-lg p-3 space-y-2">
+                  <h4 className="font-semibold flex items-center gap-2"><Package className="h-4 w-4" /> المنتجات</h4>
+                  <div className="space-y-1.5 mr-6">
+                    {(o.order_items || []).map((item: any, idx: number) => (
+                      <div key={idx} className="flex justify-between items-center bg-card rounded p-2 border">
+                        <div>
+                          <span className="font-medium">{item.product_type}</span>
+                          <span className="text-muted-foreground text-xs mr-2">({item.size}) × {item.quantity}</span>
+                        </div>
+                        <div className="text-left">
+                          <p className="font-medium">{fmt(Number(item.price || 0) * Number(item.quantity || 1))}</p>
+                          <p className="text-[10px] text-muted-foreground">تكلفة: {fmt(Number(item.cost || 0) * Number(item.quantity || 1))}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Financial Summary */}
+                <div className="bg-muted/30 rounded-lg p-3 space-y-2">
+                  <h4 className="font-semibold flex items-center gap-2"><Calculator className="h-4 w-4" /> الملخص المالي</h4>
+                  <div className="space-y-1.5 mr-6">
+                    <div className="flex justify-between"><span className="text-muted-foreground">إجمالي الفاتورة</span><span className="font-bold">{fmt(fin.total)}</span></div>
+                    {fin.shipping > 0 && <div className="flex justify-between"><span className="text-muted-foreground">الشحن</span><span>{fmt(fin.shipping)}</span></div>}
+                    {fin.discount > 0 && <div className="flex justify-between"><span className="text-muted-foreground">خصم</span><span className="text-red-600">-{fmt(fin.discount)}</span></div>}
+                    <Separator />
+                    <div className="flex justify-between"><span className="text-muted-foreground">تكلفة الإنتاج (متوقعة)</span><span>{fmt(expectedCost)}</span></div>
+                    {wpPaid > 0 && <div className="flex justify-between"><span className="text-muted-foreground">تكلفة ورشة (مدفوعة)</span><span className="text-red-600">{fmt(wpPaid)}</span></div>}
+                    <Separator />
+                    <div className="flex justify-between"><span className="text-emerald-600">المحصل</span><span className="font-bold text-emerald-600">{fmt(fin.paid)}</span></div>
+                    {fin.deposit > 0 && <div className="flex justify-between text-xs"><span className="text-muted-foreground mr-4">↳ عربون</span><span>{fmt(fin.deposit)}</span></div>}
+                    {fin.paymentsReceived > 0 && <div className="flex justify-between text-xs"><span className="text-muted-foreground mr-4">↳ دفعات</span><span>{fmt(fin.paymentsReceived)}</span></div>}
+                    <div className="flex justify-between"><span className={fin.remaining > 0 ? 'text-red-600' : 'text-emerald-600'}>المتبقي</span><span className={`font-bold ${fin.remaining > 0 ? 'text-red-600' : 'text-emerald-600'}`}>{fmt(fin.remaining)}</span></div>
+                    <Separator />
+                    <div className="flex justify-between font-bold"><span>الربح الفعلي</span><span className={fin.paid - wpPaid >= 0 ? 'text-emerald-600' : 'text-red-600'}>{fmt(fin.paid - wpPaid)}</span></div>
+                  </div>
+                </div>
+
+                {/* Workshop Payments */}
+                {orderWP.length > 0 && (
+                  <div className="bg-muted/30 rounded-lg p-3 space-y-2">
+                    <h4 className="font-semibold flex items-center gap-2"><Factory className="h-4 w-4" /> مدفوعات الورش</h4>
+                    <div className="space-y-1.5 mr-6">
+                      {orderWP.map((w: any) => (
+                        <div key={w.id} className="flex justify-between items-center bg-card rounded p-2 border">
+                          <div>
+                            <span className="font-medium">{w.workshop_name}</span>
+                            <span className="text-muted-foreground text-xs mr-2">{w.product_name}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant={w.payment_status === 'Paid' ? 'default' : 'secondary'} className="text-[10px]">
+                              {w.payment_status === 'Paid' ? 'مدفوع' : 'مستحق'}
+                            </Badge>
+                            <span className="font-medium">{fmt(Number(w.cost_amount))}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {o.notes && (
+                  <div className="bg-amber-50 dark:bg-amber-950/20 rounded-lg p-3">
+                    <p className="text-xs text-muted-foreground mb-1">ملاحظات:</p>
+                    <p className="text-sm">{o.notes}</p>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
