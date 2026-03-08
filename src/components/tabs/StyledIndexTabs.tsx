@@ -34,6 +34,7 @@ import ImprovedInvoiceTab from "@/components/ImprovedInvoiceTab";
 import AdminSettings from "@/pages/admin/AdminSettings";
 import PrintingReport from "@/components/admin/PrintingReport";
 import SummaryAccountReport from "@/components/admin/SummaryAccountReport";
+import { getTabsSettings } from "@/components/admin/settings/TabsManagementSettings";
 
 // Create date filter context
 interface DateFilterContextType {
