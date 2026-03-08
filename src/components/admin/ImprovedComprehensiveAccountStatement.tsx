@@ -1930,13 +1930,16 @@ const ImprovedComprehensiveAccountStatement = () => {
 
               <Button 
                 onClick={() => costRegMutation.mutate()}
-                disabled={costRegMutation.isPending || !costRegAmount || costRegSelectedOrders.length === 0}
+                disabled={costRegMutation.isPending || !costRegAmount}
                 className="w-full h-12 text-base font-bold"
               >
                 {costRegMutation.isPending ? 'جاري التسجيل...' : (
                   <>
                     {costRegType === 'cost' ? <Factory className="h-5 w-5 ml-2" /> : <Truck className="h-5 w-5 ml-2" />}
-                    تسجيل {costRegType === 'cost' ? 'التكلفة' : 'الشحن'} على {costRegSelectedOrders.length || '...'} طلب
+                    {costRegSelectedOrders.length > 0 
+                      ? `تسجيل ${costRegType === 'cost' ? 'التكلفة' : 'الشحن'} على ${costRegSelectedOrders.length} طلب`
+                      : `تسجيل ${costRegType === 'cost' ? 'التكلفة' : 'الشحن'} بدون ربط (يمكن ربطه لاحقاً)`
+                    }
                   </>
                 )}
               </Button>
