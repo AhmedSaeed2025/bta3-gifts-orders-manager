@@ -188,15 +188,26 @@ const ImprovedComprehensiveAccountStatement = () => {
     });
 
     // === الفعلي (من المدفوعات) ===
-    const actualWorkshopPaid = workshopPayments
+    // Separate workshop payments into production vs shipping
+    const productionWP = workshopPayments.filter(w => w.product_name !== 'shipping_cost');
+    const shippingWP = workshopPayments.filter(w => w.product_name === 'shipping_cost');
+
+    const actualWorkshopPaid = productionWP
       .filter(w => w.payment_status === 'Paid')
       .reduce((sum, w) => sum + Number(w.cost_amount), 0);
     
-    const actualWorkshopDue = workshopPayments
+    const actualWorkshopDue = productionWP
       .filter(w => w.payment_status !== 'Paid')
       .reduce((sum, w) => sum + Number(w.cost_amount), 0);
 
-    const totalWorkshopCost = workshopPayments
+    const totalWorkshopCost = productionWP
+      .reduce((sum, w) => sum + Number(w.cost_amount), 0);
+
+    const actualShippingWPPaid = shippingWP
+      .filter(w => w.payment_status === 'Paid')
+      .reduce((sum, w) => sum + Number(w.cost_amount), 0);
+
+    const totalShippingWPCost = shippingWP
       .reduce((sum, w) => sum + Number(w.cost_amount), 0);
 
     const actualCustomerPaid = customerPayments
@@ -230,8 +241,8 @@ const ImprovedComprehensiveAccountStatement = () => {
     // إجمالي المحصل فعلياً (عربون + دفعات + تحصيلات يدوية)
     const totalCollected = totalOrderPaymentsReceived + manualIncome;
     
-    // إجمالي المدفوع فعلياً (ورش + شحن + مصاريف)
-    const totalPaidOut = actualWorkshopPaid + manualExpenses;
+    // إجمالي المدفوع فعلياً (ورش + شحن مسجل بالورش + مصاريف يدوية)
+    const totalPaidOut = actualWorkshopPaid + actualShippingWPPaid + manualExpenses;
     
     // الرصيد النقدي = المحصل - المدفوع
     const cashBalance = totalCollected - totalPaidOut;
@@ -355,6 +366,8 @@ const ImprovedComprehensiveAccountStatement = () => {
       actualWorkshopPaid,
       actualWorkshopDue,
       totalWorkshopCost,
+      actualShippingWPPaid,
+      totalShippingWPCost,
       manualShippingExpenses,
       manualProductionExpenses,
       manualOtherExpenses,
@@ -1046,12 +1059,14 @@ const ImprovedComprehensiveAccountStatement = () => {
                     </span>
                     <span className="font-medium">{fmt(financial.actualWorkshopPaid)}</span>
                   </div>
+                  {(financial.actualShippingWPPaid + financial.manualShippingExpenses) > 0 && (
                   <div className="flex justify-between text-xs">
                     <span className="text-muted-foreground flex items-center gap-1">
                       <Truck className="h-3 w-3" /> شحن
                     </span>
-                    <span className="font-medium">{fmt(financial.manualShippingExpenses)}</span>
+                    <span className="font-medium">{fmt(financial.actualShippingWPPaid + financial.manualShippingExpenses)}</span>
                   </div>
+                  )}
                   <div className="flex justify-between text-xs">
                     <span className="text-muted-foreground flex items-center gap-1">
                       <FileText className="h-3 w-3" /> مصاريف أخرى
@@ -1165,12 +1180,12 @@ const ImprovedComprehensiveAccountStatement = () => {
                       </span>
                       <span className="font-medium text-red-600">{fmt(financial.actualWorkshopPaid)}</span>
                     </div>
-                    {financial.manualShippingExpenses > 0 && (
+                    {(financial.actualShippingWPPaid + financial.manualShippingExpenses) > 0 && (
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground flex items-center gap-1">
-                          <Truck className="h-3 w-3" /> مصاريف شحن مسجلة
+                          <Truck className="h-3 w-3" /> مصاريف شحن
                         </span>
-                        <span className="font-medium text-red-600">{fmt(financial.manualShippingExpenses)}</span>
+                        <span className="font-medium text-red-600">{fmt(financial.actualShippingWPPaid + financial.manualShippingExpenses)}</span>
                       </div>
                     )}
                     {financial.manualProductionExpenses > 0 && (
@@ -1577,8 +1592,8 @@ const ImprovedComprehensiveAccountStatement = () => {
                   </div>
                   <div className="bg-card rounded-lg p-4 border">
                     <p className="text-xs text-muted-foreground mb-1">المدفوع لشركة الشحن</p>
-                    <p className="text-xl font-bold text-red-600">{fmt(financial.manualShippingExpenses)}</p>
-                    <p className="text-xs text-muted-foreground mt-1">المسجل كمصروف شحن في المعاملات</p>
+                    <p className="text-xl font-bold text-red-600">{fmt(financial.actualShippingWPPaid + financial.manualShippingExpenses)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">المسجل كمصروف شحن</p>
                   </div>
                 </div>
               </div>
@@ -1670,12 +1685,12 @@ const ImprovedComprehensiveAccountStatement = () => {
                   </span>
                   <span className="font-semibold text-red-700 dark:text-red-400">{fmt(financial.actualWorkshopPaid)}</span>
                 </div>
-                {financial.manualShippingExpenses > 0 && (
+                {(financial.actualShippingWPPaid + financial.manualShippingExpenses) > 0 && (
                   <div className="flex justify-between p-3 bg-red-50 dark:bg-red-950/20 rounded-lg">
                     <span className="text-sm flex items-center gap-2">
                       <Truck className="h-4 w-4" /> مصاريف شحن
                     </span>
-                    <span className="font-semibold text-red-700 dark:text-red-400">{fmt(financial.manualShippingExpenses)}</span>
+                    <span className="font-semibold text-red-700 dark:text-red-400">{fmt(financial.actualShippingWPPaid + financial.manualShippingExpenses)}</span>
                   </div>
                 )}
                 {financial.manualProductionExpenses > 0 && (
