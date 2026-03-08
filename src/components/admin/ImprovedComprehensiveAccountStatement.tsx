@@ -71,6 +71,7 @@ const ImprovedComprehensiveAccountStatement = () => {
   const [linkSelectedPayments, setLinkSelectedPayments] = useState<string[]>([]);
   const [linkSelectedOrders, setLinkSelectedOrders] = useState<string[]>([]);
   const [linkOrderSearch, setLinkOrderSearch] = useState('');
+  const [linkViewMode, setLinkViewMode] = useState<'unlinked' | 'linked'>('unlinked');
   
   const [newTransaction, setNewTransaction] = useState({
     amount: '',
@@ -621,6 +622,12 @@ const ImprovedComprehensiveAccountStatement = () => {
     return allWorkshopPayments.filter(w => !w.order_id || !orderIds.has(w.order_id));
   }, [allWorkshopPayments, allOrders]);
 
+  // Linked workshop payments (linked to a valid order)
+  const linkedWorkshopPayments = useMemo(() => {
+    const orderIds = new Set(allOrders.map(o => o.id));
+    return allWorkshopPayments.filter(w => w.order_id && orderIds.has(w.order_id));
+  }, [allWorkshopPayments, allOrders]);
+
   // Filtered unlinked payments
   const filteredUnlinkedPayments = useMemo(() => {
     if (!linkSearch) return unlinkedWorkshopPayments;
@@ -632,6 +639,23 @@ const ImprovedComprehensiveAccountStatement = () => {
       String(w.cost_amount).includes(s)
     );
   }, [unlinkedWorkshopPayments, linkSearch]);
+
+  // Filtered linked payments
+  const filteredLinkedPayments = useMemo(() => {
+    if (!linkSearch) return linkedWorkshopPayments;
+    const s = linkSearch.toLowerCase();
+    return linkedWorkshopPayments.filter(w => {
+      const order = allOrders.find(o => o.id === w.order_id);
+      return (
+        w.workshop_name?.toLowerCase().includes(s) ||
+        w.product_name?.toLowerCase().includes(s) ||
+        w.notes?.toLowerCase().includes(s) ||
+        String(w.cost_amount).includes(s) ||
+        order?.serial?.toLowerCase().includes(s) ||
+        order?.client_name?.toLowerCase().includes(s)
+      );
+    });
+  }, [linkedWorkshopPayments, linkSearch, allOrders]);
 
   // Filtered orders for linking
   const linkFilteredOrders = useMemo(() => {
@@ -703,6 +727,23 @@ const ImprovedComprehensiveAccountStatement = () => {
       setLinkOrderSearch('');
     },
     onError: () => toast.error('حدث خطأ في ربط الدفعة')
+  });
+
+  // Unlink payment mutation - removes order_id from a workshop payment
+  const unlinkPaymentMutation = useMutation({
+    mutationFn: async (paymentId: string) => {
+      const { error } = await supabase
+        .from('workshop_payments')
+        .update({ order_id: null })
+        .eq('id', paymentId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-workshop-payments'] });
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-orders'] });
+      toast.success('تم فك الربط بنجاح');
+    },
+    onError: () => toast.error('حدث خطأ في فك الربط')
   });
 
   // Cost/Shipping bulk registration mutation
@@ -2146,6 +2187,35 @@ const ImprovedComprehensiveAccountStatement = () => {
       {/* ======= SECTION: ربط المدفوعات ======= */}
       {activeSection === 'link_payments' && (
         <div className="space-y-4">
+          {/* Toggle between unlinked and linked views */}
+          <div className="flex gap-2 p-1 bg-muted/50 rounded-xl border border-border/50">
+            <button
+              onClick={() => { setLinkViewMode('unlinked'); setLinkSelectedPayments([]); setLinkSelectedOrders([]); }}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                linkViewMode === 'unlinked'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'text-muted-foreground hover:bg-accent'
+              }`}
+            >
+              <Link2 className="h-4 w-4" />
+              ربط دفعات ({unlinkedWorkshopPayments.length})
+            </button>
+            <button
+              onClick={() => { setLinkViewMode('linked'); setLinkSelectedPayments([]); setLinkSelectedOrders([]); }}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                linkViewMode === 'linked'
+                  ? 'bg-destructive text-destructive-foreground shadow-sm'
+                  : 'text-muted-foreground hover:bg-accent'
+              }`}
+            >
+              <XCircle className="h-4 w-4" />
+              فك الربط ({linkedWorkshopPayments.length})
+            </button>
+          </div>
+
+          {/* ---- UNLINKED VIEW ---- */}
+          {linkViewMode === 'unlinked' && (
+            <>
           <Card>
             <CardHeader className="pb-3">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
@@ -2297,11 +2367,9 @@ const ImprovedComprehensiveAccountStatement = () => {
               const orderWP = workshopPayments.filter(w => w.order_id === o.id);
               
               if (isShippingLink) {
-                // Only show orders with shipping cost AND no shipping workshop payment linked yet
                 const hasLinkedShipping = orderWP.some(w => w.product_name === 'shipping_cost');
                 return fin.shipping > 0 && !hasLinkedShipping;
               } else {
-                // Only show orders with no production cost workshop payment linked yet
                 const hasLinkedCost = orderWP.some(w => w.product_name !== 'shipping_cost');
                 return !hasLinkedCost;
               }
@@ -2404,6 +2472,88 @@ const ImprovedComprehensiveAccountStatement = () => {
             </Card>
             );
           })()}
+            </>
+          )}
+
+          {/* ---- LINKED VIEW (فك الربط) ---- */}
+          {linkViewMode === 'linked' && (
+            <Card>
+              <CardHeader className="pb-3">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <XCircle className="h-5 w-5 text-destructive" />
+                    الدفعات المربوطة بطلبات
+                  </CardTitle>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    اضغط على "فك الربط" لإعادة الدفعة إلى قائمة غير المربوطة
+                  </p>
+                </div>
+                <div className="relative mt-2">
+                  <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="بحث بالورشة أو الطلب أو المبلغ..."
+                    value={linkSearch}
+                    onChange={e => setLinkSearch(e.target.value)}
+                    className="pr-9 h-9"
+                  />
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                {filteredLinkedPayments.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Link2 className="h-10 w-10 mx-auto mb-2 opacity-40" />
+                    <p className="text-sm font-medium">لا توجد دفعات مربوطة</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2 max-h-[500px] overflow-y-auto">
+                    {filteredLinkedPayments.map(w => {
+                      const order = allOrders.find(o => o.id === w.order_id);
+                      return (
+                        <div
+                          key={w.id}
+                          className="flex items-center gap-3 p-3 rounded-xl border-2 border-border bg-card transition-all hover:bg-accent/30"
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Badge variant="outline" className="text-[10px] font-mono">
+                                {order?.serial || '—'}
+                              </Badge>
+                              <span className="font-bold text-sm">{w.workshop_name}</span>
+                              <span className="text-muted-foreground text-xs">•</span>
+                              <span className="text-sm text-muted-foreground">
+                                {w.product_name === 'shipping_cost' ? 'شحن' : w.product_name}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
+                              <span>المبلغ: <span className="font-bold text-foreground">{fmt(Number(w.cost_amount))}</span></span>
+                              {order && <span>العميل: <span className="font-medium text-foreground">{order.client_name}</span></span>}
+                              <span>
+                                {w.actual_payment_date ? format(new Date(w.actual_payment_date), 'dd/MM/yy', { locale: ar }) : 
+                                 w.created_at ? format(new Date(w.created_at), 'dd/MM/yy', { locale: ar }) : ''}
+                              </span>
+                            </div>
+                          </div>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            className="shrink-0 h-8 text-xs"
+                            disabled={unlinkPaymentMutation.isPending}
+                            onClick={() => {
+                              if (confirm(`هل تريد فك ربط هذه الدفعة (${fmt(Number(w.cost_amount))}) من الطلب ${order?.serial || ''}؟`))
+                                unlinkPaymentMutation.mutate(w.id);
+                            }}
+                          >
+                            <XCircle className="h-3.5 w-3.5 ml-1" />
+                            فك الربط
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
       )}
 
