@@ -1167,6 +1167,18 @@ const ImprovedComprehensiveAccountStatement = () => {
                       </span>
                       <span className="font-medium text-purple-600">{fmt(financial.totalWorkshopCost)}</span>
                     </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-blue-500 flex items-center gap-1">
+                        <Truck className="h-3 w-3" /> شحن بالطلبات
+                      </span>
+                      <span className="font-medium text-blue-500">{fmt(financial.expectedShippingCost)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-purple-500 flex items-center gap-1">
+                        <Truck className="h-3 w-3" /> مدفوع شحن
+                      </span>
+                      <span className="font-medium text-purple-500">{fmt(financial.totalShippingWPCost)}</span>
+                    </div>
                   </div>
                   {financial.pendingToWorkshops > 0 && (
                     <div className="flex justify-between text-xs pt-1 border-t border-dashed border-border/50">
