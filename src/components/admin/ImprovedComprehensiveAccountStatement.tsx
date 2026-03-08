@@ -617,6 +617,14 @@ const ImprovedComprehensiveAccountStatement = () => {
     }
     return filtered.sort((a, b) => new Date(b.date_created).getTime() - new Date(a.date_created).getTime());
   }, [orders, costRegSearch]);
+
+  if (ordersLoading || transactionsLoading) {
+    return (
+      <div className="space-y-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="h-24 bg-muted animate-pulse rounded-xl" />
+        ))}
+      </div>
     );
   }
 
