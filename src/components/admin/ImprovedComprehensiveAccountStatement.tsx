@@ -1745,7 +1745,19 @@ const ImprovedComprehensiveAccountStatement = () => {
                     />
                   </div>
                 )}
-                <div className={`space-y-2 ${costRegType === 'shipping' ? '' : 'sm:col-span-2'}`}>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium flex items-center gap-1.5">
+                    <Calendar className="h-3.5 w-3.5" />
+                    تاريخ التسجيل
+                  </Label>
+                  <Input 
+                    type="date" 
+                    value={costRegDate}
+                    onChange={e => setCostRegDate(e.target.value)}
+                    className="h-12"
+                  />
+                </div>
+                <div className={`space-y-2 ${costRegType === 'shipping' ? '' : ''}`}>
                   <Label className="text-sm font-medium">ملاحظات</Label>
                   <Input 
                     placeholder={costRegType === 'cost' ? 'تفاصيل التكلفة...' : 'تفاصيل الشحن...'}
