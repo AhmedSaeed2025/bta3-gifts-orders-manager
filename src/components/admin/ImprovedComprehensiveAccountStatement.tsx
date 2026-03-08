@@ -780,7 +780,7 @@ const ImprovedComprehensiveAccountStatement = () => {
                 <div className="mt-3 pt-2 border-t border-border/50 space-y-1.5">
                   <div className="flex justify-between text-xs">
                     <span className="text-muted-foreground flex items-center gap-1">
-                      <Factory className="h-3 w-3" /> ورش
+                      <Factory className="h-3 w-3" /> ورش (مدفوع)
                     </span>
                     <span className="font-medium">{fmt(financial.actualWorkshopPaid)}</span>
                   </div>
@@ -795,6 +795,20 @@ const ImprovedComprehensiveAccountStatement = () => {
                       <FileText className="h-3 w-3" /> مصاريف أخرى
                     </span>
                     <span className="font-medium">{fmt(financial.manualOtherExpenses)}</span>
+                  </div>
+                  <div className="pt-1.5 mt-1.5 border-t border-dashed border-border/50 space-y-1.5">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-blue-600 flex items-center gap-1">
+                        <Target className="h-3 w-3" /> تكلفة متوقعة
+                      </span>
+                      <span className="font-medium text-blue-600">{fmt(financial.expectedProductionCost)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-purple-600 flex items-center gap-1">
+                        <Factory className="h-3 w-3" /> تكلفة مسجلة (ورش)
+                      </span>
+                      <span className="font-medium text-purple-600">{fmt(financial.totalWorkshopCost)}</span>
+                    </div>
                   </div>
                   {financial.pendingToWorkshops > 0 && (
                     <div className="flex justify-between text-xs pt-1 border-t border-dashed border-border/50">
