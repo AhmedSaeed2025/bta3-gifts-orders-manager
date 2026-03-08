@@ -49,7 +49,7 @@ const ImprovedComprehensiveAccountStatement = () => {
   const [filterType, setFilterType] = useState<string>('all');
   const [activeSection, setActiveSection] = useState<'summary' | 'orders' | 'comparison' | 'cashflow' | 'transactions' | 'register_cost' | 'link_payments'>('summary');
   const [orderSearch, setOrderSearch] = useState('');
-  const [orderPaymentFilter, setOrderPaymentFilter] = useState<'all' | 'paid' | 'partial' | 'unpaid'>('all');
+  const [orderPaymentFilter, setOrderPaymentFilter] = useState<'all' | 'paid' | 'partial' | 'unpaid' | 'unpaid_cost' | 'uncollected'>('all');
   const [orderSortBy, setOrderSortBy] = useState<'date' | 'remaining' | 'total'>('date');
   const [paymentDialog, setPaymentDialog] = useState<{ open: boolean; order: any; type: 'collection' | 'cost' | 'instapay' | 'wallet' | 'shipping_company' }>({ open: false, order: null, type: 'collection' });
   const [paymentAmount, setPaymentAmount] = useState('');
