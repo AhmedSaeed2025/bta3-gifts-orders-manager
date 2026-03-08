@@ -96,6 +96,9 @@ const DetailedOrdersReport = () => {
     enabled: !!user
   });
 
+  // Get unique delivery methods for filter
+  const deliveryMethods = [...new Set(orders.map(o => o.delivery_method).filter(Boolean))];
+
   // Filter orders with date filter support
   const filteredOrders = orders.filter(order => {
     const matchesSearch = order.client_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -104,13 +107,14 @@ const DetailedOrdersReport = () => {
     
     const matchesStatus = statusFilters.length === 0 || statusFilters.includes(order.status);
     const matchesPayment = paymentFilter === "all" || order.payment_method === paymentFilter;
+    const matchesDelivery = deliveryFilter === "all" || order.delivery_method === deliveryFilter;
     
     // Apply date filter from context
     const orderDate = new Date(order.date_created);
     const matchesDateFrom = !startDate || orderDate >= startDate;
     const matchesDateTo = !endDate || orderDate <= endDate;
     
-    return matchesSearch && matchesStatus && matchesPayment && matchesDateFrom && matchesDateTo;
+    return matchesSearch && matchesStatus && matchesPayment && matchesDelivery && matchesDateFrom && matchesDateTo;
   });
 
   // Calculate summary statistics
