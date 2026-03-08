@@ -962,7 +962,7 @@ const ImprovedComprehensiveAccountStatement = () => {
                 <Select value={newTransaction.type} onValueChange={v => setNewTransaction(p => ({ ...p, type: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="income">إيراد</SelectItem>
+                    <SelectItem value="other_income">إيراد</SelectItem>
                     <SelectItem value="expense">مصروف</SelectItem>
                   </SelectContent>
                 </Select>
