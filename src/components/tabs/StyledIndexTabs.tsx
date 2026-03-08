@@ -165,23 +165,32 @@ const StyledIndexTabs = () => {
     return setting?.visible !== false;
   };
 
-  // All tabs definition with reversed order
-  const allTabs = [
-    { id: "settings", label: getTabLabel("settings", "الإعدادات"), icon: Settings, component: <AdminSettings /> },
-    { id: "invoice", label: getTabLabel("invoice", "الفاتورة"), icon: Receipt, component: <ImprovedInvoiceTab /> },
-    { id: "printing-report", label: getTabLabel("printing-report", "المطبعة"), icon: Printer, component: <PrintingReport /> },
-    { id: "summary-report", label: getTabLabel("summary-report", "كشف ملخص"), icon: Calculator, component: <SummaryAccountReport /> },
-    { id: "modern-account-statement", label: getTabLabel("modern-account-statement", "كشف محدث"), icon: FileBarChart, component: <ModernAccountStatement /> },
-    { id: "account-statement", label: getTabLabel("account-statement", "كشف الحساب"), icon: FileText, component: <ComprehensiveAccountStatement /> },
-    { id: "shipping-report", label: getTabLabel("shipping-report", "تقرير الشحن"), icon: Truck, component: <ImprovedShippingReport /> },
-    { id: "orders-report", label: getTabLabel("orders-report", "تقرير الطلبات"), icon: FileText, component: <DetailedOrdersReport /> },
-    { id: "products", label: getTabLabel("products", "إدارة المنتجات"), icon: Package, component: <ProductsManagementPro /> },
-    { id: "orders-management", label: getTabLabel("orders-management", "إدارة الطلبات"), icon: ShoppingCart, component: <AdminOrders /> },
-    { id: "add-order", label: getTabLabel("add-order", "إضافة طلب"), icon: Plus, component: <OrderForm /> },
-    { id: "dashboard", label: getTabLabel("dashboard", "لوحة التحكم"), icon: BarChart3, component: <EnhancedAdminDashboard /> },
-  ];
+  // Component map for tab content
+  const componentMap: Record<string, { icon: React.ElementType; component: React.ReactNode }> = {
+    "settings": { icon: Settings, component: <AdminSettings /> },
+    "invoice": { icon: Receipt, component: <ImprovedInvoiceTab /> },
+    "printing-report": { icon: Printer, component: <PrintingReport /> },
+    "summary-report": { icon: Calculator, component: <SummaryAccountReport /> },
+    "modern-account-statement": { icon: FileBarChart, component: <ModernAccountStatement /> },
+    "account-statement": { icon: FileText, component: <ComprehensiveAccountStatement /> },
+    "shipping-report": { icon: Truck, component: <ImprovedShippingReport /> },
+    "orders-report": { icon: FileText, component: <DetailedOrdersReport /> },
+    "products": { icon: Package, component: <ProductsManagementPro /> },
+    "orders-management": { icon: ShoppingCart, component: <AdminOrders /> },
+    "add-order": { icon: Plus, component: <OrderForm /> },
+    "dashboard": { icon: BarChart3, component: <EnhancedAdminDashboard /> },
+  };
 
-  const tabs = allTabs.filter(tab => isTabVisible(tab.id));
+  // Build tabs from settings order (reversed for RTL display)
+  const tabs = tabsSettings
+    .filter(t => isTabVisible(t.id) && componentMap[t.id])
+    .reverse()
+    .map(t => ({
+      id: t.id,
+      label: t.label,
+      icon: componentMap[t.id].icon,
+      component: componentMap[t.id].component,
+    }));
 
   return (
     <DateFilterContext.Provider value={{ startDate, endDate, setDateRange }}>
