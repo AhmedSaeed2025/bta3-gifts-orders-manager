@@ -758,6 +758,7 @@ const ImprovedComprehensiveAccountStatement = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comprehensive-workshop-payments'] });
       queryClient.invalidateQueries({ queryKey: ['comprehensive-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['detailed-report-workshop-payments'] });
       toast.success('تم فك الربط بنجاح');
     },
     onError: () => toast.error('حدث خطأ في فك الربط')
