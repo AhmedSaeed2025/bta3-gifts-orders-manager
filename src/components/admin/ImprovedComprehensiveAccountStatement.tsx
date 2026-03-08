@@ -1813,6 +1813,33 @@ const ImprovedComprehensiveAccountStatement = () => {
                   </Button>
                 </div>
               </div>
+              {/* Payment Status Filter */}
+              <div className="flex gap-1.5 flex-wrap mt-2">
+                {[
+                  { value: 'all', label: 'الكل' },
+                  { value: 'cost_unpaid', label: 'لم تُسدد التكلفة', icon: XCircle },
+                  { value: 'cost_paid', label: 'سُددت التكلفة', icon: CheckCircle2 },
+                  { value: 'shipping_unpaid', label: 'لم يُسدد الشحن', icon: XCircle },
+                  { value: 'shipping_paid', label: 'سُدد الشحن', icon: CheckCircle2 },
+                ].map(f => {
+                  const Icon = (f as any).icon;
+                  const isActive = costRegPaymentFilter === f.value;
+                  return (
+                    <button
+                      key={f.value}
+                      onClick={() => setCostRegPaymentFilter(f.value as any)}
+                      className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium transition-all border ${
+                        isActive
+                          ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                          : 'bg-muted/50 text-muted-foreground border-border hover:bg-accent'
+                      }`}
+                    >
+                      {Icon && <Icon className="h-3 w-3" />}
+                      {f.label}
+                    </button>
+                  );
+                })}
+              </div>
             </CardHeader>
             <CardContent className="pt-0">
               <div className="space-y-1.5 max-h-[400px] overflow-y-auto">
