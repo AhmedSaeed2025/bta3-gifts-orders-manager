@@ -1434,6 +1434,7 @@ const ImprovedComprehensiveAccountStatement = () => {
               const fin = calculateOrderFinancials(order);
               const orderWP = workshopPayments.filter(w => w.order_id === order.id);
               const workshopCostPaid = orderWP.filter(w => w.payment_status === 'Paid').reduce((s, w) => s + Number(w.cost_amount), 0);
+              const productionCostPaid = orderWP.filter(w => w.payment_status === 'Paid' && w.product_name !== 'shipping_cost').reduce((s, w) => s + Number(w.cost_amount), 0);
               const expectedCost = (order.order_items || []).reduce((s: number, i: any) => s + (Number(i.cost || 0) * Number(i.quantity || 1)), 0);
               const costUsed = workshopCostPaid > 0 ? workshopCostPaid : expectedCost;
               const actualProfit = fin.total - costUsed - fin.shipping;
@@ -1616,10 +1617,12 @@ const ImprovedComprehensiveAccountStatement = () => {
                           </>
                         )}
 
-                        <Button size="sm" variant="outline" className={`gap-1 border-red-300 text-red-700 hover:bg-red-50 dark:border-red-700 dark:text-red-400 ${isMobile ? 'text-[10px] h-7 px-2 shrink-0' : 'text-xs h-8'}`}
-                          onClick={() => { setPaymentDialog({ open: true, order, type: 'cost' }); setPaymentAmount(String(expectedCost)); }}>
-                          <Factory className="h-3 w-3" /> تكلفة
-                        </Button>
+                        {productionCostPaid <= 0 && (
+                          <Button size="sm" variant="outline" className={`gap-1 border-red-300 text-red-700 hover:bg-red-50 dark:border-red-700 dark:text-red-400 ${isMobile ? 'text-[10px] h-7 px-2 shrink-0' : 'text-xs h-8'}`}
+                            onClick={() => { setPaymentDialog({ open: true, order, type: 'cost' }); setPaymentAmount(String(expectedCost)); }}>
+                            <Factory className="h-3 w-3" /> تكلفة
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </CardContent>
