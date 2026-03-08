@@ -38,6 +38,19 @@ const CustomerDataForm: React.FC<CustomerDataFormProps> = ({
   const selectedMethod = deliveryMethods.find(m => m.name === customerData.deliveryMethod);
   const showAddress = selectedMethod?.requiresAddress ?? false;
 
+  const handleDeliveryMethodChange = (value: string) => {
+    onSelectChange("deliveryMethod", value);
+    const method = deliveryMethods.find(m => m.name === value);
+    if (method) {
+      if (method.defaultGovernorate) {
+        onSelectChange("governorate", method.defaultGovernorate);
+      }
+      if (method.defaultAddress) {
+        onSelectChange("address", method.defaultAddress);
+      }
+    }
+  };
+
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const converted = arabicToEnglishDigits(e.target.value);
     const syntheticEvent = { ...e, target: { ...e.target, name: e.target.name, value: converted, type: e.target.type } } as React.ChangeEvent<HTMLInputElement>;
