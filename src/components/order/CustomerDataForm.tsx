@@ -24,6 +24,11 @@ interface CustomerDataFormProps {
   onSelectChange: (name: string, value: string) => void;
 }
 
+const arabicToEnglishDigits = (str: string) => {
+  return str.replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d).toString())
+            .replace(/[۰-۹]/g, (d) => String.fromCharCode(d.charCodeAt(0) - 1728));
+};
+
 const CustomerDataForm: React.FC<CustomerDataFormProps> = ({
   customerData,
   onCustomerDataChange,
@@ -32,6 +37,12 @@ const CustomerDataForm: React.FC<CustomerDataFormProps> = ({
   const { methods: deliveryMethods } = useDeliveryMethods();
   const selectedMethod = deliveryMethods.find(m => m.name === customerData.deliveryMethod);
   const showAddress = selectedMethod?.requiresAddress ?? false;
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const converted = arabicToEnglishDigits(e.target.value);
+    const syntheticEvent = { ...e, target: { ...e.target, name: e.target.name, value: converted, type: e.target.type } } as React.ChangeEvent<HTMLInputElement>;
+    onCustomerDataChange(syntheticEvent);
+  };
 
   return (
     <div className="space-y-5">
