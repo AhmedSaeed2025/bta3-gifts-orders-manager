@@ -1180,12 +1180,12 @@ const ImprovedComprehensiveAccountStatement = () => {
                       </span>
                       <span className="font-medium text-red-600">{fmt(financial.actualWorkshopPaid)}</span>
                     </div>
-                    {financial.manualShippingExpenses > 0 && (
+                    {(financial.actualShippingWPPaid + financial.manualShippingExpenses) > 0 && (
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground flex items-center gap-1">
-                          <Truck className="h-3 w-3" /> مصاريف شحن مسجلة
+                          <Truck className="h-3 w-3" /> مصاريف شحن
                         </span>
-                        <span className="font-medium text-red-600">{fmt(financial.manualShippingExpenses)}</span>
+                        <span className="font-medium text-red-600">{fmt(financial.actualShippingWPPaid + financial.manualShippingExpenses)}</span>
                       </div>
                     )}
                     {financial.manualProductionExpenses > 0 && (
