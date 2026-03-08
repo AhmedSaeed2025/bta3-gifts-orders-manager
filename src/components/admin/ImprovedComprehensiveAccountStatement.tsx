@@ -601,7 +601,10 @@ const ImprovedComprehensiveAccountStatement = () => {
       setPaymentAmount('');
       setPaymentNotes('');
     },
-    onError: () => toast.error('حدث خطأ في تسجيل الدفعة')
+    onError: (error: any) => {
+      console.error('Payment mutation error:', error);
+      toast.error(`حدث خطأ في تسجيل الدفعة: ${error?.message || 'خطأ غير معروف'}`);
+    }
   });
 
   const fmt = (n: number) => formatCurrency(n);
