@@ -1715,7 +1715,7 @@ const ImprovedComprehensiveAccountStatement = () => {
                             <span className="font-bold text-blue-600">{fmt(totalExpectedCost)}</span>
                           </div>
                           <div className="bg-card rounded-lg p-2 border border-border/50">
-                            <span className="text-muted-foreground block">مسجل سابقاً (ورش)</span>
+                            <span className="text-muted-foreground block">مدفوع للورش</span>
                             <span className="font-bold text-purple-600">{fmt(totalRegisteredWP)}</span>
                           </div>
                         </>
