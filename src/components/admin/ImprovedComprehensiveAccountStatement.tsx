@@ -525,6 +525,39 @@ const ImprovedComprehensiveAccountStatement = () => {
       {/* ======= SECTION: الملخص المالي ======= */}
       {activeSection === 'summary' && (
         <div className="space-y-5">
+          {/* Smart Alerts */}
+          {financial.alerts.length > 0 && (
+            <div className="space-y-2">
+              {financial.alerts.map((alert, idx) => (
+                <div key={idx} className={`flex items-start gap-3 p-3 rounded-xl border transition-all
+                  ${alert.type === 'danger' 
+                    ? 'bg-destructive/10 border-destructive/30 dark:bg-destructive/5' 
+                    : alert.type === 'warning' 
+                      ? 'bg-amber-50 dark:bg-amber-950/20 border-amber-300 dark:border-amber-700' 
+                      : 'bg-blue-50 dark:bg-blue-950/20 border-blue-300 dark:border-blue-700'
+                  }`}>
+                  <span className="text-lg shrink-0 mt-0.5">{alert.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-medium ${
+                      alert.type === 'danger' ? 'text-destructive' 
+                        : alert.type === 'warning' ? 'text-amber-800 dark:text-amber-300' 
+                        : 'text-blue-800 dark:text-blue-300'
+                    }`}>
+                      {alert.message}
+                    </p>
+                  </div>
+                  <Badge variant="outline" className={`shrink-0 text-xs ${
+                    alert.type === 'danger' ? 'border-destructive/50 text-destructive' 
+                      : alert.type === 'warning' ? 'border-amber-400 text-amber-700 dark:text-amber-400' 
+                      : 'border-blue-400 text-blue-700 dark:text-blue-400'
+                  }`}>
+                    {alert.count}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Top KPI Cards */}
           <div className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'grid-cols-4'}`}>
             <Card className="border-l-4 border-l-emerald-500">
