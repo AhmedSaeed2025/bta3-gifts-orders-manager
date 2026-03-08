@@ -595,6 +595,7 @@ const ImprovedComprehensiveAccountStatement = () => {
       queryClient.invalidateQueries({ queryKey: ['comprehensive-transactions'] });
       queryClient.invalidateQueries({ queryKey: ['comprehensive-workshop-payments'] });
       queryClient.invalidateQueries({ queryKey: ['comprehensive-customer-payments'] });
+      queryClient.invalidateQueries({ queryKey: ['detailed-report-workshop-payments'] });
       toast.success('تم تسجيل الدفعة بنجاح');
       setPaymentDialog({ open: false, order: null, type: 'collection' });
       setPaymentAmount('');
