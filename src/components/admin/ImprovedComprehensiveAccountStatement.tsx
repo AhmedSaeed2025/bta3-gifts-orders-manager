@@ -1036,7 +1036,9 @@ const ImprovedComprehensiveAccountStatement = () => {
               const workshopCostPaid = orderWP.filter(w => w.payment_status === 'Paid').reduce((s, w) => s + Number(w.cost_amount), 0);
               const workshopCostDue = orderWP.filter(w => w.payment_status !== 'Paid').reduce((s, w) => s + Number(w.cost_amount), 0);
               const expectedCost = (order.order_items || []).reduce((s: number, i: any) => s + (Number(i.cost || 0) * Number(i.quantity || 1)), 0);
-              const actualProfit = fin.paid - workshopCostPaid;
+              // الربح = الإجمالي - التكلفة (الفعلية إن وجدت، وإلا المتوقعة) - الشحن
+              const costUsed = workshopCostPaid > 0 ? workshopCostPaid : expectedCost;
+              const actualProfit = fin.total - costUsed - fin.shipping;
               const paymentPercent = fin.total > 0 ? Math.min(100, (fin.paid / fin.total) * 100) : 0;
               const paymentStatus = fin.remaining === 0 ? 'paid' : fin.paid > 0 ? 'partial' : 'unpaid';
 
