@@ -13,11 +13,13 @@ import { toast } from 'sonner';
 export interface DeliveryMethod {
   name: string;
   requiresAddress: boolean;
+  defaultGovernorate?: string;
+  defaultAddress?: string;
 }
 
 const defaultMethods: DeliveryMethod[] = [
-  { name: 'استلام من المعادي', requiresAddress: false },
-  { name: 'شحن للمنزل', requiresAddress: true },
+  { name: 'استلام من المعادي', requiresAddress: false, defaultGovernorate: '', defaultAddress: '' },
+  { name: 'شحن للمنزل', requiresAddress: true, defaultGovernorate: '', defaultAddress: '' },
 ];
 
 export const useDeliveryMethods = () => {
@@ -114,6 +116,18 @@ const DeliveryMethodsSettings = () => {
     saveMethods(updated);
   };
 
+  const updateDefaultGovernorate = (index: number, value: string) => {
+    const updated = [...methods];
+    updated[index] = { ...updated[index], defaultGovernorate: value };
+    saveMethods(updated);
+  };
+
+  const updateDefaultAddress = (index: number, value: string) => {
+    const updated = [...methods];
+    updated[index] = { ...updated[index], defaultAddress: value };
+    saveMethods(updated);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -175,17 +189,39 @@ const DeliveryMethodsSettings = () => {
                 )}
               </div>
               {editingIndex !== index && (
-                <div className="flex items-center gap-2 pr-6">
-                  <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
-                  <Label htmlFor={`addr-${index}`} className="text-xs text-muted-foreground cursor-pointer">
-                    يتطلب عنوان
-                  </Label>
-                  <Switch
-                    id={`addr-${index}`}
-                    checked={method.requiresAddress}
-                    onCheckedChange={() => toggleRequiresAddress(index)}
-                    className="scale-75"
-                  />
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 pr-6">
+                    <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+                    <Label htmlFor={`addr-${index}`} className="text-xs text-muted-foreground cursor-pointer">
+                      يتطلب عنوان
+                    </Label>
+                    <Switch
+                      id={`addr-${index}`}
+                      checked={method.requiresAddress}
+                      onCheckedChange={() => toggleRequiresAddress(index)}
+                      className="scale-75"
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pr-6">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">المحافظة الافتراضية</Label>
+                      <Input
+                        value={method.defaultGovernorate || ''}
+                        onChange={(e) => updateDefaultGovernorate(index, e.target.value)}
+                        className="h-8 text-sm"
+                        placeholder="مثال: القاهرة"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">العنوان الافتراضي</Label>
+                      <Input
+                        value={method.defaultAddress || ''}
+                        onChange={(e) => updateDefaultAddress(index, e.target.value)}
+                        className="h-8 text-sm"
+                        placeholder="مثال: المعادي - القاهرة"
+                      />
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
