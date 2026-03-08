@@ -227,6 +227,86 @@ const ImprovedComprehensiveAccountStatement = () => {
     const cancelledOrders = orders.filter(o => o.status === 'cancelled').length;
     const activeOrders = orders.filter(o => o.status !== 'cancelled').length;
 
+    // === التنبيهات الذكية ===
+    const alerts: { type: 'danger' | 'warning' | 'info'; icon: string; message: string; count: number }[] = [];
+
+    // 1) طلبات تم توصيلها بدون تحصيل كامل
+    const deliveredNotFullyPaid = orders.filter(o => {
+      if (o.status !== 'delivered') return false;
+      const fin = calculateOrderFinancials(o);
+      return fin.remaining > 0;
+    });
+    if (deliveredNotFullyPaid.length > 0) {
+      const pendingAmount = deliveredNotFullyPaid.reduce((sum, o) => sum + calculateOrderFinancials(o).remaining, 0);
+      alerts.push({
+        type: 'danger',
+        icon: '🚨',
+        message: `${deliveredNotFullyPaid.length} طلب تم توصيله بدون تحصيل كامل (متبقي ${formatCurrency(pendingAmount)})`,
+        count: deliveredNotFullyPaid.length
+      });
+    }
+
+    // 2) طلبات تكلفة ورشتها أعلى من سعر البيع
+    const orderIds = new Set(orders.map(o => o.id));
+    const lossOrders = orders.filter(o => {
+      const orderWP = workshopPayments.filter(w => w.order_id === o.id);
+      const wpCost = orderWP.reduce((sum, w) => sum + Number(w.cost_amount), 0);
+      const fin = calculateOrderFinancials(o);
+      return wpCost > 0 && wpCost > fin.total;
+    });
+    if (lossOrders.length > 0) {
+      alerts.push({
+        type: 'danger',
+        icon: '📉',
+        message: `${lossOrders.length} طلب تكلفة الورشة فيه أعلى من سعر البيع (خسارة محتملة)`,
+        count: lossOrders.length
+      });
+    }
+
+    // 3) طلبات بدون تسجيل تكلفة ورشة
+    const activeNonCancelled = orders.filter(o => o.status !== 'cancelled');
+    const ordersWithoutWorkshop = activeNonCancelled.filter(o => {
+      const hasWP = workshopPayments.some(w => w.order_id === o.id);
+      return !hasWP;
+    });
+    if (ordersWithoutWorkshop.length > 0) {
+      alerts.push({
+        type: 'warning',
+        icon: '🏭',
+        message: `${ordersWithoutWorkshop.length} طلب بدون تسجيل تكلفة ورشة — سجّلها من الإدارة المالية`,
+        count: ordersWithoutWorkshop.length
+      });
+    }
+
+    // 4) طلبات بدون أي دفعات
+    const ordersWithoutPayments = activeNonCancelled.filter(o => {
+      const fin = calculateOrderFinancials(o);
+      return fin.paid === 0 && fin.total > 0;
+    });
+    if (ordersWithoutPayments.length > 0) {
+      alerts.push({
+        type: 'warning',
+        icon: '💳',
+        message: `${ordersWithoutPayments.length} طلب بدون أي دفعات مسجلة`,
+        count: ordersWithoutPayments.length
+      });
+    }
+
+    // 5) طلبات تم شحنها ولم يتم تحصيلها بالكامل
+    const shippedNotPaid = orders.filter(o => {
+      if (o.status !== 'shipped') return false;
+      const fin = calculateOrderFinancials(o);
+      return fin.remaining > 0;
+    });
+    if (shippedNotPaid.length > 0) {
+      alerts.push({
+        type: 'info',
+        icon: '🚚',
+        message: `${shippedNotPaid.length} طلب تم شحنه ولم يُحصّل بالكامل بعد`,
+        count: shippedNotPaid.length
+      });
+    }
+
     return {
       // Orders
       orderCount: orders.length,
@@ -267,6 +347,9 @@ const ImprovedComprehensiveAccountStatement = () => {
 
       // Customer payments
       actualCustomerPaid,
+
+      // Alerts
+      alerts,
     };
   }, [orders, transactions, workshopPayments, customerPayments]);
 
