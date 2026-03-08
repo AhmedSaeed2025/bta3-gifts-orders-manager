@@ -591,7 +591,58 @@ const ImprovedComprehensiveAccountStatement = () => {
     { id: 'cashflow', label: 'حركة النقدية', icon: ArrowUpDown },
     { id: 'transactions', label: 'المعاملات', icon: FileText },
     { id: 'register_cost', label: 'تسجيل التكلفة', icon: Factory },
+    { id: 'link_payments', label: 'ربط المدفوعات', icon: Link2 },
   ];
+
+  // Unlinked workshop payments (not linked to any valid order)
+  const unlinkedWorkshopPayments = useMemo(() => {
+    const orderIds = new Set(allOrders.map(o => o.id));
+    return allWorkshopPayments.filter(w => !orderIds.has(w.order_id) || !w.order_id);
+  }, [allWorkshopPayments, allOrders]);
+
+  // Filtered unlinked payments
+  const filteredUnlinkedPayments = useMemo(() => {
+    if (!linkSearch) return unlinkedWorkshopPayments;
+    const s = linkSearch.toLowerCase();
+    return unlinkedWorkshopPayments.filter(w =>
+      w.workshop_name?.toLowerCase().includes(s) ||
+      w.product_name?.toLowerCase().includes(s) ||
+      w.notes?.toLowerCase().includes(s) ||
+      String(w.cost_amount).includes(s)
+    );
+  }, [unlinkedWorkshopPayments, linkSearch]);
+
+  // Filtered orders for linking
+  const linkFilteredOrders = useMemo(() => {
+    let filtered = orders.filter(o => o.status !== 'cancelled');
+    if (linkOrderSearch) {
+      const s = linkOrderSearch.toLowerCase();
+      filtered = filtered.filter(o =>
+        o.serial?.toLowerCase().includes(s) ||
+        o.client_name?.toLowerCase().includes(s)
+      );
+    }
+    return filtered.sort((a, b) => new Date(b.date_created).getTime() - new Date(a.date_created).getTime());
+  }, [orders, linkOrderSearch]);
+
+  // Link payment mutation
+  const linkPaymentMutation = useMutation({
+    mutationFn: async ({ paymentId, orderId }: { paymentId: string; orderId: string }) => {
+      const { error } = await supabase
+        .from('workshop_payments')
+        .update({ order_id: orderId })
+        .eq('id', paymentId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-workshop-payments'] });
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-orders'] });
+      toast.success('تم ربط الدفعة بالطلب بنجاح');
+      setLinkSelectedPayment(null);
+      setLinkOrderSearch('');
+    },
+    onError: () => toast.error('حدث خطأ في ربط الدفعة')
+  });
 
   // Cost/Shipping bulk registration mutation
   const costRegMutation = useMutation({
