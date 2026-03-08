@@ -279,10 +279,19 @@ const SummaryAccountReport = () => {
     
     const orderCount = orders.length;
 
-    // Parse transactions by type and category
+    // Parse expenses/income with source separation to avoid double-counting
+    // workshop_payments = system source for production + shipping paid costs
+    const paidProductionFromWP = workshopPayments
+      .filter((w: any) => w.product_name !== 'shipping_cost')
+      .reduce((sum: number, w: any) => sum + Number(w.cost_amount || 0), 0);
+
+    const paidShippingFromWP = workshopPayments
+      .filter((w: any) => w.product_name === 'shipping_cost')
+      .reduce((sum: number, w: any) => sum + Number(w.cost_amount || 0), 0);
+
     const expensesByCategory = {
-      cost: 0,
-      shipping: 0,
+      cost: paidProductionFromWP,
+      shipping: paidShippingFromWP,
       materials: 0,
       other: 0
     };
@@ -295,31 +304,38 @@ const SummaryAccountReport = () => {
     let totalManualExpenses = 0;
     let totalManualIncome = 0;
 
-    transactions.forEach(t => {
+    transactions.forEach((t: any) => {
       const desc = t.description || '';
       
       if (t.transaction_type === 'expense') {
-        totalManualExpenses += t.amount;
+        // System-generated mirrored entries ([cost]/[shipping]) are already counted in workshop_payments
+        const isTaggedCostOrShipping = desc.includes('[cost]') || desc.includes('[shipping]');
+        const isManualExpenseEntry = typeof t.order_serial === 'string' && t.order_serial.startsWith('EXP-');
+        const shouldSkipAsMirroredSystemEntry = isTaggedCostOrShipping && !isManualExpenseEntry;
+
+        if (shouldSkipAsMirroredSystemEntry) return;
+
+        totalManualExpenses += Number(t.amount || 0);
         if (desc.includes('[cost]')) {
-          expensesByCategory.cost += t.amount;
+          expensesByCategory.cost += Number(t.amount || 0);
         } else if (desc.includes('[shipping]')) {
-          expensesByCategory.shipping += t.amount;
+          expensesByCategory.shipping += Number(t.amount || 0);
         } else if (desc.includes('[materials]')) {
-          expensesByCategory.materials += t.amount;
+          expensesByCategory.materials += Number(t.amount || 0);
         } else {
-          expensesByCategory.other += t.amount;
+          expensesByCategory.other += Number(t.amount || 0);
         }
       } else if (t.transaction_type === 'income') {
-        totalManualIncome += t.amount;
+        totalManualIncome += Number(t.amount || 0);
         if (desc.includes('[sales]')) {
-          incomesByCategory.sales += t.amount;
+          incomesByCategory.sales += Number(t.amount || 0);
         } else {
-          incomesByCategory.other += t.amount;
+          incomesByCategory.other += Number(t.amount || 0);
         }
       }
     });
 
-    const totalExpenses = totalManualExpenses;
+    const totalExpenses = expensesByCategory.cost + expensesByCategory.shipping + expensesByCategory.materials + expensesByCategory.other;
     const totalIncome = totalSales + totalManualIncome;
     const netProfit = totalIncome - totalExpenses;
 
@@ -336,7 +352,7 @@ const SummaryAccountReport = () => {
       expectedProductionCost,
       expectedShippingCost
     };
-  }, [orders, transactions]);
+  }, [orders, transactions, workshopPayments]);
 
   const handleAddExpense = () => {
     if (!newExpense.description || !newExpense.amount) {
