@@ -8,7 +8,7 @@ import CustomerDataForm from "./order/CustomerDataForm";
 import ImprovedItemAddForm from "./order/ImprovedItemAddForm";
 import ItemsTable from "./order/ItemsTable";
 import NotesField from "./order/NotesField";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useQueryClient } from "@tanstack/react-query";
 
