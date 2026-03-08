@@ -66,6 +66,11 @@ const ImprovedComprehensiveAccountStatement = () => {
   const [costRegPaymentFilter, setCostRegPaymentFilter] = useState<'all' | 'cost_paid' | 'cost_unpaid' | 'shipping_paid' | 'shipping_unpaid'>('all');
   const [costRegDate, setCostRegDate] = useState(new Date().toISOString().split('T')[0]);
   
+  // Link payments tab state
+  const [linkSearch, setLinkSearch] = useState('');
+  const [linkSelectedPayment, setLinkSelectedPayment] = useState<string | null>(null);
+  const [linkOrderSearch, setLinkOrderSearch] = useState('');
+  
   const [newTransaction, setNewTransaction] = useState({
     amount: '',
     type: 'expense',
