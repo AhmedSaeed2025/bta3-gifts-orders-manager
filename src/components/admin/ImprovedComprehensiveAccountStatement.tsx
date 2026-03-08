@@ -669,17 +669,25 @@ const ImprovedComprehensiveAccountStatement = () => {
     return filtered.sort((a, b) => new Date(b.date_created).getTime() - new Date(a.date_created).getTime());
   }, [orders, linkOrderSearch]);
 
-  // Link payment mutation - distributes selected payments across selected orders
+  // Helper: calculate expected cost for an order (production or shipping)
+  const getOrderExpectedValue = (orderId: string, isShipping: boolean) => {
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return 0;
+    if (isShipping) return calculateOrderFinancials(order).shipping;
+    const items = order.order_items || [];
+    return items.reduce((s: number, item: any) => s + Number(item.cost ?? 0) * Number(item.quantity ?? 1), 0);
+  };
+
+  // Link payment mutation - distributes selected payments across selected orders proportionally
   const linkPaymentMutation = useMutation({
     mutationFn: async ({ paymentIds, orderIds }: { paymentIds: string[]; orderIds: string[] }) => {
       if (!user) throw new Error('Not authenticated');
       
-      // Calculate total amount from all selected payments
       const selectedPayments = paymentIds
         .map(id => allWorkshopPayments.find(w => w.id === id))
         .filter(Boolean);
       const totalAmount = selectedPayments.reduce((sum, w) => sum + Number(w!.cost_amount), 0);
-      const perOrderAmount = totalAmount / orderIds.length;
+      const isShipping = selectedPayments.some(w => w!.product_name === 'shipping_cost');
 
       // If single payment & single order, just update the existing record
       if (paymentIds.length === 1 && orderIds.length === 1) {
@@ -691,16 +699,24 @@ const ImprovedComprehensiveAccountStatement = () => {
         return;
       }
 
-      // For multiple orders: delete original payments, create new split records
-      const firstPayment = selectedPayments[0]!;
+      // Calculate proportional distribution based on each order's expected cost
+      const orderValues = orderIds.map(id => ({ id, value: getOrderExpectedValue(id, isShipping) }));
+      const totalExpected = orderValues.reduce((s, o) => s + o.value, 0);
       
-      for (const orderId of orderIds) {
+      const firstPayment = selectedPayments[0]!;
+
+      for (const ov of orderValues) {
+        // Proportional: if totalExpected > 0, distribute by ratio; otherwise equal split
+        const share = totalExpected > 0
+          ? (ov.value / totalExpected) * totalAmount
+          : totalAmount / orderIds.length;
+
         const { error } = await supabase.from('workshop_payments').insert({
           user_id: user.id,
-          order_id: orderId,
+          order_id: ov.id,
           workshop_name: firstPayment.workshop_name || 'ورشة',
           product_name: firstPayment.product_name,
-          cost_amount: perOrderAmount,
+          cost_amount: Math.round(share * 100) / 100,
           payment_status: 'Paid',
           actual_payment_date: firstPayment.actual_payment_date || new Date().toISOString().split('T')[0],
           notes: firstPayment.notes || null
