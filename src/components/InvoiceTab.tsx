@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, FileText, Eye, Loader2, Receipt } from 'lucide-react';
+import { Search, FileText, Eye, Loader2, ClipboardList, User, Phone, CalendarDays, Banknote } from 'lucide-react';
 import InvoiceTemplateSelector from '@/components/invoice/InvoiceTemplateSelector';
 import { formatCurrency } from '@/lib/utils';
 
@@ -58,13 +58,10 @@ const InvoiceTab = () => {
         order.serial?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         order.client_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         order.phone?.includes(searchTerm);
-      
       const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
-      
       const orderDate = new Date(order.date_created);
       const matchesDateFrom = !dateFrom || orderDate >= new Date(dateFrom);
       const matchesDateTo = !dateTo || orderDate <= new Date(dateTo + 'T23:59:59');
-
       return matchesSearch && matchesStatus && matchesDateFrom && matchesDateTo;
     });
   }, [orders, searchTerm, statusFilter, dateFrom, dateTo]);
@@ -74,15 +71,24 @@ const InvoiceTab = () => {
       pending: 'في الانتظار', confirmed: 'مؤكد', processing: 'قيد التجهيز',
       shipped: 'تم الشحن', delivered: 'تم التوصيل', cancelled: 'ملغي',
       sentToPrinter: 'في المطبعة', sent_to_printing: 'في المطبعة',
+      readyForDelivery: 'جاهز للتسليم',
     };
     return map[status] || status;
   };
 
-  const getStatusVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
-    if (status === 'delivered') return 'default';
-    if (status === 'cancelled') return 'destructive';
-    if (status === 'shipped' || status === 'confirmed') return 'secondary';
-    return 'outline';
+  const getStatusColor = (status: string) => {
+    const map: Record<string, string> = {
+      pending: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
+      confirmed: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+      processing: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400',
+      shipped: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-400',
+      delivered: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400',
+      cancelled: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+      sentToPrinter: 'bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-400',
+      sent_to_printing: 'bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-400',
+      readyForDelivery: 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400',
+    };
+    return map[status] || 'bg-muted text-muted-foreground';
   };
 
   if (selectedOrder) {
@@ -109,136 +115,172 @@ const InvoiceTab = () => {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-3 pb-2 border-b border-border">
-        <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10">
-          <Receipt className="h-5 w-5 text-primary" />
+      <div className="flex items-center gap-3 bg-gradient-to-l from-primary/5 to-primary/10 rounded-xl px-5 py-4">
+        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/15 shadow-sm">
+          <ClipboardList className="h-5 w-5 text-primary" />
         </div>
         <div>
-          <h2 className="text-lg font-bold text-foreground">الفواتير والطلبات</h2>
-          <p className="text-xs text-muted-foreground">{orders.length} طلب • {filteredOrders.length} نتيجة</p>
+          <h2 className="text-xl font-extrabold text-foreground tracking-tight">الفواتير والطلبات</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            إجمالي <span className="font-semibold text-foreground">{orders.length}</span> طلب
+            {filteredOrders.length !== orders.length && (
+              <> • عرض <span className="font-semibold text-primary">{filteredOrders.length}</span> نتيجة</>
+            )}
+          </p>
         </div>
       </div>
 
-      {/* Filters Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        {/* Search */}
-        <div className="space-y-1.5">
-          <label className="text-xs font-medium text-foreground">البحث</label>
-          <div className="relative">
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              type="text"
-              placeholder="رقم الطلب، العميل، الهاتف..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pr-10 h-9 bg-background"
-            />
+      {/* Filters */}
+      <Card className="border-border/60 shadow-sm">
+        <CardContent className="p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-primary">البحث</label>
+              <div className="relative">
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input
+                  type="text"
+                  placeholder="رقم الطلب، العميل، الهاتف..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pr-10 h-10 bg-background border-border/50 focus-visible:ring-primary/30"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-primary">حالة الطلب</label>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="h-10 bg-background border-border/50">
+                  <SelectValue placeholder="جميع الحالات" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">جميع الحالات</SelectItem>
+                  <SelectItem value="pending">في الانتظار</SelectItem>
+                  <SelectItem value="confirmed">مؤكد</SelectItem>
+                  <SelectItem value="processing">قيد التجهيز</SelectItem>
+                  <SelectItem value="sentToPrinter">في المطبعة</SelectItem>
+                  <SelectItem value="readyForDelivery">جاهز للتسليم</SelectItem>
+                  <SelectItem value="shipped">تم الشحن</SelectItem>
+                  <SelectItem value="delivered">تم التوصيل</SelectItem>
+                  <SelectItem value="cancelled">ملغي</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-primary">من تاريخ</label>
+              <Input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                className="h-10 bg-background border-border/50"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-primary">إلى تاريخ</label>
+              <Input
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                className="h-10 bg-background border-border/50"
+              />
+            </div>
           </div>
-        </div>
-
-        {/* Status Filter */}
-        <div className="space-y-1.5">
-          <label className="text-xs font-medium text-foreground">حالة الطلب</label>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="h-9 bg-background">
-              <SelectValue placeholder="جميع الحالات" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">جميع الحالات</SelectItem>
-              <SelectItem value="pending">في الانتظار</SelectItem>
-              <SelectItem value="confirmed">مؤكد</SelectItem>
-              <SelectItem value="processing">قيد التجهيز</SelectItem>
-              <SelectItem value="sentToPrinter">في المطبعة</SelectItem>
-              <SelectItem value="shipped">تم الشحن</SelectItem>
-              <SelectItem value="delivered">تم التوصيل</SelectItem>
-              <SelectItem value="cancelled">ملغي</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Date From */}
-        <div className="space-y-1.5">
-          <label className="text-xs font-medium text-foreground">من تاريخ</label>
-          <Input
-            type="date"
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-            className="h-9 bg-background"
-          />
-        </div>
-
-        {/* Date To */}
-        <div className="space-y-1.5">
-          <label className="text-xs font-medium text-foreground">إلى تاريخ</label>
-          <Input
-            type="date"
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-            className="h-9 bg-background"
-          />
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Orders List */}
       {isLoading ? (
-        <div className="flex flex-col items-center justify-center py-16 gap-3">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="flex flex-col items-center justify-center py-20 gap-3">
+          <Loader2 className="h-9 w-9 animate-spin text-primary" />
           <span className="text-sm text-muted-foreground">جاري تحميل الطلبات...</span>
         </div>
       ) : filteredOrders.length === 0 ? (
-        <Card>
-          <CardContent className="py-16">
+        <Card className="border-dashed">
+          <CardContent className="py-20">
             <div className="text-center text-muted-foreground">
-              <FileText className="h-12 w-12 mx-auto mb-3 opacity-30" />
-              <p className="font-medium">{searchTerm || statusFilter !== 'all' || dateFrom || dateTo ? 'لا توجد طلبات تطابق الفلاتر' : 'لا توجد طلبات'}</p>
+              <FileText className="h-14 w-14 mx-auto mb-4 opacity-20" />
+              <p className="font-semibold text-base">
+                {searchTerm || statusFilter !== 'all' || dateFrom || dateTo
+                  ? 'لا توجد طلبات تطابق الفلاتر المحددة'
+                  : 'لا توجد طلبات بعد'}
+              </p>
+              <p className="text-xs mt-1.5 opacity-70">جرّب تغيير معايير البحث أو الفلاتر</p>
             </div>
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-3">
           {filteredOrders.map((order) => (
-            <Card key={order.id} className="overflow-hidden hover:shadow-md transition-all border-border">
-              <CardContent className="p-4 sm:p-5">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-0">
-                  {/* Serial + Status */}
-                  <div className="flex items-center gap-2.5 sm:min-w-[200px]">
-                    <span className="font-bold text-sm text-foreground">{order.serial}</span>
-                    <Badge variant={getStatusVariant(order.status)} className="text-[10px] h-5 shrink-0">
+            <Card
+              key={order.id}
+              className="group overflow-hidden border-border/50 hover:border-primary/30 hover:shadow-lg transition-all duration-200"
+            >
+              <CardContent className="p-5 sm:p-6">
+                {/* Top: Serial + Status */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <h3 className="font-extrabold text-base tracking-tight text-foreground">
+                      {order.serial}
+                    </h3>
+                    <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${getStatusColor(order.status)}`}>
                       {getStatusLabel(order.status)}
-                    </Badge>
+                    </span>
+                  </div>
+                </div>
+
+                {/* Info + Action */}
+                <div className="flex flex-col sm:flex-row sm:items-end gap-4">
+                  <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-3">
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-1.5 text-muted-foreground">
+                        <User className="h-3.5 w-3.5" />
+                        <span className="text-[11px]">العميل:</span>
+                      </div>
+                      <p className="text-sm font-semibold text-foreground truncate">{order.client_name}</p>
+                    </div>
+
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-1.5 text-muted-foreground">
+                        <Phone className="h-3.5 w-3.5" />
+                        <span className="text-[11px]">الهاتف:</span>
+                      </div>
+                      <p className="text-sm font-semibold text-foreground" dir="ltr">{order.phone}</p>
+                    </div>
+
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-1.5 text-muted-foreground">
+                        <CalendarDays className="h-3.5 w-3.5" />
+                        <span className="text-[11px]">التاريخ:</span>
+                      </div>
+                      <p className="text-sm font-semibold text-foreground">
+                        {new Date(order.date_created).toLocaleDateString('ar-EG')}
+                      </p>
+                    </div>
+
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-1.5 text-muted-foreground">
+                        <Banknote className="h-3.5 w-3.5" />
+                        <span className="text-[11px]">المبلغ الإجمالي:</span>
+                      </div>
+                      <p className="text-lg font-extrabold text-primary leading-tight">
+                        {formatCurrency(order.total)}
+                      </p>
+                    </div>
                   </div>
 
-                  {/* Info Grid */}
-                  <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-2 text-xs">
-                    <div>
-                      <span className="text-muted-foreground block">العميل:</span>
-                      <span className="font-medium text-foreground truncate block">{order.client_name}</span>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground block">الهاتف:</span>
-                      <span className="font-medium text-foreground" dir="ltr">{order.phone}</span>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground block">التاريخ:</span>
-                      <span className="font-medium text-foreground">{new Date(order.date_created).toLocaleDateString('ar-EG')}</span>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground block">المبلغ الإجمالي:</span>
-                      <span className="font-bold text-primary text-sm">{formatCurrency(order.total)}</span>
-                    </div>
-                  </div>
-
-                  {/* Action */}
-                  <div className="sm:mr-4 flex sm:justify-end">
+                  {/* Action Button */}
+                  <div className="shrink-0">
                     <Button
                       onClick={() => setSelectedOrder(order)}
-                      size="sm"
-                      className="gap-2 h-9 px-5"
+                      className="gap-2 h-10 px-6 rounded-lg bg-gradient-to-l from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-md hover:shadow-lg transition-all"
                     >
                       <Eye className="h-4 w-4" />
-                      عرض الفاتورة
+                      <span className="font-semibold text-sm">عرض الفاتورة</span>
                     </Button>
                   </div>
                 </div>
