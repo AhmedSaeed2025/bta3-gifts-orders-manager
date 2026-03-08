@@ -50,6 +50,29 @@ import IndexLayout from "./components/layout/IndexLayout";
 
 const queryClient = new QueryClient();
 
+// Component to dynamically set document title from store settings
+function DynamicTitle() {
+  useEffect(() => {
+    const fetchTitle = async () => {
+      try {
+        const { supabase } = await import('@/integrations/supabase/client');
+        const { data } = await supabase
+          .from('store_settings')
+          .select('store_name')
+          .eq('is_active', true)
+          .maybeSingle();
+        if (data?.store_name) {
+          document.title = data.store_name;
+        }
+      } catch (e) {
+        // keep default title
+      }
+    };
+    fetchTitle();
+  }, []);
+  return null;
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
