@@ -419,10 +419,120 @@ const ImprovedComprehensiveAccountStatement = () => {
     });
   }, [transactions, filterType]);
 
+  // Filtered & sorted orders for the orders tab
+  const displayOrders = useMemo(() => {
+    let filtered = orders.filter(o => o.status !== 'cancelled');
+    
+    // Search
+    if (orderSearch) {
+      const s = orderSearch.toLowerCase();
+      filtered = filtered.filter(o => 
+        o.serial?.toLowerCase().includes(s) ||
+        o.client_name?.toLowerCase().includes(s) ||
+        o.phone?.includes(s)
+      );
+    }
+
+    // Payment filter
+    if (orderPaymentFilter !== 'all') {
+      filtered = filtered.filter(o => {
+        const fin = calculateOrderFinancials(o);
+        if (orderPaymentFilter === 'paid') return fin.remaining === 0;
+        if (orderPaymentFilter === 'unpaid') return fin.paid === 0 && fin.total > 0;
+        if (orderPaymentFilter === 'partial') return fin.paid > 0 && fin.remaining > 0;
+        return true;
+      });
+    }
+
+    // Sort
+    filtered.sort((a, b) => {
+      if (orderSortBy === 'remaining') {
+        return calculateOrderFinancials(b).remaining - calculateOrderFinancials(a).remaining;
+      }
+      if (orderSortBy === 'total') {
+        return calculateOrderFinancials(b).total - calculateOrderFinancials(a).total;
+      }
+      return new Date(b.date_created).getTime() - new Date(a.date_created).getTime();
+    });
+
+    return filtered;
+  }, [orders, orderSearch, orderPaymentFilter, orderSortBy]);
+
+  // Payment mutation for orders tab
+  const orderPaymentMutation = useMutation({
+    mutationFn: async ({ orderId, orderSerial, amount, type, notes }: { orderId: string; orderSerial: string; amount: number; type: string; notes: string }) => {
+      if (!user) throw new Error('Not authenticated');
+      
+      // Find the order
+      const order = orders.find(o => o.id === orderId);
+      if (!order) throw new Error('Order not found');
+
+      if (type === 'collection' || type === 'instapay' || type === 'wallet' || type === 'shipping_company') {
+        // Update order payments_received
+        const currentPaid = Number(order.payments_received || 0);
+        const newPaid = currentPaid + amount;
+        const fin = calculateOrderFinancials(order);
+        const newRemaining = Math.max(0, fin.total - Number(order.deposit || 0) - newPaid);
+
+        const { error: orderError } = await supabase
+          .from('orders')
+          .update({ payments_received: newPaid, remaining_amount: newRemaining })
+          .eq('id', orderId);
+        if (orderError) throw orderError;
+
+        // Add transaction
+        const methodLabel = type === 'instapay' ? 'انستا باي' : type === 'wallet' ? 'محفظة' : type === 'shipping_company' ? 'شركة شحن' : 'تحصيل';
+        const { error: txError } = await supabase.from('transactions').insert({
+          user_id: user.id,
+          order_serial: orderSerial,
+          transaction_type: 'income',
+          amount,
+          description: `[order_collection] ${methodLabel} - ${notes || 'دفعة من العميل'}`
+        });
+        if (txError) throw txError;
+
+      } else if (type === 'cost') {
+        // Register workshop payment
+        const { error: wpError } = await supabase.from('workshop_payments').insert({
+          user_id: user.id,
+          order_id: orderId,
+          workshop_name: notes || 'ورشة',
+          product_name: 'تكلفة إنتاج',
+          cost_amount: amount,
+          payment_status: 'Paid',
+          actual_payment_date: new Date().toISOString().split('T')[0]
+        });
+        if (wpError) throw wpError;
+
+        // Add expense transaction
+        const { error: txError } = await supabase.from('transactions').insert({
+          user_id: user.id,
+          order_serial: orderSerial,
+          transaction_type: 'expense',
+          amount,
+          description: `[cost] تكلفة ورشة - ${notes || ''}`
+        });
+        if (txError) throw txError;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-workshop-payments'] });
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-customer-payments'] });
+      toast.success('تم تسجيل الدفعة بنجاح');
+      setPaymentDialog({ open: false, order: null, type: 'collection' });
+      setPaymentAmount('');
+      setPaymentNotes('');
+    },
+    onError: () => toast.error('حدث خطأ في تسجيل الدفعة')
+  });
+
   const fmt = (n: number) => formatCurrency(n);
 
   const sections = [
     { id: 'summary', label: 'الملخص', icon: BarChart3 },
+    { id: 'orders', label: 'تفاصيل الطلبات', icon: ListOrdered },
     { id: 'comparison', label: 'متوقع vs فعلي', icon: Scale },
     { id: 'cashflow', label: 'حركة النقدية', icon: ArrowUpDown },
     { id: 'transactions', label: 'المعاملات', icon: FileText },
