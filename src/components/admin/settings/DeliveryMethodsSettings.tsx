@@ -116,6 +116,18 @@ const DeliveryMethodsSettings = () => {
     saveMethods(updated);
   };
 
+  const updateDefaultGovernorate = (index: number, value: string) => {
+    const updated = [...methods];
+    updated[index] = { ...updated[index], defaultGovernorate: value };
+    saveMethods(updated);
+  };
+
+  const updateDefaultAddress = (index: number, value: string) => {
+    const updated = [...methods];
+    updated[index] = { ...updated[index], defaultAddress: value };
+    saveMethods(updated);
+  };
+
   return (
     <Card>
       <CardHeader>
