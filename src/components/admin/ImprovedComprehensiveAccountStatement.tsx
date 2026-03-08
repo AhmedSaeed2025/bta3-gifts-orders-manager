@@ -2125,6 +2125,36 @@ const ImprovedComprehensiveAccountStatement = () => {
                               {w.payment_status === 'Paid' ? 'مدفوع' : 'مستحق'}
                             </Badge>
                             <span className="font-medium">{fmt(Number(w.cost_amount))}</span>
+                            <Button 
+                              variant="ghost" size="icon" 
+                              className="h-6 w-6 text-destructive hover:text-destructive hover:bg-destructive/10"
+                              onClick={async () => {
+                                if (!confirm('حذف هذه الدفعة والمعاملة المرتبطة؟')) return;
+                                try {
+                                  // Delete workshop payment
+                                  await supabase.from('workshop_payments').delete().eq('id', w.id);
+                                  // Delete matching transaction
+                                  const matchingTx = allTransactions.find(t => 
+                                    t.order_serial === o.serial && 
+                                    t.transaction_type === 'expense' && 
+                                    t.description?.includes('[cost]') &&
+                                    Number(t.amount) === Number(w.cost_amount)
+                                  );
+                                  if (matchingTx) {
+                                    await supabase.from('transactions').delete().eq('id', matchingTx.id);
+                                  }
+                                  queryClient.invalidateQueries({ queryKey: ['comprehensive-workshop-payments'] });
+                                  queryClient.invalidateQueries({ queryKey: ['comprehensive-transactions'] });
+                                  queryClient.invalidateQueries({ queryKey: ['comprehensive-orders'] });
+                                  toast.success('تم حذف الدفعة بنجاح');
+                                  setOrderDetailsDialog({ open: false, order: null });
+                                } catch {
+                                  toast.error('حدث خطأ في الحذف');
+                                }
+                              }}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
                           </div>
                         </div>
                       ))}
