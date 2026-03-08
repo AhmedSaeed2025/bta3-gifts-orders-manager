@@ -865,6 +865,7 @@ const ImprovedComprehensiveAccountStatement = () => {
       queryClient.invalidateQueries({ queryKey: ['comprehensive-orders'] });
       queryClient.invalidateQueries({ queryKey: ['comprehensive-transactions'] });
       queryClient.invalidateQueries({ queryKey: ['comprehensive-workshop-payments'] });
+      queryClient.invalidateQueries({ queryKey: ['detailed-report-workshop-payments'] });
       const hasOrders = costRegSelectedOrders.length > 0;
       toast.success(hasOrders 
         ? `تم تسجيل ${costRegType === 'cost' ? 'التكلفة' : 'الشحن'} بنجاح على ${costRegSelectedOrders.length} طلب`
