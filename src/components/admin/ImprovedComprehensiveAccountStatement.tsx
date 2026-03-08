@@ -1592,8 +1592,8 @@ const ImprovedComprehensiveAccountStatement = () => {
                   </div>
                   <div className="bg-card rounded-lg p-4 border">
                     <p className="text-xs text-muted-foreground mb-1">المدفوع لشركة الشحن</p>
-                    <p className="text-xl font-bold text-red-600">{fmt(financial.manualShippingExpenses)}</p>
-                    <p className="text-xs text-muted-foreground mt-1">المسجل كمصروف شحن في المعاملات</p>
+                    <p className="text-xl font-bold text-red-600">{fmt(financial.actualShippingWPPaid + financial.manualShippingExpenses)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">المسجل كمصروف شحن</p>
                   </div>
                 </div>
               </div>
