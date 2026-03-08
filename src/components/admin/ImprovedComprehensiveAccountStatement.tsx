@@ -622,6 +622,12 @@ const ImprovedComprehensiveAccountStatement = () => {
     return allWorkshopPayments.filter(w => !w.order_id || !orderIds.has(w.order_id));
   }, [allWorkshopPayments, allOrders]);
 
+  // Linked workshop payments (linked to a valid order)
+  const linkedWorkshopPayments = useMemo(() => {
+    const orderIds = new Set(allOrders.map(o => o.id));
+    return allWorkshopPayments.filter(w => w.order_id && orderIds.has(w.order_id));
+  }, [allWorkshopPayments, allOrders]);
+
   // Filtered unlinked payments
   const filteredUnlinkedPayments = useMemo(() => {
     if (!linkSearch) return unlinkedWorkshopPayments;
@@ -633,6 +639,23 @@ const ImprovedComprehensiveAccountStatement = () => {
       String(w.cost_amount).includes(s)
     );
   }, [unlinkedWorkshopPayments, linkSearch]);
+
+  // Filtered linked payments
+  const filteredLinkedPayments = useMemo(() => {
+    if (!linkSearch) return linkedWorkshopPayments;
+    const s = linkSearch.toLowerCase();
+    return linkedWorkshopPayments.filter(w => {
+      const order = allOrders.find(o => o.id === w.order_id);
+      return (
+        w.workshop_name?.toLowerCase().includes(s) ||
+        w.product_name?.toLowerCase().includes(s) ||
+        w.notes?.toLowerCase().includes(s) ||
+        String(w.cost_amount).includes(s) ||
+        order?.serial?.toLowerCase().includes(s) ||
+        order?.client_name?.toLowerCase().includes(s)
+      );
+    });
+  }, [linkedWorkshopPayments, linkSearch, allOrders]);
 
   // Filtered orders for linking
   const linkFilteredOrders = useMemo(() => {
