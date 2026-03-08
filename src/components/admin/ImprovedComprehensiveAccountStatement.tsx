@@ -1048,12 +1048,12 @@ const ImprovedComprehensiveAccountStatement = () => {
                     : paymentStatus === 'partial' ? 'border-r-amber-500' 
                     : 'border-r-red-500'
                 }`}>
-                  <CardContent className="p-4">
+                  <CardContent className={isMobile ? 'p-3' : 'p-4'}>
                     {/* Header */}
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="font-mono text-xs">{order.serial}</Badge>
-                        <Badge className={`text-[10px] ${
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <Badge variant="outline" className="font-mono text-[10px] h-5">{order.serial}</Badge>
+                        <Badge className={`text-[10px] h-5 ${
                           order.status === 'delivered' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' 
                             : order.status === 'shipped' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
                             : 'bg-muted text-muted-foreground'
@@ -1062,99 +1062,165 @@ const ImprovedComprehensiveAccountStatement = () => {
                             : order.status === 'printing' ? 'في المطبعة' : order.status === 'pending' ? 'قيد الانتظار' : order.status}
                         </Badge>
                       </div>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-[10px] text-muted-foreground shrink-0">
                         {format(new Date(order.date_created), 'dd/MM/yyyy', { locale: ar })}
                       </span>
                     </div>
 
                     {/* Customer */}
-                    <div className="flex items-center gap-2 mb-3 text-sm">
-                      <span className="font-semibold text-foreground">{order.client_name}</span>
-                      {order.phone && (
+                    <div className="flex items-center gap-2 mb-2 text-sm">
+                      <span className="font-semibold text-foreground truncate">{order.client_name}</span>
+                      {order.phone && !isMobile && (
                         <span className="text-muted-foreground text-xs flex items-center gap-1">
                           <Phone className="h-3 w-3" />{order.phone}
                         </span>
                       )}
                     </div>
 
-                    {/* Financial Grid */}
-                    <div className={`grid gap-2 mb-3 ${isMobile ? 'grid-cols-3' : 'grid-cols-7'}`}>
-                      <div className="bg-muted/40 rounded-lg p-2 text-center">
-                        <p className="text-[10px] text-muted-foreground">الإجمالي</p>
-                        <p className="text-sm font-bold">{fmt(fin.total)}</p>
+                    {/* Financial Grid - Mobile optimized */}
+                    {isMobile ? (
+                      <div className="space-y-1.5 mb-2">
+                        {/* Row 1: Main financials */}
+                        <div className="grid grid-cols-3 gap-1.5">
+                          <div className="bg-muted/40 rounded-md p-1.5 text-center">
+                            <p className="text-[9px] text-muted-foreground">الإجمالي</p>
+                            <p className="text-xs font-bold">{fmt(fin.total)}</p>
+                          </div>
+                          <div className="bg-emerald-50 dark:bg-emerald-950/20 rounded-md p-1.5 text-center">
+                            <p className="text-[9px] text-muted-foreground">المحصل</p>
+                            <p className="text-xs font-bold text-emerald-600">{fmt(fin.paid)}</p>
+                          </div>
+                          <div className={`rounded-md p-1.5 text-center ${fin.remaining > 0 ? 'bg-red-50 dark:bg-red-950/20' : 'bg-emerald-50 dark:bg-emerald-950/20'}`}>
+                            <p className="text-[9px] text-muted-foreground">المتبقي</p>
+                            <p className={`text-xs font-bold ${fin.remaining > 0 ? 'text-red-600' : 'text-emerald-600'}`}>{fmt(fin.remaining)}</p>
+                          </div>
+                        </div>
+                        {/* Row 2: Cost details */}
+                        <div className="grid grid-cols-3 gap-1.5">
+                          <div className="bg-muted/40 rounded-md p-1.5 text-center">
+                            <p className="text-[9px] text-muted-foreground">التكلفة</p>
+                            <p className="text-xs font-bold">{fmt(expectedCost)}</p>
+                          </div>
+                          {fin.shipping > 0 ? (
+                            <div className="bg-muted/40 rounded-md p-1.5 text-center">
+                              <p className="text-[9px] text-muted-foreground">الشحن</p>
+                              <p className="text-xs font-bold">{fmt(fin.shipping)}</p>
+                            </div>
+                          ) : (
+                            <div />
+                          )}
+                          <div className={`rounded-md p-1.5 text-center ${actualProfit >= 0 ? 'bg-blue-50 dark:bg-blue-950/20' : 'bg-red-50 dark:bg-red-950/20'}`}>
+                            <p className="text-[9px] text-muted-foreground">الربح</p>
+                            <p className={`text-xs font-bold ${actualProfit >= 0 ? 'text-blue-600' : 'text-red-600'}`}>{fmt(actualProfit)}</p>
+                          </div>
+                        </div>
                       </div>
-                      <div className="bg-muted/40 rounded-lg p-2 text-center">
-                        <p className="text-[10px] text-muted-foreground">التكلفة</p>
-                        <p className="text-sm font-bold">{fmt(expectedCost)}</p>
-                        {workshopCostPaid > 0 && (
-                          <p className="text-[10px] text-emerald-600">فعلي: {fmt(workshopCostPaid)}</p>
+                    ) : (
+                      <div className="grid gap-2 mb-3 grid-cols-7">
+                        <div className="bg-muted/40 rounded-lg p-2 text-center">
+                          <p className="text-[10px] text-muted-foreground">الإجمالي</p>
+                          <p className="text-sm font-bold">{fmt(fin.total)}</p>
+                        </div>
+                        <div className="bg-muted/40 rounded-lg p-2 text-center">
+                          <p className="text-[10px] text-muted-foreground">التكلفة</p>
+                          <p className="text-sm font-bold">{fmt(expectedCost)}</p>
+                          {workshopCostPaid > 0 && <p className="text-[10px] text-emerald-600">فعلي: {fmt(workshopCostPaid)}</p>}
+                        </div>
+                        {fin.shipping > 0 && (
+                          <div className="bg-muted/40 rounded-lg p-2 text-center">
+                            <p className="text-[10px] text-muted-foreground">الشحن</p>
+                            <p className="text-sm font-bold">{fmt(fin.shipping)}</p>
+                          </div>
                         )}
-                      </div>
-                      {fin.shipping > 0 && (
-                        <div className="bg-muted/40 rounded-lg p-2 text-center">
-                          <p className="text-[10px] text-muted-foreground">الشحن</p>
-                          <p className="text-sm font-bold">{fmt(fin.shipping)}</p>
+                        {fin.discount > 0 && (
+                          <div className="bg-muted/40 rounded-lg p-2 text-center">
+                            <p className="text-[10px] text-muted-foreground">خصم</p>
+                            <p className="text-sm font-bold text-red-500">-{fmt(fin.discount)}</p>
+                          </div>
+                        )}
+                        <div className="bg-emerald-50 dark:bg-emerald-950/20 rounded-lg p-2 text-center">
+                          <p className="text-[10px] text-muted-foreground">المحصل</p>
+                          <p className="text-sm font-bold text-emerald-600">{fmt(fin.paid)}</p>
+                          {fin.deposit > 0 && <p className="text-[10px] text-muted-foreground">عربون: {fmt(fin.deposit)}</p>}
                         </div>
-                      )}
-                      {fin.discount > 0 && (
-                        <div className="bg-muted/40 rounded-lg p-2 text-center">
-                          <p className="text-[10px] text-muted-foreground">خصم</p>
-                          <p className="text-sm font-bold text-red-500">-{fmt(fin.discount)}</p>
+                        <div className={`rounded-lg p-2 text-center ${fin.remaining > 0 ? 'bg-red-50 dark:bg-red-950/20' : 'bg-emerald-50 dark:bg-emerald-950/20'}`}>
+                          <p className="text-[10px] text-muted-foreground">المتبقي</p>
+                          <p className={`text-sm font-bold ${fin.remaining > 0 ? 'text-red-600' : 'text-emerald-600'}`}>{fmt(fin.remaining)}</p>
                         </div>
-                      )}
-                      <div className="bg-emerald-50 dark:bg-emerald-950/20 rounded-lg p-2 text-center">
-                        <p className="text-[10px] text-muted-foreground">المحصل</p>
-                        <p className="text-sm font-bold text-emerald-600">{fmt(fin.paid)}</p>
-                        {fin.deposit > 0 && <p className="text-[10px] text-muted-foreground">عربون: {fmt(fin.deposit)}</p>}
+                        <div className={`rounded-lg p-2 text-center ${actualProfit >= 0 ? 'bg-blue-50 dark:bg-blue-950/20' : 'bg-red-50 dark:bg-red-950/20'}`}>
+                          <p className="text-[10px] text-muted-foreground">الربح الفعلي</p>
+                          <p className={`text-sm font-bold ${actualProfit >= 0 ? 'text-blue-600' : 'text-red-600'}`}>{fmt(actualProfit)}</p>
+                        </div>
                       </div>
-                      <div className={`rounded-lg p-2 text-center ${fin.remaining > 0 ? 'bg-red-50 dark:bg-red-950/20' : 'bg-emerald-50 dark:bg-emerald-950/20'}`}>
-                        <p className="text-[10px] text-muted-foreground">المتبقي</p>
-                        <p className={`text-sm font-bold ${fin.remaining > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
-                          {fmt(fin.remaining)}
-                        </p>
-                      </div>
-                      <div className={`rounded-lg p-2 text-center ${isMobile ? 'col-span-3' : ''} ${actualProfit >= 0 ? 'bg-blue-50 dark:bg-blue-950/20' : 'bg-red-50 dark:bg-red-950/20'}`}>
-                        <p className="text-[10px] text-muted-foreground">الربح الفعلي</p>
-                        <p className={`text-sm font-bold ${actualProfit >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-                          {fmt(actualProfit)}
-                        </p>
-                      </div>
-                    </div>
+                    )}
 
                     {/* Progress bar */}
-                    <Progress value={paymentPercent} className="h-1.5 mb-3" />
+                    <Progress value={paymentPercent} className="h-1 mb-2" />
 
-                    {/* Actions */}
-                    <div className={`flex ${isMobile ? 'flex-col' : 'flex-wrap'} gap-2`}>
-                      {fin.remaining > 0 && (
-                        <>
-                          <Button size="sm" variant="outline" className="gap-1 text-xs h-8 border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-400"
-                            onClick={() => { setPaymentDialog({ open: true, order, type: 'collection' }); setPaymentAmount(String(fin.remaining)); }}>
-                            <DollarSign className="h-3 w-3" /> تحصيل
-                          </Button>
-                          <Button size="sm" variant="outline" className="gap-1 text-xs h-8 border-purple-300 text-purple-700 hover:bg-purple-50 dark:border-purple-700 dark:text-purple-400"
-                            onClick={() => { setPaymentDialog({ open: true, order, type: 'instapay' }); setPaymentAmount(String(fin.remaining)); }}>
-                            <Smartphone className="h-3 w-3" /> انستا باي
-                          </Button>
-                          <Button size="sm" variant="outline" className="gap-1 text-xs h-8 border-orange-300 text-orange-700 hover:bg-orange-50 dark:border-orange-700 dark:text-orange-400"
-                            onClick={() => { setPaymentDialog({ open: true, order, type: 'wallet' }); setPaymentAmount(String(fin.remaining)); }}>
-                            <Wallet className="h-3 w-3" /> محفظة
-                          </Button>
-                          <Button size="sm" variant="outline" className="gap-1 text-xs h-8 border-blue-300 text-blue-700 hover:bg-blue-50 dark:border-blue-700 dark:text-blue-400"
-                            onClick={() => { setPaymentDialog({ open: true, order, type: 'shipping_company' }); setPaymentAmount(String(fin.remaining)); }}>
-                            <Truck className="h-3 w-3" /> شركة شحن
-                          </Button>
-                        </>
-                      )}
-                      <Button size="sm" variant="outline" className="gap-1 text-xs h-8 border-red-300 text-red-700 hover:bg-red-50 dark:border-red-700 dark:text-red-400"
-                        onClick={() => { setPaymentDialog({ open: true, order, type: 'cost' }); setPaymentAmount(String(expectedCost)); }}>
-                        <Factory className="h-3 w-3" /> تكلفة ورشة
-                      </Button>
-                      <Button size="sm" variant="ghost" className="gap-1 text-xs h-8"
-                        onClick={() => setOrderDetailsDialog({ open: true, order })}>
-                        <Eye className="h-3 w-3" /> تفاصيل
-                      </Button>
-                    </div>
+                    {/* Actions - Mobile: horizontal scroll, Desktop: wrap */}
+                    {isMobile ? (
+                      <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
+                        {fin.remaining > 0 && (
+                          <>
+                            <Button size="sm" variant="outline" className="gap-1 text-[10px] h-7 px-2 shrink-0 border-emerald-300 text-emerald-700 dark:border-emerald-700 dark:text-emerald-400"
+                              onClick={() => { setPaymentDialog({ open: true, order, type: 'collection' }); setPaymentAmount(String(fin.remaining)); }}>
+                              <DollarSign className="h-3 w-3" /> تحصيل
+                            </Button>
+                            <Button size="sm" variant="outline" className="gap-1 text-[10px] h-7 px-2 shrink-0 border-purple-300 text-purple-700 dark:border-purple-700 dark:text-purple-400"
+                              onClick={() => { setPaymentDialog({ open: true, order, type: 'instapay' }); setPaymentAmount(String(fin.remaining)); }}>
+                              <Smartphone className="h-3 w-3" /> انستا باي
+                            </Button>
+                            <Button size="sm" variant="outline" className="gap-1 text-[10px] h-7 px-2 shrink-0 border-orange-300 text-orange-700 dark:border-orange-700 dark:text-orange-400"
+                              onClick={() => { setPaymentDialog({ open: true, order, type: 'wallet' }); setPaymentAmount(String(fin.remaining)); }}>
+                              <Wallet className="h-3 w-3" /> محفظة
+                            </Button>
+                            <Button size="sm" variant="outline" className="gap-1 text-[10px] h-7 px-2 shrink-0 border-blue-300 text-blue-700 dark:border-blue-700 dark:text-blue-400"
+                              onClick={() => { setPaymentDialog({ open: true, order, type: 'shipping_company' }); setPaymentAmount(String(fin.remaining)); }}>
+                              <Truck className="h-3 w-3" /> شحن
+                            </Button>
+                          </>
+                        )}
+                        <Button size="sm" variant="outline" className="gap-1 text-[10px] h-7 px-2 shrink-0 border-red-300 text-red-700 dark:border-red-700 dark:text-red-400"
+                          onClick={() => { setPaymentDialog({ open: true, order, type: 'cost' }); setPaymentAmount(String(expectedCost)); }}>
+                          <Factory className="h-3 w-3" /> ورشة
+                        </Button>
+                        <Button size="sm" variant="ghost" className="gap-1 text-[10px] h-7 px-2 shrink-0"
+                          onClick={() => setOrderDetailsDialog({ open: true, order })}>
+                          <Eye className="h-3 w-3" /> تفاصيل
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {fin.remaining > 0 && (
+                          <>
+                            <Button size="sm" variant="outline" className="gap-1 text-xs h-8 border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-400"
+                              onClick={() => { setPaymentDialog({ open: true, order, type: 'collection' }); setPaymentAmount(String(fin.remaining)); }}>
+                              <DollarSign className="h-3 w-3" /> تحصيل
+                            </Button>
+                            <Button size="sm" variant="outline" className="gap-1 text-xs h-8 border-purple-300 text-purple-700 hover:bg-purple-50 dark:border-purple-700 dark:text-purple-400"
+                              onClick={() => { setPaymentDialog({ open: true, order, type: 'instapay' }); setPaymentAmount(String(fin.remaining)); }}>
+                              <Smartphone className="h-3 w-3" /> انستا باي
+                            </Button>
+                            <Button size="sm" variant="outline" className="gap-1 text-xs h-8 border-orange-300 text-orange-700 hover:bg-orange-50 dark:border-orange-700 dark:text-orange-400"
+                              onClick={() => { setPaymentDialog({ open: true, order, type: 'wallet' }); setPaymentAmount(String(fin.remaining)); }}>
+                              <Wallet className="h-3 w-3" /> محفظة
+                            </Button>
+                            <Button size="sm" variant="outline" className="gap-1 text-xs h-8 border-blue-300 text-blue-700 hover:bg-blue-50 dark:border-blue-700 dark:text-blue-400"
+                              onClick={() => { setPaymentDialog({ open: true, order, type: 'shipping_company' }); setPaymentAmount(String(fin.remaining)); }}>
+                              <Truck className="h-3 w-3" /> شركة شحن
+                            </Button>
+                          </>
+                        )}
+                        <Button size="sm" variant="outline" className="gap-1 text-xs h-8 border-red-300 text-red-700 hover:bg-red-50 dark:border-red-700 dark:text-red-400"
+                          onClick={() => { setPaymentDialog({ open: true, order, type: 'cost' }); setPaymentAmount(String(expectedCost)); }}>
+                          <Factory className="h-3 w-3" /> تكلفة ورشة
+                        </Button>
+                        <Button size="sm" variant="ghost" className="gap-1 text-xs h-8"
+                          onClick={() => setOrderDetailsDialog({ open: true, order })}>
+                          <Eye className="h-3 w-3" /> تفاصيل
+                        </Button>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               );
