@@ -33,6 +33,7 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
     governorate: editingOrder?.governorate || "",
     shippingCost: editingOrder?.shippingCost || 0,
     deposit: editingOrder?.deposit || 0,
+    discount: editingOrder?.discount || 0,
   });
   
   const [currentItem, setCurrentItem] = useState({
