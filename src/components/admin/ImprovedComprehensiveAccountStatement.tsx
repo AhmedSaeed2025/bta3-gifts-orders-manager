@@ -778,33 +778,29 @@ const ImprovedComprehensiveAccountStatement = () => {
                 <p className="text-xl font-bold text-foreground">{fmt(financial.totalPaidOut)}</p>
                 <p className="text-xs text-muted-foreground mt-1">ورش + شحن + مصاريف</p>
                 <div className="mt-3 pt-2 border-t border-border/50 space-y-1.5">
-                  {financial.actualWorkshopPaid > 0 && (
-                    <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground flex items-center gap-1">
-                        <Factory className="h-3 w-3" /> ورش
-                      </span>
-                      <span className="font-medium">{fmt(financial.actualWorkshopPaid)}</span>
-                    </div>
-                  )}
-                  {financial.manualShippingExpenses > 0 && (
-                    <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground flex items-center gap-1">
-                        <Truck className="h-3 w-3" /> شحن
-                      </span>
-                      <span className="font-medium">{fmt(financial.manualShippingExpenses)}</span>
-                    </div>
-                  )}
-                  {financial.manualOtherExpenses > 0 && (
-                    <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground flex items-center gap-1">
-                        <FileText className="h-3 w-3" /> مصاريف أخرى
-                      </span>
-                      <span className="font-medium">{fmt(financial.manualOtherExpenses)}</span>
-                    </div>
-                  )}
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground flex items-center gap-1">
+                      <Factory className="h-3 w-3" /> ورش
+                    </span>
+                    <span className="font-medium">{fmt(financial.actualWorkshopPaid)}</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground flex items-center gap-1">
+                      <Truck className="h-3 w-3" /> شحن
+                    </span>
+                    <span className="font-medium">{fmt(financial.manualShippingExpenses)}</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground flex items-center gap-1">
+                      <FileText className="h-3 w-3" /> مصاريف أخرى
+                    </span>
+                    <span className="font-medium">{fmt(financial.manualOtherExpenses)}</span>
+                  </div>
                   {financial.pendingToWorkshops > 0 && (
-                    <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground text-amber-600">مستحق للورش</span>
+                    <div className="flex justify-between text-xs pt-1 border-t border-dashed border-border/50">
+                      <span className="text-amber-600 flex items-center gap-1">
+                        <Clock className="h-3 w-3" /> مستحق للورش
+                      </span>
                       <span className="font-medium text-amber-600">{fmt(financial.pendingToWorkshops)}</span>
                     </div>
                   )}
