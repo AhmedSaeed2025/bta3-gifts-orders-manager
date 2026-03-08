@@ -544,15 +544,79 @@ const ImprovedComprehensiveAccountStatement = () => {
     { id: 'comparison', label: 'متوقع vs فعلي', icon: Scale },
     { id: 'cashflow', label: 'حركة النقدية', icon: ArrowUpDown },
     { id: 'transactions', label: 'المعاملات', icon: FileText },
+    { id: 'register_cost', label: 'تسجيل التكلفة', icon: Factory },
   ];
 
-  if (ordersLoading || transactionsLoading) {
-    return (
-      <div className="space-y-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-24 bg-muted animate-pulse rounded-xl" />
-        ))}
-      </div>
+  // Cost/Shipping bulk registration mutation
+  const costRegMutation = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error('Not authenticated');
+      const amount = parseFloat(costRegAmount);
+      if (!amount || costRegSelectedOrders.length === 0) throw new Error('Missing data');
+      
+      const perOrderAmount = amount / costRegSelectedOrders.length;
+
+      for (const orderId of costRegSelectedOrders) {
+        const order = orders.find(o => o.id === orderId);
+        if (!order) continue;
+
+        if (costRegType === 'cost') {
+          // Register workshop payment
+          await supabase.from('workshop_payments').insert({
+            user_id: user.id,
+            order_id: orderId,
+            workshop_name: costRegWorkshop || 'ورشة',
+            product_name: 'تكلفة إنتاج',
+            cost_amount: perOrderAmount,
+            payment_status: 'Paid',
+            actual_payment_date: new Date().toISOString().split('T')[0]
+          });
+
+          // Add expense transaction
+          await supabase.from('transactions').insert({
+            user_id: user.id,
+            order_serial: order.serial,
+            transaction_type: 'expense',
+            amount: perOrderAmount,
+            description: `[cost] ${costRegWorkshop || 'ورشة'} - ${costRegNotes || 'تكلفة إنتاج'}`
+          });
+        } else {
+          // Shipping expense
+          await supabase.from('transactions').insert({
+            user_id: user.id,
+            order_serial: order.serial,
+            transaction_type: 'expense',
+            amount: perOrderAmount,
+            description: `[shipping] شحن - ${costRegNotes || 'مصاريف شحن'}`
+          });
+        }
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-workshop-payments'] });
+      toast.success(`تم تسجيل ${costRegType === 'cost' ? 'التكلفة' : 'الشحن'} بنجاح على ${costRegSelectedOrders.length} طلب`);
+      setCostRegAmount('');
+      setCostRegNotes('');
+      setCostRegWorkshop('');
+      setCostRegSelectedOrders([]);
+    },
+    onError: () => toast.error('حدث خطأ في التسجيل')
+  });
+
+  // Orders filtered for cost registration tab
+  const costRegFilteredOrders = useMemo(() => {
+    let filtered = orders.filter(o => o.status !== 'cancelled');
+    if (costRegSearch) {
+      const s = costRegSearch.toLowerCase();
+      filtered = filtered.filter(o => 
+        o.serial?.toLowerCase().includes(s) ||
+        o.client_name?.toLowerCase().includes(s)
+      );
+    }
+    return filtered.sort((a, b) => new Date(b.date_created).getTime() - new Date(a.date_created).getTime());
+  }, [orders, costRegSearch]);
     );
   }
 
