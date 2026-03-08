@@ -68,7 +68,8 @@ const ImprovedComprehensiveAccountStatement = () => {
   
   // Link payments tab state
   const [linkSearch, setLinkSearch] = useState('');
-  const [linkSelectedPayment, setLinkSelectedPayment] = useState<string | null>(null);
+  const [linkSelectedPayments, setLinkSelectedPayments] = useState<string[]>([]);
+  const [linkSelectedOrders, setLinkSelectedOrders] = useState<string[]>([]);
   const [linkOrderSearch, setLinkOrderSearch] = useState('');
   
   const [newTransaction, setNewTransaction] = useState({
