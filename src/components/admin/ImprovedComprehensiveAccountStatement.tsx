@@ -49,7 +49,7 @@ const ImprovedComprehensiveAccountStatement = () => {
   const [filterType, setFilterType] = useState<string>('all');
   const [activeSection, setActiveSection] = useState<'summary' | 'orders' | 'comparison' | 'cashflow' | 'transactions' | 'register_cost' | 'link_payments'>('summary');
   const [orderSearch, setOrderSearch] = useState('');
-  const [orderPaymentFilter, setOrderPaymentFilter] = useState<'all' | 'paid' | 'partial' | 'unpaid'>('all');
+  const [orderPaymentFilter, setOrderPaymentFilter] = useState<'all' | 'paid' | 'partial' | 'unpaid' | 'unpaid_cost' | 'uncollected'>('all');
   const [orderSortBy, setOrderSortBy] = useState<'date' | 'remaining' | 'total'>('date');
   const [paymentDialog, setPaymentDialog] = useState<{ open: boolean; order: any; type: 'collection' | 'cost' | 'instapay' | 'wallet' | 'shipping_company' }>({ open: false, order: null, type: 'collection' });
   const [paymentAmount, setPaymentAmount] = useState('');
@@ -515,6 +515,11 @@ const ImprovedComprehensiveAccountStatement = () => {
         if (orderPaymentFilter === 'paid') return fin.remaining === 0;
         if (orderPaymentFilter === 'unpaid') return fin.paid === 0 && fin.total > 0;
         if (orderPaymentFilter === 'partial') return fin.paid > 0 && fin.remaining > 0;
+        if (orderPaymentFilter === 'uncollected') return fin.remaining > 0;
+        if (orderPaymentFilter === 'unpaid_cost') {
+          const hasProductionPayment = allWorkshopPayments.some(w => w.order_id === o.id && w.product_name !== 'shipping_cost');
+          return !hasProductionPayment;
+        }
         return true;
       });
     }
@@ -531,7 +536,7 @@ const ImprovedComprehensiveAccountStatement = () => {
     });
 
     return filtered;
-  }, [orders, orderSearch, orderPaymentFilter, orderSortBy]);
+  }, [orders, orderSearch, orderPaymentFilter, orderSortBy, allWorkshopPayments]);
 
   // Payment mutation for orders tab
   const orderPaymentMutation = useMutation({
@@ -1406,6 +1411,8 @@ const ImprovedComprehensiveAccountStatement = () => {
                     <SelectItem value="paid">مدفوع بالكامل</SelectItem>
                     <SelectItem value="partial">مدفوع جزئياً</SelectItem>
                     <SelectItem value="unpaid">لم يُدفع</SelectItem>
+                    <SelectItem value="uncollected">تحصيل متبقي</SelectItem>
+                    <SelectItem value="unpaid_cost">تكلفة غير مسددة</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select value={orderSortBy} onValueChange={(v: any) => setOrderSortBy(v)}>

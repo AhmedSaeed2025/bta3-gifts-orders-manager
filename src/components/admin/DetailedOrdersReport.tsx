@@ -59,6 +59,7 @@ const DetailedOrdersReport = () => {
   const [statusFilters, setStatusFilters] = useState<string[]>([]);
   const [paymentFilter, setPaymentFilter] = useState("all");
   const [deliveryFilter, setDeliveryFilter] = useState("all");
+  const [financialFilter, setFinancialFilter] = useState("all");
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
@@ -172,8 +173,21 @@ const DetailedOrdersReport = () => {
     const orderDate = new Date(order.date_created);
     const matchesDateFrom = !startDate || orderDate >= startDate;
     const matchesDateTo = !endDate || orderDate <= endDate;
+
+    // Financial status filter
+    let matchesFinancial = true;
+    if (financialFilter === 'uncollected') {
+      const fin = calculateOrderFinancials(order);
+      matchesFinancial = fin.remaining > 0;
+    } else if (financialFilter === 'unpaid_cost') {
+      const wp = workshopByOrder[order.id];
+      matchesFinancial = !wp || wp.paidProduction <= 0;
+    } else if (financialFilter === 'fully_paid') {
+      const fin = calculateOrderFinancials(order);
+      matchesFinancial = fin.remaining === 0;
+    }
     
-    return matchesSearch && matchesStatus && matchesPayment && matchesDelivery && matchesDateFrom && matchesDateTo;
+    return matchesSearch && matchesStatus && matchesPayment && matchesDelivery && matchesDateFrom && matchesDateTo && matchesFinancial;
   });
 
   // Calculate summary statistics
@@ -507,10 +521,25 @@ const DetailedOrdersReport = () => {
                   </SelectContent>
                 </Select>
               </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">الحالة المالية</label>
+                <Select value={financialFilter} onValueChange={setFinancialFilter}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">الكل</SelectItem>
+                    <SelectItem value="uncollected">تحصيل متبقي</SelectItem>
+                    <SelectItem value="unpaid_cost">تكلفة غير مسددة</SelectItem>
+                    <SelectItem value="fully_paid">مدفوع بالكامل</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {/* Active filters summary */}
-            {(statusFilters.length > 0 || paymentFilter !== "all" || deliveryFilter !== "all" || searchTerm) && (
+            {(statusFilters.length > 0 || paymentFilter !== "all" || deliveryFilter !== "all" || financialFilter !== "all" || searchTerm) && (
               <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border">
                 <Filter className="h-4 w-4 text-muted-foreground" />
                 <span className="text-xs text-muted-foreground">فلاتر نشطة</span>
@@ -523,6 +552,7 @@ const DetailedOrdersReport = () => {
                     setStatusFilters([]);
                     setPaymentFilter("all");
                     setDeliveryFilter("all");
+                    setFinancialFilter("all");
                   }}
                 >
                   مسح الكل
