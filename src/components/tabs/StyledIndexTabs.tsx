@@ -228,7 +228,7 @@ const StyledIndexTabs = () => {
               </Select>
 
               {selectedYear && selectedYear !== "all" && (
-                <Select value={selectedMonth} onValueChange={handleMonthChange}>
+                <Select value={selectedMonth || undefined} onValueChange={handleMonthChange}>
                   <SelectTrigger className={`${isMobile ? 'w-full' : 'w-[130px]'} h-10 bg-background border-border/60 focus:ring-2 focus:ring-primary/20`}>
                     <SelectValue placeholder="الشهر" />
                   </SelectTrigger>
