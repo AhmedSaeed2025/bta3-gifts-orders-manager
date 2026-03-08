@@ -624,17 +624,17 @@ const ImprovedComprehensiveAccountStatement = () => {
       </div>
 
       {/* Section Navigation */}
-      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
         {sections.map(s => {
           const Icon = s.icon;
           const isActive = activeSection === s.id;
           return (
             <button key={s.id} onClick={() => setActiveSection(s.id as any)}
-              className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all border
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all border
                 ${isActive 
                   ? 'bg-primary text-primary-foreground border-primary shadow-md' 
                   : 'bg-card text-muted-foreground border-border hover:bg-accent'}`}>
-              <Icon className="h-4 w-4" />
+              <Icon className="h-3.5 w-3.5" />
               {s.label}
             </button>
           );
