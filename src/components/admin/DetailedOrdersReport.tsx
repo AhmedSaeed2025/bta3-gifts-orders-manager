@@ -57,6 +57,7 @@ const DetailedOrdersReport = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilters, setStatusFilters] = useState<string[]>([]);
   const [paymentFilter, setPaymentFilter] = useState("all");
+  const [deliveryFilter, setDeliveryFilter] = useState("all");
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
@@ -95,6 +96,9 @@ const DetailedOrdersReport = () => {
     enabled: !!user
   });
 
+  // Get unique delivery methods for filter
+  const deliveryMethods = [...new Set(orders.map(o => o.delivery_method).filter(Boolean))];
+
   // Filter orders with date filter support
   const filteredOrders = orders.filter(order => {
     const matchesSearch = order.client_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -103,13 +107,14 @@ const DetailedOrdersReport = () => {
     
     const matchesStatus = statusFilters.length === 0 || statusFilters.includes(order.status);
     const matchesPayment = paymentFilter === "all" || order.payment_method === paymentFilter;
+    const matchesDelivery = deliveryFilter === "all" || order.delivery_method === deliveryFilter;
     
     // Apply date filter from context
     const orderDate = new Date(order.date_created);
     const matchesDateFrom = !startDate || orderDate >= startDate;
     const matchesDateTo = !endDate || orderDate <= endDate;
     
-    return matchesSearch && matchesStatus && matchesPayment && matchesDateFrom && matchesDateTo;
+    return matchesSearch && matchesStatus && matchesPayment && matchesDelivery && matchesDateFrom && matchesDateTo;
   });
 
   // Calculate summary statistics
@@ -360,7 +365,7 @@ const DetailedOrdersReport = () => {
               <div className="space-y-2">
                 <label className="text-sm font-medium">البحث</label>
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="اسم العميل، رقم الطلب، الهاتف..."
                     value={searchTerm}
@@ -418,13 +423,41 @@ const DetailedOrdersReport = () => {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">الإجراءات</label>
-                <Button variant="outline" className="w-full">
-                  <Filter className="h-4 w-4 ml-1" />
-                  فلاتر متقدمة
-                </Button>
+                <label className="text-sm font-medium">طريقة التسليم</label>
+                <Select value={deliveryFilter} onValueChange={setDeliveryFilter}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">جميع الطرق</SelectItem>
+                    {deliveryMethods.map(method => (
+                      <SelectItem key={method} value={method}>{method}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
+
+            {/* Active filters summary */}
+            {(statusFilters.length > 0 || paymentFilter !== "all" || deliveryFilter !== "all" || searchTerm) && (
+              <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">فلاتر نشطة</span>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-xs h-6 text-destructive hover:text-destructive"
+                  onClick={() => {
+                    setSearchTerm("");
+                    setStatusFilters([]);
+                    setPaymentFilter("all");
+                    setDeliveryFilter("all");
+                  }}
+                >
+                  مسح الكل
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
