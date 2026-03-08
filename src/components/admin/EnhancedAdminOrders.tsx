@@ -413,7 +413,7 @@ const EnhancedAdminOrders = () => {
 
                       {/* حذف الطلب */}
                       <Button
-                        onClick={() => handleDeleteOrder(order.id)}
+                        onClick={() => handleDeleteOrder(order)}
                         variant="outline"
                         size="sm"
                         className="text-red-600 hover:text-red-700 hover:bg-red-50"
