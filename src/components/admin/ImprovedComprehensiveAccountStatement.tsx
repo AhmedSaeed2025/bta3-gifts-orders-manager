@@ -2185,6 +2185,16 @@ const ImprovedComprehensiveAccountStatement = () => {
               {linkSelectedPayments.length > 0 && (() => {
                 const selectedData = linkSelectedPayments.map(id => filteredUnlinkedPayments.find(w => w.id === id)).filter(Boolean);
                 const totalAmount = selectedData.reduce((sum, w) => sum + Number(w!.cost_amount), 0);
+                const isShippingType = selectedData.some(w => w!.product_name === 'shipping_cost');
+                
+                // Calculate totals from selected orders
+                const selectedOrdersData = linkSelectedOrders.map(id => orders.find(o => o.id === id)).filter(Boolean);
+                const totalOrderShipping = selectedOrdersData.reduce((sum, o) => sum + calculateOrderFinancials(o!).shipping, 0);
+                const totalOrderCost = selectedOrdersData.reduce((sum, o) => {
+                  const items = o!.order_items || [];
+                  return sum + items.reduce((s: number, item: any) => s + Number(item.cost ?? 0) * Number(item.quantity ?? 1), 0);
+                }, 0);
+
                 return (
                   <div className="mt-3 bg-primary/5 border border-primary/20 rounded-xl p-3 space-y-2">
                     <div className="flex items-center justify-between">
@@ -2194,10 +2204,23 @@ const ImprovedComprehensiveAccountStatement = () => {
                       </div>
                       <span className="font-bold text-primary">{fmt(totalAmount)}</span>
                     </div>
+                    
                     {linkSelectedOrders.length > 0 && (
-                      <div className="flex items-center justify-between text-xs text-muted-foreground pt-1 border-t border-primary/20">
-                        <span>لكل طلب:</span>
-                        <span className="font-bold text-foreground">{fmt(totalAmount / linkSelectedOrders.length)}</span>
+                      <div className="space-y-1.5 pt-2 border-t border-primary/20">
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div className="bg-card rounded-lg p-2 border border-border/50">
+                            <span className="text-muted-foreground block">{isShippingType ? 'شحن مسجل بالطلبات' : 'تكلفة مسجلة بالطلبات'}</span>
+                            <span className="font-bold text-blue-600">{fmt(isShippingType ? totalOrderShipping : totalOrderCost)}</span>
+                          </div>
+                          <div className="bg-card rounded-lg p-2 border border-border/50">
+                            <span className="text-muted-foreground block">إجمالي سيتم توزيعه</span>
+                            <span className="font-bold text-foreground">{fmt(totalAmount)}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>لكل طلب ({linkSelectedOrders.length} طلب):</span>
+                          <span className="font-bold text-foreground">{fmt(totalAmount / linkSelectedOrders.length)}</span>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -2207,14 +2230,32 @@ const ImprovedComprehensiveAccountStatement = () => {
           </Card>
 
           {/* Order selection for linking */}
-          {linkSelectedPayments.length > 0 && (
+          {linkSelectedPayments.length > 0 && (() => {
+            // Determine if selected payments are shipping type
+            const selectedPaymentsData = linkSelectedPayments.map(id => filteredUnlinkedPayments.find(w => w.id === id)).filter(Boolean);
+            const isShippingLink = selectedPaymentsData.some(w => w!.product_name === 'shipping_cost');
+            
+            // Filter orders: for shipping, only show orders with shipping cost > 0
+            const applicableOrders = isShippingLink 
+              ? linkFilteredOrders.filter(o => {
+                  const fin = calculateOrderFinancials(o);
+                  return fin.shipping > 0;
+                })
+              : linkFilteredOrders;
+
+            return (
             <Card>
               <CardHeader className="pb-3">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <Package className="h-5 w-5" />
-                    اختر الطلبات للربط
-                  </CardTitle>
+                  <div>
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <Package className="h-5 w-5" />
+                      {isShippingLink ? 'اختر طلبات الشحن للربط' : 'اختر الطلبات للربط'}
+                    </CardTitle>
+                    {isShippingLink && (
+                      <p className="text-xs text-muted-foreground mt-1">يظهر فقط الطلبات التي بها قيمة شحن مسجلة</p>
+                    )}
+                  </div>
                   <div className="flex items-center gap-2 w-full sm:w-auto">
                     <div className="relative flex-1 sm:w-[220px]">
                       <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -2230,7 +2271,7 @@ const ImprovedComprehensiveAccountStatement = () => {
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="space-y-1.5 max-h-[350px] overflow-y-auto">
-                  {linkFilteredOrders.map(o => {
+                  {applicableOrders.map(o => {
                     const fin = calculateOrderFinancials(o);
                     const orderWP = workshopPayments.filter(w => w.order_id === o.id);
                     const wpTotal = orderWP.reduce((sum, w) => sum + Number(w.cost_amount), 0);
@@ -2261,7 +2302,12 @@ const ImprovedComprehensiveAccountStatement = () => {
                           </div>
                           <div className={`flex items-center gap-3 mt-1 text-xs text-muted-foreground ${isMobile ? 'flex-wrap gap-1.5' : ''}`}>
                             <span>الإجمالي: <span className="font-medium text-foreground">{fmt(fin.total)}</span></span>
-                            {wpTotal > 0 && <span>مدفوع للورش: <span className="font-medium text-purple-600">{fmt(wpTotal)}</span></span>}
+                            {isShippingLink && fin.shipping > 0 && (
+                              <span>شحن بالطلب: <span className="font-medium text-blue-600">{fmt(fin.shipping)}</span></span>
+                            )}
+                            {!isShippingLink && wpTotal > 0 && (
+                              <span>مدفوع للورش: <span className="font-medium text-purple-600">{fmt(wpTotal)}</span></span>
+                            )}
                           </div>
                         </div>
                         <span className="text-[10px] text-muted-foreground shrink-0">
@@ -2292,7 +2338,8 @@ const ImprovedComprehensiveAccountStatement = () => {
                 )}
               </CardContent>
             </Card>
-          )}
+            );
+          })()}
         </div>
       )}
 
