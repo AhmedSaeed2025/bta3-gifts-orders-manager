@@ -648,6 +648,7 @@ const DetailedOrdersReport = () => {
               const { total, paid, remaining, shipping, discount } = calculateOrderFinancials(order);
               // حساب التكلفة = الإجمالي - الربح - الشحن
               const orderCost = total - (order.profit || 0) - shipping;
+              const wp = workshopByOrder[order.id] || { paidProduction: 0, paidShipping: 0 };
               
               return (
                 <Card key={order.id} id={`order-card-${order.serial}`} className="border-l-4 border-l-primary overflow-hidden transition-all duration-500">
