@@ -235,6 +235,10 @@ const DetailedOrdersReport = () => {
       queryClient.invalidateQueries({ queryKey: ['printing-orders'] });
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['summary-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-workshop-payments'] });
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-customer-payments'] });
       toast.success('تم حذف الطلب بنجاح');
     },
     onError: (error: any) => {
