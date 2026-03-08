@@ -49,6 +49,7 @@ const DetailedOrdersReport = () => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const { getStatusOptions, getStatusLabel, getStatusColor } = useOrderStatuses();
   const { startDate, endDate } = useDateFilter();
