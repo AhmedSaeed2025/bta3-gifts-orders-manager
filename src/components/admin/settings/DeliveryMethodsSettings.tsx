@@ -13,11 +13,13 @@ import { toast } from 'sonner';
 export interface DeliveryMethod {
   name: string;
   requiresAddress: boolean;
+  defaultGovernorate?: string;
+  defaultAddress?: string;
 }
 
 const defaultMethods: DeliveryMethod[] = [
-  { name: 'استلام من المعادي', requiresAddress: false },
-  { name: 'شحن للمنزل', requiresAddress: true },
+  { name: 'استلام من المعادي', requiresAddress: false, defaultGovernorate: '', defaultAddress: '' },
+  { name: 'شحن للمنزل', requiresAddress: true, defaultGovernorate: '', defaultAddress: '' },
 ];
 
 export const useDeliveryMethods = () => {
