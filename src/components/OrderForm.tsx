@@ -56,11 +56,11 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
   }, 0);
   
   const totalCost = items.reduce((sum, item) => sum + item.cost * item.quantity, 0);
-  // الإجمالي الكلي = المجموع الفرعي + الشحن (بدون خصم العربون)
-  const totalAmount = subtotal + customerData.shippingCost;
+  // الإجمالي الكلي = المجموع الفرعي + الشحن - الخصم
+  const totalAmount = subtotal + customerData.shippingCost - customerData.discount;
   // المبلغ المتبقي = الإجمالي - العربون
   const remainingAmount = totalAmount - customerData.deposit;
-  const netProfit = subtotal - totalCost;
+  const netProfit = subtotal - totalCost - customerData.discount;
 
   const handleCustomerDataChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type } = e.target;
