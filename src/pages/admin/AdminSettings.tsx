@@ -19,6 +19,7 @@ import CustomerReviewsSettings from '@/components/admin/settings/CustomerReviews
 import OrderStatusSettings from '@/components/admin/settings/OrderStatusSettings';
 import DeliveryMethodsSettings from '@/components/admin/settings/DeliveryMethodsSettings';
 import InvoicePolicySettings from '@/components/admin/settings/InvoicePolicySettings';
+import TabsManagementSettings from '@/components/admin/settings/TabsManagementSettings';
 
 // Import the custom hooks
 import { useAdminSettings } from '@/hooks/useAdminSettings';
