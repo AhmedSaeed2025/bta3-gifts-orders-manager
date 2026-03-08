@@ -71,6 +71,7 @@ const ImprovedComprehensiveAccountStatement = () => {
   const [linkSelectedPayments, setLinkSelectedPayments] = useState<string[]>([]);
   const [linkSelectedOrders, setLinkSelectedOrders] = useState<string[]>([]);
   const [linkOrderSearch, setLinkOrderSearch] = useState('');
+  const [linkViewMode, setLinkViewMode] = useState<'unlinked' | 'linked'>('unlinked');
   
   const [newTransaction, setNewTransaction] = useState({
     amount: '',
