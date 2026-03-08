@@ -226,10 +226,17 @@ const ImprovedComprehensiveAccountStatement = () => {
       if (t.transaction_type === 'income') {
         manualIncome += t.amount;
       } else if (t.transaction_type === 'expense') {
+        // Transactions prefixed with [cost] or [shipping] are ALREADY counted
+        // via workshop_payments table — skip them to avoid double counting
+        const isFromWorkshopReg = desc.startsWith('[cost]') || desc.startsWith('[shipping]');
+        if (isFromWorkshopReg) {
+          // Don't add to manualExpenses — already in actualWorkshopPaid / actualShippingWPPaid
+          return;
+        }
         manualExpenses += t.amount;
-        if (desc.includes('[shipping]') || desc.includes('شحن')) {
+        if (desc.includes('شحن')) {
           manualShippingExpenses += t.amount;
-        } else if (desc.includes('[cost]') || desc.includes('تكلفة') || desc.includes('إنتاج')) {
+        } else if (desc.includes('تكلفة') || desc.includes('إنتاج')) {
           manualProductionExpenses += t.amount;
         } else {
           manualOtherExpenses += t.amount;
