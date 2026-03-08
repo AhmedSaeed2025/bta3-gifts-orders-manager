@@ -1682,20 +1682,64 @@ const ImprovedComprehensiveAccountStatement = () => {
               </div>
 
               {/* Selected orders summary */}
-              {costRegSelectedOrders.length > 0 && parseFloat(costRegAmount) > 0 && (
-                <div className="bg-primary/5 border border-primary/20 rounded-xl p-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
+              {costRegSelectedOrders.length > 0 && (() => {
+                const selectedOrdersData = costRegSelectedOrders.map(id => orders.find(o => o.id === id)).filter(Boolean);
+                const totalOrdersValue = selectedOrdersData.reduce((sum, o) => sum + calculateOrderFinancials(o!).total, 0);
+                const totalExpectedCost = selectedOrdersData.reduce((sum, o) => {
+                  const items = o!.order_items || [];
+                  return sum + items.reduce((s: number, item: any) => s + Number(item.cost ?? 0) * Number(item.quantity ?? 1), 0);
+                }, 0);
+                const totalOrderShipping = selectedOrdersData.reduce((sum, o) => sum + calculateOrderFinancials(o!).shipping, 0);
+                const totalRegisteredWP = selectedOrdersData.reduce((sum, o) => {
+                  return sum + workshopPayments.filter(w => w.order_id === o!.id).reduce((s, w) => s + Number(w.cost_amount), 0);
+                }, 0);
+                const enteredAmount = parseFloat(costRegAmount) || 0;
+                const perOrder = costRegSelectedOrders.length > 0 ? enteredAmount / costRegSelectedOrders.length : 0;
+
+                return (
+                  <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 space-y-3">
+                    <div className="flex items-center gap-2 mb-1">
                       <CheckCircle2 className="h-4 w-4 text-primary" />
-                      <span className="text-sm font-medium">{costRegSelectedOrders.length} طلب محدد</span>
+                      <span className="text-sm font-bold">{costRegSelectedOrders.length} طلب محدد</span>
                     </div>
-                    <div className="text-sm">
-                      <span className="text-muted-foreground">لكل طلب: </span>
-                      <span className="font-bold text-primary">{fmt(parseFloat(costRegAmount) / costRegSelectedOrders.length)}</span>
+                    
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+                      <div className="bg-card rounded-lg p-2 border border-border/50">
+                        <span className="text-muted-foreground block">إجمالي قيمة الطلبات</span>
+                        <span className="font-bold text-foreground">{fmt(totalOrdersValue)}</span>
+                      </div>
+                      {costRegType === 'cost' ? (
+                        <>
+                          <div className="bg-card rounded-lg p-2 border border-border/50">
+                            <span className="text-muted-foreground block">تكلفة متوقعة</span>
+                            <span className="font-bold text-blue-600">{fmt(totalExpectedCost)}</span>
+                          </div>
+                          <div className="bg-card rounded-lg p-2 border border-border/50">
+                            <span className="text-muted-foreground block">مسجل سابقاً (ورش)</span>
+                            <span className="font-bold text-purple-600">{fmt(totalRegisteredWP)}</span>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="bg-card rounded-lg p-2 border border-border/50">
+                          <span className="text-muted-foreground block">شحن بالطلبات</span>
+                          <span className="font-bold">{fmt(totalOrderShipping)}</span>
+                        </div>
+                      )}
                     </div>
+
+                    {enteredAmount > 0 && (
+                      <div className="flex items-center justify-between pt-2 border-t border-primary/20">
+                        <span className="text-sm text-muted-foreground">لكل طلب:</span>
+                        <span className="font-bold text-primary text-sm">{fmt(perOrder)}</span>
+                      </div>
+                    )}
+                    
+                    <p className="text-[10px] text-muted-foreground leading-relaxed">
+                      💡 يمكنك تسجيل أي مبلغ فعلي حتى لو اختلف عن {costRegType === 'cost' ? 'التكلفة المتوقعة بالطلب' : 'قيمة الشحن المسجلة بالطلب'}
+                    </p>
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               <Button 
                 onClick={() => costRegMutation.mutate()}
