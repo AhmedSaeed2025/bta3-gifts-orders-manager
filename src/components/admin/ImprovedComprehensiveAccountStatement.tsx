@@ -729,6 +729,23 @@ const ImprovedComprehensiveAccountStatement = () => {
     onError: () => toast.error('حدث خطأ في ربط الدفعة')
   });
 
+  // Unlink payment mutation - removes order_id from a workshop payment
+  const unlinkPaymentMutation = useMutation({
+    mutationFn: async (paymentId: string) => {
+      const { error } = await supabase
+        .from('workshop_payments')
+        .update({ order_id: null })
+        .eq('id', paymentId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-workshop-payments'] });
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-orders'] });
+      toast.success('تم فك الربط بنجاح');
+    },
+    onError: () => toast.error('حدث خطأ في فك الربط')
+  });
+
   // Cost/Shipping bulk registration mutation
   const costRegMutation = useMutation({
     mutationFn: async () => {
