@@ -2257,13 +2257,21 @@ const ImprovedComprehensiveAccountStatement = () => {
             const selectedPaymentsData = linkSelectedPayments.map(id => filteredUnlinkedPayments.find(w => w.id === id)).filter(Boolean);
             const isShippingLink = selectedPaymentsData.some(w => w!.product_name === 'shipping_cost');
             
-            // Filter orders: for shipping, only show orders with shipping cost > 0
-            const applicableOrders = isShippingLink 
-              ? linkFilteredOrders.filter(o => {
-                  const fin = calculateOrderFinancials(o);
-                  return fin.shipping > 0;
-                })
-              : linkFilteredOrders;
+            // Filter orders based on payment type and whether they already have linked payments of same type
+            const applicableOrders = linkFilteredOrders.filter(o => {
+              const fin = calculateOrderFinancials(o);
+              const orderWP = workshopPayments.filter(w => w.order_id === o.id);
+              
+              if (isShippingLink) {
+                // Only show orders with shipping cost AND no shipping workshop payment linked yet
+                const hasLinkedShipping = orderWP.some(w => w.product_name === 'shipping_cost');
+                return fin.shipping > 0 && !hasLinkedShipping;
+              } else {
+                // Only show orders with no production cost workshop payment linked yet
+                const hasLinkedCost = orderWP.some(w => w.product_name !== 'shipping_cost');
+                return !hasLinkedCost;
+              }
+            });
 
             return (
             <Card>
