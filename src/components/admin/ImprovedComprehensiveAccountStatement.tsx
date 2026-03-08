@@ -536,7 +536,7 @@ const ImprovedComprehensiveAccountStatement = () => {
     });
 
     return filtered;
-  }, [orders, orderSearch, orderPaymentFilter, orderSortBy]);
+  }, [orders, orderSearch, orderPaymentFilter, orderSortBy, allWorkshopPayments]);
 
   // Payment mutation for orders tab
   const orderPaymentMutation = useMutation({
