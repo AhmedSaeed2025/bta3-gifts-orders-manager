@@ -1036,7 +1036,9 @@ const ImprovedComprehensiveAccountStatement = () => {
               const workshopCostPaid = orderWP.filter(w => w.payment_status === 'Paid').reduce((s, w) => s + Number(w.cost_amount), 0);
               const workshopCostDue = orderWP.filter(w => w.payment_status !== 'Paid').reduce((s, w) => s + Number(w.cost_amount), 0);
               const expectedCost = (order.order_items || []).reduce((s: number, i: any) => s + (Number(i.cost || 0) * Number(i.quantity || 1)), 0);
-              const actualProfit = fin.paid - workshopCostPaid;
+              // الربح = الإجمالي - التكلفة (الفعلية إن وجدت، وإلا المتوقعة) - الشحن
+              const costUsed = workshopCostPaid > 0 ? workshopCostPaid : expectedCost;
+              const actualProfit = fin.total - costUsed - fin.shipping;
               const paymentPercent = fin.total > 0 ? Math.min(100, (fin.paid / fin.total) * 100) : 0;
               const paymentStatus = fin.remaining === 0 ? 'paid' : fin.paid > 0 ? 'partial' : 'unpaid';
 
@@ -1601,7 +1603,9 @@ const ImprovedComprehensiveAccountStatement = () => {
                     {fin.paymentsReceived > 0 && <div className="flex justify-between text-xs"><span className="text-muted-foreground mr-4">↳ دفعات</span><span>{fmt(fin.paymentsReceived)}</span></div>}
                     <div className="flex justify-between"><span className={fin.remaining > 0 ? 'text-red-600' : 'text-emerald-600'}>المتبقي</span><span className={`font-bold ${fin.remaining > 0 ? 'text-red-600' : 'text-emerald-600'}`}>{fmt(fin.remaining)}</span></div>
                     <Separator />
-                    <div className="flex justify-between font-bold"><span>الربح الفعلي</span><span className={fin.paid - wpPaid >= 0 ? 'text-emerald-600' : 'text-red-600'}>{fmt(fin.paid - wpPaid)}</span></div>
+                    {(() => { const costUsed = wpPaid > 0 ? wpPaid : expectedCost; const profit = fin.total - costUsed - fin.shipping; return (
+                    <div className="flex justify-between font-bold"><span>الربح الفعلي</span><span className={profit >= 0 ? 'text-emerald-600' : 'text-red-600'}>{fmt(profit)}</span></div>
+                    ); })()}
                   </div>
                 </div>
 
