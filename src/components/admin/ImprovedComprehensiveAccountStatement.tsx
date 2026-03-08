@@ -1617,7 +1617,207 @@ const ImprovedComprehensiveAccountStatement = () => {
         </Card>
       )}
 
-      {/* Edit Dialog */}
+      {/* ======= SECTION: تسجيل التكلفة ======= */}
+      {activeSection === 'register_cost' && (
+        <div className="space-y-4">
+          {/* Type Toggle */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => setCostRegType('cost')}
+              className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border-2 font-medium transition-all ${
+                costRegType === 'cost'
+                  ? 'border-primary bg-primary/10 text-primary'
+                  : 'border-border bg-card text-muted-foreground hover:bg-accent'
+              }`}
+            >
+              <Factory className="h-5 w-5" />
+              تكلفة إنتاج (ورشة)
+            </button>
+            <button
+              onClick={() => setCostRegType('shipping')}
+              className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border-2 font-medium transition-all ${
+                costRegType === 'shipping'
+                  ? 'border-primary bg-primary/10 text-primary'
+                  : 'border-border bg-card text-muted-foreground hover:bg-accent'
+              }`}
+            >
+              <Truck className="h-5 w-5" />
+              مصاريف شحن
+            </button>
+          </div>
+
+          {/* Form */}
+          <Card>
+            <CardContent className="p-4 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">المبلغ الإجمالي (ج.م)</Label>
+                  <Input 
+                    type="number" 
+                    placeholder="0" 
+                    value={costRegAmount}
+                    onChange={e => setCostRegAmount(e.target.value)}
+                    className="text-lg font-bold h-12"
+                  />
+                </div>
+                {costRegType === 'cost' && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">اسم الورشة</Label>
+                    <Input 
+                      placeholder="مثال: ورشة أحمد" 
+                      value={costRegWorkshop}
+                      onChange={e => setCostRegWorkshop(e.target.value)}
+                      className="h-12"
+                    />
+                  </div>
+                )}
+                <div className={`space-y-2 ${costRegType === 'shipping' ? '' : 'sm:col-span-2'}`}>
+                  <Label className="text-sm font-medium">ملاحظات</Label>
+                  <Input 
+                    placeholder={costRegType === 'cost' ? 'تفاصيل التكلفة...' : 'تفاصيل الشحن...'}
+                    value={costRegNotes}
+                    onChange={e => setCostRegNotes(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* Selected orders summary */}
+              {costRegSelectedOrders.length > 0 && parseFloat(costRegAmount) > 0 && (
+                <div className="bg-primary/5 border border-primary/20 rounded-xl p-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-primary" />
+                      <span className="text-sm font-medium">{costRegSelectedOrders.length} طلب محدد</span>
+                    </div>
+                    <div className="text-sm">
+                      <span className="text-muted-foreground">لكل طلب: </span>
+                      <span className="font-bold text-primary">{fmt(parseFloat(costRegAmount) / costRegSelectedOrders.length)}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <Button 
+                onClick={() => costRegMutation.mutate()}
+                disabled={costRegMutation.isPending || !costRegAmount || costRegSelectedOrders.length === 0}
+                className="w-full h-12 text-base font-bold"
+              >
+                {costRegMutation.isPending ? 'جاري التسجيل...' : (
+                  <>
+                    {costRegType === 'cost' ? <Factory className="h-5 w-5 ml-2" /> : <Truck className="h-5 w-5 ml-2" />}
+                    تسجيل {costRegType === 'cost' ? 'التكلفة' : 'الشحن'} على {costRegSelectedOrders.length || '...'} طلب
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Orders Selection */}
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Package className="h-5 w-5" />
+                  اختر الطلبات
+                </CardTitle>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <div className="relative flex-1 sm:w-[220px]">
+                    <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input 
+                      placeholder="بحث بالرقم أو الاسم..."
+                      value={costRegSearch}
+                      onChange={e => setCostRegSearch(e.target.value)}
+                      className="pr-9 h-9"
+                    />
+                  </div>
+                  <Button 
+                    variant="outline" size="sm"
+                    onClick={() => {
+                      if (costRegSelectedOrders.length === costRegFilteredOrders.length) {
+                        setCostRegSelectedOrders([]);
+                      } else {
+                        setCostRegSelectedOrders(costRegFilteredOrders.map(o => o.id));
+                      }
+                    }}
+                    className="whitespace-nowrap h-9"
+                  >
+                    {costRegSelectedOrders.length === costRegFilteredOrders.length && costRegFilteredOrders.length > 0
+                      ? 'إلغاء الكل' 
+                      : 'تحديد الكل'}
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="space-y-1.5 max-h-[400px] overflow-y-auto">
+                {costRegFilteredOrders.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Package className="h-10 w-10 mx-auto mb-2 opacity-40" />
+                    <p className="text-sm">لا توجد طلبات</p>
+                  </div>
+                ) : costRegFilteredOrders.map(o => {
+                  const fin = calculateOrderFinancials(o);
+                  const isSelected = costRegSelectedOrders.includes(o.id);
+                  const orderWP = workshopPayments.filter(w => w.order_id === o.id);
+                  const wpTotal = orderWP.reduce((sum, w) => sum + Number(w.cost_amount), 0);
+                  const items = o.order_items || [];
+                  const expectedCost = items.reduce((sum: number, item: any) => sum + Number(item.cost ?? 0) * Number(item.quantity ?? 1), 0);
+
+                  return (
+                    <div 
+                      key={o.id}
+                      onClick={() => {
+                        setCostRegSelectedOrders(prev => 
+                          isSelected ? prev.filter(id => id !== o.id) : [...prev, o.id]
+                        );
+                      }}
+                      className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                        isSelected 
+                          ? 'border-primary bg-primary/5 shadow-sm' 
+                          : 'border-border bg-card hover:border-muted-foreground/30 hover:bg-accent/50'
+                      }`}
+                    >
+                      {/* Checkbox indicator */}
+                      <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${
+                        isSelected ? 'bg-primary border-primary' : 'border-muted-foreground/40'
+                      }`}>
+                        {isSelected && <CheckCircle2 className="h-3.5 w-3.5 text-primary-foreground" />}
+                      </div>
+
+                      {/* Order info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-bold text-sm">{o.serial}</span>
+                          <span className="text-muted-foreground text-xs">•</span>
+                          <span className="text-sm truncate">{o.client_name}</span>
+                        </div>
+                        <div className={`flex items-center gap-3 mt-1 text-xs text-muted-foreground ${isMobile ? 'flex-wrap gap-1.5' : ''}`}>
+                          <span>الإجمالي: <span className="font-medium text-foreground">{fmt(fin.total)}</span></span>
+                          {costRegType === 'cost' && (
+                            <>
+                              <span>متوقع: <span className="font-medium text-blue-600">{fmt(expectedCost)}</span></span>
+                              {wpTotal > 0 && <span>مسجل: <span className="font-medium text-purple-600">{fmt(wpTotal)}</span></span>}
+                            </>
+                          )}
+                          {costRegType === 'shipping' && fin.shipping > 0 && (
+                            <span>شحن بالطلب: <span className="font-medium">{fmt(fin.shipping)}</span></span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Date */}
+                      <span className="text-[10px] text-muted-foreground shrink-0">
+                        {format(new Date(o.date_created), 'dd/MM', { locale: ar })}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       <Dialog open={editTransactionDialog} onOpenChange={setEditTransactionDialog}>
         <DialogContent>
           <DialogHeader>
