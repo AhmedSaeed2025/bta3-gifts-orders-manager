@@ -521,6 +521,21 @@ const DetailedOrdersReport = () => {
                   </SelectContent>
                 </Select>
               </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">الحالة المالية</label>
+                <Select value={financialFilter} onValueChange={setFinancialFilter}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">الكل</SelectItem>
+                    <SelectItem value="uncollected">تحصيل متبقي</SelectItem>
+                    <SelectItem value="unpaid_cost">تكلفة غير مسددة</SelectItem>
+                    <SelectItem value="fully_paid">مدفوع بالكامل</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {/* Active filters summary */}
