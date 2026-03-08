@@ -445,35 +445,34 @@ const ImprovedComprehensiveAccountStatement = () => {
       const { error } = await supabase.from('transactions').delete().eq('id', id);
       if (error) throw error;
 
-      // If it's a cost expense, also delete the matching workshop_payment
-      if (transaction && transaction.transaction_type === 'expense' && transaction.description?.includes('[cost]')) {
+      if (transaction && transaction.transaction_type === 'expense') {
         const orderSerial = transaction.order_serial;
         const amount = transaction.amount;
-        
-        // Find the order to get the order_id
-        const order = allOrders.find(o => o.serial === orderSerial);
-        if (order) {
-          // Find matching workshop payment by order_id and amount
-          const matchingWP = allWorkshopPayments.find(w => 
-            w.order_id === order.id && Number(w.cost_amount) === amount
-          );
-          if (matchingWP) {
-            await supabase.from('workshop_payments').delete().eq('id', matchingWP.id);
-          }
-        }
-      }
+        const isCost = transaction.description?.includes('[cost]');
+        const isShipping = transaction.description?.includes('[shipping]');
 
-      // If it's a shipping expense, also delete matching workshop_payment for shipping
-      if (transaction && transaction.transaction_type === 'expense' && transaction.description?.includes('[shipping]')) {
-        const orderSerial = transaction.order_serial;
-        const amount = transaction.amount;
-        const order = allOrders.find(o => o.serial === orderSerial);
-        if (order) {
-          const matchingWP = allWorkshopPayments.find(w => 
-            w.order_id === order.id && w.product_name === 'shipping_cost' && Number(w.cost_amount) === amount
-          );
-          if (matchingWP) {
-            await supabase.from('workshop_payments').delete().eq('id', matchingWP.id);
+        if (isCost || isShipping) {
+          if (orderSerial === 'UNLINKED') {
+            // For UNLINKED transactions, find matching workshop_payment with null order_id
+            const matchingWP = allWorkshopPayments.find(w => 
+              !w.order_id && Number(w.cost_amount) === amount &&
+              (isShipping ? w.product_name === 'shipping_cost' : w.product_name !== 'shipping_cost')
+            );
+            if (matchingWP) {
+              await supabase.from('workshop_payments').delete().eq('id', matchingWP.id);
+            }
+          } else {
+            // For linked transactions, find by order_id
+            const order = allOrders.find(o => o.serial === orderSerial);
+            if (order) {
+              const matchingWP = allWorkshopPayments.find(w => 
+                w.order_id === order.id && Number(w.cost_amount) === amount &&
+                (isShipping ? w.product_name === 'shipping_cost' : true)
+              );
+              if (matchingWP) {
+                await supabase.from('workshop_payments').delete().eq('id', matchingWP.id);
+              }
+            }
           }
         }
       }
