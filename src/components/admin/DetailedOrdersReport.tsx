@@ -188,6 +188,7 @@ const DetailedOrdersReport = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
       queryClient.invalidateQueries({ queryKey: ['admin-orders-enhanced'] });
       queryClient.invalidateQueries({ queryKey: ['printing-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-orders'] });
     } catch (error) {
       console.error('Error updating status:', error);
       toast.error('حدث خطأ في تحديث حالة الطلب');
@@ -235,6 +236,10 @@ const DetailedOrdersReport = () => {
       queryClient.invalidateQueries({ queryKey: ['printing-orders'] });
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['summary-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-workshop-payments'] });
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-customer-payments'] });
       toast.success('تم حذف الطلب بنجاح');
     },
     onError: (error: any) => {
@@ -336,6 +341,8 @@ const DetailedOrdersReport = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
       queryClient.invalidateQueries({ queryKey: ['admin-orders-enhanced'] });
       queryClient.invalidateQueries({ queryKey: ['admin-orders-for-modern-statement'] });
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-transactions'] });
       setPaymentDialogOpen(false);
     } catch (error) {
       console.error('Error adding payment:', error);
