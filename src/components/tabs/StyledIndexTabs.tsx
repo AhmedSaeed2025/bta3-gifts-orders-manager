@@ -65,12 +65,25 @@ const StyledIndexTabs = () => {
       const saved = localStorage.getItem(FILTER_STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        return {
-          startDate: parsed.startDate ? new Date(parsed.startDate) : undefined,
-          endDate: parsed.endDate ? new Date(parsed.endDate) : undefined,
-          selectedYear: parsed.selectedYear || "",
-          selectedMonth: parsed.selectedMonth || ""
-        };
+        let sd = parsed.startDate ? new Date(parsed.startDate) : undefined;
+        let ed = parsed.endDate ? new Date(parsed.endDate) : undefined;
+        const sy = parsed.selectedYear || "";
+        const sm = parsed.selectedMonth || "";
+        
+        // Recompute dates from year/month if dates are missing but year is set
+        if (!sd && !ed && sy && sy !== "all") {
+          const yearNum = parseInt(sy);
+          if (sm) {
+            const monthNum = parseInt(sm);
+            sd = startOfMonth(new Date(yearNum, monthNum, 1));
+            ed = endOfMonth(new Date(yearNum, monthNum, 1));
+          } else {
+            sd = startOfYear(new Date(yearNum, 0, 1));
+            ed = endOfYear(new Date(yearNum, 0, 1));
+          }
+        }
+        
+        return { startDate: sd, endDate: ed, selectedYear: sy, selectedMonth: sm };
       }
     } catch (e) {
       console.error('Error loading saved filter:', e);
