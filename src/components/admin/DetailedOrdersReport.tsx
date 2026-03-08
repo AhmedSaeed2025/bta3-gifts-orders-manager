@@ -173,8 +173,21 @@ const DetailedOrdersReport = () => {
     const orderDate = new Date(order.date_created);
     const matchesDateFrom = !startDate || orderDate >= startDate;
     const matchesDateTo = !endDate || orderDate <= endDate;
+
+    // Financial status filter
+    let matchesFinancial = true;
+    if (financialFilter === 'uncollected') {
+      const fin = calculateOrderFinancials(order);
+      matchesFinancial = fin.remaining > 0;
+    } else if (financialFilter === 'unpaid_cost') {
+      const wp = workshopByOrder[order.id];
+      matchesFinancial = !wp || wp.paidProduction <= 0;
+    } else if (financialFilter === 'fully_paid') {
+      const fin = calculateOrderFinancials(order);
+      matchesFinancial = fin.remaining === 0;
+    }
     
-    return matchesSearch && matchesStatus && matchesPayment && matchesDelivery && matchesDateFrom && matchesDateTo;
+    return matchesSearch && matchesStatus && matchesPayment && matchesDelivery && matchesDateFrom && matchesDateTo && matchesFinancial;
   });
 
   // Calculate summary statistics
