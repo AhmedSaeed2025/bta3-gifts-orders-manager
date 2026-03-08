@@ -2390,9 +2390,27 @@ const ImprovedComprehensiveAccountStatement = () => {
                             <span className="font-bold text-foreground">{fmt(totalAmount)}</span>
                           </div>
                         </div>
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <span>لكل طلب ({linkSelectedOrders.length} طلب):</span>
-                          <span className="font-bold text-foreground">{fmt(totalAmount / linkSelectedOrders.length)}</span>
+                        <div className="text-[10px] text-muted-foreground font-medium mt-1">التوزيع حسب نسبة التكلفة:</div>
+                        <div className="space-y-1 max-h-[150px] overflow-y-auto">
+                          {selectedOrdersData.map(o => {
+                            const orderExpected = isShippingType 
+                              ? calculateOrderFinancials(o!).shipping
+                              : (o!.order_items || []).reduce((s: number, item: any) => s + Number(item.cost ?? 0) * Number(item.quantity ?? 1), 0);
+                            const totalExp = isShippingType ? totalOrderShipping : totalOrderCost;
+                            const share = totalExp > 0 ? (orderExpected / totalExp) * totalAmount : totalAmount / selectedOrdersData.length;
+                            return (
+                              <div key={o!.id} className="flex items-center justify-between text-xs bg-card rounded-md px-2 py-1.5 border border-border/30">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-mono text-[10px] text-muted-foreground">{o!.serial}</span>
+                                  <span className="text-muted-foreground truncate max-w-[100px]">{o!.client_name}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-muted-foreground text-[10px]">({fmt(orderExpected)})</span>
+                                  <span className="font-bold text-primary">{fmt(Math.round(share * 100) / 100)}</span>
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     )}
