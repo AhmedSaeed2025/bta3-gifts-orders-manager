@@ -2465,12 +2465,27 @@ const ImprovedComprehensiveAccountStatement = () => {
                           </div>
                           <div className={`flex items-center gap-3 mt-1 text-xs text-muted-foreground ${isMobile ? 'flex-wrap gap-1.5' : ''}`}>
                             <span>الإجمالي: <span className="font-medium text-foreground">{fmt(fin.total)}</span></span>
-                            {isShippingLink && fin.shipping > 0 && (
-                              <span>شحن بالطلب: <span className="font-medium text-blue-600">{fmt(fin.shipping)}</span></span>
-                            )}
-                            {!isShippingLink && wpTotal > 0 && (
-                              <span>مدفوع للورش: <span className="font-medium text-purple-600">{fmt(wpTotal)}</span></span>
-                            )}
+                            {(() => {
+                              const orderItems = o.order_items || [];
+                              const expectedCost = orderItems.reduce((s: number, item: any) => s + Number(item.cost ?? 0) * Number(item.quantity ?? 1), 0);
+                              const existingProductionWP = orderWP.filter(w => w.product_name !== 'shipping_cost').reduce((s, w) => s + Number(w.cost_amount), 0);
+                              const existingShippingWP = orderWP.filter(w => w.product_name === 'shipping_cost').reduce((s, w) => s + Number(w.cost_amount), 0);
+                              return (
+                                <>
+                                  {isShippingLink ? (
+                                    <>
+                                      <span>شحن بالطلب: <span className="font-medium text-blue-600">{fmt(fin.shipping)}</span></span>
+                                      {existingShippingWP > 0 && <span>مدفوع شحن: <span className="font-medium text-cyan-600">{fmt(existingShippingWP)}</span></span>}
+                                    </>
+                                  ) : (
+                                    <>
+                                      <span>تكلفة بالطلب: <span className="font-medium text-orange-600">{fmt(expectedCost)}</span></span>
+                                      {existingProductionWP > 0 && <span>مدفوع إنتاج: <span className="font-medium text-teal-600">{fmt(existingProductionWP)}</span></span>}
+                                    </>
+                                  )}
+                                </>
+                              );
+                            })()}
                           </div>
                         </div>
                         <span className="text-[10px] text-muted-foreground shrink-0">
