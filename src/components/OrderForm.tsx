@@ -8,7 +8,7 @@ import CustomerDataForm from "./order/CustomerDataForm";
 import ImprovedItemAddForm from "./order/ImprovedItemAddForm";
 import ItemsTable from "./order/ItemsTable";
 import NotesField from "./order/NotesField";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -19,6 +19,7 @@ interface OrderFormProps {
 const OrderForm = ({ editingOrder }: OrderFormProps) => {
   const { addOrder, updateOrder } = useSupabaseOrders();
   const navigate = useNavigate();
+  const location = useLocation();
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   
@@ -175,7 +176,14 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
         await updateOrder(editingOrder.serial, orderData);
         queryClient.invalidateQueries({ queryKey: ['detailed-orders-report'] });
         queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
-        navigate(-1);
+
+        const navigationState = location.state as { returnTo?: string; focusSerial?: string } | null;
+        if (navigationState?.returnTo === 'orders-report') {
+          const focusSerial = navigationState.focusSerial || editingOrder.serial;
+          navigate(`/legacy-admin?tab=orders-report&focusSerial=${encodeURIComponent(focusSerial)}`, { replace: true });
+        } else {
+          navigate(-1);
+        }
       } else {
         await addOrder(orderData);
         queryClient.invalidateQueries({ queryKey: ['detailed-orders-report'] });

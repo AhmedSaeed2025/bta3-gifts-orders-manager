@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,7 +40,7 @@ import {
   Check
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import OrderPaymentDialog from "./OrderPaymentDialog";
 import InvoiceTemplateSelector from "@/components/invoice/InvoiceTemplateSelector";
 import { toast } from "sonner";
@@ -49,6 +49,7 @@ const DetailedOrdersReport = () => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const { getStatusOptions, getStatusLabel, getStatusColor } = useOrderStatuses();
   const { startDate, endDate } = useDateFilter();
@@ -66,6 +67,15 @@ const DetailedOrdersReport = () => {
 
   const selectedFinancials = selectedOrder ? calculateOrderFinancials(selectedOrder) : null;
   const statusOptions = getStatusOptions();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const focusSerial = params.get('focusSerial');
+
+    if (focusSerial) {
+      setSearchTerm(focusSerial);
+    }
+  }, [location.search]);
 
   const copyToClipboard = (text: string, fieldKey: string) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -237,7 +247,12 @@ const DetailedOrdersReport = () => {
   };
 
   const handleEditOrder = (order: any) => {
-    navigate(`/edit-order/${order.serial}`);
+    navigate(`/edit-order/${order.serial}`, {
+      state: {
+        returnTo: 'orders-report',
+        focusSerial: order.serial,
+      },
+    });
   };
 
   const handlePayment = async (amount: number, notes?: string, updateOrderCost?: boolean) => {

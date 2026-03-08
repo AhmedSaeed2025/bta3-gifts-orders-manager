@@ -35,6 +35,7 @@ import AdminSettings from "@/pages/admin/AdminSettings";
 import PrintingReport from "@/components/admin/PrintingReport";
 import SummaryAccountReport from "@/components/admin/SummaryAccountReport";
 import { getTabsSettings } from "@/components/admin/settings/TabsManagementSettings";
+import { useLocation } from "react-router-dom";
 
 // Create date filter context
 interface DateFilterContextType {
@@ -56,9 +57,9 @@ const FILTER_STORAGE_KEY = 'app_date_filter';
 
 const StyledIndexTabs = () => {
   const isMobile = useIsMobile();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState("dashboard");
-  
-  // Load saved filter from localStorage
+
   const getSavedFilter = () => {
     try {
       const saved = localStorage.getItem(FILTER_STORAGE_KEY);
@@ -191,6 +192,14 @@ const StyledIndexTabs = () => {
       icon: componentMap[t.id].icon,
       component: componentMap[t.id].component,
     }));
+
+  // Open requested tab from URL (e.g. /legacy-admin?tab=orders-report)
+  useEffect(() => {
+    const tabFromUrl = new URLSearchParams(location.search).get("tab");
+    if (tabFromUrl && componentMap[tabFromUrl]) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [location.search]);
 
   return (
     <DateFilterContext.Provider value={{ startDate, endDate, setDateRange }}>
