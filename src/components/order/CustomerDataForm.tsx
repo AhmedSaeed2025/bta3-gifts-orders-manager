@@ -145,7 +145,7 @@ const CustomerDataForm: React.FC<CustomerDataFormProps> = ({
             <Label className="text-xs text-muted-foreground">طريقة التوصيل</Label>
             <Select
               value={customerData.deliveryMethod}
-              onValueChange={(value) => onSelectChange("deliveryMethod", value)}
+              onValueChange={handleDeliveryMethodChange}
             >
               <SelectTrigger className="h-9 text-sm">
                 <div className="flex items-center gap-2">
