@@ -68,6 +68,37 @@ const DetailedOrdersReport = () => {
   const selectedFinancials = selectedOrder ? calculateOrderFinancials(selectedOrder) : null;
   const statusOptions = getStatusOptions();
 
+  // Fetch workshop payments to show paid production vs shipping per order
+  const { data: workshopPayments = [] } = useQuery({
+    queryKey: ['detailed-report-workshop-payments'],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from('workshop_payments')
+        .select('order_id, cost_amount, product_name')
+        .eq('user_id', user.id);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user
+  });
+
+  // Build a map: orderId -> { paidProduction, paidShipping }
+  const workshopByOrder = React.useMemo(() => {
+    const map: Record<string, { paidProduction: number; paidShipping: number }> = {};
+    workshopPayments.forEach((wp: any) => {
+      const oid = wp.order_id;
+      if (!oid) return;
+      if (!map[oid]) map[oid] = { paidProduction: 0, paidShipping: 0 };
+      if (wp.product_name === 'shipping_cost') {
+        map[oid].paidShipping += Number(wp.cost_amount || 0);
+      } else {
+        map[oid].paidProduction += Number(wp.cost_amount || 0);
+      }
+    });
+    return map;
+  }, [workshopPayments]);
+
 
   const copyToClipboard = (text: string, fieldKey: string) => {
     navigator.clipboard.writeText(text).then(() => {
