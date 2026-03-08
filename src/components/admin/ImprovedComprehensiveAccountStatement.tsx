@@ -241,8 +241,8 @@ const ImprovedComprehensiveAccountStatement = () => {
     // إجمالي المحصل فعلياً (عربون + دفعات + تحصيلات يدوية)
     const totalCollected = totalOrderPaymentsReceived + manualIncome;
     
-    // إجمالي المدفوع فعلياً (ورش + شحن + مصاريف)
-    const totalPaidOut = actualWorkshopPaid + manualExpenses;
+    // إجمالي المدفوع فعلياً (ورش + شحن مسجل بالورش + مصاريف يدوية)
+    const totalPaidOut = actualWorkshopPaid + actualShippingWPPaid + manualExpenses;
     
     // الرصيد النقدي = المحصل - المدفوع
     const cashBalance = totalCollected - totalPaidOut;
