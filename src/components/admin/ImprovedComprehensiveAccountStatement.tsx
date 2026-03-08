@@ -68,7 +68,8 @@ const ImprovedComprehensiveAccountStatement = () => {
   
   // Link payments tab state
   const [linkSearch, setLinkSearch] = useState('');
-  const [linkSelectedPayment, setLinkSelectedPayment] = useState<string | null>(null);
+  const [linkSelectedPayments, setLinkSelectedPayments] = useState<string[]>([]);
+  const [linkSelectedOrders, setLinkSelectedOrders] = useState<string[]>([]);
   const [linkOrderSearch, setLinkOrderSearch] = useState('');
   
   const [newTransaction, setNewTransaction] = useState({
@@ -625,20 +626,27 @@ const ImprovedComprehensiveAccountStatement = () => {
     return filtered.sort((a, b) => new Date(b.date_created).getTime() - new Date(a.date_created).getTime());
   }, [orders, linkOrderSearch]);
 
-  // Link payment mutation
+  // Link payment mutation - distributes selected payments across selected orders
   const linkPaymentMutation = useMutation({
-    mutationFn: async ({ paymentId, orderId }: { paymentId: string; orderId: string }) => {
-      const { error } = await supabase
-        .from('workshop_payments')
-        .update({ order_id: orderId })
-        .eq('id', paymentId);
-      if (error) throw error;
+    mutationFn: async ({ paymentIds, orderIds }: { paymentIds: string[]; orderIds: string[] }) => {
+      // Distribute payments evenly across orders
+      for (const paymentId of paymentIds) {
+        const targetOrderId = orderIds.length === 1 
+          ? orderIds[0] 
+          : orderIds[paymentIds.indexOf(paymentId) % orderIds.length];
+        const { error } = await supabase
+          .from('workshop_payments')
+          .update({ order_id: targetOrderId })
+          .eq('id', paymentId);
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comprehensive-workshop-payments'] });
       queryClient.invalidateQueries({ queryKey: ['comprehensive-orders'] });
-      toast.success('تم ربط الدفعة بالطلب بنجاح');
-      setLinkSelectedPayment(null);
+      toast.success(`تم ربط ${linkSelectedPayments.length} دفعة بـ ${linkSelectedOrders.length} طلب بنجاح`);
+      setLinkSelectedPayments([]);
+      setLinkSelectedOrders([]);
       setLinkOrderSearch('');
     },
     onError: () => toast.error('حدث خطأ في ربط الدفعة')
@@ -2084,13 +2092,33 @@ const ImprovedComprehensiveAccountStatement = () => {
         <div className="space-y-4">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Link2 className="h-5 w-5" />
-                دفعات غير مربوطة بطلبات
-              </CardTitle>
-              <p className="text-xs text-muted-foreground mt-1">
-                هذه الدفعات تم تسجيلها ولكن لم يتم ربطها بطلبات محددة. اختر دفعة ثم اربطها بالطلب المناسب.
-              </p>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Link2 className="h-5 w-5" />
+                    دفعات غير مربوطة بطلبات
+                  </CardTitle>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    اختر الدفعات ثم اختر الطلبات لربطها معاً
+                  </p>
+                </div>
+                {filteredUnlinkedPayments.length > 0 && (
+                  <Button 
+                    variant="outline" size="sm"
+                    onClick={() => {
+                      if (linkSelectedPayments.length === filteredUnlinkedPayments.length) {
+                        setLinkSelectedPayments([]);
+                      } else {
+                        setLinkSelectedPayments(filteredUnlinkedPayments.map(w => w.id));
+                      }
+                    }}
+                    className="whitespace-nowrap h-9"
+                  >
+                    {linkSelectedPayments.length === filteredUnlinkedPayments.length && filteredUnlinkedPayments.length > 0
+                      ? 'إلغاء الكل' : 'تحديد الكل'}
+                  </Button>
+                )}
+              </div>
               <div className="relative mt-2">
                 <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -2111,18 +2139,20 @@ const ImprovedComprehensiveAccountStatement = () => {
               ) : (
                 <div className="space-y-2 max-h-[300px] overflow-y-auto">
                   {filteredUnlinkedPayments.map(w => {
-                    const isSelected = linkSelectedPayment === w.id;
+                    const isSelected = linkSelectedPayments.includes(w.id);
                     return (
                       <div
                         key={w.id}
-                        onClick={() => setLinkSelectedPayment(isSelected ? null : w.id)}
+                        onClick={() => setLinkSelectedPayments(prev => 
+                          isSelected ? prev.filter(id => id !== w.id) : [...prev, w.id]
+                        )}
                         className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${
                           isSelected
                             ? 'border-primary bg-primary/5 shadow-sm'
                             : 'border-border bg-card hover:border-muted-foreground/30 hover:bg-accent/50'
                         }`}
                       >
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
+                        <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${
                           isSelected ? 'bg-primary border-primary' : 'border-muted-foreground/40'
                         }`}>
                           {isSelected && <CheckCircle2 className="h-3.5 w-3.5 text-primary-foreground" />}
@@ -2150,25 +2180,52 @@ const ImprovedComprehensiveAccountStatement = () => {
                   })}
                 </div>
               )}
+
+              {/* Selected payments summary */}
+              {linkSelectedPayments.length > 0 && (() => {
+                const selectedData = linkSelectedPayments.map(id => filteredUnlinkedPayments.find(w => w.id === id)).filter(Boolean);
+                const totalAmount = selectedData.reduce((sum, w) => sum + Number(w!.cost_amount), 0);
+                return (
+                  <div className="mt-3 bg-primary/5 border border-primary/20 rounded-xl p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-primary" />
+                        <span className="text-sm font-bold">{linkSelectedPayments.length} دفعة محددة</span>
+                      </div>
+                      <span className="font-bold text-primary">{fmt(totalAmount)}</span>
+                    </div>
+                    {linkSelectedOrders.length > 0 && (
+                      <div className="flex items-center justify-between text-xs text-muted-foreground pt-1 border-t border-primary/20">
+                        <span>لكل طلب:</span>
+                        <span className="font-bold text-foreground">{fmt(totalAmount / linkSelectedOrders.length)}</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </CardContent>
           </Card>
 
           {/* Order selection for linking */}
-          {linkSelectedPayment && (
+          {linkSelectedPayments.length > 0 && (
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Package className="h-5 w-5" />
-                  اختر الطلب لربط الدفعة به
-                </CardTitle>
-                <div className="relative mt-2">
-                  <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="بحث بالرقم أو اسم العميل..."
-                    value={linkOrderSearch}
-                    onChange={e => setLinkOrderSearch(e.target.value)}
-                    className="pr-9 h-9"
-                  />
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Package className="h-5 w-5" />
+                    اختر الطلبات للربط
+                  </CardTitle>
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <div className="relative flex-1 sm:w-[220px]">
+                      <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="بحث بالرقم أو اسم العميل..."
+                        value={linkOrderSearch}
+                        onChange={e => setLinkOrderSearch(e.target.value)}
+                        className="pr-9 h-9"
+                      />
+                    </div>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="pt-0">
@@ -2177,17 +2234,25 @@ const ImprovedComprehensiveAccountStatement = () => {
                     const fin = calculateOrderFinancials(o);
                     const orderWP = workshopPayments.filter(w => w.order_id === o.id);
                     const wpTotal = orderWP.reduce((sum, w) => sum + Number(w.cost_amount), 0);
+                    const isSelected = linkSelectedOrders.includes(o.id);
                     
                     return (
                       <div
                         key={o.id}
-                        onClick={() => {
-                          if (confirm(`هل تريد ربط الدفعة بالطلب ${o.serial} - ${o.client_name}؟`))
-                            linkPaymentMutation.mutate({ paymentId: linkSelectedPayment, orderId: o.id });
-                        }}
-                        className="flex items-center gap-3 p-3 rounded-xl border-2 border-border bg-card cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all"
+                        onClick={() => setLinkSelectedOrders(prev =>
+                          isSelected ? prev.filter(id => id !== o.id) : [...prev, o.id]
+                        )}
+                        className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                          isSelected 
+                            ? 'border-primary bg-primary/5 shadow-sm'
+                            : 'border-border bg-card hover:border-muted-foreground/30 hover:bg-accent/50'
+                        }`}
                       >
-                        <Link2 className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${
+                          isSelected ? 'bg-primary border-primary' : 'border-muted-foreground/40'
+                        }`}>
+                          {isSelected && <CheckCircle2 className="h-3.5 w-3.5 text-primary-foreground" />}
+                        </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-bold text-sm">{o.serial}</span>
@@ -2206,6 +2271,25 @@ const ImprovedComprehensiveAccountStatement = () => {
                     );
                   })}
                 </div>
+
+                {/* Link button */}
+                {linkSelectedOrders.length > 0 && (
+                  <Button
+                    onClick={() => {
+                      if (confirm(`هل تريد ربط ${linkSelectedPayments.length} دفعة بـ ${linkSelectedOrders.length} طلب؟`))
+                        linkPaymentMutation.mutate({ paymentIds: linkSelectedPayments, orderIds: linkSelectedOrders });
+                    }}
+                    disabled={linkPaymentMutation.isPending}
+                    className="w-full h-12 text-base font-bold mt-4"
+                  >
+                    {linkPaymentMutation.isPending ? 'جاري الربط...' : (
+                      <>
+                        <Link2 className="h-5 w-5 ml-2" />
+                        ربط {linkSelectedPayments.length} دفعة بـ {linkSelectedOrders.length} طلب
+                      </>
+                    )}
+                  </Button>
+                )}
               </CardContent>
             </Card>
           )}
