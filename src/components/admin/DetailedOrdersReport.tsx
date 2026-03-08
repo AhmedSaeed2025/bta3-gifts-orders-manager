@@ -604,7 +604,7 @@ const DetailedOrdersReport = () => {
               const orderCost = total - (order.profit || 0) - shipping;
               
               return (
-                <Card key={order.id} className="border-l-4 border-l-primary overflow-hidden">
+                <Card key={order.id} id={`order-card-${order.serial}`} className="border-l-4 border-l-primary overflow-hidden transition-all duration-500">
                   <CardContent className="p-0">
                     {/* Top Section: Header + Actions */}
                     <div className={`flex ${isMobile ? 'flex-col' : 'flex-row items-start justify-between'} gap-3 p-4 pb-3`}>
