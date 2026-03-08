@@ -31,37 +31,29 @@ const CategoryProductSizeSelector: React.FC<CategoryProductSizeSelectorProps> = 
   const [selectedProductId, setSelectedProductId] = useState(currentSelection?.productId || "");
   const [selectedSize, setSelectedSize] = useState(currentSelection?.size || "");
 
-  // Fetch categories
   const { data: categories = [] } = useQuery({
     queryKey: ['categories-for-orders'],
     queryFn: async () => {
       if (!user) return [];
-      
       const { data, error } = await supabase
         .from('categories')
         .select('*')
         .eq('user_id', user.id)
         .eq('is_active', true)
         .order('name');
-      
       if (error) throw error;
       return data || [];
     },
     enabled: !!user
   });
 
-  // Fetch products for selected category
   const { data: products = [] } = useQuery({
     queryKey: ['products-for-category', selectedCategoryId],
     queryFn: async () => {
       if (!user || !selectedCategoryId) return [];
-      
       let query = supabase
         .from('products')
-        .select(`
-          *,
-          product_sizes (*)
-        `)
+        .select(`*, product_sizes (*)`)
         .eq('user_id', user.id)
         .eq('is_active', true);
 
@@ -72,18 +64,15 @@ const CategoryProductSizeSelector: React.FC<CategoryProductSizeSelectorProps> = 
       }
 
       const { data, error } = await query.order('name');
-      
       if (error) throw error;
       return data || [];
     },
     enabled: !!user && !!selectedCategoryId
   });
 
-  // Get sizes for selected product
   const selectedProduct = products.find(p => p.id === selectedProductId);
   const availableSizes = selectedProduct?.product_sizes || [];
 
-  // Reset selections when category changes
   useEffect(() => {
     if (selectedCategoryId && selectedCategoryId !== currentSelection?.categoryId) {
       setSelectedProductId("");
@@ -92,7 +81,6 @@ const CategoryProductSizeSelector: React.FC<CategoryProductSizeSelectorProps> = 
     }
   }, [selectedCategoryId]);
 
-  // Reset size when product changes
   useEffect(() => {
     if (selectedProductId && selectedProductId !== currentSelection?.productId) {
       setSelectedSize("");
@@ -100,7 +88,6 @@ const CategoryProductSizeSelector: React.FC<CategoryProductSizeSelectorProps> = 
     }
   }, [selectedProductId]);
 
-  // Update selection when all values are selected
   useEffect(() => {
     if (selectedCategoryId && selectedProductId && selectedSize && selectedProduct) {
       const sizeData = availableSizes.find(s => s.size === selectedSize);
@@ -118,11 +105,11 @@ const CategoryProductSizeSelector: React.FC<CategoryProductSizeSelectorProps> = 
   }, [selectedCategoryId, selectedProductId, selectedSize, selectedProduct, availableSizes]);
 
   return (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <Label>الفئة</Label>
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="space-y-1.5">
+        <Label className="text-xs text-muted-foreground">الفئة</Label>
         <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
-          <SelectTrigger>
+          <SelectTrigger className="h-9 text-sm">
             <SelectValue placeholder="اختر الفئة" />
           </SelectTrigger>
           <SelectContent>
@@ -136,14 +123,14 @@ const CategoryProductSizeSelector: React.FC<CategoryProductSizeSelectorProps> = 
         </Select>
       </div>
 
-      <div className="space-y-2">
-        <Label>المنتج</Label>
+      <div className="space-y-1.5">
+        <Label className="text-xs text-muted-foreground">المنتج</Label>
         <Select 
           value={selectedProductId} 
           onValueChange={setSelectedProductId}
           disabled={!selectedCategoryId}
         >
-          <SelectTrigger>
+          <SelectTrigger className="h-9 text-sm">
             <SelectValue placeholder="اختر المنتج" />
           </SelectTrigger>
           <SelectContent>
@@ -156,14 +143,14 @@ const CategoryProductSizeSelector: React.FC<CategoryProductSizeSelectorProps> = 
         </Select>
       </div>
 
-      <div className="space-y-2">
-        <Label>المقاس</Label>
+      <div className="space-y-1.5">
+        <Label className="text-xs text-muted-foreground">المقاس</Label>
         <Select 
           value={selectedSize} 
           onValueChange={setSelectedSize}
           disabled={!selectedProductId || availableSizes.length === 0}
         >
-          <SelectTrigger>
+          <SelectTrigger className="h-9 text-sm">
             <SelectValue placeholder="اختر المقاس" />
           </SelectTrigger>
           <SelectContent>

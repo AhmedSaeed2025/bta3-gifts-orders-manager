@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { useSupabaseOrders } from "@/context/SupabaseOrderContext";
 import { OrderItem, Order } from "@/types";
 import CustomerDataForm from "./order/CustomerDataForm";
@@ -9,8 +9,8 @@ import ImprovedItemAddForm from "./order/ImprovedItemAddForm";
 import ItemsTable from "./order/ItemsTable";
 import NotesField from "./order/NotesField";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { useQueryClient } from "@tanstack/react-query";
+import { FileText, Send, Loader2 } from "lucide-react";
 
 interface OrderFormProps {
   editingOrder?: Order;
@@ -20,7 +20,6 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
   const { addOrder, updateOrder } = useSupabaseOrders();
   const navigate = useNavigate();
   const location = useLocation();
-  const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   
   const [customerData, setCustomerData] = useState({
@@ -49,16 +48,13 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
   const [notes, setNotes] = useState<string>(editingOrder?.notes || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // المجموع الفرعي = مجموع (السعر - الخصم) × الكمية لكل صنف
   const subtotal = items.reduce((sum, item) => {
     const discountedPrice = item.price - (item.itemDiscount || 0);
     return sum + discountedPrice * item.quantity;
   }, 0);
   
   const totalCost = items.reduce((sum, item) => sum + item.cost * item.quantity, 0);
-  // الإجمالي الكلي = المجموع الفرعي + الشحن - الخصم
   const totalAmount = subtotal + customerData.shippingCost - customerData.discount;
-  // المبلغ المتبقي = الإجمالي - العربون
   const remainingAmount = totalAmount - customerData.deposit;
   const netProfit = subtotal - totalCost - customerData.discount;
 
@@ -79,70 +75,31 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
   };
 
   const handleCustomerSelectChange = (name: string, value: string) => {
-    setCustomerData(prev => ({
-      ...prev,
-      [name]: value,
-    }));
+    setCustomerData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleProductSelectionChange = (selection: {
-    categoryId: string;
-    productId: string;
-    productName: string;
-    size: string;
-    cost: number;
-    price: number;
+    categoryId: string; productId: string; productName: string; size: string; cost: number; price: number;
   } | null) => {
     if (selection) {
-      setCurrentItem(prev => ({
-        ...prev,
-        productType: selection.productName,
-        size: selection.size,
-        cost: selection.cost,
-        price: selection.price
-      }));
+      setCurrentItem(prev => ({ ...prev, productType: selection.productName, size: selection.size, cost: selection.cost, price: selection.price }));
     } else {
-      setCurrentItem(prev => ({
-        ...prev,
-        productType: "",
-        size: "",
-        cost: 0,
-        price: 0
-      }));
+      setCurrentItem(prev => ({ ...prev, productType: "", size: "", cost: 0, price: 0 }));
     }
   };
 
   const updateItem = (index: number, updatedItem: OrderItem) => {
     const discountedPrice = updatedItem.price - (updatedItem.itemDiscount || 0);
     const profit = (discountedPrice - updatedItem.cost) * updatedItem.quantity;
-    
-    setItems(prev => prev.map((item, i) => 
-      i === index ? { ...updatedItem, profit } : item
-    ));
+    setItems(prev => prev.map((item, i) => i === index ? { ...updatedItem, profit } : item));
   };
   
   const addItem = () => {
-    if (!currentItem.productType || !currentItem.size || currentItem.quantity < 1) {
-      return;
-    }
-    
+    if (!currentItem.productType || !currentItem.size || currentItem.quantity < 1) return;
     const discountedPrice = currentItem.price - (currentItem.itemDiscount || 0);
     const profit = (discountedPrice - currentItem.cost) * currentItem.quantity;
-    
-    setItems(prev => [...prev, { 
-      ...currentItem, 
-      profit,
-      itemDiscount: currentItem.itemDiscount || 0
-    }]);
-    
-    setCurrentItem({
-      productType: "",
-      size: "",
-      quantity: 1,
-      cost: 0,
-      price: 0,
-      itemDiscount: 0,
-    });
+    setItems(prev => [...prev, { ...currentItem, profit, itemDiscount: currentItem.itemDiscount || 0 }]);
+    setCurrentItem({ productType: "", size: "", quantity: 1, cost: 0, price: 0, itemDiscount: 0 });
   };
   
   const removeItem = (index: number) => {
@@ -151,90 +108,79 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
-    if (items.length === 0) {
-      alert("يجب إضافة منتج واحد على الأقل");
-      return;
-    }
-    
+    if (items.length === 0) { alert("يجب إضافة منتج واحد على الأقل"); return; }
     setIsSubmitting(true);
-    
     try {
       const orderData = {
         ...customerData,
         address: customerData.address || "-",
         governorate: customerData.governorate || "-",
-        items,
-        total: totalAmount,
-        remaining_amount: remainingAmount,
-        profit: netProfit,
-        status: editingOrder?.status || "pending",
-        discount: customerData.discount,
-        notes: notes.trim() || undefined
+        items, total: totalAmount, remaining_amount: remainingAmount,
+        profit: netProfit, status: editingOrder?.status || "pending",
+        discount: customerData.discount, notes: notes.trim() || undefined
       };
 
       if (editingOrder) {
         await updateOrder(editingOrder.serial, orderData);
         queryClient.invalidateQueries({ queryKey: ['detailed-orders-report'] });
         queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
-
         const navigationState = location.state as { returnTo?: string; focusSerial?: string } | null;
         if (navigationState?.returnTo === 'orders-report') {
           const focusSerial = navigationState.focusSerial || editingOrder.serial;
           navigate(`/legacy-admin?tab=orders-report&focusSerial=${encodeURIComponent(focusSerial)}`, { replace: true });
-        } else {
-          navigate(-1);
-        }
+        } else { navigate(-1); }
       } else {
         await addOrder(orderData);
         queryClient.invalidateQueries({ queryKey: ['detailed-orders-report'] });
         queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
-        
-        // Reset form
-        setCustomerData({
-          paymentMethod: "",
-          clientName: "",
-          phone: "",
-          phone2: "",
-          deliveryMethod: "",
-          address: "",
-          governorate: "",
-          shippingCost: 0,
-          deposit: 0,
-          discount: 0,
-        });
+        setCustomerData({ paymentMethod: "", clientName: "", phone: "", phone2: "", deliveryMethod: "", address: "", governorate: "", shippingCost: 0, deposit: 0, discount: 0 });
         setItems([]);
         setNotes("");
       }
     } catch (error) {
       console.error('Error submitting order:', error);
-    } finally {
-      setIsSubmitting(false);
-    }
+    } finally { setIsSubmitting(false); }
   };
 
   return (
-    <Card className={isMobile ? "text-sm" : ""}>
-      <CardHeader>
-        <CardTitle className={`${isMobile ? "text-base" : "text-xl"}`}>
-          {editingOrder ? `تعديل الطلب - ${editingOrder.serial}` : "إضافة طلب جديد"}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+    <Card className="border-0 shadow-lg">
+      <CardContent className="p-4 sm:p-6">
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border">
+          <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <FileText size={20} className="text-primary" />
+          </div>
+          <div>
+            <h2 className="font-bold text-lg">
+              {editingOrder ? `تعديل الطلب - ${editingOrder.serial}` : "طلب جديد"}
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              {editingOrder ? "قم بتعديل بيانات الطلب" : "أدخل بيانات الطلب الجديد"}
+            </p>
+          </div>
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-6">
-          <CustomerDataForm
-            customerData={customerData}
-            onCustomerDataChange={handleCustomerDataChange}
-            onSelectChange={handleCustomerSelectChange}
-          />
+          {/* Step 1: Customer Data */}
+          <div className="bg-card border border-border rounded-xl p-4">
+            <CustomerDataForm
+              customerData={customerData}
+              onCustomerDataChange={handleCustomerDataChange}
+              onSelectChange={handleCustomerSelectChange}
+            />
+          </div>
           
-          <ImprovedItemAddForm
-            currentItem={currentItem}
-            onItemChange={handleItemChange}
-            onProductSelectionChange={handleProductSelectionChange}
-            onAddItem={addItem}
-          />
+          {/* Step 2: Add Items */}
+          <div className="bg-card border border-border rounded-xl p-4">
+            <ImprovedItemAddForm
+              currentItem={currentItem}
+              onItemChange={handleItemChange}
+              onProductSelectionChange={handleProductSelectionChange}
+              onAddItem={addItem}
+            />
+          </div>
           
+          {/* Step 3: Items List */}
           <ItemsTable
             items={items}
             onRemoveItem={removeItem}
@@ -251,20 +197,22 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
             netProfit={netProfit}
           />
 
-          <NotesField
-            notes={notes}
-            onNotesChange={setNotes}
-          />
+          {/* Step 4: Notes */}
+          <div className="bg-card border border-border rounded-xl p-4">
+            <NotesField notes={notes} onNotesChange={setNotes} />
+          </div>
           
+          {/* Submit Button */}
           <Button 
             type="submit" 
-            className={`bg-gift-primary hover:bg-gift-primaryHover ${isMobile ? "text-sm h-8" : ""}`}
+            className="w-full h-11 text-sm font-bold gap-2"
             disabled={items.length === 0 || isSubmitting}
           >
-            {isSubmitting ? 
-              (editingOrder ? "جاري التحديث..." : "جاري الإضافة...") : 
-              (editingOrder ? "تحديث الطلب" : "إضافة الطلب")
-            }
+            {isSubmitting ? (
+              <><Loader2 size={18} className="animate-spin" /> {editingOrder ? "جاري التحديث..." : "جاري الإضافة..."}</>
+            ) : (
+              <><Send size={18} /> {editingOrder ? "تحديث الطلب" : "إضافة الطلب"}</>
+            )}
           </Button>
         </form>
       </CardContent>
