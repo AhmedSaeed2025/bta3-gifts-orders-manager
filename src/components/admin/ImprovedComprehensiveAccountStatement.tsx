@@ -624,12 +624,23 @@ const ImprovedComprehensiveAccountStatement = () => {
           });
         } else {
           // Shipping expense
+          await supabase.from('workshop_payments').insert({
+            user_id: user.id,
+            order_id: orderId,
+            workshop_name: costRegWorkshop || 'شحن',
+            product_name: 'shipping_cost',
+            cost_amount: perOrderAmount,
+            payment_status: 'Paid',
+            actual_payment_date: costRegDate
+          });
+
           await supabase.from('transactions').insert({
             user_id: user.id,
             order_serial: order.serial,
             transaction_type: 'expense',
             amount: perOrderAmount,
-            description: `[shipping] شحن - ${costRegNotes || 'مصاريف شحن'}`
+            description: `[shipping] شحن - ${costRegNotes || 'مصاريف شحن'}`,
+            created_at: new Date(costRegDate + 'T12:00:00').toISOString()
           });
         }
       }
