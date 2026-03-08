@@ -463,10 +463,50 @@ const ImprovedComprehensiveAccountStatement = () => {
                 </div>
                 <p className="text-xl font-bold text-foreground">{fmt(financial.totalCollected)}</p>
                 <p className="text-xs text-muted-foreground mt-1">
+                  من أصل {fmt(financial.expectedRevenue)}
                   {financial.expectedRevenue > 0 
-                    ? `${((financial.totalOrderPaymentsReceived / financial.expectedRevenue) * 100).toFixed(0)}% من المبيعات`
-                    : '—'}
+                    ? ` (${((financial.totalOrderPaymentsReceived / financial.expectedRevenue) * 100).toFixed(0)}%)`
+                    : ''}
                 </p>
+                {/* Collection breakdown */}
+                <div className="mt-3 pt-2 border-t border-border/50 space-y-1.5">
+                  {financial.totalDeposits > 0 && (
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground flex items-center gap-1">
+                        <DollarSign className="h-3 w-3" /> عربون
+                      </span>
+                      <span className="font-medium">{fmt(financial.totalDeposits)}</span>
+                    </div>
+                  )}
+                  {(financial.totalOrderPaymentsReceived - financial.totalDeposits) > 0 && (
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground flex items-center gap-1">
+                        <Banknote className="h-3 w-3" /> دفعات من الطلبات
+                      </span>
+                      <span className="font-medium">{fmt(financial.totalOrderPaymentsReceived - financial.totalDeposits)}</span>
+                    </div>
+                  )}
+                  {financial.actualCustomerPaid > 0 && (
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground flex items-center gap-1">
+                        <Receipt className="h-3 w-3" /> تحصيلات العملاء
+                      </span>
+                      <span className="font-medium">{fmt(financial.actualCustomerPaid)}</span>
+                    </div>
+                  )}
+                  {financial.manualIncome > 0 && (
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground flex items-center gap-1">
+                        <TrendingUp className="h-3 w-3" /> إيرادات أخرى
+                      </span>
+                      <span className="font-medium">{fmt(financial.manualIncome)}</span>
+                    </div>
+                  )}
+                </div>
+                {financial.expectedRevenue > 0 && (
+                  <Progress value={(financial.totalOrderPaymentsReceived / financial.expectedRevenue) * 100} 
+                    className="mt-2 h-1.5" />
+                )}
               </CardContent>
             </Card>
 
