@@ -98,7 +98,7 @@ const DetailedOrdersReport = () => {
     enabled: !!user
   });
 
-  // Scroll to the focused order after returning from edit
+  // Scroll to the focused order after returning from edit (one-time only)
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const focusSerial = params.get('focusSerial');
@@ -111,6 +111,11 @@ const DetailedOrdersReport = () => {
           el.classList.add('ring-2', 'ring-primary', 'ring-offset-2');
           setTimeout(() => el.classList.remove('ring-2', 'ring-primary', 'ring-offset-2'), 3000);
         }
+        // Clear focusSerial from URL so it doesn't re-trigger
+        const newParams = new URLSearchParams(location.search);
+        newParams.delete('focusSerial');
+        const newSearch = newParams.toString();
+        window.history.replaceState({}, '', `${location.pathname}${newSearch ? '?' + newSearch : ''}`);
       }, 300);
     }
   }, [location.search, isLoading]);
