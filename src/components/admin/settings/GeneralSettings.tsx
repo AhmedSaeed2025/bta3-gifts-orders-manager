@@ -51,13 +51,16 @@ const GeneralSettings = ({ formData, onInputChange, onToggleChange }: GeneralSet
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="store_name">اسم المتجر</Label>
+              <Label htmlFor="store_name">اسم المتجر (يظهر في تاب المتصفح)</Label>
               <Input
                 id="store_name"
                 value={formData.store_name}
                 onChange={(e) => onInputChange('store_name', e.target.value)}
                 placeholder="اسم المتجر"
               />
+              <p className="text-sm text-muted-foreground">
+                هذا الاسم سيظهر في عنوان تاب المتصفح (Chrome, Explorer, إلخ)
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="store_tagline">شعار المتجر</Label>

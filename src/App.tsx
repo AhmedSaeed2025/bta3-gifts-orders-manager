@@ -87,6 +87,7 @@ function App() {
                       <SupabaseOrderProvider>
                         <TooltipProvider>
                           <Toaster />
+                          <DynamicTitle />
                           <BrowserRouter>
                             <ErrorBoundary>
                               <Routes>
