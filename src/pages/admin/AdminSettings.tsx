@@ -231,6 +231,10 @@ const AdminSettings = () => {
           <InvoicePolicySettings />
         </TabsContent>
 
+        <TabsContent value="tabs-management">
+          <TabsManagementSettings />
+        </TabsContent>
+
         <TabsContent value="policies">
           <PolicySettings 
             formData={formData}
