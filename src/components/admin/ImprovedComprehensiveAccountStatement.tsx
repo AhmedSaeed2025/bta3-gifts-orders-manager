@@ -127,15 +127,16 @@ const ImprovedComprehensiveAccountStatement = () => {
     return (!startDate || d >= startDate) && (!endDate || d <= endDate);
   }), [allTransactions, startDate, endDate]);
 
-  const workshopPayments = useMemo(() => allWorkshopPayments.filter(w => {
-    const d = new Date(w.created_at || '');
-    return (!startDate || d >= startDate) && (!endDate || d <= endDate);
-  }), [allWorkshopPayments, startDate, endDate]);
+  // Filter workshop & customer payments by order_id of date-filtered orders
+  const filteredOrderIds = useMemo(() => new Set(orders.map(o => o.id)), [orders]);
 
-  const customerPayments = useMemo(() => allCustomerPayments.filter(c => {
-    const d = new Date(c.created_at || '');
-    return (!startDate || d >= startDate) && (!endDate || d <= endDate);
-  }), [allCustomerPayments, startDate, endDate]);
+  const workshopPayments = useMemo(() => allWorkshopPayments.filter(w => 
+    filteredOrderIds.has(w.order_id)
+  ), [allWorkshopPayments, filteredOrderIds]);
+
+  const customerPayments = useMemo(() => allCustomerPayments.filter(c => 
+    filteredOrderIds.has(c.order_id)
+  ), [allCustomerPayments, filteredOrderIds]);
 
   // Comprehensive financial calculations
   const financial = useMemo(() => {
