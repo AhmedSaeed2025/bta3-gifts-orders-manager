@@ -18,6 +18,7 @@ interface CustomerDataFormProps {
     governorate: string;
     shippingCost: number;
     deposit: number;
+    discount: number;
   };
   onCustomerDataChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   onSelectChange: (name: string, value: string) => void;
