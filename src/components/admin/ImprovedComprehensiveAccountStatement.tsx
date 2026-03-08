@@ -703,6 +703,22 @@ const ImprovedComprehensiveAccountStatement = () => {
                   {fmt(financial.cashBalance)}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">المحصل - المدفوع</p>
+                <div className="mt-3 pt-2 border-t border-border/50 space-y-1.5">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-emerald-600">+ المحصل</span>
+                    <span className="font-medium text-emerald-600">{fmt(financial.totalCollected)}</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-red-500">- المدفوع</span>
+                    <span className="font-medium text-red-500">{fmt(financial.totalPaidOut)}</span>
+                  </div>
+                  {financial.pendingFromCustomers > 0 && (
+                    <div className="flex justify-between text-xs border-t border-border/30 pt-1">
+                      <span className="text-amber-600">متبقي عند العملاء</span>
+                      <span className="font-medium text-amber-600">{fmt(financial.pendingFromCustomers)}</span>
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
           </div>
