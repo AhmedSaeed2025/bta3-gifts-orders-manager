@@ -879,13 +879,13 @@ const ImprovedComprehensiveAccountStatement = () => {
                   <div className="pt-1.5 mt-1.5 border-t border-dashed border-border/50 space-y-1.5">
                     <div className="flex justify-between text-xs">
                       <span className="text-blue-600 flex items-center gap-1">
-                        <Target className="h-3 w-3" /> تكلفة متوقعة
+                        <Target className="h-3 w-3" /> تكلفة بالطلبات
                       </span>
                       <span className="font-medium text-blue-600">{fmt(financial.expectedProductionCost)}</span>
                     </div>
                     <div className="flex justify-between text-xs">
                       <span className="text-purple-600 flex items-center gap-1">
-                        <Factory className="h-3 w-3" /> تكلفة مسجلة (ورش)
+                        <Factory className="h-3 w-3" /> مدفوع للورش
                       </span>
                       <span className="font-medium text-purple-600">{fmt(financial.totalWorkshopCost)}</span>
                     </div>
@@ -1711,11 +1711,11 @@ const ImprovedComprehensiveAccountStatement = () => {
                       {costRegType === 'cost' ? (
                         <>
                           <div className="bg-card rounded-lg p-2 border border-border/50">
-                            <span className="text-muted-foreground block">تكلفة متوقعة</span>
+                            <span className="text-muted-foreground block">تكلفة بالطلبات</span>
                             <span className="font-bold text-blue-600">{fmt(totalExpectedCost)}</span>
                           </div>
                           <div className="bg-card rounded-lg p-2 border border-border/50">
-                            <span className="text-muted-foreground block">مسجل سابقاً (ورش)</span>
+                            <span className="text-muted-foreground block">مدفوع للورش</span>
                             <span className="font-bold text-purple-600">{fmt(totalRegisteredWP)}</span>
                           </div>
                         </>
@@ -1735,7 +1735,7 @@ const ImprovedComprehensiveAccountStatement = () => {
                     )}
                     
                     <p className="text-[10px] text-muted-foreground leading-relaxed">
-                      💡 يمكنك تسجيل أي مبلغ فعلي حتى لو اختلف عن {costRegType === 'cost' ? 'التكلفة المتوقعة بالطلب' : 'قيمة الشحن المسجلة بالطلب'}
+                      💡 يمكنك تسجيل أي مبلغ فعلي حتى لو اختلف عن {costRegType === 'cost' ? 'التكلفة المسجلة بالطلب' : 'قيمة الشحن المسجلة بالطلب'}
                     </p>
                   </div>
                 );
@@ -1839,8 +1839,8 @@ const ImprovedComprehensiveAccountStatement = () => {
                           <span>الإجمالي: <span className="font-medium text-foreground">{fmt(fin.total)}</span></span>
                           {costRegType === 'cost' && (
                             <>
-                              <span>متوقع: <span className="font-medium text-blue-600">{fmt(expectedCost)}</span></span>
-                              {wpTotal > 0 && <span>مسجل: <span className="font-medium text-purple-600">{fmt(wpTotal)}</span></span>}
+                              <span>بالطلب: <span className="font-medium text-blue-600">{fmt(expectedCost)}</span></span>
+                              {wpTotal > 0 && <span>مدفوع للورش: <span className="font-medium text-purple-600">{fmt(wpTotal)}</span></span>}
                             </>
                           )}
                           {costRegType === 'shipping' && fin.shipping > 0 && (
