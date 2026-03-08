@@ -357,7 +357,7 @@ const SimpleAccountStatement = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="income">إيراد</SelectItem>
+                    <SelectItem value="other_income">إيراد</SelectItem>
                     <SelectItem value="expense">مصروف</SelectItem>
                     <SelectItem value="expense">مصروف إعلانات</SelectItem>
                   </SelectContent>
