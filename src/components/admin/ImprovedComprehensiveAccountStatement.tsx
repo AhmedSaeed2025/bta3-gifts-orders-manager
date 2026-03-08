@@ -366,6 +366,8 @@ const ImprovedComprehensiveAccountStatement = () => {
       actualWorkshopPaid,
       actualWorkshopDue,
       totalWorkshopCost,
+      actualShippingWPPaid,
+      totalShippingWPCost,
       manualShippingExpenses,
       manualProductionExpenses,
       manualOtherExpenses,
