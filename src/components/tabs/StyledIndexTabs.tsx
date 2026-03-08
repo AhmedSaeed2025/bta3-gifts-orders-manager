@@ -34,6 +34,7 @@ import ImprovedInvoiceTab from "@/components/ImprovedInvoiceTab";
 import AdminSettings from "@/pages/admin/AdminSettings";
 import PrintingReport from "@/components/admin/PrintingReport";
 import SummaryAccountReport from "@/components/admin/SummaryAccountReport";
+import { getTabsSettings } from "@/components/admin/settings/TabsManagementSettings";
 
 // Create date filter context
 interface DateFilterContextType {
@@ -145,81 +146,42 @@ const StyledIndexTabs = () => {
     { value: "11", label: "ديسمبر" },
   ];
 
-  // Reverse order of tabs - from right to left (settings first, dashboard last)
-  const tabs = [
-    {
-      id: "settings",
-      label: "الإعدادات",
-      icon: Settings,
-      component: <AdminSettings />
-    },
-    {
-      id: "invoice",
-      label: "الفاتورة",
-      icon: Receipt,
-      component: <ImprovedInvoiceTab />
-    },
-    {
-      id: "printing-report",
-      label: "المطبعة",
-      icon: Printer,
-      component: <PrintingReport />
-    },
-    {
-      id: "summary-report",
-      label: "كشف ملخص",
-      icon: Calculator,
-      component: <SummaryAccountReport />
-    },
-    {
-      id: "modern-account-statement",
-      label: "كشف محدث",
-      icon: FileBarChart,
-      component: <ModernAccountStatement />
-    },
-    {
-      id: "account-statement",
-      label: "كشف الحساب",
-      icon: FileText,
-      component: <ComprehensiveAccountStatement />
-    },
-    {
-      id: "shipping-report",
-      label: "تقرير الشحن",
-      icon: Truck,
-      component: <ImprovedShippingReport />
-    },
-    {
-      id: "orders-report",
-      label: "تقرير الطلبات",
-      icon: FileText,
-      component: <DetailedOrdersReport />
-    },
-    {
-      id: "products",
-      label: "إدارة المنتجات",
-      icon: Package,
-      component: <ProductsManagementPro />
-    },
-    {
-      id: "orders-management",
-      label: "إدارة الطلبات",
-      icon: ShoppingCart,
-      component: <AdminOrders />
-    },
-    {
-      id: "add-order",
-      label: "إضافة طلب",
-      icon: Plus,
-      component: <OrderForm />
-    },
-    {
-      id: "dashboard",
-      label: "لوحة التحكم",
-      icon: BarChart3,
-      component: <EnhancedAdminDashboard />
-    }
+  // Load tabs settings
+  const [tabsSettings, setTabsSettings] = useState(getTabsSettings);
+
+  useEffect(() => {
+    const handler = () => setTabsSettings(getTabsSettings());
+    window.addEventListener('tabs-settings-changed', handler);
+    return () => window.removeEventListener('tabs-settings-changed', handler);
+  }, []);
+
+  const getTabLabel = (id: string, defaultLabel: string) => {
+    const setting = tabsSettings.find(t => t.id === id);
+    return setting?.label || defaultLabel;
+  };
+
+  const isTabVisible = (id: string) => {
+    const setting = tabsSettings.find(t => t.id === id);
+    return setting?.visible !== false;
+  };
+
+  // All tabs definition with reversed order
+  const allTabs = [
+    { id: "settings", label: getTabLabel("settings", "الإعدادات"), icon: Settings, component: <AdminSettings /> },
+    { id: "invoice", label: getTabLabel("invoice", "الفاتورة"), icon: Receipt, component: <ImprovedInvoiceTab /> },
+    { id: "printing-report", label: getTabLabel("printing-report", "المطبعة"), icon: Printer, component: <PrintingReport /> },
+    { id: "summary-report", label: getTabLabel("summary-report", "كشف ملخص"), icon: Calculator, component: <SummaryAccountReport /> },
+    { id: "modern-account-statement", label: getTabLabel("modern-account-statement", "كشف محدث"), icon: FileBarChart, component: <ModernAccountStatement /> },
+    { id: "account-statement", label: getTabLabel("account-statement", "كشف الحساب"), icon: FileText, component: <ComprehensiveAccountStatement /> },
+    { id: "shipping-report", label: getTabLabel("shipping-report", "تقرير الشحن"), icon: Truck, component: <ImprovedShippingReport /> },
+    { id: "orders-report", label: getTabLabel("orders-report", "تقرير الطلبات"), icon: FileText, component: <DetailedOrdersReport /> },
+    { id: "products", label: getTabLabel("products", "إدارة المنتجات"), icon: Package, component: <ProductsManagementPro /> },
+    { id: "orders-management", label: getTabLabel("orders-management", "إدارة الطلبات"), icon: ShoppingCart, component: <AdminOrders /> },
+    { id: "add-order", label: getTabLabel("add-order", "إضافة طلب"), icon: Plus, component: <OrderForm /> },
+    { id: "dashboard", label: getTabLabel("dashboard", "لوحة التحكم"), icon: BarChart3, component: <EnhancedAdminDashboard /> },
   ];
+
+  const tabs = allTabs.filter(tab => isTabVisible(tab.id));
 
   return (
     <DateFilterContext.Provider value={{ startDate, endDate, setDateRange }}>

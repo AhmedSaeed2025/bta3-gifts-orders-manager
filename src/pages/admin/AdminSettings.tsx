@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Settings, Palette, Truck, CreditCard, FileText, Save, Star, ImageIcon, ListOrdered, PackageCheck, Receipt } from 'lucide-react';
+import { Loader2, Settings, Palette, Truck, CreditCard, FileText, Save, Star, ImageIcon, ListOrdered, PackageCheck, Receipt, LayoutList } from 'lucide-react';
 import { Facebook } from 'lucide-react';
 
 // Import the component modules
@@ -19,6 +19,7 @@ import CustomerReviewsSettings from '@/components/admin/settings/CustomerReviews
 import OrderStatusSettings from '@/components/admin/settings/OrderStatusSettings';
 import DeliveryMethodsSettings from '@/components/admin/settings/DeliveryMethodsSettings';
 import InvoicePolicySettings from '@/components/admin/settings/InvoicePolicySettings';
+import TabsManagementSettings from '@/components/admin/settings/TabsManagementSettings';
 
 // Import the custom hooks
 import { useAdminSettings } from '@/hooks/useAdminSettings';
@@ -105,7 +106,7 @@ const AdminSettings = () => {
       </div>
 
       <Tabs defaultValue="general" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-11">
+        <TabsList className="grid w-full grid-cols-12">
           <TabsTrigger value="general" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             عام
@@ -145,6 +146,10 @@ const AdminSettings = () => {
           <TabsTrigger value="invoice-policy" className="flex items-center gap-2">
             <Receipt className="h-4 w-4" />
             سياسة الفاتورة
+          </TabsTrigger>
+          <TabsTrigger value="tabs-management" className="flex items-center gap-2">
+            <LayoutList className="h-4 w-4" />
+            القوائم
           </TabsTrigger>
           <TabsTrigger value="policies" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
@@ -224,6 +229,10 @@ const AdminSettings = () => {
 
         <TabsContent value="invoice-policy">
           <InvoicePolicySettings />
+        </TabsContent>
+
+        <TabsContent value="tabs-management">
+          <TabsManagementSettings />
         </TabsContent>
 
         <TabsContent value="policies">
