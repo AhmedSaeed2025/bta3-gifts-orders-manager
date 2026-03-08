@@ -141,19 +141,85 @@ const EnhancedAdminOrders = () => {
 
   // Delete order mutation
   const deleteOrderMutation = useMutation({
-    mutationFn: async (orderId: string) => {
+    mutationFn: async ({ adminOrderId, serial }: { adminOrderId: string; serial: string }) => {
       if (!user) throw new Error('يجب تسجيل الدخول أولاً');
-      
-      const { error } = await supabase
+
+      // Resolve real order id from orders table by serial (admin_orders.id is different)
+      const { data: orderRow, error: orderLookupError } = await supabase
+        .from('orders')
+        .select('id')
+        .eq('serial', serial)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (orderLookupError) throw orderLookupError;
+
+      if (orderRow?.id) {
+        // Delete dependent records first (in case FK cascade is not configured)
+        const { error: itemsError } = await supabase
+          .from('order_items')
+          .delete()
+          .eq('order_id', orderRow.id);
+
+        if (itemsError) throw itemsError;
+
+        const { error: customerPaymentsError } = await supabase
+          .from('customer_payments')
+          .delete()
+          .eq('order_id', orderRow.id)
+          .eq('user_id', user.id);
+
+        if (customerPaymentsError) throw customerPaymentsError;
+
+        const { error: workshopPaymentsError } = await supabase
+          .from('workshop_payments')
+          .delete()
+          .eq('order_id', orderRow.id)
+          .eq('user_id', user.id);
+
+        if (workshopPaymentsError) throw workshopPaymentsError;
+
+        const { error: ordersError } = await supabase
+          .from('orders')
+          .delete()
+          .eq('id', orderRow.id)
+          .eq('user_id', user.id);
+
+        if (ordersError) throw ordersError;
+      }
+
+      // Keep admin_orders in sync
+      const { error: adminError } = await supabase
         .from('admin_orders')
         .delete()
-        .eq('id', orderId)
+        .eq('id', adminOrderId)
+        .eq('serial', serial)
         .eq('user_id', user.id);
-      
-      if (error) throw error;
+
+      if (adminError) throw adminError;
+
+      // Delete related transactions
+      const { error: transactionsError } = await supabase
+        .from('transactions')
+        .delete()
+        .eq('order_serial', serial)
+        .eq('user_id', user.id);
+
+      if (transactionsError) throw transactionsError;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-orders-enhanced'] });
+      queryClient.invalidateQueries({ queryKey: ['detailed-orders-report'] });
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['orders-invoice'] });
+      queryClient.invalidateQueries({ queryKey: ['printing-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['summary-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['summary-transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['summary-workshop-payments'] });
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-workshop-payments'] });
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-customer-payments'] });
       toast.success('تم حذف الطلب بنجاح');
     },
     onError: (error: any) => {
@@ -162,9 +228,9 @@ const EnhancedAdminOrders = () => {
     }
   });
 
-  const handleDeleteOrder = (orderId: string) => {
-    if (window.confirm('هل أنت متأكد من حذف هذا الطلب؟')) {
-      deleteOrderMutation.mutate(orderId);
+  const handleDeleteOrder = (order: Order) => {
+    if (window.confirm(`هل أنت متأكد من حذف الطلب ${order.serial}؟`)) {
+      deleteOrderMutation.mutate({ adminOrderId: order.id, serial: order.serial });
     }
   };
 
@@ -358,7 +424,7 @@ const EnhancedAdminOrders = () => {
 
                       {/* حذف الطلب */}
                       <Button
-                        onClick={() => handleDeleteOrder(order.id)}
+                        onClick={() => handleDeleteOrder(order)}
                         variant="outline"
                         size="sm"
                         className="text-red-600 hover:text-red-700 hover:bg-red-50"
