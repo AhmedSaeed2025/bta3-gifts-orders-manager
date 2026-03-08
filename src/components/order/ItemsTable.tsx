@@ -271,6 +271,12 @@ const ItemsTable = ({
             <span>مصاريف الشحن:</span>
             <span>{shippingCost.toFixed(2)} ج.م</span>
           </div>
+          {discount > 0 && (
+            <div className="flex justify-between text-sm text-orange-600">
+              <span>خصم على الفاتورة:</span>
+              <span>-{discount.toFixed(2)} ج.م</span>
+            </div>
+          )}
           {deposit > 0 && (
             <div className="flex justify-between text-sm">
               <span>العربون:</span>

@@ -33,6 +33,7 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
     governorate: editingOrder?.governorate || "",
     shippingCost: editingOrder?.shippingCost || 0,
     deposit: editingOrder?.deposit || 0,
+    discount: editingOrder?.discount || 0,
   });
   
   const [currentItem, setCurrentItem] = useState({
@@ -55,11 +56,11 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
   }, 0);
   
   const totalCost = items.reduce((sum, item) => sum + item.cost * item.quantity, 0);
-  // الإجمالي الكلي = المجموع الفرعي + الشحن (بدون خصم العربون)
-  const totalAmount = subtotal + customerData.shippingCost;
+  // الإجمالي الكلي = المجموع الفرعي + الشحن - الخصم
+  const totalAmount = subtotal + customerData.shippingCost - customerData.discount;
   // المبلغ المتبقي = الإجمالي - العربون
   const remainingAmount = totalAmount - customerData.deposit;
-  const netProfit = subtotal - totalCost;
+  const netProfit = subtotal - totalCost - customerData.discount;
 
   const handleCustomerDataChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type } = e.target;
@@ -168,7 +169,7 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
         remaining_amount: remainingAmount,
         profit: netProfit,
         status: editingOrder?.status || "pending",
-        discount: 0,
+        discount: customerData.discount,
         notes: notes.trim() || undefined
       };
 
@@ -200,6 +201,7 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
           governorate: "",
           shippingCost: 0,
           deposit: 0,
+          discount: 0,
         });
         setItems([]);
         setNotes("");
@@ -239,7 +241,7 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
             onUpdateItem={updateItem}
             subtotal={subtotal}
             shippingCost={customerData.shippingCost}
-            discount={0}
+            discount={customerData.discount}
             deposit={customerData.deposit}
             totalAmount={totalAmount}
             remainingAmount={remainingAmount}
