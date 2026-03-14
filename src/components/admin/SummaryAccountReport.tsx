@@ -193,6 +193,7 @@ const SummaryAccountReport = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['summary-transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-transactions'] });
       toast.success('تم إضافة الإيراد بنجاح');
       setIsAddIncomeOpen(false);
       setNewIncome({ category: 'other', description: '', amount: '' });
