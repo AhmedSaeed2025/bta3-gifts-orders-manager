@@ -413,6 +413,7 @@ const ImprovedComprehensiveAccountStatement = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comprehensive-transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['summary-transactions'] });
       toast.success('تم إضافة المعاملة بنجاح');
       setAddTransactionDialog(false);
       setNewTransaction({ amount: '', type: 'expense', category: 'other', description: '' });
