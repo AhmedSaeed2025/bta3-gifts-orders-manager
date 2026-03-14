@@ -328,7 +328,7 @@ const SummaryAccountReport = () => {
         } else {
           expensesByCategory.other += Number(t.amount || 0);
         }
-      } else if (t.transaction_type === 'income') {
+      } else if (t.transaction_type === 'income' || t.transaction_type === 'other_income') {
         totalManualIncome += Number(t.amount || 0);
         if (desc.includes('[sales]')) {
           incomesByCategory.sales += Number(t.amount || 0);
