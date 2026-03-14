@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { useDateFilter } from '@/components/tabs/StyledIndexTabs';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { calculateOrderFinancials } from '@/lib/orderFinancials';
+import { shouldSkipMirroredWorkshopExpense } from '@/lib/transactionSync';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -313,10 +314,7 @@ const SummaryAccountReport = () => {
       const desc = t.description || '';
       
       if (t.transaction_type === 'expense') {
-        // System-generated mirrored entries ([cost]/[shipping]) are already counted in workshop_payments
-        const isTaggedCostOrShipping = desc.includes('[cost]') || desc.includes('[shipping]');
-        const isManualExpenseEntry = typeof t.order_serial === 'string' && t.order_serial.startsWith('EXP-');
-        const shouldSkipAsMirroredSystemEntry = isTaggedCostOrShipping && !isManualExpenseEntry;
+        const shouldSkipAsMirroredSystemEntry = shouldSkipMirroredWorkshopExpense(desc, t.order_serial);
 
         if (shouldSkipAsMirroredSystemEntry) return;
 
@@ -330,7 +328,7 @@ const SummaryAccountReport = () => {
         } else {
           expensesByCategory.other += Number(t.amount || 0);
         }
-      } else if (t.transaction_type === 'income') {
+      } else if (t.transaction_type === 'income' || t.transaction_type === 'other_income') {
         totalManualIncome += Number(t.amount || 0);
         if (desc.includes('[sales]')) {
           incomesByCategory.sales += Number(t.amount || 0);

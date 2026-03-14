@@ -17,6 +17,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
 import { useDateFilter } from '@/components/tabs/StyledIndexTabs';
 import { calculateOrderFinancials } from '@/lib/orderFinancials';
+import { shouldSkipMirroredWorkshopExpense } from '@/lib/transactionSync';
 import { 
   Plus, DollarSign, TrendingUp, TrendingDown, Calculator, Wallet,
   Clock, Edit, Trash2, Filter, Truck, Target, FileText, Calendar,
@@ -227,13 +228,9 @@ const ImprovedComprehensiveAccountStatement = () => {
       if (t.transaction_type === 'income' || t.transaction_type === 'other_income') {
         manualIncome += t.amount;
       } else if (t.transaction_type === 'expense') {
-        // Transactions prefixed with [cost] or [shipping] that were auto-generated
-        // from workshop registration are ALREADY counted via workshop_payments table.
-        // BUT manual entries added from Summary Report (order_serial starts with 'EXP-') should be counted.
-        const isTaggedCostOrShipping = desc.startsWith('[cost]') || desc.startsWith('[shipping]');
-        const isManualExpenseEntry = typeof t.order_serial === 'string' && t.order_serial.startsWith('EXP-');
-        if (isTaggedCostOrShipping && !isManualExpenseEntry) {
-          // Don't add to manualExpenses — already in actualWorkshopPaid / actualShippingWPPaid
+        // Skip only mirrored workshop-generated [cost]/[shipping] entries.
+        // Manual entries from Summary Report (EXP-/INC-) must always be counted.
+        if (shouldSkipMirroredWorkshopExpense(desc, t.order_serial)) {
           return;
         }
         manualExpenses += t.amount;
@@ -416,6 +413,7 @@ const ImprovedComprehensiveAccountStatement = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comprehensive-transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['summary-transactions'] });
       toast.success('تم إضافة المعاملة بنجاح');
       setAddTransactionDialog(false);
       setNewTransaction({ amount: '', type: 'expense', category: 'other', description: '' });
@@ -432,6 +430,7 @@ const ImprovedComprehensiveAccountStatement = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comprehensive-transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['summary-transactions'] });
       toast.success('تم التحديث');
       setEditTransactionDialog(false);
     },
@@ -481,7 +480,9 @@ const ImprovedComprehensiveAccountStatement = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comprehensive-transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['summary-transactions'] });
       queryClient.invalidateQueries({ queryKey: ['comprehensive-workshop-payments'] });
+      queryClient.invalidateQueries({ queryKey: ['summary-workshop-payments'] });
       queryClient.invalidateQueries({ queryKey: ['comprehensive-orders'] });
       toast.success('تم الحذف');
     }
