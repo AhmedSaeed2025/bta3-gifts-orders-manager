@@ -165,6 +165,7 @@ const SummaryAccountReport = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['summary-transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-transactions'] });
       toast.success('تم إضافة المصروف بنجاح');
       setIsAddExpenseOpen(false);
       setNewExpense({ category: 'cost', description: '', amount: '' });
