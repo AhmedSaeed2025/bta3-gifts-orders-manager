@@ -17,6 +17,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
 import { useDateFilter } from '@/components/tabs/StyledIndexTabs';
 import { calculateOrderFinancials } from '@/lib/orderFinancials';
+import { shouldSkipMirroredWorkshopExpense } from '@/lib/transactionSync';
 import { 
   Plus, DollarSign, TrendingUp, TrendingDown, Calculator, Wallet,
   Clock, Edit, Trash2, Filter, Truck, Target, FileText, Calendar,

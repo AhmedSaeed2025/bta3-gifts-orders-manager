@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { useDateFilter } from '@/components/tabs/StyledIndexTabs';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { calculateOrderFinancials } from '@/lib/orderFinancials';
+import { shouldSkipMirroredWorkshopExpense } from '@/lib/transactionSync';
 import { 
   TrendingUp, 
   TrendingDown, 
