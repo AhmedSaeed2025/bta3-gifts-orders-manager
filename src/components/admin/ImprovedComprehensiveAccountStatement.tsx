@@ -227,10 +227,12 @@ const ImprovedComprehensiveAccountStatement = () => {
       if (t.transaction_type === 'income' || t.transaction_type === 'other_income') {
         manualIncome += t.amount;
       } else if (t.transaction_type === 'expense') {
-        // Transactions prefixed with [cost] or [shipping] are ALREADY counted
-        // via workshop_payments table — skip them to avoid double counting
-        const isFromWorkshopReg = desc.startsWith('[cost]') || desc.startsWith('[shipping]');
-        if (isFromWorkshopReg) {
+        // Transactions prefixed with [cost] or [shipping] that were auto-generated
+        // from workshop registration are ALREADY counted via workshop_payments table.
+        // BUT manual entries added from Summary Report (order_serial starts with 'EXP-') should be counted.
+        const isTaggedCostOrShipping = desc.startsWith('[cost]') || desc.startsWith('[shipping]');
+        const isManualExpenseEntry = typeof t.order_serial === 'string' && t.order_serial.startsWith('EXP-');
+        if (isTaggedCostOrShipping && !isManualExpenseEntry) {
           // Don't add to manualExpenses — already in actualWorkshopPaid / actualShippingWPPaid
           return;
         }
