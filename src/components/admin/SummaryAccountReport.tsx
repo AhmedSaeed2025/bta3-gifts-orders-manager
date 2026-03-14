@@ -165,6 +165,7 @@ const SummaryAccountReport = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['summary-transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-transactions'] });
       toast.success('تم إضافة المصروف بنجاح');
       setIsAddExpenseOpen(false);
       setNewExpense({ category: 'cost', description: '', amount: '' });
@@ -192,6 +193,7 @@ const SummaryAccountReport = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['summary-transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-transactions'] });
       toast.success('تم إضافة الإيراد بنجاح');
       setIsAddIncomeOpen(false);
       setNewIncome({ category: 'other', description: '', amount: '' });
@@ -212,6 +214,7 @@ const SummaryAccountReport = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['summary-transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-transactions'] });
       toast.success('تم تحديث المعاملة بنجاح');
       setIsEditOpen(false);
       setEditingTransaction(null);
@@ -229,6 +232,7 @@ const SummaryAccountReport = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['summary-transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-transactions'] });
       toast.success('تم حذف المعاملة');
     }
   });
@@ -255,6 +259,7 @@ const SummaryAccountReport = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['summary-transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-transactions'] });
       toast.success('تم ترحيل الأرباح بنجاح إلى حسابك');
     }
   });
