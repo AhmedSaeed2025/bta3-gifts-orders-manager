@@ -232,6 +232,7 @@ const SummaryAccountReport = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['summary-transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['comprehensive-transactions'] });
       toast.success('تم حذف المعاملة');
     }
   });
