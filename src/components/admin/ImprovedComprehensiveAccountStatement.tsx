@@ -430,6 +430,7 @@ const ImprovedComprehensiveAccountStatement = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comprehensive-transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['summary-transactions'] });
       toast.success('تم التحديث');
       setEditTransactionDialog(false);
     },
