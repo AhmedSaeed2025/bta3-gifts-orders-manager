@@ -480,7 +480,9 @@ const ImprovedComprehensiveAccountStatement = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comprehensive-transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['summary-transactions'] });
       queryClient.invalidateQueries({ queryKey: ['comprehensive-workshop-payments'] });
+      queryClient.invalidateQueries({ queryKey: ['summary-workshop-payments'] });
       queryClient.invalidateQueries({ queryKey: ['comprehensive-orders'] });
       toast.success('تم الحذف');
     }
