@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,6 +7,9 @@ import { Switch } from '@/components/ui/switch';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Upload, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface AppearanceSettingsProps {
   formData: any;
@@ -15,13 +18,13 @@ interface AppearanceSettingsProps {
 }
 
 const AppearanceSettings = ({ formData, onInputChange, onToggleChange }: AppearanceSettingsProps) => {
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+
   const colorPresets = [
-    { name: 'أخضر كلاسيكي', primary: '#10B981', secondary: '#059669', accent: '#F59E0B', text: '#1F2937' },
-    { name: 'أزرق احترافي', primary: '#3B82F6', secondary: '#1E40AF', accent: '#F59E0B', text: '#1F2937' },
-    { name: 'بنفسجي عصري', primary: '#8B5CF6', secondary: '#7C3AED', accent: '#F59E0B', text: '#1F2937' },
-    { name: 'وردي أنيق', primary: '#EC4899', secondary: '#DB2777', accent: '#F59E0B', text: '#1F2937' },
-    { name: 'برتقالي دافئ', primary: '#F97316', secondary: '#EA580C', accent: '#EAB308', text: '#1F2937' },
-    { name: 'رمادي احترافي', primary: '#6B7280', secondary: '#4B5563', accent: '#F59E0B', text: '#1F2937' },
+    { name: 'أخضر', primary: '#10B981', secondary: '#34D399', accent: '#6EE7B7', text: '#064E3B' },
+    { name: 'أزرق', primary: '#3B82F6', secondary: '#60A5FA', accent: '#93C5FD', text: '#1E3A5F' },
+    { name: 'بنفسجي', primary: '#8B5CF6', secondary: '#A78BFA', accent: '#C4B5FD', text: '#4C1D95' },
+    { name: 'وردي', primary: '#EC4899', secondary: '#F472B6', accent: '#FBCFE8', text: '#831843' },
   ];
 
   const applyColorPreset = (preset: any) => {
@@ -29,6 +32,45 @@ const AppearanceSettings = ({ formData, onInputChange, onToggleChange }: Appeara
     onInputChange('secondary_color', preset.secondary);
     onInputChange('accent_color', preset.accent);
     onInputChange('text_color', preset.text);
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('يرجى اختيار ملف صورة فقط');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('حجم الصورة يجب أن يكون أقل من 5 ميجابايت');
+      return;
+    }
+
+    setUploadingLogo(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `logo-${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('store-logos')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('store-logos')
+        .getPublicUrl(fileName);
+
+      onInputChange('logo_url', publicUrl);
+      toast.success('تم رفع الشعار بنجاح');
+    } catch (error) {
+      console.error('Logo upload error:', error);
+      toast.error('حدث خطأ أثناء رفع الشعار');
+    } finally {
+      setUploadingLogo(false);
+    }
   };
 
   return (
@@ -44,7 +86,7 @@ const AppearanceSettings = ({ formData, onInputChange, onToggleChange }: Appeara
             {/* Logo Preview */}
             <div className="flex items-center gap-4 p-4 border rounded-lg bg-gray-50">
               <div className="flex-shrink-0">
-                <Avatar className="h-16 w-16">
+                <Avatar className="h-20 w-20">
                   <AvatarImage 
                     src={formData.logo_url} 
                     alt="شعار المتجر"
@@ -58,11 +100,34 @@ const AppearanceSettings = ({ formData, onInputChange, onToggleChange }: Appeara
                   </AvatarFallback>
                 </Avatar>
               </div>
-              <div className="flex-1">
+              <div className="flex-1 space-y-2">
                 <h4 className="font-semibold text-sm">معاينة الشعار</h4>
                 <p className="text-xs text-muted-foreground">
                   {formData.logo_url ? 'شعار مخصص' : 'شعار افتراضي (الحرف الأول من اسم المتجر)'}
                 </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5"
+                    disabled={uploadingLogo}
+                    onClick={() => document.getElementById('logo-file-input')?.click()}
+                  >
+                    {uploadingLogo ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Upload className="w-3.5 h-3.5" />
+                    )}
+                    <span className="text-xs">رفع شعار</span>
+                  </Button>
+                  <input
+                    id="logo-file-input"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleLogoUpload}
+                  />
+                </div>
               </div>
             </div>
 
@@ -70,11 +135,11 @@ const AppearanceSettings = ({ formData, onInputChange, onToggleChange }: Appeara
               id="logo_url"
               value={formData.logo_url || ''}
               onChange={(e) => onInputChange('logo_url', e.target.value)}
-              placeholder="https://example.com/logo.png"
+              placeholder="https://example.com/logo.png أو ارفع صورة من الزر أعلاه"
               dir="ltr"
             />
             <p className="text-xs text-muted-foreground">
-              أدخل رابط الشعار أو اتركه فارغاً لاستخدام الشعار الافتراضي
+              ارفع شعار المتجر أو أدخل رابط الشعار - يظهر في الفواتير والمتجر
             </p>
           </div>
 

@@ -70,31 +70,32 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
           boxSizing: 'border-box',
           border: '1px solid #e5e7eb',
           borderRadius: '10px',
-          overflow: 'hidden',
+          overflow: 'visible',
         }}
       >
         {/* Header */}
-        <div style={{ background: 'linear-gradient(135deg, #fef2f2 0%, #fff1f2 100%)', padding: '16px 14px', borderBottom: '2px solid #fecaca' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div style={{ background: 'linear-gradient(135deg, #fef2f2 0%, #fff1f2 100%)', padding: '16px 14px', borderBottom: '2px solid #fecaca', borderRadius: '10px 10px 0 0' }}>
+          <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0', tableLayout: 'fixed' }}>
             <tbody>
               <tr>
-                <td style={{ textAlign: 'right', width: '28%', verticalAlign: 'middle' }}>
+                <td style={{ textAlign: 'right', width: '30%', verticalAlign: 'middle', padding: '0 4px' }}>
                   <div style={{ fontSize: fs.xs, color: '#9ca3af', marginBottom: '2px' }}>فاتورة رقم</div>
-                  <div style={{ fontSize: fs.lg, fontWeight: 'bold', color: '#dc2626', letterSpacing: '0.5px' }}>{order.serial}</div>
-                  <div style={{ fontSize: fs.xs, color: '#6b7280', fontWeight: '500' }}>
+                  <div style={{ fontSize: fs.lg, fontWeight: 'bold', color: '#dc2626', letterSpacing: '0.5px', wordBreak: 'break-all' }}>{order.serial}</div>
+                  <div style={{ fontSize: fs.xs, color: '#6b7280', fontWeight: '500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {storeTagline || '#بتاع_هدايا_الأصلي'}
                   </div>
                 </td>
-                <td style={{ textAlign: 'center', width: '44%', verticalAlign: 'middle' }}>
+                <td style={{ textAlign: 'center', width: '40%', verticalAlign: 'middle', padding: '0 4px' }}>
                   {storeSettings?.logo_url && (
                     <img 
                       src={storeSettings.logo_url} 
                       alt={storeName}
-                      style={{ width: '50px', height: '50px', objectFit: 'contain', display: 'inline-block', marginBottom: '4px', borderRadius: '50%', border: '2px solid #fecaca', padding: '2px', backgroundColor: '#fff' }}
+                      crossOrigin="anonymous"
+                      style={{ width: '60px', height: '60px', objectFit: 'contain', display: 'inline-block', marginBottom: '4px', borderRadius: '50%', border: '2px solid #fecaca', padding: '3px', backgroundColor: '#fff' }}
                     />
                   )}
                 </td>
-                <td style={{ textAlign: 'left', width: '28%', verticalAlign: 'middle' }}>
+                <td style={{ textAlign: 'left', width: '30%', verticalAlign: 'middle', padding: '0 4px' }}>
                   <div style={{ fontSize: fs.xs, color: '#9ca3af', marginBottom: '2px' }}>التاريخ</div>
                   <div style={{ fontSize: fs.md, fontWeight: '600', color: '#374151' }}>{formatDate(order.date_created || order.order_date)}</div>
                 </td>
