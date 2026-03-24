@@ -70,7 +70,7 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
           boxSizing: 'border-box',
           border: '1px solid #e5e7eb',
           borderRadius: '10px',
-          overflow: 'visible',
+          overflow: 'hidden',
         }}
       >
         {/* Header */}

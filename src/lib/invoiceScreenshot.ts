@@ -68,12 +68,17 @@ export const captureInvoiceScreenshot = async (
           clonedElement.style.maxWidth = '420px';
           clonedElement.style.overflow = 'visible';
           clonedElement.style.position = 'relative';
-          // Fix all table cells to prevent overlap
-          const cells = clonedElement.querySelectorAll('td, th');
-          cells.forEach((cell: Element) => {
-            (cell as HTMLElement).style.overflow = 'visible';
-            (cell as HTMLElement).style.wordBreak = 'break-word';
+          // Ensure all children are visible and not clipped
+          const allElements = clonedElement.querySelectorAll('*');
+          allElements.forEach((el: Element) => {
+            const htmlEl = el as HTMLElement;
+            htmlEl.style.overflow = 'visible';
+            if (el.tagName === 'TD' || el.tagName === 'TH') {
+              htmlEl.style.wordBreak = 'break-word';
+            }
           });
+          // Ensure the header with gradient is not clipped by border-radius
+          clonedElement.style.borderRadius = '0';
         }
       },
     });
