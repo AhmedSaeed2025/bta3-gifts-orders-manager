@@ -226,13 +226,17 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
 
         {/* Invoice Summary */}
         <div style={{ padding: '12px 14px', borderBottom: '1px solid #f3f4f6' }}>
-          <div style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <span style={{ display: 'inline-block', width: '6px', height: '6px', backgroundColor: '#dc2626', borderRadius: '50%' }}></span>
-            <span style={{ fontSize: fs.md, fontWeight: 'bold', color: '#dc2626' }}>ملخص الفاتورة</span>
+          <div style={{ marginBottom: '8px' }}>
+            <table style={{ borderCollapse: 'collapse' }}><tbody><tr>
+              <td style={{ width: '6px', height: '6px', padding: '0 3px 0 0' }}>
+                <div style={{ width: '6px', height: '6px', backgroundColor: '#dc2626', borderRadius: '50%' }}></div>
+              </td>
+              <td style={{ fontSize: fs.md, fontWeight: 'bold', color: '#dc2626', padding: '0' }}>ملخص الفاتورة</td>
+            </tr></tbody></table>
           </div>
 
-          {/* Subtotal & Shipping & Discount */}
-          <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '0' }}>
+          {/* Details table */}
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <tbody>
               <tr>
                 <td style={{ padding: '4px 10px', fontSize: fs.base, color: '#6b7280', textAlign: 'right', width: '60%' }}>إجمالي المنتجات:</td>
@@ -253,62 +257,107 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
             </tbody>
           </table>
 
-          {/* Total - highlighted box */}
-          <div style={{
-            margin: '6px 0',
-            background: 'linear-gradient(135deg, #1e40af, #2563eb)',
-            borderRadius: '6px',
-            padding: '7px 10px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}>
-            <span style={{ fontSize: fs.lg, fontWeight: 'bold', color: '#ffffff' }}>إجمالي الفاتورة</span>
-            <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#ffffff' }}>{formatCurrency(total)}</span>
-          </div>
+          {/* Total - RED table-based box */}
+          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '6px', marginBottom: '4px' }}>
+            <tbody>
+              <tr>
+                <td style={{
+                  backgroundColor: '#dc2626',
+                  padding: '8px 12px',
+                  fontSize: fs.lg,
+                  fontWeight: 'bold',
+                  color: '#ffffff',
+                  textAlign: 'right',
+                  width: '60%',
+                }}>إجمالي الفاتورة</td>
+                <td style={{
+                  backgroundColor: '#dc2626',
+                  padding: '8px 12px',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  color: '#ffffff',
+                  textAlign: 'left',
+                }}>{formatCurrency(total)}</td>
+              </tr>
+            </tbody>
+          </table>
 
-          {/* Paid & Remaining */}
+          {/* Paid */}
           {paid > 0 && (
-            <div style={{
-              margin: '4px 0',
-              backgroundColor: '#f0fdf4',
-              border: '1px solid #bbf7d0',
-              borderRadius: '6px',
-              padding: '5px 10px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}>
-              <span style={{ fontSize: fs.base, fontWeight: '600', color: '#16a34a' }}>المدفوع (عربون)</span>
-              <span style={{ fontSize: fs.md, fontWeight: 'bold', color: '#16a34a' }}>{formatCurrency(paid)}</span>
-            </div>
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '4px' }}>
+              <tbody>
+                <tr>
+                  <td style={{
+                    backgroundColor: '#f0fdf4',
+                    border: '1px solid #bbf7d0',
+                    padding: '6px 12px',
+                    fontSize: fs.base,
+                    fontWeight: '600',
+                    color: '#16a34a',
+                    textAlign: 'right',
+                    width: '60%',
+                  }}>المدفوع (عربون)</td>
+                  <td style={{
+                    backgroundColor: '#f0fdf4',
+                    border: '1px solid #bbf7d0',
+                    borderRight: 'none',
+                    borderLeft: '1px solid #bbf7d0',
+                    padding: '6px 12px',
+                    fontSize: fs.md,
+                    fontWeight: 'bold',
+                    color: '#16a34a',
+                    textAlign: 'left',
+                  }}>{formatCurrency(paid)}</td>
+                </tr>
+              </tbody>
+            </table>
           )}
 
+          {/* Remaining */}
           {remaining > 0 ? (
-            <div style={{
-              margin: '4px 0',
-              backgroundColor: '#fef2f2',
-              border: '1px solid #fecaca',
-              borderRadius: '6px',
-              padding: '6px 10px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}>
-              <span style={{ fontSize: fs.md, fontWeight: 'bold', color: '#dc2626' }}>المتبقي للسداد</span>
-              <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#dc2626' }}>{formatCurrency(remaining)}</span>
-            </div>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <tbody>
+                <tr>
+                  <td style={{
+                    backgroundColor: '#fef2f2',
+                    border: '1px solid #fecaca',
+                    padding: '7px 12px',
+                    fontSize: fs.md,
+                    fontWeight: 'bold',
+                    color: '#dc2626',
+                    textAlign: 'right',
+                    width: '60%',
+                  }}>المتبقي للسداد</td>
+                  <td style={{
+                    backgroundColor: '#fef2f2',
+                    border: '1px solid #fecaca',
+                    borderRight: 'none',
+                    borderLeft: '1px solid #fecaca',
+                    padding: '7px 12px',
+                    fontSize: '13px',
+                    fontWeight: 'bold',
+                    color: '#dc2626',
+                    textAlign: 'left',
+                  }}>{formatCurrency(remaining)}</td>
+                </tr>
+              </tbody>
+            </table>
           ) : total > 0 ? (
-            <div style={{
-              margin: '4px 0',
-              backgroundColor: '#f0fdf4',
-              border: '1px solid #bbf7d0',
-              borderRadius: '6px',
-              padding: '6px 10px',
-              textAlign: 'center',
-            }}>
-              <span style={{ fontSize: fs.md, fontWeight: 'bold', color: '#16a34a' }}>✅ تم السداد بالكامل</span>
-            </div>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <tbody>
+                <tr>
+                  <td style={{
+                    backgroundColor: '#f0fdf4',
+                    border: '1px solid #bbf7d0',
+                    padding: '7px 12px',
+                    fontSize: fs.md,
+                    fontWeight: 'bold',
+                    color: '#16a34a',
+                    textAlign: 'center',
+                  }} colSpan={2}>✅ تم السداد بالكامل</td>
+                </tr>
+              </tbody>
+            </table>
           ) : null}
         </div>
 
