@@ -86,12 +86,18 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
                   </div>
                 </td>
                 <td style={{ textAlign: 'center', width: '40%', verticalAlign: 'middle', padding: '0 4px' }}>
-                  {storeSettings?.logo_url && (
+                  {storeSettings?.logo_url ? (
                     <img 
                       src={storeSettings.logo_url} 
                       alt={storeName}
                       crossOrigin="anonymous"
-                      style={{ width: '60px', height: '60px', objectFit: 'contain', display: 'inline-block', marginBottom: '4px', borderRadius: '50%', border: '2px solid #fecaca', padding: '3px', backgroundColor: '#fff' }}
+                      style={{ width: '64px', height: '64px', objectFit: 'contain', display: 'inline-block', borderRadius: '50%', border: '2px solid #fecaca', padding: '3px', backgroundColor: '#fff' }}
+                    />
+                  ) : (
+                    <img 
+                      src="/lovable-uploads/ac63ecb6-e1d0-4917-9537-12f75da70364.png" 
+                      alt={storeName}
+                      style={{ width: '64px', height: '64px', objectFit: 'contain', display: 'inline-block', borderRadius: '50%', border: '2px solid #fecaca', padding: '3px', backgroundColor: '#fff' }}
                     />
                   )}
                 </td>

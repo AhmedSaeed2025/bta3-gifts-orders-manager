@@ -69,20 +69,31 @@ export const captureInvoiceScreenshot = async (
           clonedElement.style.overflow = 'visible';
           clonedElement.style.position = 'relative';
           clonedElement.style.borderRadius = '0';
+          
           // Fix all elements for html2canvas compatibility
           const allElements = clonedElement.querySelectorAll('*');
           allElements.forEach((el: Element) => {
             const htmlEl = el as HTMLElement;
             htmlEl.style.overflow = 'visible';
-            // Ensure table cells render text properly
+            
+            // Ensure table cells render text properly with centered alignment
             if (el.tagName === 'TD' || el.tagName === 'TH') {
               htmlEl.style.wordBreak = 'break-word';
               htmlEl.style.verticalAlign = 'middle';
-              // Preserve background colors on cells
-              const bg = htmlEl.style.backgroundColor;
-              if (bg) {
-                htmlEl.style.backgroundColor = bg;
+              // Force line-height for consistent text positioning
+              if (!htmlEl.style.lineHeight) {
+                htmlEl.style.lineHeight = '1.5';
               }
+              // Preserve background colors
+              const computed = clonedDoc.defaultView?.getComputedStyle(htmlEl);
+              if (computed?.backgroundColor && computed.backgroundColor !== 'rgba(0, 0, 0, 0)') {
+                htmlEl.style.backgroundColor = computed.backgroundColor;
+              }
+            }
+            
+            // Ensure images load with crossOrigin for html2canvas
+            if (el.tagName === 'IMG') {
+              (el as HTMLImageElement).crossOrigin = 'anonymous';
             }
           });
         }
