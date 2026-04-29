@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Package } from "lucide-react";
-import CategoryProductSizeSelector from "./CategoryProductSizeSelector";
+import ProductQuickSearch from "./ProductQuickSearch";
 
 interface ImprovedItemAddFormProps {
   currentItem: {
