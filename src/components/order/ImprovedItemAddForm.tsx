@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Package } from "lucide-react";
-import CategoryProductSizeSelector from "./CategoryProductSizeSelector";
+import ProductQuickSearch from "./ProductQuickSearch";
 
 interface ImprovedItemAddFormProps {
   currentItem: {
@@ -43,7 +43,7 @@ const ImprovedItemAddForm: React.FC<ImprovedItemAddFormProps> = ({
         <h3 className="font-semibold text-sm">إضافة منتج</h3>
       </div>
 
-      <CategoryProductSizeSelector onSelectionChange={onProductSelectionChange} />
+      <ProductQuickSearch onSelectionChange={onProductSelectionChange} />
       
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="space-y-1.5">
