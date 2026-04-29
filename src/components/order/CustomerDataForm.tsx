@@ -1,11 +1,12 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useDeliveryMethods } from "@/components/admin/settings/DeliveryMethodsSettings";
-import { User, Phone, CreditCard, Truck, MapPin, DollarSign } from "lucide-react";
+import { useShippingRates } from "@/hooks/useShippingRates";
+import { User, Phone, CreditCard, Truck, MapPin, DollarSign, AlertCircle } from "lucide-react";
 
 interface CustomerDataFormProps {
   customerData: {
