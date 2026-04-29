@@ -140,10 +140,18 @@ const CustomerDataForm: React.FC<CustomerDataFormProps> = ({
                 name="phone2"
                 value={customerData.phone2 || ""}
                 onChange={handlePhoneChange}
-                className="h-9 text-sm pr-9"
+                inputMode="numeric"
+                maxLength={11}
+                className={`h-9 text-sm pr-9 ${phone2Invalid ? "border-destructive focus-visible:ring-destructive" : ""}`}
                 placeholder="رقم تليفون إضافي"
               />
             </div>
+            {phone2Invalid && (
+              <div className="flex items-center gap-1 text-[11px] text-destructive">
+                <AlertCircle size={11} />
+                <span>رقم غير صحيح (11 رقم يبدأ بـ 01)</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
