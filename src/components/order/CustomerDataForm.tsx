@@ -36,8 +36,34 @@ const CustomerDataForm: React.FC<CustomerDataFormProps> = ({
   onSelectChange,
 }) => {
   const { methods: deliveryMethods } = useDeliveryMethods();
+  const { shippingRates } = useShippingRates();
   const selectedMethod = deliveryMethods.find(m => m.name === customerData.deliveryMethod);
   const showAddress = selectedMethod?.requiresAddress ?? false;
+
+  // Egyptian phone validation: 11 digits starting with 01
+  const phoneRegex = /^01[0-2,5]\d{8}$/;
+  const phoneInvalid = customerData.phone.length > 0 && !phoneRegex.test(customerData.phone);
+  const phone2Invalid =
+    !!customerData.phone2 && customerData.phone2.length > 0 && !phoneRegex.test(customerData.phone2);
+
+  // Auto-fetch shipping cost based on governorate (uses average across product types when multiple match)
+  useEffect(() => {
+    if (!customerData.governorate || shippingRates.length === 0) return;
+    const matches = shippingRates.filter(
+      r => r.governorate.trim().toLowerCase() === customerData.governorate.trim().toLowerCase()
+    );
+    if (matches.length === 0) return;
+    const avgCost = Math.round(
+      matches.reduce((sum, r) => sum + Number(r.shipping_cost || 0), 0) / matches.length
+    );
+    if (Number(customerData.shippingCost || 0) === 0 && avgCost > 0) {
+      const synthetic = {
+        target: { name: "shippingCost", value: String(avgCost), type: "number" },
+      } as unknown as React.ChangeEvent<HTMLInputElement>;
+      onCustomerDataChange(synthetic);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customerData.governorate, shippingRates]);
 
   const handleDeliveryMethodChange = (value: string) => {
     onSelectChange("deliveryMethod", value);
@@ -53,7 +79,7 @@ const CustomerDataForm: React.FC<CustomerDataFormProps> = ({
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const converted = arabicToEnglishDigits(e.target.value);
+    const converted = arabicToEnglishDigits(e.target.value).replace(/\D/g, "").slice(0, 11);
     const syntheticEvent = { ...e, target: { ...e.target, name: e.target.name, value: converted, type: e.target.type } } as React.ChangeEvent<HTMLInputElement>;
     onCustomerDataChange(syntheticEvent);
   };
