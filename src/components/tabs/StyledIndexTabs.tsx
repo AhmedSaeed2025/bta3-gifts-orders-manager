@@ -24,7 +24,7 @@ import { format, startOfYear, endOfYear, startOfMonth, endOfMonth } from "date-f
 import { ar } from "date-fns/locale";
 import EnhancedAdminDashboard from "@/components/admin/EnhancedAdminDashboard";
 import OrderForm from "@/components/OrderForm";
-import ProductsManagementPro from "@/components/ProductsManagementPro";
+import ProductsManagementProV2 from "@/components/admin/ProductsManagementProV2";
 import AdminOrders from "@/pages/admin/AdminOrders";
 import ImprovedShippingReport from "@/components/admin/ImprovedShippingReport";
 import DetailedOrdersReport from "@/components/admin/DetailedOrdersReport";
@@ -189,7 +189,7 @@ const StyledIndexTabs = () => {
     "account-statement": { icon: FileText, component: <ComprehensiveAccountStatement /> },
     "shipping-report": { icon: Truck, component: <ImprovedShippingReport /> },
     "orders-report": { icon: FileText, component: <DetailedOrdersReport /> },
-    "products": { icon: Package, component: <ProductsManagementPro /> },
+    "products": { icon: Package, component: <ProductsManagementProV2 /> },
     "orders-management": { icon: ShoppingCart, component: <AdminOrders /> },
     "add-order": { icon: Plus, component: <OrderForm /> },
     "dashboard": { icon: BarChart3, component: <EnhancedAdminDashboard /> },
