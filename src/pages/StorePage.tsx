@@ -1,6 +1,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { PUBLIC_STORE_SETTINGS_COLUMNS, PUBLIC_PRODUCT_SIZE_COLUMNS } from '@/lib/storeSettingsColumns';
 import StoreHeader from '@/components/store/StoreHeader';
 import ProductGrid from '@/components/store/ProductGrid';
 import StoreFooter from '@/components/store/StoreFooter';
