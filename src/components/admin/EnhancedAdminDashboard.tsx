@@ -59,6 +59,8 @@ const EnhancedAdminDashboard = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { startDate, endDate } = useDateFilter();
+  const navigate = useNavigate();
+
   const [now, setNow] = useState(new Date());
 
   useEffect(() => {
