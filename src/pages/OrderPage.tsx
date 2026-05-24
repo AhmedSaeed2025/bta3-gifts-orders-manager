@@ -47,7 +47,7 @@ const OrderPage = () => {
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from('store_settings')
-        .select((await import('@/lib/storeSettingsColumns')).PUBLIC_STORE_SETTINGS_COLUMNS)
+        .select(PUBLIC_STORE_SETTINGS_COLUMNS)
         .eq('is_active', true)
         .single();
       
