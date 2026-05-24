@@ -27,7 +27,20 @@ import {
   Clock,
   XCircle,
   Crown,
+  Plus,
+  FileText,
+  Printer,
+  Calculator,
+  Users,
+  MapPin,
+  Receipt,
+  Calendar,
+  PiggyBank,
+  HandCoins,
+  Banknote,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+
 import {
   AreaChart,
   Area,
@@ -46,6 +59,8 @@ const EnhancedAdminDashboard = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { startDate, endDate } = useDateFilter();
+  const navigate = useNavigate();
+
   const [now, setNow] = useState(new Date());
 
   useEffect(() => {
@@ -91,6 +106,37 @@ const EnhancedAdminDashboard = () => {
     },
     enabled: !!user,
   });
+
+  // Fetch payments (financial position)
+  const { data: customerPayments = [] } = useQuery({
+    queryKey: ["dashboard-customer-payments", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from("customer_payments")
+        .select("amount, payment_status")
+        .eq("user_id", user.id);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user,
+  });
+
+  const { data: workshopPayments = [] } = useQuery({
+    queryKey: ["dashboard-workshop-payments", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from("workshop_payments")
+        .select("cost_amount, payment_status")
+        .eq("user_id", user.id);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user,
+  });
+
+
 
   // Filter by date
   const orders = useMemo(() => {
@@ -198,8 +244,73 @@ const EnhancedAdminDashboard = () => {
 
   const maxProductRevenue = productPerformance[0]?.revenue || 1;
 
+  // Top customers (from all-time orders for the period)
+  const topCustomers = useMemo(() => {
+    const map = new Map<string, { name: string; phone: string; orders: number; revenue: number }>();
+    orders.forEach((o: any) => {
+      const key = (o.phone || o.client_name || "—").trim();
+      const cur = map.get(key) || { name: o.client_name || "—", phone: o.phone || "", orders: 0, revenue: 0 };
+      cur.orders += 1;
+      cur.revenue += Number(o.total) || 0;
+      map.set(key, cur);
+    });
+    return Array.from(map.values()).sort((a, b) => b.revenue - a.revenue).slice(0, 5);
+  }, [orders]);
+
+  // Top governorates
+  const topGovernorates = useMemo(() => {
+    const map = new Map<string, { orders: number; revenue: number }>();
+    orders.forEach((o: any) => {
+      const gov = (o.governorate || "غير محدد").trim() || "غير محدد";
+      const cur = map.get(gov) || { orders: 0, revenue: 0 };
+      cur.orders += 1;
+      cur.revenue += Number(o.total) || 0;
+      map.set(gov, cur);
+    });
+    return Array.from(map.entries())
+      .map(([name, v]) => ({ name, ...v }))
+      .sort((a, b) => b.orders - a.orders)
+      .slice(0, 5);
+  }, [orders]);
+
+  const maxGovOrders = topGovernorates[0]?.orders || 1;
+
+  // Today vs Yesterday (always from all-time data, independent of filter)
+  const todayStr = new Date().toISOString().split("T")[0];
+  const yest = new Date();
+  yest.setDate(yest.getDate() - 1);
+  const yestStr = yest.toISOString().split("T")[0];
+  const todayOrders = allOrders.filter((o: any) => o.date_created?.split("T")[0] === todayStr);
+  const yestOrders = allOrders.filter((o: any) => o.date_created?.split("T")[0] === yestStr);
+  const todayRevenue = todayOrders.reduce((s: number, o: any) => s + Number(o.total || 0), 0);
+  const yestRevenue = yestOrders.reduce((s: number, o: any) => s + Number(o.total || 0), 0);
+  const todayProfit = todayOrders.reduce((s: number, o: any) => s + Number(o.profit || 0), 0);
+
+  // Financial position (all-time)
+  const cashIn = customerPayments.reduce(
+    (s: number, p: any) => (p.payment_status === "Paid" || p.payment_status === "Partial" ? s + Number(p.amount || 0) : s),
+    0
+  );
+  const cashOut = workshopPayments.reduce(
+    (s: number, p: any) => (p.payment_status === "Paid" ? s + Number(p.cost_amount || 0) : s),
+    0
+  );
+  const duesFromCustomers = customerPayments.reduce(
+    (s: number, p: any) => (p.payment_status === "Unpaid" ? s + Number(p.amount || 0) : s),
+    0
+  );
+  const duesToWorkshops = workshopPayments.reduce(
+    (s: number, p: any) => (p.payment_status === "Due" ? s + Number(p.cost_amount || 0) : s),
+    0
+  );
+  const netCash = cashIn - cashOut;
+
   // Recent activity
   const recentOrders = orders.slice(0, 5);
+
+  const goToTab = (tab: string) => navigate(`/legacy-admin?tab=${tab}`);
+
+
 
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ["dashboard-orders"] });
@@ -265,7 +376,47 @@ const EnhancedAdminDashboard = () => {
         </div>
       </div>
 
+      {/* Quick Actions */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
+        <QuickAction icon={Plus} label="طلب جديد" color="bg-primary text-primary-foreground" onClick={() => goToTab("add-order")} />
+        <QuickAction icon={ShoppingCart} label="إدارة الطلبات" color="bg-blue-500/10 text-blue-700 dark:text-blue-300" onClick={() => goToTab("orders-management")} />
+        <QuickAction icon={Package} label="المنتجات" color="bg-violet-500/10 text-violet-700 dark:text-violet-300" onClick={() => goToTab("products")} />
+        <QuickAction icon={Printer} label="تقرير الطباعة" color="bg-amber-500/10 text-amber-700 dark:text-amber-300" onClick={() => goToTab("printing-report")} />
+        <QuickAction icon={Receipt} label="فاتورة" color="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" onClick={() => goToTab("invoice")} />
+        <QuickAction icon={Calculator} label="كشف الحساب" color="bg-rose-500/10 text-rose-700 dark:text-rose-300" onClick={() => goToTab("account-statement")} />
+      </div>
+
+      {/* Today snapshot */}
+      <Card className="border-border/60 shadow-sm overflow-hidden">
+        <CardContent className="p-4 sm:p-5">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                <Calendar className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold">نشاط اليوم</p>
+                <p className="text-xs text-muted-foreground">
+                  مقارنة سريعة مع أمس
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-4 sm:gap-6 text-center sm:text-right">
+              <TodayStat label="طلبات اليوم" value={String(todayOrders.length)} sub={`أمس: ${yestOrders.length}`} />
+              <TodayStat
+                label="إيرادات اليوم"
+                value={formatCurrency(todayRevenue)}
+                sub={`أمس: ${formatCurrency(yestRevenue)}`}
+                delta={pct(todayRevenue, yestRevenue)}
+              />
+              <TodayStat label="ربح اليوم" value={formatCurrency(todayProfit)} sub="صافي" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* KPI Cards */}
+
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <KpiCard
           label="إجمالي الإيرادات"
@@ -318,7 +469,34 @@ const EnhancedAdminDashboard = () => {
         />
       </div>
 
+      {/* Financial position */}
+      <Card className="border-border/60 shadow-sm overflow-hidden">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+            <PiggyBank className="h-5 w-5 text-primary" />
+            المركز المالي (إجمالي)
+          </CardTitle>
+          <p className="text-xs text-muted-foreground">ملخص فوري للنقد الفعلي والمستحقات</p>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+            <FinanceTile icon={Banknote} label="نقد داخل" value={formatCurrency(cashIn)} tone="emerald" />
+            <FinanceTile icon={HandCoins} label="نقد خارج" value={formatCurrency(cashOut)} tone="rose" />
+            <FinanceTile
+              icon={Wallet}
+              label="صافي النقد"
+              value={formatCurrency(netCash)}
+              tone={netCash >= 0 ? "emerald" : "rose"}
+              highlight
+            />
+            <FinanceTile icon={Clock} label="مستحقات للعملاء" value={formatCurrency(duesFromCustomers)} tone="amber" />
+            <FinanceTile icon={AlertCircle} label="مستحقات للورش" value={formatCurrency(duesToWorkshops)} tone="orange" />
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Charts */}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Performance area chart */}
         <Card className="lg:col-span-2 border-border/60 shadow-sm">
@@ -527,7 +705,82 @@ const EnhancedAdminDashboard = () => {
         </Card>
       </div>
 
+      {/* Top customers + Top governorates */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <Card className="border-border/60 shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" />
+              أفضل العملاء
+            </CardTitle>
+            <p className="text-xs text-muted-foreground">أعلى 5 عملاء من حيث الإيرادات</p>
+          </CardHeader>
+          <CardContent>
+            {topCustomers.length > 0 ? (
+              <div className="space-y-2">
+                {topCustomers.map((c, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between gap-3 p-2.5 rounded-lg border border-border/50 hover:bg-muted/40 transition-colors"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className="flex-shrink-0 w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
+                        {idx + 1}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{c.name}</p>
+                        <p className="text-[11px] text-muted-foreground font-mono truncate">{c.phone || "—"}</p>
+                      </div>
+                    </div>
+                    <div className="text-left flex-shrink-0">
+                      <div className="text-sm font-bold text-primary">{formatCurrency(c.revenue)}</div>
+                      <div className="text-[10px] text-muted-foreground">{c.orders} طلب</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="py-10 text-center text-sm text-muted-foreground">لا يوجد عملاء بعد</div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/60 shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+              <MapPin className="h-5 w-5 text-primary" />
+              أعلى المحافظات
+            </CardTitle>
+            <p className="text-xs text-muted-foreground">توزيع الطلبات جغرافياً</p>
+          </CardHeader>
+          <CardContent>
+            {topGovernorates.length > 0 ? (
+              <div className="space-y-3">
+                {topGovernorates.map((g, idx) => (
+                  <div key={idx} className="space-y-1.5">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <MapPin className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                        <span className="text-sm font-medium truncate">{g.name}</span>
+                      </div>
+                      <div className="flex-shrink-0 text-left">
+                        <div className="text-sm font-semibold">{g.orders} طلب</div>
+                        <div className="text-[10px] text-muted-foreground">{formatCurrency(g.revenue)}</div>
+                      </div>
+                    </div>
+                    <Progress value={(g.orders / maxGovOrders) * 100} className="h-1.5" />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="py-10 text-center text-sm text-muted-foreground">لا توجد بيانات جغرافية</div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Smart alerts */}
+
       {(pendingOrders > 0 || inProgressOrders > 0) && (
         <Card className="border-amber-200/60 bg-amber-50/40 dark:bg-amber-950/10 dark:border-amber-900/40">
           <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
@@ -635,4 +888,85 @@ const StatusBadge = ({ status }: { status: string }) => {
   );
 };
 
+const QuickAction = ({
+  icon: Icon,
+  label,
+  color,
+  onClick,
+}: {
+  icon: React.ElementType;
+  label: string;
+  color: string;
+  onClick: () => void;
+}) => (
+  <button
+    onClick={onClick}
+    className={`group flex items-center gap-2 sm:gap-3 p-3 sm:p-3.5 rounded-xl border border-border/60 bg-card hover:shadow-md hover:-translate-y-0.5 transition-all text-right`}
+  >
+    <span className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${color}`}>
+      <Icon className="h-4 w-4" />
+    </span>
+    <span className="text-xs sm:text-sm font-semibold truncate">{label}</span>
+  </button>
+);
+
+const TodayStat = ({
+  label,
+  value,
+  sub,
+  delta,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+  delta?: number;
+}) => {
+  const positive = (delta ?? 0) >= 0;
+  return (
+    <div>
+      <p className="text-[11px] text-muted-foreground mb-0.5">{label}</p>
+      <p className="text-base sm:text-lg font-bold leading-tight">{value}</p>
+      <div className="flex items-center gap-1 justify-center sm:justify-start mt-0.5">
+        {sub && <span className="text-[10px] text-muted-foreground">{sub}</span>}
+        {delta !== undefined && Number.isFinite(delta) && (
+          <span className={`text-[10px] font-semibold ${positive ? "text-emerald-600" : "text-red-600"}`}>
+            {positive ? "▲" : "▼"} {Math.abs(delta).toFixed(0)}%
+          </span>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const FinanceTile = ({
+  icon: Icon,
+  label,
+  value,
+  tone,
+  highlight,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: string;
+  tone: "emerald" | "rose" | "amber" | "orange";
+  highlight?: boolean;
+}) => {
+  const toneMap: Record<string, string> = {
+    emerald: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 ring-emerald-500/20",
+    rose: "bg-rose-500/10 text-rose-700 dark:text-rose-300 ring-rose-500/20",
+    amber: "bg-amber-500/10 text-amber-700 dark:text-amber-300 ring-amber-500/20",
+    orange: "bg-orange-500/10 text-orange-700 dark:text-orange-300 ring-orange-500/20",
+  };
+  return (
+    <div className={`rounded-xl p-3 ring-1 ${toneMap[tone]} ${highlight ? "ring-2" : ""}`}>
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-[11px] font-medium opacity-80">{label}</span>
+        <Icon className="h-4 w-4 opacity-80" />
+      </div>
+      <p className="text-sm sm:text-base font-bold tracking-tight">{value}</p>
+    </div>
+  );
+};
+
 export default EnhancedAdminDashboard;
+
