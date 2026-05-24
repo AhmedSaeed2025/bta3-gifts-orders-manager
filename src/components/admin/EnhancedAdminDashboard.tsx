@@ -376,7 +376,47 @@ const EnhancedAdminDashboard = () => {
         </div>
       </div>
 
+      {/* Quick Actions */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
+        <QuickAction icon={Plus} label="طلب جديد" color="bg-primary text-primary-foreground" onClick={() => goToTab("add-order")} />
+        <QuickAction icon={ShoppingCart} label="إدارة الطلبات" color="bg-blue-500/10 text-blue-700 dark:text-blue-300" onClick={() => goToTab("orders-management")} />
+        <QuickAction icon={Package} label="المنتجات" color="bg-violet-500/10 text-violet-700 dark:text-violet-300" onClick={() => goToTab("products")} />
+        <QuickAction icon={Printer} label="تقرير الطباعة" color="bg-amber-500/10 text-amber-700 dark:text-amber-300" onClick={() => goToTab("printing-report")} />
+        <QuickAction icon={Receipt} label="فاتورة" color="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" onClick={() => goToTab("invoice")} />
+        <QuickAction icon={Calculator} label="كشف الحساب" color="bg-rose-500/10 text-rose-700 dark:text-rose-300" onClick={() => goToTab("account-statement")} />
+      </div>
+
+      {/* Today snapshot */}
+      <Card className="border-border/60 shadow-sm overflow-hidden">
+        <CardContent className="p-4 sm:p-5">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                <Calendar className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold">نشاط اليوم</p>
+                <p className="text-xs text-muted-foreground">
+                  مقارنة سريعة مع أمس
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-4 sm:gap-6 text-center sm:text-right">
+              <TodayStat label="طلبات اليوم" value={String(todayOrders.length)} sub={`أمس: ${yestOrders.length}`} />
+              <TodayStat
+                label="إيرادات اليوم"
+                value={formatCurrency(todayRevenue)}
+                sub={`أمس: ${formatCurrency(yestRevenue)}`}
+                delta={pct(todayRevenue, yestRevenue)}
+              />
+              <TodayStat label="ربح اليوم" value={formatCurrency(todayProfit)} sub="صافي" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* KPI Cards */}
+
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <KpiCard
           label="إجمالي الإيرادات"
