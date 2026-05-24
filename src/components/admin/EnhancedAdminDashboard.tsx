@@ -469,7 +469,34 @@ const EnhancedAdminDashboard = () => {
         />
       </div>
 
+      {/* Financial position */}
+      <Card className="border-border/60 shadow-sm overflow-hidden">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+            <PiggyBank className="h-5 w-5 text-primary" />
+            المركز المالي (إجمالي)
+          </CardTitle>
+          <p className="text-xs text-muted-foreground">ملخص فوري للنقد الفعلي والمستحقات</p>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+            <FinanceTile icon={Banknote} label="نقد داخل" value={formatCurrency(cashIn)} tone="emerald" />
+            <FinanceTile icon={HandCoins} label="نقد خارج" value={formatCurrency(cashOut)} tone="rose" />
+            <FinanceTile
+              icon={Wallet}
+              label="صافي النقد"
+              value={formatCurrency(netCash)}
+              tone={netCash >= 0 ? "emerald" : "rose"}
+              highlight
+            />
+            <FinanceTile icon={Clock} label="مستحقات للعملاء" value={formatCurrency(duesFromCustomers)} tone="amber" />
+            <FinanceTile icon={AlertCircle} label="مستحقات للورش" value={formatCurrency(duesToWorkshops)} tone="orange" />
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Charts */}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Performance area chart */}
         <Card className="lg:col-span-2 border-border/60 shadow-sm">
