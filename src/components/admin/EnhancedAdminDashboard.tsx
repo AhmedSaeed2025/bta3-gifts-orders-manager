@@ -705,7 +705,82 @@ const EnhancedAdminDashboard = () => {
         </Card>
       </div>
 
+      {/* Top customers + Top governorates */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <Card className="border-border/60 shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" />
+              أفضل العملاء
+            </CardTitle>
+            <p className="text-xs text-muted-foreground">أعلى 5 عملاء من حيث الإيرادات</p>
+          </CardHeader>
+          <CardContent>
+            {topCustomers.length > 0 ? (
+              <div className="space-y-2">
+                {topCustomers.map((c, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between gap-3 p-2.5 rounded-lg border border-border/50 hover:bg-muted/40 transition-colors"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className="flex-shrink-0 w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
+                        {idx + 1}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{c.name}</p>
+                        <p className="text-[11px] text-muted-foreground font-mono truncate">{c.phone || "—"}</p>
+                      </div>
+                    </div>
+                    <div className="text-left flex-shrink-0">
+                      <div className="text-sm font-bold text-primary">{formatCurrency(c.revenue)}</div>
+                      <div className="text-[10px] text-muted-foreground">{c.orders} طلب</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="py-10 text-center text-sm text-muted-foreground">لا يوجد عملاء بعد</div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/60 shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+              <MapPin className="h-5 w-5 text-primary" />
+              أعلى المحافظات
+            </CardTitle>
+            <p className="text-xs text-muted-foreground">توزيع الطلبات جغرافياً</p>
+          </CardHeader>
+          <CardContent>
+            {topGovernorates.length > 0 ? (
+              <div className="space-y-3">
+                {topGovernorates.map((g, idx) => (
+                  <div key={idx} className="space-y-1.5">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <MapPin className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                        <span className="text-sm font-medium truncate">{g.name}</span>
+                      </div>
+                      <div className="flex-shrink-0 text-left">
+                        <div className="text-sm font-semibold">{g.orders} طلب</div>
+                        <div className="text-[10px] text-muted-foreground">{formatCurrency(g.revenue)}</div>
+                      </div>
+                    </div>
+                    <Progress value={(g.orders / maxGovOrders) * 100} className="h-1.5" />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="py-10 text-center text-sm text-muted-foreground">لا توجد بيانات جغرافية</div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Smart alerts */}
+
       {(pendingOrders > 0 || inProgressOrders > 0) && (
         <Card className="border-amber-200/60 bg-amber-50/40 dark:bg-amber-950/10 dark:border-amber-900/40">
           <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
