@@ -9,6 +9,7 @@ import { CheckCircle, ArrowRight, Phone, Mail } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency } from "@/lib/utils";
+import { PUBLIC_STORE_SETTINGS_COLUMNS } from "@/lib/storeSettingsColumns";
 
 const OrderConfirmationPage = () => {
   const { serial } = useParams<{ serial: string }>();
@@ -37,9 +38,9 @@ const OrderConfirmationPage = () => {
   const { data: storeSettings } = useQuery({
     queryKey: ['store-settings-contact'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('store_settings')
-        .select('*')
+        .select(PUBLIC_STORE_SETTINGS_COLUMNS)
         .eq('is_active', true)
         .single();
       

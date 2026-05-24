@@ -1,6 +1,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { PUBLIC_STORE_SETTINGS_COLUMNS, PUBLIC_PRODUCT_SIZE_COLUMNS } from '@/lib/storeSettingsColumns';
 import StoreHeader from '@/components/store/StoreHeader';
 import ProductGrid from '@/components/store/ProductGrid';
 import StoreFooter from '@/components/store/StoreFooter';
@@ -20,7 +21,7 @@ const StorePage = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('store_settings')
-        .select('*')
+        .select(PUBLIC_STORE_SETTINGS_COLUMNS as any)
         .eq('is_active', true)
         .maybeSingle();
       
@@ -30,7 +31,7 @@ const StorePage = () => {
         return null;
       }
       
-      return data;
+      return data as any;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 1,
@@ -74,7 +75,7 @@ const StorePage = () => {
         .select(`
           *,
           categories (id, name),
-          product_sizes (*),
+          product_sizes (${PUBLIC_PRODUCT_SIZE_COLUMNS}),
           product_images (*)
         `)
         .eq('is_active', true)

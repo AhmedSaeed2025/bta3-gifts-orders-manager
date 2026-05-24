@@ -4,14 +4,15 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { Phone, Mail, MapPin, Facebook, Instagram, MessageCircle } from 'lucide-react';
+import { PUBLIC_STORE_SETTINGS_COLUMNS } from '@/lib/storeSettingsColumns';
 
 const StoreFooter = () => {
   const { data: storeSettings } = useQuery({
     queryKey: ['store-settings-footer'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('store_settings')
-        .select('*')
+        .select(PUBLIC_STORE_SETTINGS_COLUMNS)
         .eq('is_active', true)
         .maybeSingle();
 

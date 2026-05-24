@@ -13,6 +13,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import Logo from "@/components/Logo";
 import UserProfile from "@/components/UserProfile";
+import { PUBLIC_STORE_SETTINGS_COLUMNS } from "@/lib/storeSettingsColumns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Info, Upload, X, ShoppingCart } from "lucide-react";
@@ -44,9 +45,9 @@ const OrderPage = () => {
   const { data: storeSettings } = useQuery({
     queryKey: ['store-settings-order'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('store_settings')
-        .select('*')
+        .select(PUBLIC_STORE_SETTINGS_COLUMNS)
         .eq('is_active', true)
         .single();
       

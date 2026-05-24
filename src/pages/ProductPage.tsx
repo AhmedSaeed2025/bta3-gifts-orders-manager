@@ -11,6 +11,7 @@ import { Loader2, ArrowLeft, Heart, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import ProductImageGallery from '@/components/product/ProductImageGallery';
 import RelatedProducts from '@/components/product/RelatedProducts';
+import { PUBLIC_PRODUCT_SIZE_COLUMNS } from '@/lib/storeSettingsColumns';
 
 const ProductPage = () => {
   const { id } = useParams();
@@ -43,7 +44,7 @@ const ProductPage = () => {
         .from('products')
         .select(`
           *,
-          product_sizes (*),
+          product_sizes (${PUBLIC_PRODUCT_SIZE_COLUMNS}),
           product_images (*),
           categories (id, name)
         `)
