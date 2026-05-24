@@ -27,7 +27,20 @@ import {
   Clock,
   XCircle,
   Crown,
+  Plus,
+  FileText,
+  Printer,
+  Calculator,
+  Users,
+  MapPin,
+  Receipt,
+  Calendar,
+  PiggyBank,
+  HandCoins,
+  Banknote,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+
 import {
   AreaChart,
   Area,
