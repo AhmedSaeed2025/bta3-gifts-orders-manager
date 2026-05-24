@@ -888,4 +888,85 @@ const StatusBadge = ({ status }: { status: string }) => {
   );
 };
 
+const QuickAction = ({
+  icon: Icon,
+  label,
+  color,
+  onClick,
+}: {
+  icon: React.ElementType;
+  label: string;
+  color: string;
+  onClick: () => void;
+}) => (
+  <button
+    onClick={onClick}
+    className={`group flex items-center gap-2 sm:gap-3 p-3 sm:p-3.5 rounded-xl border border-border/60 bg-card hover:shadow-md hover:-translate-y-0.5 transition-all text-right`}
+  >
+    <span className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${color}`}>
+      <Icon className="h-4 w-4" />
+    </span>
+    <span className="text-xs sm:text-sm font-semibold truncate">{label}</span>
+  </button>
+);
+
+const TodayStat = ({
+  label,
+  value,
+  sub,
+  delta,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+  delta?: number;
+}) => {
+  const positive = (delta ?? 0) >= 0;
+  return (
+    <div>
+      <p className="text-[11px] text-muted-foreground mb-0.5">{label}</p>
+      <p className="text-base sm:text-lg font-bold leading-tight">{value}</p>
+      <div className="flex items-center gap-1 justify-center sm:justify-start mt-0.5">
+        {sub && <span className="text-[10px] text-muted-foreground">{sub}</span>}
+        {delta !== undefined && Number.isFinite(delta) && (
+          <span className={`text-[10px] font-semibold ${positive ? "text-emerald-600" : "text-red-600"}`}>
+            {positive ? "▲" : "▼"} {Math.abs(delta).toFixed(0)}%
+          </span>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const FinanceTile = ({
+  icon: Icon,
+  label,
+  value,
+  tone,
+  highlight,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: string;
+  tone: "emerald" | "rose" | "amber" | "orange";
+  highlight?: boolean;
+}) => {
+  const toneMap: Record<string, string> = {
+    emerald: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 ring-emerald-500/20",
+    rose: "bg-rose-500/10 text-rose-700 dark:text-rose-300 ring-rose-500/20",
+    amber: "bg-amber-500/10 text-amber-700 dark:text-amber-300 ring-amber-500/20",
+    orange: "bg-orange-500/10 text-orange-700 dark:text-orange-300 ring-orange-500/20",
+  };
+  return (
+    <div className={`rounded-xl p-3 ring-1 ${toneMap[tone]} ${highlight ? "ring-2" : ""}`}>
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-[11px] font-medium opacity-80">{label}</span>
+        <Icon className="h-4 w-4 opacity-80" />
+      </div>
+      <p className="text-sm sm:text-base font-bold tracking-tight">{value}</p>
+    </div>
+  );
+};
+
 export default EnhancedAdminDashboard;
+
