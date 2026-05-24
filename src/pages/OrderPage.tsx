@@ -44,9 +44,9 @@ const OrderPage = () => {
   const { data: storeSettings } = useQuery({
     queryKey: ['store-settings-order'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('store_settings')
-        .select('*')
+        .select((await import('@/lib/storeSettingsColumns')).PUBLIC_STORE_SETTINGS_COLUMNS)
         .eq('is_active', true)
         .single();
       
