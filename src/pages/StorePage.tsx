@@ -75,7 +75,7 @@ const StorePage = () => {
         .select(`
           *,
           categories (id, name),
-          product_sizes (*),
+          product_sizes (${PUBLIC_PRODUCT_SIZE_COLUMNS}),
           product_images (*)
         `)
         .eq('is_active', true)
