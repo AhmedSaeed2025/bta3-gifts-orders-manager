@@ -31,7 +31,7 @@ const StorePage = () => {
         return null;
       }
       
-      return data;
+      return data as any;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 1,
