@@ -21,7 +21,7 @@ const StorePage = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('store_settings')
-        .select(PUBLIC_STORE_SETTINGS_COLUMNS)
+        .select(PUBLIC_STORE_SETTINGS_COLUMNS as any)
         .eq('is_active', true)
         .maybeSingle();
       
