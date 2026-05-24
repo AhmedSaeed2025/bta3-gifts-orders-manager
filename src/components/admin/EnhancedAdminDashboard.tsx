@@ -107,6 +107,37 @@ const EnhancedAdminDashboard = () => {
     enabled: !!user,
   });
 
+  // Fetch payments (financial position)
+  const { data: customerPayments = [] } = useQuery({
+    queryKey: ["dashboard-customer-payments", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from("customer_payments")
+        .select("amount, payment_status")
+        .eq("user_id", user.id);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user,
+  });
+
+  const { data: workshopPayments = [] } = useQuery({
+    queryKey: ["dashboard-workshop-payments", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from("workshop_payments")
+        .select("cost_amount, payment_status")
+        .eq("user_id", user.id);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user,
+  });
+
+
+
   // Filter by date
   const orders = useMemo(() => {
     if (!startDate && !endDate) return allOrders;
