@@ -244,8 +244,73 @@ const EnhancedAdminDashboard = () => {
 
   const maxProductRevenue = productPerformance[0]?.revenue || 1;
 
+  // Top customers (from all-time orders for the period)
+  const topCustomers = useMemo(() => {
+    const map = new Map<string, { name: string; phone: string; orders: number; revenue: number }>();
+    orders.forEach((o: any) => {
+      const key = (o.phone || o.client_name || "—").trim();
+      const cur = map.get(key) || { name: o.client_name || "—", phone: o.phone || "", orders: 0, revenue: 0 };
+      cur.orders += 1;
+      cur.revenue += Number(o.total) || 0;
+      map.set(key, cur);
+    });
+    return Array.from(map.values()).sort((a, b) => b.revenue - a.revenue).slice(0, 5);
+  }, [orders]);
+
+  // Top governorates
+  const topGovernorates = useMemo(() => {
+    const map = new Map<string, { orders: number; revenue: number }>();
+    orders.forEach((o: any) => {
+      const gov = (o.governorate || "غير محدد").trim() || "غير محدد";
+      const cur = map.get(gov) || { orders: 0, revenue: 0 };
+      cur.orders += 1;
+      cur.revenue += Number(o.total) || 0;
+      map.set(gov, cur);
+    });
+    return Array.from(map.entries())
+      .map(([name, v]) => ({ name, ...v }))
+      .sort((a, b) => b.orders - a.orders)
+      .slice(0, 5);
+  }, [orders]);
+
+  const maxGovOrders = topGovernorates[0]?.orders || 1;
+
+  // Today vs Yesterday (always from all-time data, independent of filter)
+  const todayStr = new Date().toISOString().split("T")[0];
+  const yest = new Date();
+  yest.setDate(yest.getDate() - 1);
+  const yestStr = yest.toISOString().split("T")[0];
+  const todayOrders = allOrders.filter((o: any) => o.date_created?.split("T")[0] === todayStr);
+  const yestOrders = allOrders.filter((o: any) => o.date_created?.split("T")[0] === yestStr);
+  const todayRevenue = todayOrders.reduce((s: number, o: any) => s + Number(o.total || 0), 0);
+  const yestRevenue = yestOrders.reduce((s: number, o: any) => s + Number(o.total || 0), 0);
+  const todayProfit = todayOrders.reduce((s: number, o: any) => s + Number(o.profit || 0), 0);
+
+  // Financial position (all-time)
+  const cashIn = customerPayments.reduce(
+    (s: number, p: any) => (p.payment_status === "Paid" || p.payment_status === "Partial" ? s + Number(p.amount || 0) : s),
+    0
+  );
+  const cashOut = workshopPayments.reduce(
+    (s: number, p: any) => (p.payment_status === "Paid" ? s + Number(p.cost_amount || 0) : s),
+    0
+  );
+  const duesFromCustomers = customerPayments.reduce(
+    (s: number, p: any) => (p.payment_status === "Unpaid" ? s + Number(p.amount || 0) : s),
+    0
+  );
+  const duesToWorkshops = workshopPayments.reduce(
+    (s: number, p: any) => (p.payment_status === "Due" ? s + Number(p.cost_amount || 0) : s),
+    0
+  );
+  const netCash = cashIn - cashOut;
+
   // Recent activity
   const recentOrders = orders.slice(0, 5);
+
+  const goToTab = (tab: string) => navigate(`/legacy-admin?tab=${tab}`);
+
+
 
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ["dashboard-orders"] });
