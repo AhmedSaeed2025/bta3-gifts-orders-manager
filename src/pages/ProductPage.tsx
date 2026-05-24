@@ -44,7 +44,7 @@ const ProductPage = () => {
         .from('products')
         .select(`
           *,
-          product_sizes (*),
+          product_sizes (${PUBLIC_PRODUCT_SIZE_COLUMNS}),
           product_images (*),
           categories (id, name)
         `)
