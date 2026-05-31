@@ -124,9 +124,9 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
                 </td>
                 <td style={{ fontSize: fs.base, padding: '2px 0', width: '50%' }}>
                   <span style={{ color: '#9ca3af' }}>التليفون: </span>
-                  <span style={{ fontWeight: '600', color: '#111827' }}>{order.phone || order.customer_phone}</span>
+                  <span style={{ fontWeight: '700', color: '#111827', ...numStyle }}>{toEnDigits(order.phone || order.customer_phone)}</span>
                   {(order.phone2 || order.customer_phone2) && (
-                    <span style={{ fontWeight: '600', color: '#111827' }}> / {order.phone2 || order.customer_phone2}</span>
+                    <span style={{ fontWeight: '700', color: '#111827', ...numStyle }}> / {toEnDigits(order.phone2 || order.customer_phone2)}</span>
                   )}
                 </td>
               </tr>
@@ -212,12 +212,12 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
                         {item.size || item.product_size}
                       </span>
                     </td>
-                    <td style={{ padding: '5px 3px', textAlign: 'center', fontWeight: '600', fontSize: fs.base }}>{item.quantity}</td>
-                    <td style={{ padding: '5px 3px', textAlign: 'center', fontSize: fs.base }}>{formatCurrency(price)}</td>
-                    <td style={{ padding: '5px 3px', textAlign: 'center', color: itemDiscount > 0 ? '#dc2626' : '#d1d5db', fontSize: fs.base }}>
-                      {itemDiscount > 0 ? `-${formatCurrency(itemDiscount)}` : '-'}
+                    <td style={{ padding: '7px 4px', textAlign: 'center', fontWeight: '700', fontSize: fs.base, verticalAlign: 'middle', ...numStyle }}>{toEnDigits(item.quantity)}</td>
+                    <td style={{ padding: '7px 4px', textAlign: 'center', fontSize: fs.base, verticalAlign: 'middle', ...numStyle }}>{formatCurrency(price)}</td>
+                    <td style={{ padding: '7px 4px', textAlign: 'center', verticalAlign: 'middle', color: itemDiscount > 0 ? '#dc2626' : '#d1d5db', fontSize: fs.base, ...numStyle }}>
+                      {itemDiscount > 0 ? `- ${formatCurrency(itemDiscount)}` : '—'}
                     </td>
-                    <td style={{ padding: '5px 3px', textAlign: 'left', fontWeight: '600', fontSize: fs.base }}>{formatCurrency(itemTotal)}</td>
+                    <td style={{ padding: '7px 4px', textAlign: 'center', fontWeight: '700', fontSize: fs.base, verticalAlign: 'middle', color: '#dc2626', ...numStyle }}>{formatCurrency(itemTotal)}</td>
                   </tr>
                 );
               }) : (
