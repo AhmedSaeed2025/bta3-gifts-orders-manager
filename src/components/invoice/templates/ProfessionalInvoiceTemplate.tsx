@@ -187,13 +187,13 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
           
           <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
             <thead>
-              <tr style={{ backgroundColor: '#dc2626', color: '#ffffff' }}>
-                <th style={{ padding: '5px 3px', textAlign: 'right', fontWeight: '600', fontSize: fs.sm, width: '30%' }}>المنتج</th>
-                <th style={{ padding: '5px 3px', textAlign: 'center', fontWeight: '600', fontSize: fs.sm, width: '14%' }}>المقاس</th>
-                <th style={{ padding: '5px 3px', textAlign: 'center', fontWeight: '600', fontSize: fs.sm, width: '10%' }}>العدد</th>
-                <th style={{ padding: '5px 3px', textAlign: 'center', fontWeight: '600', fontSize: fs.sm, width: '15%' }}>السعر</th>
-                <th style={{ padding: '5px 3px', textAlign: 'center', fontWeight: '600', fontSize: fs.sm, width: '13%' }}>الخصم</th>
-                <th style={{ padding: '5px 3px', textAlign: 'left', fontWeight: '600', fontSize: fs.sm, width: '18%' }}>الإجمالي</th>
+              <tr style={{ background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)', color: '#ffffff' }}>
+                <th style={{ padding: '8px 4px', textAlign: 'center', fontWeight: '700', fontSize: fs.sm, width: '30%', letterSpacing: '0.3px' }}>المنتج</th>
+                <th style={{ padding: '8px 4px', textAlign: 'center', fontWeight: '700', fontSize: fs.sm, width: '14%', letterSpacing: '0.3px' }}>المقاس</th>
+                <th style={{ padding: '8px 4px', textAlign: 'center', fontWeight: '700', fontSize: fs.sm, width: '10%', letterSpacing: '0.3px' }}>العدد</th>
+                <th style={{ padding: '8px 4px', textAlign: 'center', fontWeight: '700', fontSize: fs.sm, width: '15%', letterSpacing: '0.3px' }}>السعر</th>
+                <th style={{ padding: '8px 4px', textAlign: 'center', fontWeight: '700', fontSize: fs.sm, width: '13%', letterSpacing: '0.3px' }}>الخصم</th>
+                <th style={{ padding: '8px 4px', textAlign: 'center', fontWeight: '700', fontSize: fs.sm, width: '18%', letterSpacing: '0.3px' }}>الإجمالي</th>
               </tr>
             </thead>
             <tbody>
@@ -204,12 +204,12 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
                 const itemTotal = (price * qty) - itemDiscount;
                 return (
                   <tr key={index} style={{ borderBottom: '1px solid #f3f4f6', backgroundColor: index % 2 === 0 ? '#ffffff' : '#fafafa' }}>
-                    <td style={{ padding: '5px 3px', textAlign: 'right', color: '#111827', fontWeight: '600', wordBreak: 'break-word', whiteSpace: 'normal', lineHeight: '1.4', fontSize: fs.base }}>
+                    <td style={{ padding: '7px 4px', textAlign: 'center', color: '#111827', fontWeight: '700', wordBreak: 'break-word', whiteSpace: 'normal', lineHeight: '1.4', fontSize: fs.base, verticalAlign: 'middle' }}>
                       {item.product_type || item.product_name}
                     </td>
-                    <td style={{ padding: '5px 3px', textAlign: 'center', fontSize: fs.base }}>
-                      <span style={{ backgroundColor: '#f3f4f6', padding: '1px 4px', borderRadius: '3px', fontSize: fs.xs }}>
-                        {item.size || item.product_size}
+                    <td style={{ padding: '7px 4px', textAlign: 'center', fontSize: fs.base, verticalAlign: 'middle' }}>
+                      <span style={{ backgroundColor: '#fef2f2', color: '#b91c1c', padding: '3px 8px', borderRadius: '6px', fontSize: fs.xs, fontWeight: '700', border: '1px solid #fecaca', display: 'inline-block', ...numStyle }}>
+                        {toEnDigits(item.size || item.product_size)}
                       </span>
                     </td>
                     <td style={{ padding: '7px 4px', textAlign: 'center', fontWeight: '700', fontSize: fs.base, verticalAlign: 'middle', ...numStyle }}>{toEnDigits(item.quantity)}</td>
