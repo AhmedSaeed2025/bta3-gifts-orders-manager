@@ -76,30 +76,31 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
           <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0', tableLayout: 'fixed' }}>
             <tbody>
               <tr>
-                <td style={{ textAlign: 'right', width: '30%', verticalAlign: 'middle', padding: '0 4px' }}>
-                  <div style={{ fontSize: fs.xs, color: '#9ca3af', marginBottom: '2px' }}>فاتورة رقم</div>
-                  <div style={{ fontSize: fs.lg, fontWeight: 'bold', color: '#dc2626', letterSpacing: '0.5px', wordBreak: 'break-all' }}>{order.serial}</div>
-                  <div style={{ fontSize: fs.xs, color: '#6b7280', fontWeight: '500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <td style={{ textAlign: 'right', width: '28%', verticalAlign: 'middle', padding: '0 4px' }}>
+                  <div style={{ fontSize: fs.xs, color: '#9ca3af', marginBottom: '3px', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Invoice No.</div>
+                  <div style={{ fontSize: fs.lg, fontWeight: 'bold', color: '#dc2626', letterSpacing: '0.8px', wordBreak: 'break-all', ...numStyle }}>{formatSerialEn(order.serial)}</div>
+                  <div style={{ fontSize: fs.xs, color: '#6b7280', fontWeight: '500', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {storeTagline || '#بتاع_هدايا_الأصلي'}
                   </div>
                 </td>
-                <td style={{ textAlign: 'center', width: '40%', verticalAlign: 'middle', padding: '0 4px' }}>
+                <td style={{ textAlign: 'center', width: '44%', verticalAlign: 'middle', padding: '0 4px' }}>
                   {storeSettings?.logo_url ? (
                     <img 
                       src={storeSettings.logo_url} 
                       alt={storeName}
                       crossOrigin="anonymous"
-                      style={{ width: '64px', height: '64px', objectFit: 'contain', display: 'inline-block', borderRadius: '50%', border: '2px solid #fecaca', padding: '3px', backgroundColor: '#fff' }}
+                      style={{ width: '84px', height: '84px', objectFit: 'contain', display: 'inline-block', borderRadius: '50%', border: '3px solid #fecaca', padding: '4px', backgroundColor: '#fff', boxShadow: '0 2px 8px rgba(220, 38, 38, 0.15)' }}
                     />
                   ) : (
                     <img 
                       src="/lovable-uploads/ac63ecb6-e1d0-4917-9537-12f75da70364.png" 
                       alt={storeName}
-                      style={{ width: '64px', height: '64px', objectFit: 'contain', display: 'inline-block', borderRadius: '50%', border: '2px solid #fecaca', padding: '3px', backgroundColor: '#fff' }}
+                      style={{ width: '84px', height: '84px', objectFit: 'contain', display: 'inline-block', borderRadius: '50%', border: '3px solid #fecaca', padding: '4px', backgroundColor: '#fff', boxShadow: '0 2px 8px rgba(220, 38, 38, 0.15)' }}
                     />
                   )}
+                  <div style={{ fontSize: fs.sm, fontWeight: '700', color: '#dc2626', marginTop: '6px', letterSpacing: '0.3px' }}>{storeName}</div>
                 </td>
-                <td style={{ textAlign: 'left', width: '30%', verticalAlign: 'middle', padding: '0 4px' }}>
+                <td style={{ textAlign: 'left', width: '28%', verticalAlign: 'middle', padding: '0 4px' }}>
                   <div style={{ fontSize: fs.xs, color: '#9ca3af', marginBottom: '2px' }}>التاريخ</div>
                   <div style={{ fontSize: fs.md, fontWeight: '700', color: '#374151', ...numStyle }}>{formatDateEn(order.date_created || order.order_date)}</div>
                 </td>
