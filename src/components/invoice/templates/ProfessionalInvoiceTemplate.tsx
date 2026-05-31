@@ -410,7 +410,7 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
           </div>
           {storeSettings?.contact_phone && (
             <div style={{ fontSize: fs.xs, color: '#9ca3af' }}>
-              📞 للتواصل: {storeSettings.contact_phone}
+              📞 للتواصل: <span style={numStyle}>{toEnDigits(storeSettings.contact_phone)}</span>
             </div>
           )}
         </div>
