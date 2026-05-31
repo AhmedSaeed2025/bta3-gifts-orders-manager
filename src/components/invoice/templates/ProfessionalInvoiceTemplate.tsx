@@ -244,44 +244,46 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <tbody>
               <tr>
-                <td style={{ padding: '4px 10px', fontSize: fs.base, color: '#6b7280', textAlign: 'right', width: '60%' }}>إجمالي المنتجات:</td>
-                <td style={{ padding: '4px 10px', fontSize: fs.base, fontWeight: '600', textAlign: 'left', color: '#374151' }}>{formatCurrency(subtotal)}</td>
+                <td style={{ padding: '5px 10px', fontSize: fs.base, color: '#6b7280', textAlign: 'right', width: '60%' }}>إجمالي المنتجات</td>
+                <td style={{ padding: '5px 10px', fontSize: fs.base, fontWeight: '700', textAlign: 'left', color: '#374151', ...numStyle }}>{formatCurrency(subtotal)}</td>
               </tr>
               {shipping > 0 && (
                 <tr>
-                  <td style={{ padding: '4px 10px', fontSize: fs.base, color: '#6b7280', textAlign: 'right' }}>مصاريف الشحن:</td>
-                  <td style={{ padding: '4px 10px', fontSize: fs.base, fontWeight: '600', textAlign: 'left', color: '#374151' }}>{formatCurrency(shipping)}</td>
+                  <td style={{ padding: '5px 10px', fontSize: fs.base, color: '#6b7280', textAlign: 'right' }}>مصاريف الشحن</td>
+                  <td style={{ padding: '5px 10px', fontSize: fs.base, fontWeight: '700', textAlign: 'left', color: '#374151', ...numStyle }}>{formatCurrency(shipping)}</td>
                 </tr>
               )}
               {discount > 0 && (
                 <tr>
-                  <td style={{ padding: '4px 10px', fontSize: fs.base, color: '#dc2626', textAlign: 'right' }}>الخصم:</td>
-                  <td style={{ padding: '4px 10px', fontSize: fs.base, fontWeight: '600', textAlign: 'left', color: '#dc2626' }}>- {formatCurrency(discount)}</td>
+                  <td style={{ padding: '5px 10px', fontSize: fs.base, color: '#dc2626', textAlign: 'right' }}>الخصم</td>
+                  <td style={{ padding: '5px 10px', fontSize: fs.base, fontWeight: '700', textAlign: 'left', color: '#dc2626', ...numStyle }}>- {formatCurrency(discount)}</td>
                 </tr>
               )}
             </tbody>
           </table>
 
           {/* Total - RED table-based box */}
-          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '6px', marginBottom: '4px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '8px', marginBottom: '4px', borderRadius: '6px', overflow: 'hidden' }}>
             <tbody>
               <tr>
                 <td style={{
-                  backgroundColor: '#dc2626',
-                  padding: '8px 12px',
+                  background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
+                  padding: '10px 14px',
                   fontSize: fs.lg,
                   fontWeight: 'bold',
                   color: '#ffffff',
                   textAlign: 'right',
                   width: '60%',
+                  letterSpacing: '0.3px',
                 }}>إجمالي الفاتورة</td>
                 <td style={{
-                  backgroundColor: '#dc2626',
-                  padding: '8px 12px',
-                  fontSize: '14px',
+                  background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
+                  padding: '10px 14px',
+                  fontSize: fs.xl,
                   fontWeight: 'bold',
                   color: '#ffffff',
                   textAlign: 'left',
+                  ...numStyle,
                 }}>{formatCurrency(total)}</td>
               </tr>
             </tbody>
@@ -295,9 +297,9 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
                   <td style={{
                     backgroundColor: '#f0fdf4',
                     border: '1px solid #bbf7d0',
-                    padding: '6px 12px',
+                    padding: '7px 12px',
                     fontSize: fs.base,
-                    fontWeight: '600',
+                    fontWeight: '700',
                     color: '#16a34a',
                     textAlign: 'right',
                     width: '60%',
@@ -307,11 +309,12 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
                     border: '1px solid #bbf7d0',
                     borderRight: 'none',
                     borderLeft: '1px solid #bbf7d0',
-                    padding: '6px 12px',
+                    padding: '7px 12px',
                     fontSize: fs.md,
                     fontWeight: 'bold',
                     color: '#16a34a',
                     textAlign: 'left',
+                    ...numStyle,
                   }}>{formatCurrency(paid)}</td>
                 </tr>
               </tbody>
@@ -326,7 +329,7 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
                   <td style={{
                     backgroundColor: '#fef2f2',
                     border: '1px solid #fecaca',
-                    padding: '7px 12px',
+                    padding: '8px 12px',
                     fontSize: fs.md,
                     fontWeight: 'bold',
                     color: '#dc2626',
@@ -338,11 +341,12 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
                     border: '1px solid #fecaca',
                     borderRight: 'none',
                     borderLeft: '1px solid #fecaca',
-                    padding: '7px 12px',
-                    fontSize: '13px',
+                    padding: '8px 12px',
+                    fontSize: fs.lg,
                     fontWeight: 'bold',
                     color: '#dc2626',
                     textAlign: 'left',
+                    ...numStyle,
                   }}>{formatCurrency(remaining)}</td>
                 </tr>
               </tbody>
