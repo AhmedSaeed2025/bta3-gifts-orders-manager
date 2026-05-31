@@ -11,6 +11,7 @@ import ElegantInvoiceTemplate from './templates/ElegantInvoiceTemplate';
 import ProfessionalInvoiceTemplate from './templates/ProfessionalInvoiceTemplate';
 import MinimalInvoiceTemplate from './templates/MinimalInvoiceTemplate';
 import CompactInvoiceTemplate from './templates/CompactInvoiceTemplate';
+import RoyalInvoiceTemplate from './templates/RoyalInvoiceTemplate';
 
 interface InvoiceTemplateSelectorProps {
   order: any;
@@ -18,9 +19,10 @@ interface InvoiceTemplateSelectorProps {
   onClose?: () => void;
 }
 
-type TemplateType = 'professional' | 'minimal' | 'compact' | 'classic' | 'modern' | 'elegant';
+type TemplateType = 'royal' | 'professional' | 'minimal' | 'compact' | 'classic' | 'modern' | 'elegant';
 
 const templates: { key: TemplateType; label: string; desc: string }[] = [
+  { key: 'royal', label: 'الملكي', desc: 'تصميم فاخر بألوان ذهبية على خلفية داكنة — مميز جداً وراقي' },
   { key: 'professional', label: 'الاحترافي', desc: 'تصميم احترافي نظيف مع ملخص واضح للفاتورة' },
   { key: 'minimal', label: 'البسيط', desc: 'تصميم بسيط وأنيق بخطوط نظيفة بدون ألوان زائدة' },
   { key: 'compact', label: 'المدمج', desc: 'تصميم مدمج عصري بألوان متدرجة وتنظيم مميز' },
@@ -57,6 +59,7 @@ const InvoiceTemplateSelector: React.FC<InvoiceTemplateSelectorProps> = ({
 
   const renderTemplate = () => {
     const map: Record<TemplateType, React.ReactNode> = {
+      royal: <RoyalInvoiceTemplate order={order} storeSettings={storeSettings} />,
       professional: <ProfessionalInvoiceTemplate order={order} storeSettings={storeSettings} />,
       minimal: <MinimalInvoiceTemplate order={order} storeSettings={storeSettings} />,
       compact: <CompactInvoiceTemplate order={order} storeSettings={storeSettings} />,
@@ -96,7 +99,7 @@ const InvoiceTemplateSelector: React.FC<InvoiceTemplateSelectorProps> = ({
         </div>
 
         <Tabs value={selectedTemplate} onValueChange={(v) => setSelectedTemplate(v as TemplateType)} className="w-full" dir="rtl">
-          <TabsList className={`grid w-full mb-6 ${isMobile ? 'grid-cols-3 gap-1' : 'grid-cols-6'}`}>
+          <TabsList className={`grid w-full mb-6 ${isMobile ? 'grid-cols-4 gap-1' : 'grid-cols-7'}`}>
             {templates.map(t => (
               <TabsTrigger key={t.key} value={t.key} className="text-xs sm:text-sm">
                 {t.label}
