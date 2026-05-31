@@ -59,6 +59,7 @@ const InvoiceTemplateSelector: React.FC<InvoiceTemplateSelectorProps> = ({
 
   const renderTemplate = () => {
     const map: Record<TemplateType, React.ReactNode> = {
+      royal: <RoyalInvoiceTemplate order={order} storeSettings={storeSettings} />,
       professional: <ProfessionalInvoiceTemplate order={order} storeSettings={storeSettings} />,
       minimal: <MinimalInvoiceTemplate order={order} storeSettings={storeSettings} />,
       compact: <CompactInvoiceTemplate order={order} storeSettings={storeSettings} />,
