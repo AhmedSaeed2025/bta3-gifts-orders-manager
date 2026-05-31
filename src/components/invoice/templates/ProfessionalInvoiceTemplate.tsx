@@ -6,6 +6,7 @@ import { Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { captureInvoiceScreenshot } from '@/lib/invoiceScreenshot';
 import { useInvoicePolicy } from '@/components/admin/settings/InvoicePolicySettings';
+import { formatDateEn, formatSerialEn, toEnDigits, NUMERIC_FONT } from '@/lib/invoiceFormat';
 
 interface InvoiceTemplateProps {
   order: any;
@@ -18,25 +19,22 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
   const invoiceRef = useRef<HTMLDivElement>(null);
   const invoicePolicy = useInvoicePolicy();
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ar-EG');
-  };
-
   const handleScreenshot = () => {
     if (!invoiceRef.current) return;
     captureInvoiceScreenshot(invoiceRef.current, order.serial);
   };
 
-  // Unified font sizes
+  // Unified font sizes — slightly bumped + tightened scale for a more consistent rhythm
   const fs = {
-    xs: '9px',
-    sm: '10px',
-    base: '10.5px',
-    md: '11px',
-    lg: '12px',
-    xl: '13px',
+    xs: '10px',
+    sm: '11px',
+    base: '12px',
+    md: '13px',
+    lg: '14px',
+    xl: '16px',
   };
+  // Numeric values share a single mono stack for perfect alignment
+  const numStyle: React.CSSProperties = { fontFamily: NUMERIC_FONT, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.2px' };
 
   const storeName = storeSettings?.store_name || 'المتجر';
   const storeTagline = storeSettings?.store_tagline || '';
