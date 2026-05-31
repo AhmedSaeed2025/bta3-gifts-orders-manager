@@ -99,7 +99,7 @@ const InvoiceTemplateSelector: React.FC<InvoiceTemplateSelectorProps> = ({
         </div>
 
         <Tabs value={selectedTemplate} onValueChange={(v) => setSelectedTemplate(v as TemplateType)} className="w-full" dir="rtl">
-          <TabsList className={`grid w-full mb-6 ${isMobile ? 'grid-cols-3 gap-1' : 'grid-cols-6'}`}>
+          <TabsList className={`grid w-full mb-6 ${isMobile ? 'grid-cols-4 gap-1' : 'grid-cols-7'}`}>
             {templates.map(t => (
               <TabsTrigger key={t.key} value={t.key} className="text-xs sm:text-sm">
                 {t.label}
