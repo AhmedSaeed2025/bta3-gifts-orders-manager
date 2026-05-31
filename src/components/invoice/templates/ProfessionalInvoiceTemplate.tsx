@@ -101,7 +101,7 @@ const ProfessionalInvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, st
                 </td>
                 <td style={{ textAlign: 'left', width: '30%', verticalAlign: 'middle', padding: '0 4px' }}>
                   <div style={{ fontSize: fs.xs, color: '#9ca3af', marginBottom: '2px' }}>التاريخ</div>
-                  <div style={{ fontSize: fs.md, fontWeight: '600', color: '#374151' }}>{formatDate(order.date_created || order.order_date)}</div>
+                  <div style={{ fontSize: fs.md, fontWeight: '700', color: '#374151', ...numStyle }}>{formatDateEn(order.date_created || order.order_date)}</div>
                 </td>
               </tr>
             </tbody>
