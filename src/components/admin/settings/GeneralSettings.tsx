@@ -178,14 +178,54 @@ const GeneralSettings = ({ formData, onInputChange, onToggleChange }: GeneralSet
             </div>
           </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="city">المدينة</Label>
+              <Input
+                id="city"
+                value={formData.city || ''}
+                onChange={(e) => onInputChange('city', e.target.value)}
+                placeholder="مثال: طنطا"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="country">الدولة</Label>
+              <Input
+                id="country"
+                value={formData.country || ''}
+                onChange={(e) => onInputChange('country', e.target.value)}
+                placeholder="مصر"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="website_url">رابط الموقع</Label>
+              <Input
+                id="website_url"
+                value={formData.website_url || ''}
+                onChange={(e) => onInputChange('website_url', e.target.value)}
+                placeholder="www.example.com"
+              />
+            </div>
+          </div>
+
           <div className="space-y-2">
-            <Label htmlFor="address">العنوان</Label>
+            <Label htmlFor="address">العنوان التفصيلي</Label>
             <Textarea
               id="address"
               value={formData.address}
               onChange={(e) => onInputChange('address', e.target.value)}
               placeholder="عنوان المتجر الكامل"
               rows={2}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="invoice_thank_you">عبارة الشكر في الفاتورة</Label>
+            <Input
+              id="invoice_thank_you"
+              value={formData.invoice_thank_you || ''}
+              onChange={(e) => onInputChange('invoice_thank_you', e.target.value)}
+              placeholder="شكراً لثقتك بنا"
             />
           </div>
         </CardContent>
