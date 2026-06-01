@@ -12,6 +12,7 @@ import ProfessionalInvoiceTemplate from './templates/ProfessionalInvoiceTemplate
 import MinimalInvoiceTemplate from './templates/MinimalInvoiceTemplate';
 import CompactInvoiceTemplate from './templates/CompactInvoiceTemplate';
 import RoyalInvoiceTemplate from './templates/RoyalInvoiceTemplate';
+import BrandedInvoiceTemplate from './templates/BrandedInvoiceTemplate';
 
 interface InvoiceTemplateSelectorProps {
   order: any;
@@ -19,9 +20,10 @@ interface InvoiceTemplateSelectorProps {
   onClose?: () => void;
 }
 
-type TemplateType = 'royal' | 'professional' | 'minimal' | 'compact' | 'classic' | 'modern' | 'elegant';
+type TemplateType = 'branded' | 'royal' | 'professional' | 'minimal' | 'compact' | 'classic' | 'modern' | 'elegant';
 
 const templates: { key: TemplateType; label: string; desc: string }[] = [
+  { key: 'branded', label: 'العلامة التجارية', desc: 'تصميم عصري متكامل بالـ QR وخط زمني للحالة وروابط السوشيال — متناسق للموبايل واللابتوب' },
   { key: 'royal', label: 'الملكي', desc: 'تصميم فاخر بألوان ذهبية على خلفية داكنة — مميز جداً وراقي' },
   { key: 'professional', label: 'الاحترافي', desc: 'تصميم احترافي نظيف مع ملخص واضح للفاتورة' },
   { key: 'minimal', label: 'البسيط', desc: 'تصميم بسيط وأنيق بخطوط نظيفة بدون ألوان زائدة' },
