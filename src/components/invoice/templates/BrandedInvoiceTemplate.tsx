@@ -277,7 +277,7 @@ const BrandedInvoiceTemplate: React.FC<Props> = ({ order, storeSettings }) => {
                       const isCurrent = idx === currentIdx;
                       return (
                         <div key={s.status} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', justifyContent: 'flex-end' }}>
-                          <span style={{ fontSize: fs.sm, color: active ? dark : gray, fontWeight: isCurrent ? 800 : 500, color: isCurrent ? red : (active ? dark : gray) }}>{s.label}</span>
+                          <span style={{ fontSize: fs.sm, fontWeight: isCurrent ? 800 : 500, color: isCurrent ? red : (active ? dark : gray) }}>{s.label}</span>
                           <span style={{
                             width: '18px', height: '18px', borderRadius: '50%',
                             background: isCurrent ? red : (active ? '#16a34a' : '#fff'),
