@@ -656,10 +656,12 @@ export type Database = {
           bank_name: string | null
           bank_transfer: boolean | null
           cash_on_delivery: boolean | null
+          city: string | null
           contact_email: string | null
           contact_phone: string | null
           contact_phone_2: string | null
           cookie_policy: string | null
+          country: string | null
           created_at: string
           credit_cards: boolean | null
           customer_review_images: string[] | null
@@ -682,6 +684,7 @@ export type Database = {
           iban: string | null
           id: string
           instagram_url: string | null
+          invoice_thank_you: string | null
           is_active: boolean
           linkedin_url: string | null
           logo_url: string | null
@@ -721,6 +724,7 @@ export type Database = {
           updated_at: string
           user_id: string
           vodafone_cash: string | null
+          website_url: string | null
           whatsapp_catalog_url: string | null
           whatsapp_chat_url: string | null
           whatsapp_number: string | null
@@ -735,10 +739,12 @@ export type Database = {
           bank_name?: string | null
           bank_transfer?: boolean | null
           cash_on_delivery?: boolean | null
+          city?: string | null
           contact_email?: string | null
           contact_phone?: string | null
           contact_phone_2?: string | null
           cookie_policy?: string | null
+          country?: string | null
           created_at?: string
           credit_cards?: boolean | null
           customer_review_images?: string[] | null
@@ -761,6 +767,7 @@ export type Database = {
           iban?: string | null
           id?: string
           instagram_url?: string | null
+          invoice_thank_you?: string | null
           is_active?: boolean
           linkedin_url?: string | null
           logo_url?: string | null
@@ -800,6 +807,7 @@ export type Database = {
           updated_at?: string
           user_id: string
           vodafone_cash?: string | null
+          website_url?: string | null
           whatsapp_catalog_url?: string | null
           whatsapp_chat_url?: string | null
           whatsapp_number?: string | null
@@ -814,10 +822,12 @@ export type Database = {
           bank_name?: string | null
           bank_transfer?: boolean | null
           cash_on_delivery?: boolean | null
+          city?: string | null
           contact_email?: string | null
           contact_phone?: string | null
           contact_phone_2?: string | null
           cookie_policy?: string | null
+          country?: string | null
           created_at?: string
           credit_cards?: boolean | null
           customer_review_images?: string[] | null
@@ -840,6 +850,7 @@ export type Database = {
           iban?: string | null
           id?: string
           instagram_url?: string | null
+          invoice_thank_you?: string | null
           is_active?: boolean
           linkedin_url?: string | null
           logo_url?: string | null
@@ -879,6 +890,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           vodafone_cash?: string | null
+          website_url?: string | null
           whatsapp_catalog_url?: string | null
           whatsapp_chat_url?: string | null
           whatsapp_number?: string | null

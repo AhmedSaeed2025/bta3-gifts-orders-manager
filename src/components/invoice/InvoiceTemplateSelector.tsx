@@ -12,6 +12,7 @@ import ProfessionalInvoiceTemplate from './templates/ProfessionalInvoiceTemplate
 import MinimalInvoiceTemplate from './templates/MinimalInvoiceTemplate';
 import CompactInvoiceTemplate from './templates/CompactInvoiceTemplate';
 import RoyalInvoiceTemplate from './templates/RoyalInvoiceTemplate';
+import BrandedInvoiceTemplate from './templates/BrandedInvoiceTemplate';
 
 interface InvoiceTemplateSelectorProps {
   order: any;
@@ -19,9 +20,10 @@ interface InvoiceTemplateSelectorProps {
   onClose?: () => void;
 }
 
-type TemplateType = 'royal' | 'professional' | 'minimal' | 'compact' | 'classic' | 'modern' | 'elegant';
+type TemplateType = 'branded' | 'royal' | 'professional' | 'minimal' | 'compact' | 'classic' | 'modern' | 'elegant';
 
 const templates: { key: TemplateType; label: string; desc: string }[] = [
+  { key: 'branded', label: 'العلامة التجارية', desc: 'تصميم عصري متكامل بالـ QR وخط زمني للحالة وروابط السوشيال — متناسق للموبايل واللابتوب' },
   { key: 'royal', label: 'الملكي', desc: 'تصميم فاخر بألوان ذهبية على خلفية داكنة — مميز جداً وراقي' },
   { key: 'professional', label: 'الاحترافي', desc: 'تصميم احترافي نظيف مع ملخص واضح للفاتورة' },
   { key: 'minimal', label: 'البسيط', desc: 'تصميم بسيط وأنيق بخطوط نظيفة بدون ألوان زائدة' },
@@ -36,7 +38,7 @@ const InvoiceTemplateSelector: React.FC<InvoiceTemplateSelectorProps> = ({
   storeSettings,
   onClose
 }) => {
-  const [selectedTemplate, setSelectedTemplate] = useState<TemplateType>('professional');
+  const [selectedTemplate, setSelectedTemplate] = useState<TemplateType>('branded');
   const [previewMode, setPreviewMode] = useState(false);
   const invoiceRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
@@ -59,6 +61,7 @@ const InvoiceTemplateSelector: React.FC<InvoiceTemplateSelectorProps> = ({
 
   const renderTemplate = () => {
     const map: Record<TemplateType, React.ReactNode> = {
+      branded: <BrandedInvoiceTemplate order={order} storeSettings={storeSettings} />,
       royal: <RoyalInvoiceTemplate order={order} storeSettings={storeSettings} />,
       professional: <ProfessionalInvoiceTemplate order={order} storeSettings={storeSettings} />,
       minimal: <MinimalInvoiceTemplate order={order} storeSettings={storeSettings} />,
@@ -99,7 +102,7 @@ const InvoiceTemplateSelector: React.FC<InvoiceTemplateSelectorProps> = ({
         </div>
 
         <Tabs value={selectedTemplate} onValueChange={(v) => setSelectedTemplate(v as TemplateType)} className="w-full" dir="rtl">
-          <TabsList className={`grid w-full mb-6 ${isMobile ? 'grid-cols-4 gap-1' : 'grid-cols-7'}`}>
+          <TabsList className={`grid w-full mb-6 ${isMobile ? 'grid-cols-4 gap-1' : 'grid-cols-8'}`}>
             {templates.map(t => (
               <TabsTrigger key={t.key} value={t.key} className="text-xs sm:text-sm">
                 {t.label}
