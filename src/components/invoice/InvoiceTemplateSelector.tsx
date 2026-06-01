@@ -38,7 +38,7 @@ const InvoiceTemplateSelector: React.FC<InvoiceTemplateSelectorProps> = ({
   storeSettings,
   onClose
 }) => {
-  const [selectedTemplate, setSelectedTemplate] = useState<TemplateType>('professional');
+  const [selectedTemplate, setSelectedTemplate] = useState<TemplateType>('branded');
   const [previewMode, setPreviewMode] = useState(false);
   const invoiceRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
@@ -61,6 +61,7 @@ const InvoiceTemplateSelector: React.FC<InvoiceTemplateSelectorProps> = ({
 
   const renderTemplate = () => {
     const map: Record<TemplateType, React.ReactNode> = {
+      branded: <BrandedInvoiceTemplate order={order} storeSettings={storeSettings} />,
       royal: <RoyalInvoiceTemplate order={order} storeSettings={storeSettings} />,
       professional: <ProfessionalInvoiceTemplate order={order} storeSettings={storeSettings} />,
       minimal: <MinimalInvoiceTemplate order={order} storeSettings={storeSettings} />,
@@ -101,7 +102,7 @@ const InvoiceTemplateSelector: React.FC<InvoiceTemplateSelectorProps> = ({
         </div>
 
         <Tabs value={selectedTemplate} onValueChange={(v) => setSelectedTemplate(v as TemplateType)} className="w-full" dir="rtl">
-          <TabsList className={`grid w-full mb-6 ${isMobile ? 'grid-cols-4 gap-1' : 'grid-cols-7'}`}>
+          <TabsList className={`grid w-full mb-6 ${isMobile ? 'grid-cols-4 gap-1' : 'grid-cols-8'}`}>
             {templates.map(t => (
               <TabsTrigger key={t.key} value={t.key} className="text-xs sm:text-sm">
                 {t.label}
