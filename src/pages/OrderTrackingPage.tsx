@@ -222,20 +222,16 @@ const OrderTrackingPage = () => {
                           <Phone className="h-4 w-4 text-gray-400" />
                           <span>{order.customer_name}</span>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <Phone className="h-4 w-4 text-gray-400" />
-                          <span>{order.customer_phone}</span>
-                        </div>
-                        {order.customer_email && (
-                          <div className="flex items-center gap-3">
-                            <Mail className="h-4 w-4 text-gray-400" />
-                            <span>{order.customer_email}</span>
-                          </div>
-                        )}
-                        {order.shipping_address && (
+                        {order.governorate && (
                           <div className="flex items-center gap-3">
                             <MapPin className="h-4 w-4 text-gray-400" />
-                            <span>{order.shipping_address}</span>
+                            <span>{order.governorate}</span>
+                          </div>
+                        )}
+                        {order.estimated_delivery_date && (
+                          <div className="flex items-center gap-3">
+                            <Truck className="h-4 w-4 text-gray-400" />
+                            <span>التسليم المتوقع: {new Date(order.estimated_delivery_date).toLocaleDateString('ar-EG')}</span>
                           </div>
                         )}
                       </div>
