@@ -37,25 +37,29 @@ const BrandedInvoiceTemplate: React.FC<Props> = ({ order, storeSettings }) => {
   const isMobile = useIsMobile();
   const [qr, setQr] = useState<string>('');
 
-  const storeName = storeSettings?.store_name || 'المتجر';
-  const tagline = storeSettings?.store_tagline || '';
+  const storeName = storeSettings?.store_name || 'بتاع هدايا الأصلي';
+  const tagline = storeSettings?.store_tagline || 'ملوك الهدايا في مصر';
   const city = storeSettings?.city || '';
   const country = storeSettings?.country || 'مصر';
   const website = storeSettings?.website_url || '';
   const phone = storeSettings?.contact_phone || '';
   const instagram = storeSettings?.instagram_url || '';
   const thankYou = storeSettings?.invoice_thank_you || 'شكراً لثقتك بنا';
+  const businessHours = storeSettings?.business_hours || 'السبت إلى الخميس: 10 صباحاً - 10 مساءً';
+  const policyText = storeSettings?.order_policy_text || '';
 
-  // Generate QR for tracking
+  // Generate QR for tracking — prefer secure tracking_token over serial
   useEffect(() => {
-    const url = `${window.location.origin}/track/${encodeURIComponent(order.serial || '')}`;
+    const token = order.tracking_token || order.serial || '';
+    const url = `${window.location.origin}/track/${encodeURIComponent(token)}`;
     QRCode.toDataURL(url, { width: 200, margin: 1, color: { dark: '#dc2626', light: '#ffffff' } })
       .then(setQr).catch(() => {});
-  }, [order.serial]);
+  }, [order.tracking_token, order.serial]);
 
   const handleScreenshot = () => { if (ref.current) captureInvoiceScreenshot(ref.current, order.serial); };
   const handleWhatsApp = () => {
-    const txt = `فاتورة #${order.serial}\n${window.location.origin}/track/${encodeURIComponent(order.serial || '')}`;
+    const token = order.tracking_token || order.serial || '';
+    const txt = `فاتورة #${order.serial}\n${window.location.origin}/track/${encodeURIComponent(token)}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`, '_blank');
   };
   const handlePrint = () => window.print();
