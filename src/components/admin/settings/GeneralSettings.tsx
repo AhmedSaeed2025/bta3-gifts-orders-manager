@@ -219,13 +219,35 @@ const GeneralSettings = ({ formData, onInputChange, onToggleChange }: GeneralSet
             />
           </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="invoice_thank_you">عبارة الشكر في الفاتورة</Label>
+              <Input
+                id="invoice_thank_you"
+                value={formData.invoice_thank_you || ''}
+                onChange={(e) => onInputChange('invoice_thank_you', e.target.value)}
+                placeholder="شكراً لثقتك بنا"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="business_hours">مواعيد العمل (تظهر في الفاتورة)</Label>
+              <Input
+                id="business_hours"
+                value={formData.business_hours || ''}
+                onChange={(e) => onInputChange('business_hours', e.target.value)}
+                placeholder="السبت إلى الخميس: 10 صباحاً - 10 مساءً"
+              />
+            </div>
+          </div>
+
           <div className="space-y-2">
-            <Label htmlFor="invoice_thank_you">عبارة الشكر في الفاتورة</Label>
-            <Input
-              id="invoice_thank_you"
-              value={formData.invoice_thank_you || ''}
-              onChange={(e) => onInputChange('invoice_thank_you', e.target.value)}
-              placeholder="شكراً لثقتك بنا"
+            <Label htmlFor="order_policy_text">نص سياسة الطلبات (يظهر في فوتر الفاتورة)</Label>
+            <Textarea
+              id="order_policy_text"
+              value={formData.order_policy_text || ''}
+              onChange={(e) => onInputChange('order_policy_text', e.target.value)}
+              placeholder="يتم تنفيذ الطلبات خلال 3 إلى 5 أيام عمل..."
+              rows={2}
             />
           </div>
         </CardContent>
