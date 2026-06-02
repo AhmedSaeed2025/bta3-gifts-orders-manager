@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -11,8 +11,16 @@ import { ORDER_STATUS_LABELS } from '@/types';
 
 const OrderTrackingPage = () => {
   const navigate = useNavigate();
-  const [serial, setSerial] = useState('');
-  const [searchSerial, setSearchSerial] = useState('');
+  const params = useParams<{ serial?: string }>();
+  const [serial, setSerial] = useState(params.serial || '');
+  const [searchSerial, setSearchSerial] = useState(params.serial || '');
+
+  useEffect(() => {
+    if (params.serial) {
+      setSerial(params.serial);
+      setSearchSerial(params.serial);
+    }
+  }, [params.serial]);
 
   const { data: order, isLoading, error } = useQuery({
     queryKey: ['order-tracking', searchSerial],
