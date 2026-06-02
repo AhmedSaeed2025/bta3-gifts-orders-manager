@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -11,68 +11,68 @@ import { ORDER_STATUS_LABELS } from '@/types';
 
 const OrderTrackingPage = () => {
   const navigate = useNavigate();
-  const [serial, setSerial] = useState('');
-  const [searchSerial, setSearchSerial] = useState('');
+  const params = useParams<{ serial?: string }>();
+  const [serial, setSerial] = useState(params.serial || '');
+  const [searchSerial, setSearchSerial] = useState(params.serial || '');
+
+  useEffect(() => {
+    if (params.serial) {
+      setSerial(params.serial);
+      setSearchSerial(params.serial);
+    }
+  }, [params.serial]);
+
+  const isToken = (v: string) => v.toLowerCase().startsWith('trk_');
 
   const { data: order, isLoading, error } = useQuery({
     queryKey: ['order-tracking', searchSerial],
     queryFn: async () => {
       if (!searchSerial) return null;
-      
-      // First try to find in admin_orders table
-      const { data: adminOrder, error: adminError } = await supabase
-        .from('admin_orders')
-        .select('*')
-        .eq('serial', searchSerial.toUpperCase())
-        .maybeSingle();
+      const q = searchSerial.trim();
+      const usingToken = isToken(q);
+
+      // Public-safe columns only
+      const adminCols = 'serial, customer_name, status, order_date, total_amount, governorate, delivery_method, payment_method, estimated_delivery_date, tracking_token';
+      const ordersCols = 'serial, client_name, status, date_created, total, governorate, delivery_method, payment_method, estimated_delivery_date, tracking_token';
+
+      const adminQ = supabase.from('admin_orders').select(adminCols);
+      const { data: adminOrder } = usingToken
+        ? await adminQ.eq('tracking_token', q).maybeSingle()
+        : await adminQ.eq('serial', q.toUpperCase()).maybeSingle();
 
       if (adminOrder) {
         return {
           serial: adminOrder.serial,
           customer_name: adminOrder.customer_name,
-          customer_phone: adminOrder.customer_phone,
-          customer_email: adminOrder.customer_email,
-          shipping_address: adminOrder.shipping_address,
+          shipping_address: null,
           governorate: adminOrder.governorate,
           payment_method: adminOrder.payment_method,
           delivery_method: adminOrder.delivery_method,
           total_amount: adminOrder.total_amount,
           status: adminOrder.status,
           order_date: adminOrder.order_date,
-          shipping_cost: adminOrder.shipping_cost
+          estimated_delivery_date: (adminOrder as any).estimated_delivery_date,
         };
       }
 
-      // If not found in admin_orders, try orders table
-      const { data: regularOrder, error: regularError } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('serial', searchSerial.toUpperCase())
-        .maybeSingle();
+      const ordersQ = supabase.from('orders').select(ordersCols);
+      const { data: regularOrder } = usingToken
+        ? await ordersQ.eq('tracking_token', q).maybeSingle()
+        : await ordersQ.eq('serial', q.toUpperCase()).maybeSingle();
 
       if (regularOrder) {
         return {
           serial: regularOrder.serial,
           customer_name: regularOrder.client_name,
-          customer_phone: regularOrder.phone,
-          customer_email: regularOrder.email,
-          shipping_address: regularOrder.address,
+          shipping_address: null,
           governorate: regularOrder.governorate,
           payment_method: regularOrder.payment_method,
           delivery_method: regularOrder.delivery_method,
           total_amount: regularOrder.total,
           status: regularOrder.status,
           order_date: regularOrder.date_created,
-          shipping_cost: regularOrder.shipping_cost
+          estimated_delivery_date: (regularOrder as any).estimated_delivery_date,
         };
-      }
-
-      // If not found in either table
-      if (adminError && adminError.code !== 'PGRST116') {
-        throw adminError;
-      }
-      if (regularError && regularError.code !== 'PGRST116') {
-        throw regularError;
       }
 
       return null;
@@ -222,20 +222,16 @@ const OrderTrackingPage = () => {
                           <Phone className="h-4 w-4 text-gray-400" />
                           <span>{order.customer_name}</span>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <Phone className="h-4 w-4 text-gray-400" />
-                          <span>{order.customer_phone}</span>
-                        </div>
-                        {order.customer_email && (
-                          <div className="flex items-center gap-3">
-                            <Mail className="h-4 w-4 text-gray-400" />
-                            <span>{order.customer_email}</span>
-                          </div>
-                        )}
-                        {order.shipping_address && (
+                        {order.governorate && (
                           <div className="flex items-center gap-3">
                             <MapPin className="h-4 w-4 text-gray-400" />
-                            <span>{order.shipping_address}</span>
+                            <span>{order.governorate}</span>
+                          </div>
+                        )}
+                        {order.estimated_delivery_date && (
+                          <div className="flex items-center gap-3">
+                            <Truck className="h-4 w-4 text-gray-400" />
+                            <span>التسليم المتوقع: {new Date(order.estimated_delivery_date).toLocaleDateString('ar-EG')}</span>
                           </div>
                         )}
                       </div>

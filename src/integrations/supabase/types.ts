@@ -75,6 +75,7 @@ export type Database = {
           delivery_method: string
           deposit: number | null
           discount: number | null
+          estimated_delivery_date: string | null
           governorate: string | null
           id: string
           notes: string | null
@@ -89,6 +90,7 @@ export type Database = {
           shipping_status: string | null
           status: string
           total_amount: number
+          tracking_token: string | null
           updated_at: string
           user_id: string
         }
@@ -102,6 +104,7 @@ export type Database = {
           delivery_method: string
           deposit?: number | null
           discount?: number | null
+          estimated_delivery_date?: string | null
           governorate?: string | null
           id?: string
           notes?: string | null
@@ -116,6 +119,7 @@ export type Database = {
           shipping_status?: string | null
           status?: string
           total_amount: number
+          tracking_token?: string | null
           updated_at?: string
           user_id: string
         }
@@ -129,6 +133,7 @@ export type Database = {
           delivery_method?: string
           deposit?: number | null
           discount?: number | null
+          estimated_delivery_date?: string | null
           governorate?: string | null
           id?: string
           notes?: string | null
@@ -143,6 +148,7 @@ export type Database = {
           shipping_status?: string | null
           status?: string
           total_amount?: number
+          tracking_token?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -398,6 +404,7 @@ export type Database = {
           deposit: number | null
           discount: number | null
           email: string | null
+          estimated_delivery_date: string | null
           governorate: string | null
           id: string
           notes: string | null
@@ -411,6 +418,7 @@ export type Database = {
           shipping_cost: number | null
           status: string
           total: number
+          tracking_token: string | null
           updated_at: string
           user_id: string
         }
@@ -423,6 +431,7 @@ export type Database = {
           deposit?: number | null
           discount?: number | null
           email?: string | null
+          estimated_delivery_date?: string | null
           governorate?: string | null
           id?: string
           notes?: string | null
@@ -436,6 +445,7 @@ export type Database = {
           shipping_cost?: number | null
           status?: string
           total: number
+          tracking_token?: string | null
           updated_at?: string
           user_id: string
         }
@@ -448,6 +458,7 @@ export type Database = {
           deposit?: number | null
           discount?: number | null
           email?: string | null
+          estimated_delivery_date?: string | null
           governorate?: string | null
           id?: string
           notes?: string | null
@@ -461,6 +472,7 @@ export type Database = {
           shipping_cost?: number | null
           status?: string
           total?: number
+          tracking_token?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -655,6 +667,7 @@ export type Database = {
           address: string | null
           bank_name: string | null
           bank_transfer: boolean | null
+          business_hours: string | null
           cash_on_delivery: boolean | null
           city: string | null
           contact_email: string | null
@@ -691,6 +704,7 @@ export type Database = {
           main_text: string | null
           mobile_wallets: boolean | null
           orange_money: string | null
+          order_policy_text: string | null
           payment_instructions: string | null
           primary_color: string | null
           privacy_policy: string | null
@@ -738,6 +752,7 @@ export type Database = {
           address?: string | null
           bank_name?: string | null
           bank_transfer?: boolean | null
+          business_hours?: string | null
           cash_on_delivery?: boolean | null
           city?: string | null
           contact_email?: string | null
@@ -774,6 +789,7 @@ export type Database = {
           main_text?: string | null
           mobile_wallets?: boolean | null
           orange_money?: string | null
+          order_policy_text?: string | null
           payment_instructions?: string | null
           primary_color?: string | null
           privacy_policy?: string | null
@@ -821,6 +837,7 @@ export type Database = {
           address?: string | null
           bank_name?: string | null
           bank_transfer?: boolean | null
+          business_hours?: string | null
           cash_on_delivery?: boolean | null
           city?: string | null
           contact_email?: string | null
@@ -857,6 +874,7 @@ export type Database = {
           main_text?: string | null
           mobile_wallets?: boolean | null
           orange_money?: string | null
+          order_policy_text?: string | null
           payment_instructions?: string | null
           primary_color?: string | null
           privacy_policy?: string | null
@@ -1092,6 +1110,7 @@ export type Database = {
     }
     Functions: {
       generate_serial_number: { Args: never; Returns: string }
+      generate_tracking_token: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["user_role"]

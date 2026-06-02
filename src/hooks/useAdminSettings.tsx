@@ -20,6 +20,13 @@ export interface AdminSettingsFormData {
   contact_email: string;
   whatsapp_number: string;
   address: string;
+  city?: string;
+  country?: string;
+  website_url?: string;
+  invoice_thank_you?: string;
+  business_hours?: string;
+  order_policy_text?: string;
+  
   
   // Appearance Settings
   logo_url: string;
@@ -104,6 +111,12 @@ const defaultFormData: AdminSettingsFormData = {
   contact_email: '',
   whatsapp_number: '',
   address: '',
+  city: '',
+  country: 'مصر',
+  website_url: '',
+  invoice_thank_you: 'شكراً لثقتك بنا',
+  business_hours: 'السبت إلى الخميس: 10 صباحاً - 10 مساءً',
+  order_policy_text: 'يتم تنفيذ الطلبات خلال 3 إلى 5 أيام عمل من تاريخ تأكيد الطلب.',
   
   // Appearance Settings
   logo_url: '',
@@ -212,6 +225,12 @@ export const useAdminSettings = () => {
         contact_email: storeSettings.contact_email || '',
         whatsapp_number: storeSettings.whatsapp_number || '',
         address: storeSettings.address || '',
+        city: (storeSettings as any).city || '',
+        country: (storeSettings as any).country || 'مصر',
+        website_url: (storeSettings as any).website_url || '',
+        invoice_thank_you: (storeSettings as any).invoice_thank_you || 'شكراً لثقتك بنا',
+        business_hours: (storeSettings as any).business_hours || 'السبت إلى الخميس: 10 صباحاً - 10 مساءً',
+        order_policy_text: (storeSettings as any).order_policy_text || 'يتم تنفيذ الطلبات خلال 3 إلى 5 أيام عمل من تاريخ تأكيد الطلب.',
         logo_url: storeSettings.logo_url || '',
         favicon_url: storeSettings.favicon_url || '',
         hero_banner_url: storeSettings.hero_banner_url || '',
