@@ -22,6 +22,7 @@ export const PUBLIC_STORE_SETTINGS_COLUMNS = [
   'whatsapp_chat_url', 'whatsapp_catalog_url', 'telegram_url',
   'footer_brand_text', 'store_enabled',
   'city', 'country', 'website_url', 'invoice_thank_you',
+  'business_hours', 'order_policy_text',
 ].join(', ');
 
 // Columns of `product_sizes` safe for unauthenticated visitors (excludes `cost`).

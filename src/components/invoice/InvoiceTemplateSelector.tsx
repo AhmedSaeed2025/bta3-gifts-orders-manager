@@ -23,7 +23,7 @@ interface InvoiceTemplateSelectorProps {
 type TemplateType = 'branded' | 'royal' | 'professional' | 'minimal' | 'compact' | 'classic' | 'modern' | 'elegant';
 
 const templates: { key: TemplateType; label: string; desc: string }[] = [
-  { key: 'branded', label: 'العلامة التجارية', desc: 'تصميم عصري متكامل بالـ QR وخط زمني للحالة وروابط السوشيال — متناسق للموبايل واللابتوب' },
+  { key: 'branded', label: 'بتاع هدايا', desc: 'تصميم بتاع هدايا الأصلي — متجر إلكتروني فاخر بـ QR آمن لتتبع الطلب، خط زمني للحالة، وروابط السوشيال — متناسق للموبايل واللابتوب' },
   { key: 'royal', label: 'الملكي', desc: 'تصميم فاخر بألوان ذهبية على خلفية داكنة — مميز جداً وراقي' },
   { key: 'professional', label: 'الاحترافي', desc: 'تصميم احترافي نظيف مع ملخص واضح للفاتورة' },
   { key: 'minimal', label: 'البسيط', desc: 'تصميم بسيط وأنيق بخطوط نظيفة بدون ألوان زائدة' },
