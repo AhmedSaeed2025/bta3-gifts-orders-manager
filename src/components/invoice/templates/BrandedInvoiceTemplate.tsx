@@ -360,6 +360,7 @@ const BrandedInvoiceTemplate: React.FC<Props> = ({ order, storeSettings }) => {
                 <td style={{ verticalAlign: 'top', width: '50%' }}>
                   {phone && <FooterLine icon="📞" text={<span style={num}>{toEnDigits(phone)}</span>} />}
                   {instagram && <FooterLine icon="📷" text={instagram.replace(/^https?:\/\/(www\.)?instagram\.com\//, '@').replace(/\/$/, '')} />}
+                  {businessHours && <FooterLine icon="🕒" text={businessHours} />}
                 </td>
                 <td style={{ verticalAlign: 'top', width: '50%' }}>
                   {(city || country) && <FooterLine icon="📍" text={[country, city].filter(Boolean).join(' - ')} />}
@@ -368,6 +369,11 @@ const BrandedInvoiceTemplate: React.FC<Props> = ({ order, storeSettings }) => {
               </tr>
             </tbody>
           </table>
+          {policyText && (
+            <div style={{ marginTop: '12px', padding: '10px 12px', background: '#fff', border: '1px dashed #fecaca', borderRadius: '8px', fontSize: fs.sm, color: '#374151', lineHeight: 1.7, textAlign: 'center' }}>
+              {policyText}
+            </div>
+          )}
           <div style={{ textAlign: 'center', marginTop: '12px', fontSize: fs.md, fontWeight: 800, color: red }}>
             {thankYou} <span style={{ color: red }}>♥</span>
           </div>
