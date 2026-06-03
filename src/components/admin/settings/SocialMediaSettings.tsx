@@ -20,7 +20,7 @@ const SocialMediaSettings = ({ formData, onInputChange }: SocialMediaSettingsPro
             <CardTitle>روابط وسائل التواصل الاجتماعي</CardTitle>
           </div>
           <p className="text-sm text-muted-foreground">
-            أضف روابط صفحاتك على وسائل التواصل الاجتماعي لتظهر في المتجر
+            أضف روابط صفحاتك على وسائل التواصل الاجتماعي لتظهر في المتجر وفوتر فاتورة بتاع هدايا بشكل منظم.
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
