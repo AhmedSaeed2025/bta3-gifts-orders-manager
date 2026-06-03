@@ -11,9 +11,71 @@ import { formatDateEn, formatSerialEn, toEnDigits, NUMERIC_FONT } from '@/lib/in
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Props {
-  order: any;
-  storeSettings?: any;
+  order: InvoiceOrder;
+  storeSettings?: StoreSettings;
 }
+
+type InvoiceItem = {
+  price?: number | string | null;
+  unit_price?: number | string | null;
+  quantity?: number | string | null;
+  item_discount?: number | string | null;
+  product_name?: string | null;
+  name?: string | null;
+  product_type?: string | null;
+  size?: string | number | null;
+  product_size?: string | number | null;
+  description?: string | null;
+};
+
+type InvoiceOrder = {
+  serial?: string | number | null;
+  tracking_token?: string | null;
+  date_created?: string | null;
+  order_date?: string | null;
+  status?: string | null;
+  governorate?: string | null;
+  city?: string | null;
+  address?: string | null;
+  shipping_address?: string | null;
+  client_name?: string | null;
+  customer_name?: string | null;
+  phone?: string | number | null;
+  customer_phone?: string | number | null;
+  phone2?: string | number | null;
+  customer_phone2?: string | number | null;
+  payment_method?: string | null;
+  notes?: string | null;
+  items?: InvoiceItem[];
+  order_items?: InvoiceItem[];
+  admin_order_items?: InvoiceItem[];
+  [key: string]: unknown;
+};
+
+type StoreSettings = {
+  store_name?: string | null;
+  store_tagline?: string | null;
+  city?: string | null;
+  country?: string | null;
+  website_url?: string | null;
+  contact_phone?: string | null;
+  contact_email?: string | null;
+  invoice_thank_you?: string | null;
+  business_hours?: string | null;
+  order_policy_text?: string | null;
+  logo_url?: string | null;
+  facebook_url?: string | null;
+  instagram_url?: string | null;
+  twitter_url?: string | null;
+  youtube_url?: string | null;
+  linkedin_url?: string | null;
+  tiktok_url?: string | null;
+  snapchat_url?: string | null;
+  telegram_url?: string | null;
+  whatsapp_chat_url?: string | null;
+  whatsapp_catalog_url?: string | null;
+  whatsapp_number?: string | null;
+};
 
 // Inline brand SVG icons (no external network calls — html-to-image safe)
 const FB = () => (
@@ -52,6 +114,7 @@ const BrandedInvoiceTemplate: React.FC<Props> = ({ order, storeSettings }) => {
   const thankYou = storeSettings?.invoice_thank_you || 'شكراً لثقتك بنا';
   const businessHours = storeSettings?.business_hours || 'السبت إلى الخميس: 10 صباحاً - 10 مساءً';
   const policyText = storeSettings?.order_policy_text || '';
+  const orderStatus = String(order.status || '');
 
   useEffect(() => {
     const token = order.tracking_token || order.serial || '';
