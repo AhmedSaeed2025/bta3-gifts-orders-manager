@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Facebook, Instagram, Twitter, Youtube, Linkedin, MessageCircle, Send, Phone } from 'lucide-react';
 
 interface SocialMediaSettingsProps {
-  formData: any;
+  formData: Record<string, string | null | undefined>;
   onInputChange: (field: string, value: string) => void;
 }
 
