@@ -115,25 +115,27 @@ const BrandedInvoiceTemplate: React.FC<Props> = ({ order, storeSettings }) => {
   const businessHours = storeSettings?.business_hours || 'السبت إلى الخميس: 10 صباحاً - 10 مساءً';
   const policyText = storeSettings?.order_policy_text || '';
   const orderStatus = String(order.status || '');
+  const orderSerial = formatSerialEn(order.serial);
+  const invoiceItems = items as InvoiceItem[];
 
   useEffect(() => {
-    const token = order.tracking_token || order.serial || '';
+    const token = String(order.tracking_token || order.serial || '');
     const url = `${window.location.origin}/track/${encodeURIComponent(token)}`;
     QRCode.toDataURL(url, { width: 220, margin: 1, color: { dark: '#dc2626', light: '#ffffff' } })
       .then(setQr).catch(() => {});
   }, [order.tracking_token, order.serial]);
 
-  const handleScreenshot = () => { if (ref.current) captureInvoiceScreenshot(ref.current, order.serial); };
+  const handleScreenshot = () => { if (ref.current) captureInvoiceScreenshot(ref.current, orderSerial); };
   const handleWhatsApp = () => {
-    const token = order.tracking_token || order.serial || '';
-    const txt = `فاتورة #${order.serial}\n${window.location.origin}/track/${encodeURIComponent(token)}`;
+    const token = String(order.tracking_token || order.serial || '');
+    const txt = `فاتورة #${orderSerial}\n${window.location.origin}/track/${encodeURIComponent(token)}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`, '_blank');
   };
   const handlePrint = () => window.print();
 
-  const currentIdx = statusConfigs.findIndex(c => c.status === order.status);
+  const currentIdx = statusConfigs.findIndex(c => c.status === orderStatus);
   const timeline = statusConfigs.filter(c => c.enabled).slice(0, 6);
-  const currentStatusLabel = getStatusLabel(order.status);
+  const currentStatusLabel = getStatusLabel(orderStatus);
 
   const num: React.CSSProperties = {
     fontFamily: NUMERIC_FONT,
@@ -246,7 +248,7 @@ const BrandedInvoiceTemplate: React.FC<Props> = ({ order, storeSettings }) => {
                 <span style={{ width: isMobile ? '30px' : '36px', height: isMobile ? '30px' : '36px', borderRadius: '50%', background: redSoft, border: `1.5px solid ${redBorder}`, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: red, fontSize: isMobile ? '14px' : '17px' }}>📋</span>
               </div>
               <div style={{ marginTop: '10px', display: 'grid', gap: '7px' }}>
-                <InfoPill label="رقم الفاتورة" value={formatSerialEn(order.serial)} numStyle={num} red={red} />
+                <InfoPill label="رقم الفاتورة" value={orderSerial} numStyle={num} red={red} />
                 <InfoPill label="تاريخ الفاتورة" value={formatDateEn(order.date_created || order.order_date)} numStyle={num} />
               </div>
             </div>
@@ -322,7 +324,7 @@ const BrandedInvoiceTemplate: React.FC<Props> = ({ order, storeSettings }) => {
                 </tr>
               </thead>
               <tbody>
-                {items.length > 0 ? items.map((it: any, i: number) => {
+                {invoiceItems.length > 0 ? invoiceItems.map((it, i) => {
                   const price = Number(it.price || it.unit_price || 0);
                   const qty = Number(it.quantity || 1);
                   const itemTotal = price * qty - Number(it.item_discount || 0);
