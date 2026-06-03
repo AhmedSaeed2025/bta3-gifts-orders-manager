@@ -6,7 +6,18 @@ import { Label } from '@/components/ui/label';
 import { Facebook, Instagram, Twitter, Youtube, Linkedin, MessageCircle, Send, Phone } from 'lucide-react';
 
 interface SocialMediaSettingsProps {
-  formData: Record<string, string | null | undefined>;
+  formData: {
+    facebook_url?: string;
+    instagram_url?: string;
+    twitter_url?: string;
+    youtube_url?: string;
+    linkedin_url?: string;
+    tiktok_url?: string;
+    snapchat_url?: string;
+    whatsapp_chat_url?: string;
+    whatsapp_catalog_url?: string;
+    telegram_url?: string;
+  };
   onInputChange: (field: string, value: string) => void;
 }
 
