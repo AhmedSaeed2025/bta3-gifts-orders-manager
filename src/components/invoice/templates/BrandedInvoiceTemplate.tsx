@@ -331,7 +331,7 @@ const BrandedInvoiceTemplate: React.FC<Props> = ({ order, storeSettings }) => {
                   const productName = it.product_name || it.name || it.product_type || 'منتج';
                   const productSize = it.size || it.product_size || it.description || '';
                   return (
-                    <tr key={i} style={{ background: i % 2 === 0 ? '#fff' : '#fcfcfc', borderBottom: i === items.length - 1 ? 'none' : '1px solid #f1f5f9' }}>
+                    <tr key={i} style={{ background: i % 2 === 0 ? '#fff' : '#fcfcfc', borderBottom: i === invoiceItems.length - 1 ? 'none' : '1px solid #f1f5f9' }}>
                       <Td center numStyle={num} strong>{toEnDigits(i + 1)}</Td>
                       <Td><span style={{ display: 'block', color: dark, fontWeight: 800, lineHeight: 1.45, wordBreak: 'break-word' }}>{productName}</span></Td>
                       <Td center>{productSize ? <span style={{ background: redSoft, color: redDark, padding: isMobile ? '3px 5px' : '4px 8px', borderRadius: '7px', fontSize: fs.xs, fontWeight: 900, border: `1px solid ${redBorder}`, display: 'inline-block', lineHeight: 1.4, wordBreak: 'break-word' }}>{toEnDigits(productSize)}</span> : <span style={{ color: gray }}>—</span>}</Td>
