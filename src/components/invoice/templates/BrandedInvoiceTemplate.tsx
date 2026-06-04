@@ -501,7 +501,11 @@ const Th: React.FC<{ width: string; children: React.ReactNode }> = ({ width, chi
 );
 
 const Td: React.FC<{ children: React.ReactNode; center?: boolean; strong?: boolean; color?: string; numStyle?: React.CSSProperties }> = ({ children, center, strong, color, numStyle }) => (
-  <td style={{ padding: '10px 6px', textAlign: center ? 'center' : 'right', fontSize: '12px', fontWeight: strong ? 900 : 700, color: color || '#374151', verticalAlign: 'middle', lineHeight: 1.5, wordBreak: 'break-word', ...numStyle }}>{children}</td>
+  <td style={{ padding: '10px 6px', fontSize: '12px', fontWeight: strong ? 900 : 700, color: color || '#374151', verticalAlign: 'middle', lineHeight: 1.5, wordBreak: 'break-word', ...numStyle }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: center ? 'center' : 'flex-start', minHeight: '24px', textAlign: center ? 'center' : 'right', width: '100%' }}>
+      {children}
+    </div>
+  </td>
 );
 
 const SumRow: React.FC<{ label: string; value: string; color?: string }> = ({ label, value, color }) => (
