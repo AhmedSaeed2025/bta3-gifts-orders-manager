@@ -487,8 +487,25 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
       }
 
       console.log('Order updated successfully');
+      setOrders(prev => prev.map(order => order.serial === serial ? {
+        ...order,
+        paymentMethod: updatedOrder.paymentMethod,
+        clientName: updatedOrder.clientName,
+        phone: updatedOrder.phone,
+        phone2: (updatedOrder as any).phone2 || "",
+        deliveryMethod: updatedOrder.deliveryMethod,
+        address: updatedOrder.address,
+        governorate: updatedOrder.governorate,
+        items: updatedOrder.items,
+        shippingCost: updatedOrder.shippingCost,
+        discount: updatedOrder.discount,
+        deposit: updatedOrder.deposit,
+        total: updatedOrder.total,
+        profit: updatedOrder.profit,
+        status: updatedOrder.status,
+        notes: typeof (updatedOrder as any).notes === 'string' ? ((updatedOrder as any).notes.trim() || undefined) : undefined,
+      } : order));
       toast.success("تم تحديث الطلب بنجاح");
-      await loadOrders(); // Reload to get the updated list
     } catch (error) {
       console.error('Error updating order:', error);
       toast.error("حدث خطأ في تحديث الطلب");
