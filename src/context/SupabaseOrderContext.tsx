@@ -260,7 +260,7 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
 
       if (adminOrderError) {
         console.error('Error inserting admin order:', adminOrderError);
-        // Don't throw error here, main order is already created
+        throw adminOrderError;
       } else {
         console.log('Admin order inserted successfully:', adminOrderData);
 
@@ -283,6 +283,7 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
 
         if (adminItemsError) {
           console.error('Error inserting admin order items:', adminItemsError);
+          throw adminItemsError;
         } else {
           console.log('Admin order items inserted successfully');
         }
@@ -308,8 +309,27 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
       }
 
       console.log('Order items inserted successfully');
+      const savedOrder: Order = {
+        serial: orderData.serial,
+        paymentMethod: orderData.payment_method,
+        clientName: orderData.client_name,
+        phone: orderData.phone,
+        phone2: orderData.phone2 || "",
+        deliveryMethod: orderData.delivery_method,
+        address: orderData.address || "",
+        governorate: orderData.governorate || "",
+        items: newOrder.items,
+        shippingCost: Number(orderData.shipping_cost || 0),
+        discount: Number(orderData.discount || 0),
+        deposit: Number(orderData.deposit || 0),
+        total: Number(orderData.total || 0),
+        profit: Number(orderData.profit || 0),
+        status: orderData.status as OrderStatus,
+        dateCreated: orderData.date_created,
+        notes: orderData.notes || undefined,
+      };
+      setOrders(prev => [savedOrder, ...prev.filter(order => order.serial !== savedOrder.serial)]);
       toast.success("تم إضافة الطلب بنجاح");
-      await loadOrders(); // Reload to get the updated list
     } catch (error) {
       console.error('Error adding order:', error);
       toast.error("حدث خطأ في إضافة الطلب");
