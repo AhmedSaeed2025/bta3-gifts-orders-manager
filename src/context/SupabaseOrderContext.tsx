@@ -313,6 +313,7 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
     } catch (error) {
       console.error('Error adding order:', error);
       toast.error("حدث خطأ في إضافة الطلب");
+      throw error;
     }
   };
 
@@ -471,6 +472,7 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
     } catch (error) {
       console.error('Error updating order:', error);
       toast.error("حدث خطأ في تحديث الطلب");
+      throw error;
     }
   };
 
