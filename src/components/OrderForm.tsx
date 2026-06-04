@@ -138,14 +138,11 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
         discount: customerData.discount, notes: notes.trim() || undefined,
       };
 
-      const invalidateAll = () => {
-        ['detailed-orders-report','admin-orders','admin-orders-enhanced','orders','orders-invoice','printing-orders','invoice-data','transactions','summary-orders','comprehensive-orders']
-          .forEach(k => queryClient.invalidateQueries({ queryKey: [k] }));
-      };
-
       if (editingOrder) {
         await updateOrder(editingOrder.serial, orderData);
-        invalidateAll();
+        queryClient.invalidateQueries({ queryKey: ['detailed-orders-report'] });
+        queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+        queryClient.invalidateQueries({ queryKey: ['invoice-data'] });
         toast.success("تم تحديث الطلب بنجاح");
         const navigationState = location.state as { returnTo?: string; focusSerial?: string } | null;
         if (navigationState?.returnTo === 'orders-report') {
@@ -154,7 +151,9 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
         } else { navigate(-1); }
       } else {
         await addOrder(orderData);
-        invalidateAll();
+        queryClient.invalidateQueries({ queryKey: ['detailed-orders-report'] });
+        queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+        queryClient.invalidateQueries({ queryKey: ['invoice-data'] });
         toast.success("تم إضافة الطلب بنجاح");
         setCustomerData({ paymentMethod: "", clientName: "", phone: "", phone2: "", deliveryMethod: "", address: "", governorate: "", shippingCost: 0, deposit: 0, discount: 0 });
         setItems([]);

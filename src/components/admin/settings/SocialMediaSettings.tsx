@@ -6,18 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Facebook, Instagram, Twitter, Youtube, Linkedin, MessageCircle, Send, Phone } from 'lucide-react';
 
 interface SocialMediaSettingsProps {
-  formData: {
-    facebook_url?: string;
-    instagram_url?: string;
-    twitter_url?: string;
-    youtube_url?: string;
-    linkedin_url?: string;
-    tiktok_url?: string;
-    snapchat_url?: string;
-    whatsapp_chat_url?: string;
-    whatsapp_catalog_url?: string;
-    telegram_url?: string;
-  };
+  formData: any;
   onInputChange: (field: string, value: string) => void;
 }
 
@@ -31,7 +20,7 @@ const SocialMediaSettings = ({ formData, onInputChange }: SocialMediaSettingsPro
             <CardTitle>روابط وسائل التواصل الاجتماعي</CardTitle>
           </div>
           <p className="text-sm text-muted-foreground">
-            أضف روابط صفحاتك على وسائل التواصل الاجتماعي لتظهر في المتجر وفوتر فاتورة بتاع هدايا بشكل منظم.
+            أضف روابط صفحاتك على وسائل التواصل الاجتماعي لتظهر في المتجر
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
