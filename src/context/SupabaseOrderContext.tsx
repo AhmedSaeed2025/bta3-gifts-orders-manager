@@ -226,7 +226,7 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
 
       if (adminOrderError) {
         console.error('Error inserting admin order:', adminOrderError);
-        throw adminOrderError;
+        toast.warning("تم حفظ الطلب الأساسي، لكن حدثت مشكلة في نسخة لوحة الإدارة");
       } else {
         console.log('Admin order inserted successfully:', adminOrderData);
 
@@ -249,7 +249,7 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
 
         if (adminItemsError) {
           console.error('Error inserting admin order items:', adminItemsError);
-          throw adminItemsError;
+          toast.warning("تم حفظ الطلب، لكن بعض تفاصيل لوحة الإدارة تحتاج تحديث");
         } else {
           console.log('Admin order items inserted successfully');
         }
