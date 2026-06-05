@@ -127,38 +127,6 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
     };
   }, [user]);
 
-  const generateSerialNumber = async (): Promise<string> => {
-    try {
-      const { data, error } = await supabase.rpc('generate_serial_number');
-      if (error) throw error;
-      console.log('Generated serial number:', data);
-      return data;
-    } catch (error) {
-      console.error('Error generating serial number:', error);
-      // Fallback to client-side generation
-      const now = new Date();
-      const year = now.getFullYear().toString().slice(-2);
-      const month = (now.getMonth() + 1).toString().padStart(2, '0');
-      const currentPrefix = `INV-${year}${month}`;
-      let maxSequence = 0;
-      
-      orders.forEach(order => {
-        if (order.serial.startsWith(currentPrefix)) {
-          const sequencePart = order.serial.split('-')[2];
-          if (sequencePart) {
-            const sequenceNum = parseInt(sequencePart);
-            if (!isNaN(sequenceNum) && sequenceNum > maxSequence) {
-              maxSequence = sequenceNum;
-            }
-          }
-        }
-      });
-      
-      const nextSequence = (maxSequence + 1).toString().padStart(4, '0');
-      return `${currentPrefix}-${nextSequence}`;
-    }
-  };
-
   const addOrder = async (newOrder: Omit<Order, "serial" | "dateCreated">) => {
     if (!user) {
       toast.error("يجب تسجيل الدخول أولاً");
@@ -167,8 +135,6 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
 
     try {
       console.log('Adding new order:', newOrder);
-      const serial = await generateSerialNumber();
-      console.log('Generated serial for new order:', serial);
       
       // Calculate remaining amount properly
       const remainingAmount = (newOrder as any).remaining_amount ?? (newOrder.total - (newOrder.deposit || 0));
@@ -178,7 +144,6 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
         .from('orders')
         .insert({
           user_id: user.id,
-          serial,
           payment_method: newOrder.paymentMethod,
           client_name: newOrder.clientName,
           phone: newOrder.phone,
@@ -195,7 +160,7 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
           profit: newOrder.profit,
           status: newOrder.status,
           notes: typeof (newOrder as any).notes === 'string' ? ((newOrder as any).notes.trim() || null) : null,
-        })
+        } as any)
         .select()
         .single();
 
@@ -205,6 +170,7 @@ export const SupabaseOrderProvider = ({ children }: { children: React.ReactNode 
       }
 
       console.log('Order inserted successfully:', orderData);
+      const serial = orderData.serial;
 
       // Insert order items
       const orderItems = newOrder.items.map(item => ({
