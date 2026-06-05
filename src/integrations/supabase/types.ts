@@ -113,7 +113,7 @@ export type Database = {
           payments_received?: number | null
           profit?: number | null
           remaining_amount?: number | null
-          serial: string
+          serial?: string
           shipping_address?: string | null
           shipping_cost?: number | null
           shipping_status?: string | null
@@ -441,7 +441,7 @@ export type Database = {
           phone2?: string | null
           profit: number
           remaining_amount?: number | null
-          serial: string
+          serial?: string
           shipping_cost?: number | null
           status?: string
           total: number
