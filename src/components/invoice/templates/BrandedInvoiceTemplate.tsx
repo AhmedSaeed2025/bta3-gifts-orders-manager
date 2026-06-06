@@ -501,7 +501,6 @@ const Th: React.FC<{ width: string; children: React.ReactNode }> = ({ width, chi
 );
 
 const Td: React.FC<{ children: React.ReactNode; center?: boolean; strong?: boolean; color?: string; numStyle?: React.CSSProperties }> = ({ children, center, strong, color, numStyle }) => {
-  const isNumeric = !!numStyle;
   return (
     <td
       style={{
@@ -512,12 +511,11 @@ const Td: React.FC<{ children: React.ReactNode; center?: boolean; strong?: boole
         verticalAlign: 'middle',
         textAlign: center ? 'center' : 'right',
         lineHeight: 1.5,
-        wordBreak: 'break-word',
-        whiteSpace: isNumeric ? 'nowrap' : 'normal',
-        ...numStyle,
+        wordBreak: numStyle ? 'normal' : 'break-word',
+        whiteSpace: numStyle ? 'nowrap' : 'normal',
       }}
     >
-      {children}
+      {numStyle ? <span style={numStyle}>{children}</span> : children}
     </td>
   );
 };
