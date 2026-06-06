@@ -20,7 +20,8 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { format, startOfYear, endOfYear, startOfMonth, endOfMonth } from "date-fns";
+import { Checkbox } from "@/components/ui/checkbox";
+import { format, startOfYear, endOfYear, startOfMonth, endOfMonth, min as minDate, max as maxDate } from "date-fns";
 import { ar } from "date-fns/locale";
 import EnhancedAdminDashboard from "@/components/admin/EnhancedAdminDashboard";
 import OrderForm from "@/components/OrderForm";
@@ -68,34 +69,38 @@ const StyledIndexTabs = () => {
         let sd = parsed.startDate ? new Date(parsed.startDate) : undefined;
         let ed = parsed.endDate ? new Date(parsed.endDate) : undefined;
         const sy = parsed.selectedYear || "";
-        const sm = parsed.selectedMonth || "";
-        
-        // Recompute dates from year/month if dates are missing but year is set
+        // Back-compat: old single selectedMonth string → array
+        let sms: string[] = Array.isArray(parsed.selectedMonths)
+          ? parsed.selectedMonths
+          : (parsed.selectedMonth ? [parsed.selectedMonth] : []);
+
+        // Recompute dates from year/months if dates are missing but year is set
         if (!sd && !ed && sy && sy !== "all") {
           const yearNum = parseInt(sy);
-          if (sm) {
-            const monthNum = parseInt(sm);
-            sd = startOfMonth(new Date(yearNum, monthNum, 1));
-            ed = endOfMonth(new Date(yearNum, monthNum, 1));
+          if (sms.length > 0) {
+            const starts = sms.map(m => startOfMonth(new Date(yearNum, parseInt(m), 1)));
+            const ends = sms.map(m => endOfMonth(new Date(yearNum, parseInt(m), 1)));
+            sd = minDate(starts);
+            ed = maxDate(ends);
           } else {
             sd = startOfYear(new Date(yearNum, 0, 1));
             ed = endOfYear(new Date(yearNum, 0, 1));
           }
         }
-        
-        return { startDate: sd, endDate: ed, selectedYear: sy, selectedMonth: sm };
+
+        return { startDate: sd, endDate: ed, selectedYear: sy, selectedMonths: sms };
       }
     } catch (e) {
       console.error('Error loading saved filter:', e);
     }
-    return { startDate: undefined, endDate: undefined, selectedYear: "", selectedMonth: "" };
+    return { startDate: undefined, endDate: undefined, selectedYear: "", selectedMonths: [] as string[] };
   };
 
   const savedFilter = getSavedFilter();
   const [startDate, setStartDate] = useState<Date | undefined>(savedFilter.startDate);
   const [endDate, setEndDate] = useState<Date | undefined>(savedFilter.endDate);
   const [selectedYear, setSelectedYear] = useState<string>(savedFilter.selectedYear);
-  const [selectedMonth, setSelectedMonth] = useState<string>(savedFilter.selectedMonth);
+  const [selectedMonths, setSelectedMonths] = useState<string[]>(savedFilter.selectedMonths);
 
   // Save filter to localStorage whenever it changes
   useEffect(() => {
@@ -103,10 +108,10 @@ const StyledIndexTabs = () => {
       startDate: startDate?.toISOString(),
       endDate: endDate?.toISOString(),
       selectedYear,
-      selectedMonth
+      selectedMonths,
     };
     localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(filterData));
-  }, [startDate, endDate, selectedYear, selectedMonth]);
+  }, [startDate, endDate, selectedYear, selectedMonths]);
 
   const setDateRange = (start: Date | undefined, end: Date | undefined) => {
     setStartDate(start);
@@ -115,7 +120,7 @@ const StyledIndexTabs = () => {
 
   const handleYearChange = (year: string) => {
     setSelectedYear(year);
-    setSelectedMonth("");
+    setSelectedMonths([]);
     if (year && year !== "all") {
       const yearNum = parseInt(year);
       setStartDate(startOfYear(new Date(yearNum, 0, 1)));
@@ -126,21 +131,46 @@ const StyledIndexTabs = () => {
     }
   };
 
-  const handleMonthChange = (month: string) => {
-    setSelectedMonth(month);
-    if (month && selectedYear && selectedYear !== "all") {
-      const yearNum = parseInt(selectedYear);
-      const monthNum = parseInt(month);
-      setStartDate(startOfMonth(new Date(yearNum, monthNum, 1)));
-      setEndDate(endOfMonth(new Date(yearNum, monthNum, 1)));
+  const applyMonthsRange = (months: string[]) => {
+    if (!selectedYear || selectedYear === "all") return;
+    const yearNum = parseInt(selectedYear);
+    if (months.length === 0) {
+      setStartDate(startOfYear(new Date(yearNum, 0, 1)));
+      setEndDate(endOfYear(new Date(yearNum, 0, 1)));
+      return;
     }
+    const starts = months.map(m => startOfMonth(new Date(yearNum, parseInt(m), 1)));
+    const ends = months.map(m => endOfMonth(new Date(yearNum, parseInt(m), 1)));
+    setStartDate(minDate(starts));
+    setEndDate(maxDate(ends));
+  };
+
+  const toggleMonth = (month: string, checked: boolean) => {
+    const next = checked
+      ? Array.from(new Set([...selectedMonths, month]))
+      : selectedMonths.filter(m => m !== month);
+    // Sort numerically for nicer display
+    next.sort((a, b) => parseInt(a) - parseInt(b));
+    setSelectedMonths(next);
+    applyMonthsRange(next);
+  };
+
+  const selectAllMonths = () => {
+    const all = months.map(m => m.value);
+    setSelectedMonths(all);
+    applyMonthsRange(all);
+  };
+
+  const clearMonths = () => {
+    setSelectedMonths([]);
+    applyMonthsRange([]);
   };
 
   const clearFilters = () => {
     setStartDate(undefined);
     setEndDate(undefined);
     setSelectedYear("");
-    setSelectedMonth("");
+    setSelectedMonths([]);
   };
 
   const currentYear = new Date().getFullYear();
@@ -159,6 +189,15 @@ const StyledIndexTabs = () => {
     { value: "10", label: "نوفمبر" },
     { value: "11", label: "ديسمبر" },
   ];
+
+  const monthsLabel = (() => {
+    if (selectedMonths.length === 0) return "الشهر";
+    if (selectedMonths.length === 1) {
+      return months.find(m => m.value === selectedMonths[0])?.label || "الشهر";
+    }
+    if (selectedMonths.length === months.length) return "كل الشهور";
+    return `${selectedMonths.length} شهور محددة`;
+  })();
 
   // Load tabs settings
   const [tabsSettings, setTabsSettings] = useState(getTabsSettings);
@@ -241,18 +280,47 @@ const StyledIndexTabs = () => {
               </Select>
 
               {selectedYear && selectedYear !== "all" && (
-                <Select value={selectedMonth} onValueChange={handleMonthChange}>
-                  <SelectTrigger className={`${isMobile ? 'w-full' : 'w-[130px]'} h-10 bg-background border-border/60 focus:ring-2 focus:ring-primary/20`}>
-                    <SelectValue placeholder="الشهر" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {months.map((month) => (
-                      <SelectItem key={month.value} value={month.value}>
-                        {month.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={`${isMobile ? 'w-full' : 'w-[170px]'} h-10 justify-between bg-background border-border/60 hover:bg-accent`}
+                    >
+                      <span className="truncate text-sm">{monthsLabel}</span>
+                      <Calendar className="h-4 w-4 opacity-60 mr-2" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-64 p-3" align="start">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-semibold">اختر شهر أو أكثر</span>
+                      <div className="flex gap-1">
+                        <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={selectAllMonths}>
+                          الكل
+                        </Button>
+                        <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={clearMonths}>
+                          مسح
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto">
+                      {months.map((month) => {
+                        const checked = selectedMonths.includes(month.value);
+                        return (
+                          <label
+                            key={month.value}
+                            className="flex items-center gap-2 p-1.5 rounded-md hover:bg-accent cursor-pointer"
+                          >
+                            <Checkbox
+                              checked={checked}
+                              onCheckedChange={(v) => toggleMonth(month.value, !!v)}
+                            />
+                            <span className="text-sm">{month.label}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </PopoverContent>
+                </Popover>
               )}
 
               <Popover>
@@ -273,7 +341,7 @@ const StyledIndexTabs = () => {
                       setStartDate(range?.from);
                       setEndDate(range?.to);
                       setSelectedYear("");
-                      setSelectedMonth("");
+                      setSelectedMonths([]);
                     }}
                     locale={ar}
                     numberOfMonths={isMobile ? 1 : 2}
