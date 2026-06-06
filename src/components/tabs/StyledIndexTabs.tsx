@@ -280,18 +280,47 @@ const StyledIndexTabs = () => {
               </Select>
 
               {selectedYear && selectedYear !== "all" && (
-                <Select value={selectedMonth} onValueChange={handleMonthChange}>
-                  <SelectTrigger className={`${isMobile ? 'w-full' : 'w-[130px]'} h-10 bg-background border-border/60 focus:ring-2 focus:ring-primary/20`}>
-                    <SelectValue placeholder="الشهر" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {months.map((month) => (
-                      <SelectItem key={month.value} value={month.value}>
-                        {month.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={`${isMobile ? 'w-full' : 'w-[170px]'} h-10 justify-between bg-background border-border/60 hover:bg-accent`}
+                    >
+                      <span className="truncate text-sm">{monthsLabel}</span>
+                      <Calendar className="h-4 w-4 opacity-60 mr-2" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-64 p-3" align="start">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-semibold">اختر شهر أو أكثر</span>
+                      <div className="flex gap-1">
+                        <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={selectAllMonths}>
+                          الكل
+                        </Button>
+                        <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={clearMonths}>
+                          مسح
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto">
+                      {months.map((month) => {
+                        const checked = selectedMonths.includes(month.value);
+                        return (
+                          <label
+                            key={month.value}
+                            className="flex items-center gap-2 p-1.5 rounded-md hover:bg-accent cursor-pointer"
+                          >
+                            <Checkbox
+                              checked={checked}
+                              onCheckedChange={(v) => toggleMonth(month.value, !!v)}
+                            />
+                            <span className="text-sm">{month.label}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </PopoverContent>
+                </Popover>
               )}
 
               <Popover>
