@@ -69,34 +69,38 @@ const StyledIndexTabs = () => {
         let sd = parsed.startDate ? new Date(parsed.startDate) : undefined;
         let ed = parsed.endDate ? new Date(parsed.endDate) : undefined;
         const sy = parsed.selectedYear || "";
-        const sm = parsed.selectedMonth || "";
-        
-        // Recompute dates from year/month if dates are missing but year is set
+        // Back-compat: old single selectedMonth string → array
+        let sms: string[] = Array.isArray(parsed.selectedMonths)
+          ? parsed.selectedMonths
+          : (parsed.selectedMonth ? [parsed.selectedMonth] : []);
+
+        // Recompute dates from year/months if dates are missing but year is set
         if (!sd && !ed && sy && sy !== "all") {
           const yearNum = parseInt(sy);
-          if (sm) {
-            const monthNum = parseInt(sm);
-            sd = startOfMonth(new Date(yearNum, monthNum, 1));
-            ed = endOfMonth(new Date(yearNum, monthNum, 1));
+          if (sms.length > 0) {
+            const starts = sms.map(m => startOfMonth(new Date(yearNum, parseInt(m), 1)));
+            const ends = sms.map(m => endOfMonth(new Date(yearNum, parseInt(m), 1)));
+            sd = minDate(starts);
+            ed = maxDate(ends);
           } else {
             sd = startOfYear(new Date(yearNum, 0, 1));
             ed = endOfYear(new Date(yearNum, 0, 1));
           }
         }
-        
-        return { startDate: sd, endDate: ed, selectedYear: sy, selectedMonth: sm };
+
+        return { startDate: sd, endDate: ed, selectedYear: sy, selectedMonths: sms };
       }
     } catch (e) {
       console.error('Error loading saved filter:', e);
     }
-    return { startDate: undefined, endDate: undefined, selectedYear: "", selectedMonth: "" };
+    return { startDate: undefined, endDate: undefined, selectedYear: "", selectedMonths: [] as string[] };
   };
 
   const savedFilter = getSavedFilter();
   const [startDate, setStartDate] = useState<Date | undefined>(savedFilter.startDate);
   const [endDate, setEndDate] = useState<Date | undefined>(savedFilter.endDate);
   const [selectedYear, setSelectedYear] = useState<string>(savedFilter.selectedYear);
-  const [selectedMonth, setSelectedMonth] = useState<string>(savedFilter.selectedMonth);
+  const [selectedMonths, setSelectedMonths] = useState<string[]>(savedFilter.selectedMonths);
 
   // Save filter to localStorage whenever it changes
   useEffect(() => {
@@ -104,10 +108,10 @@ const StyledIndexTabs = () => {
       startDate: startDate?.toISOString(),
       endDate: endDate?.toISOString(),
       selectedYear,
-      selectedMonth
+      selectedMonths,
     };
     localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(filterData));
-  }, [startDate, endDate, selectedYear, selectedMonth]);
+  }, [startDate, endDate, selectedYear, selectedMonths]);
 
   const setDateRange = (start: Date | undefined, end: Date | undefined) => {
     setStartDate(start);
@@ -116,7 +120,7 @@ const StyledIndexTabs = () => {
 
   const handleYearChange = (year: string) => {
     setSelectedYear(year);
-    setSelectedMonth("");
+    setSelectedMonths([]);
     if (year && year !== "all") {
       const yearNum = parseInt(year);
       setStartDate(startOfYear(new Date(yearNum, 0, 1)));
@@ -127,21 +131,46 @@ const StyledIndexTabs = () => {
     }
   };
 
-  const handleMonthChange = (month: string) => {
-    setSelectedMonth(month);
-    if (month && selectedYear && selectedYear !== "all") {
-      const yearNum = parseInt(selectedYear);
-      const monthNum = parseInt(month);
-      setStartDate(startOfMonth(new Date(yearNum, monthNum, 1)));
-      setEndDate(endOfMonth(new Date(yearNum, monthNum, 1)));
+  const applyMonthsRange = (months: string[]) => {
+    if (!selectedYear || selectedYear === "all") return;
+    const yearNum = parseInt(selectedYear);
+    if (months.length === 0) {
+      setStartDate(startOfYear(new Date(yearNum, 0, 1)));
+      setEndDate(endOfYear(new Date(yearNum, 0, 1)));
+      return;
     }
+    const starts = months.map(m => startOfMonth(new Date(yearNum, parseInt(m), 1)));
+    const ends = months.map(m => endOfMonth(new Date(yearNum, parseInt(m), 1)));
+    setStartDate(minDate(starts));
+    setEndDate(maxDate(ends));
+  };
+
+  const toggleMonth = (month: string, checked: boolean) => {
+    const next = checked
+      ? Array.from(new Set([...selectedMonths, month]))
+      : selectedMonths.filter(m => m !== month);
+    // Sort numerically for nicer display
+    next.sort((a, b) => parseInt(a) - parseInt(b));
+    setSelectedMonths(next);
+    applyMonthsRange(next);
+  };
+
+  const selectAllMonths = () => {
+    const all = months.map(m => m.value);
+    setSelectedMonths(all);
+    applyMonthsRange(all);
+  };
+
+  const clearMonths = () => {
+    setSelectedMonths([]);
+    applyMonthsRange([]);
   };
 
   const clearFilters = () => {
     setStartDate(undefined);
     setEndDate(undefined);
     setSelectedYear("");
-    setSelectedMonth("");
+    setSelectedMonths([]);
   };
 
   const currentYear = new Date().getFullYear();
@@ -160,6 +189,15 @@ const StyledIndexTabs = () => {
     { value: "10", label: "نوفمبر" },
     { value: "11", label: "ديسمبر" },
   ];
+
+  const monthsLabel = (() => {
+    if (selectedMonths.length === 0) return "الشهر";
+    if (selectedMonths.length === 1) {
+      return months.find(m => m.value === selectedMonths[0])?.label || "الشهر";
+    }
+    if (selectedMonths.length === months.length) return "كل الشهور";
+    return `${selectedMonths.length} شهور محددة`;
+  })();
 
   // Load tabs settings
   const [tabsSettings, setTabsSettings] = useState(getTabsSettings);
