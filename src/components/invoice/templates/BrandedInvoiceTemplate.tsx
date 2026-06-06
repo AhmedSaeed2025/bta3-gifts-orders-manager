@@ -500,13 +500,25 @@ const Th: React.FC<{ width: string; children: React.ReactNode }> = ({ width, chi
   <th style={{ padding: '10px 4px', fontSize: '11px', fontWeight: 900, width, textAlign: 'center', verticalAlign: 'middle', lineHeight: 1.35 }}>{children}</th>
 );
 
-const Td: React.FC<{ children: React.ReactNode; center?: boolean; strong?: boolean; color?: string; numStyle?: React.CSSProperties }> = ({ children, center, strong, color, numStyle }) => (
-  <td style={{ padding: '10px 6px', fontSize: '12px', fontWeight: strong ? 900 : 700, color: color || '#374151', verticalAlign: 'middle', lineHeight: 1.5, wordBreak: 'break-word', ...numStyle }}>
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: center ? 'center' : 'flex-start', minHeight: '24px', textAlign: center ? 'center' : 'right', width: '100%' }}>
-      {children}
-    </div>
-  </td>
-);
+const Td: React.FC<{ children: React.ReactNode; center?: boolean; strong?: boolean; color?: string; numStyle?: React.CSSProperties }> = ({ children, center, strong, color, numStyle }) => {
+  return (
+    <td
+      style={{
+        padding: '12px 6px',
+        fontSize: '12px',
+        fontWeight: strong ? 900 : 700,
+        color: color || '#374151',
+        verticalAlign: 'middle',
+        textAlign: center ? 'center' : 'right',
+        lineHeight: 1.5,
+        wordBreak: numStyle ? 'normal' : 'break-word',
+        whiteSpace: numStyle ? 'nowrap' : 'normal',
+      }}
+    >
+      {numStyle ? <span style={numStyle}>{children}</span> : children}
+    </td>
+  );
+};
 
 const SumRow: React.FC<{ label: string; value: string; color?: string }> = ({ label, value, color }) => (
   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', padding: '5px 0' }}>
