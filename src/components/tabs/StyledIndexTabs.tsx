@@ -341,7 +341,7 @@ const StyledIndexTabs = () => {
                       setStartDate(range?.from);
                       setEndDate(range?.to);
                       setSelectedYear("");
-                      setSelectedMonth("");
+                      setSelectedMonths([]);
                     }}
                     locale={ar}
                     numberOfMonths={isMobile ? 1 : 2}
