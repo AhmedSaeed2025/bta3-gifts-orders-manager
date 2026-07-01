@@ -291,8 +291,10 @@ const BrandedInvoiceTemplate: React.FC<Props> = ({ order, storeSettings }) => {
         <div style={{ padding: isMobile ? '13px 14px' : '18px 24px' }}>
           <div style={{ display: 'flex', flexDirection: isMobile ? 'column-reverse' : 'row', gap: '12px', direction: 'ltr' }}>
             <InfoCard title="عنوان التوصيل" icon="📍" border="#e5e7eb" bg="#ffffff" titleColor={dark}>
+              {(order.delivery_method || (order as any).deliveryMethod) && (
+                <Row label="طريقة الاستلام" value={order.delivery_method || (order as any).deliveryMethod} />
+              )}
               <Row label="المحافظة" value={order.governorate} />
-              
               <Row label="العنوان" value={order.address || order.shipping_address} multiline />
               <Row label="حالة الطلب" value={<span style={{ background: '#dcfce7', color: '#15803d', padding: '3px 10px', borderRadius: '999px', fontSize: fs.xs, fontWeight: 900 }}>{currentStatusLabel}</span>} />
             </InfoCard>
