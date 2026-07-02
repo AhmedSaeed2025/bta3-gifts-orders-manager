@@ -372,6 +372,11 @@ const BrandedInvoiceTemplate: React.FC<Props> = ({ order, storeSettings }) => {
             <div style={{ flex: 1, direction: 'rtl', border: `1px solid ${line}`, borderRadius: '12px', padding: '12px', background: '#fff' }}>
               <SectionTitle icon="🧮" title="ملخص الفاتورة" red={red} dark={dark} redSoft={redSoft} redBorder={redBorder} compact />
               {(() => {
+                const itemsGrossTotal = invoiceItems.reduce((sum, it) => {
+                  const qty = Number(it.quantity ?? 1);
+                  const price = Number(it.price || it.unit_price || 0);
+                  return sum + price * qty;
+                }, 0);
                 const itemsDiscountTotal = invoiceItems.reduce((sum, it) => {
                   const qty = Number(it.quantity ?? 1);
                   const itemDisc = Number(it.item_discount ?? 0);
@@ -380,9 +385,8 @@ const BrandedInvoiceTemplate: React.FC<Props> = ({ order, storeSettings }) => {
                 const totalDiscount = itemsDiscountTotal + Number(discount || 0);
                 return (
                   <div style={{ marginTop: '8px' }}>
-                    <SumRow label="إجمالي المنتجات" value={money(subtotal)} />
+                    <SumRow label="إجمالي المنتجات" value={money(itemsGrossTotal)} />
                     <SumRow label="مصاريف الشحن" value={money(shipping)} />
-                    {discount > 0 && <SumRow label="خصم الفاتورة" value={`- ${money(discount)}`} color={red} />}
                     {totalDiscount > 0 && (
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', background: redSoft, border: `1px dashed ${redBorder}`, padding: '7px 10px', borderRadius: '10px', marginTop: '6px' }}>
                         <span style={{ fontSize: fs.sm, fontWeight: 900, color: red }}>💰 إجمالي الخصم على الفاتورة</span>
