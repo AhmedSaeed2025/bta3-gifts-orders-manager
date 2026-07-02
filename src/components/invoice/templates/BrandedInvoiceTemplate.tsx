@@ -371,15 +371,29 @@ const BrandedInvoiceTemplate: React.FC<Props> = ({ order, storeSettings }) => {
 
             <div style={{ flex: 1, direction: 'rtl', border: `1px solid ${line}`, borderRadius: '12px', padding: '12px', background: '#fff' }}>
               <SectionTitle icon="🧮" title="ملخص الفاتورة" red={red} dark={dark} redSoft={redSoft} redBorder={redBorder} compact />
-              <div style={{ marginTop: '8px' }}>
-                <SumRow label="إجمالي المنتجات" value={money(subtotal)} />
-                <SumRow label="مصاريف الشحن" value={money(shipping)} />
-                {discount > 0 && <SumRow label="الخصم" value={`- ${money(discount)}`} color={red} />}
-                <div style={{ height: '1px', background: line, margin: '9px 0' }} />
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', background: `linear-gradient(135deg, ${redSoft}, #ffffff)`, border: `1px solid ${redBorder}`, padding: '9px 11px', borderRadius: '10px', marginBottom: '7px' }}>
-                  <span style={{ fontSize: fs.md, fontWeight: 900, color: red }}>الإجمالي الكلي</span>
-                  <span style={{ fontSize: fs.lg, fontWeight: 900, color: red, ...num }}>{money(total)}</span>
-                </div>
+              {(() => {
+                const itemsDiscountTotal = invoiceItems.reduce((sum, it) => {
+                  const qty = Number(it.quantity ?? 1);
+                  const itemDisc = Number(it.item_discount ?? 0);
+                  return sum + itemDisc * qty;
+                }, 0);
+                const totalDiscount = itemsDiscountTotal + Number(discount || 0);
+                return (
+                  <div style={{ marginTop: '8px' }}>
+                    <SumRow label="إجمالي المنتجات" value={money(subtotal)} />
+                    <SumRow label="مصاريف الشحن" value={money(shipping)} />
+                    {discount > 0 && <SumRow label="خصم الفاتورة" value={`- ${money(discount)}`} color={red} />}
+                    {totalDiscount > 0 && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', background: redSoft, border: `1px dashed ${redBorder}`, padding: '7px 10px', borderRadius: '10px', marginTop: '6px' }}>
+                        <span style={{ fontSize: fs.sm, fontWeight: 900, color: red }}>💰 إجمالي الخصم على الفاتورة</span>
+                        <span style={{ fontSize: fs.md, fontWeight: 900, color: red, ...num }}>- {money(totalDiscount)}</span>
+                      </div>
+                    )}
+                    <div style={{ height: '1px', background: line, margin: '9px 0' }} />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', background: `linear-gradient(135deg, ${redSoft}, #ffffff)`, border: `1px solid ${redBorder}`, padding: '9px 11px', borderRadius: '10px', marginBottom: '7px' }}>
+                      <span style={{ fontSize: fs.md, fontWeight: 900, color: red }}>الإجمالي الكلي</span>
+                      <span style={{ fontSize: fs.lg, fontWeight: 900, color: red, ...num }}>{money(total)}</span>
+                    </div>
                 {paid > 0 && <SumRow label="المدفوع" value={money(paid)} color="#16a34a" />}
                 {remaining > 0 ? (
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', background: '#fff7ed', border: '1px solid #fed7aa', padding: '8px 10px', borderRadius: '10px', marginTop: '7px' }}>
