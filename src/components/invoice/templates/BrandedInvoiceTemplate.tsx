@@ -329,7 +329,7 @@ const BrandedInvoiceTemplate: React.FC<Props> = ({ order, storeSettings }) => {
                 {invoiceItems.length > 0 ? invoiceItems.map((it, i) => {
                   const price = Number(it.price || it.unit_price || 0);
                   const qty = Number(it.quantity || 1);
-                  const itemTotal = price * qty - Number(it.item_discount || 0);
+                  const itemTotal = price * qty;
                   const productName = it.product_name || it.name || it.product_type || 'منتج';
                   const productSize = it.size || it.product_size || it.description || '';
                   return (
