@@ -394,16 +394,18 @@ const BrandedInvoiceTemplate: React.FC<Props> = ({ order, storeSettings }) => {
                       <span style={{ fontSize: fs.md, fontWeight: 900, color: red }}>الإجمالي الكلي</span>
                       <span style={{ fontSize: fs.lg, fontWeight: 900, color: red, ...num }}>{money(total)}</span>
                     </div>
-                {paid > 0 && <SumRow label="المدفوع" value={money(paid)} color="#16a34a" />}
-                {remaining > 0 ? (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', background: '#fff7ed', border: '1px solid #fed7aa', padding: '8px 10px', borderRadius: '10px', marginTop: '7px' }}>
-                    <span style={{ fontSize: fs.md, fontWeight: 900, color: '#c2410c' }}>المتبقي للسداد</span>
-                    <span style={{ fontSize: fs.lg, fontWeight: 900, color: '#c2410c', ...num }}>{money(remaining)}</span>
+                    {paid > 0 && <SumRow label="المدفوع" value={money(paid)} color="#16a34a" />}
+                    {remaining > 0 ? (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', background: '#fff7ed', border: '1px solid #fed7aa', padding: '8px 10px', borderRadius: '10px', marginTop: '7px' }}>
+                        <span style={{ fontSize: fs.md, fontWeight: 900, color: '#c2410c' }}>المتبقي للسداد</span>
+                        <span style={{ fontSize: fs.lg, fontWeight: 900, color: '#c2410c', ...num }}>{money(remaining)}</span>
+                      </div>
+                    ) : total > 0 ? (
+                      <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '8px 10px', borderRadius: '10px', textAlign: 'center', color: '#16a34a', fontWeight: 900, fontSize: fs.md, marginTop: '7px' }}>تم السداد بالكامل</div>
+                    ) : null}
                   </div>
-                ) : total > 0 ? (
-                  <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '8px 10px', borderRadius: '10px', textAlign: 'center', color: '#16a34a', fontWeight: 900, fontSize: fs.md, marginTop: '7px' }}>تم السداد بالكامل</div>
-                ) : null}
-              </div>
+                );
+              })()}
             </div>
           </div>
         </div>
