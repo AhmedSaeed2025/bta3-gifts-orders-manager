@@ -338,52 +338,67 @@ const EnhancedAdminDashboard = () => {
 
   return (
     <div className="space-y-6">
-      {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-l from-primary via-primary to-secondary text-primary-foreground shadow-lg">
-        <div className="absolute inset-0 opacity-10 pointer-events-none">
-          <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-white blur-3xl" />
-          <div className="absolute -bottom-16 -left-16 w-64 h-64 rounded-full bg-accent blur-3xl" />
-        </div>
-        <div className="relative p-5 sm:p-7 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 text-xs sm:text-sm opacity-90 mb-1">
-              <Sparkles className="h-4 w-4" />
-              <span>
-                {now.toLocaleDateString("ar-EG", {
-                  weekday: "long",
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                })}
+      {/* Hero Header — refined luxury look */}
+      <div className="relative overflow-hidden rounded-3xl text-primary-foreground shadow-xl">
+        {/* Layered gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-tl from-primary via-primary to-secondary" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.25),transparent_55%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(0,0,0,0.35),transparent_60%)]" />
+        {/* Soft grid pattern */}
+        <div
+          className="absolute inset-0 opacity-[0.08] pointer-events-none"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(255,255,255,.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.6) 1px, transparent 1px)",
+            backgroundSize: "36px 36px",
+          }}
+        />
+        {/* Glow orbs */}
+        <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-white/25 blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-28 -left-24 w-80 h-80 rounded-full bg-accent/40 blur-3xl pointer-events-none" />
+
+        <div className="relative p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
+          <div className="min-w-0">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-[11px] sm:text-xs mb-3">
+              <Sparkles className="h-3.5 w-3.5" />
+              <span dir="ltr" className="font-mono tracking-wide">
+                {now.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+              </span>
+              <span className="opacity-60">•</span>
+              <span dir="ltr" className="font-mono tabular-nums">
+                {now.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold mb-1">{greeting} 👋</h1>
-            <p className="text-sm sm:text-base opacity-90">
-              نظرة شاملة على أداء مشروعك في لمحة سريعة
+            <h1 className="text-2xl sm:text-4xl font-extrabold mb-1.5 tracking-tight drop-shadow-sm">
+              {greeting}
+              <span className="inline-block mr-2 animate-pulse">✨</span>
+            </h1>
+            <p className="text-sm sm:text-base opacity-90 max-w-lg leading-relaxed">
+              نظرة أنيقة وشاملة على أداء مشروعك — كل الأرقام المهمة في مكان واحد.
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
             <Button
               onClick={handleRefresh}
               variant="secondary"
               size="sm"
-              className="bg-white/15 hover:bg-white/25 text-primary-foreground border-white/20 backdrop-blur"
+              className="bg-white/15 hover:bg-white/25 text-primary-foreground border border-white/25 backdrop-blur-md shadow-sm rounded-xl"
             >
               <RefreshCw className="h-4 w-4 ml-2" />
-              تحديث
+              تحديث اللوحة
             </Button>
           </div>
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
-        <QuickAction icon={Plus} label="طلب جديد" color="bg-primary text-primary-foreground" onClick={() => goToTab("add-order")} />
-        <QuickAction icon={ShoppingCart} label="إدارة الطلبات" color="bg-blue-500/10 text-blue-700 dark:text-blue-300" onClick={() => goToTab("orders-management")} />
-        <QuickAction icon={Package} label="المنتجات" color="bg-violet-500/10 text-violet-700 dark:text-violet-300" onClick={() => goToTab("products")} />
-        <QuickAction icon={Printer} label="تقرير الطباعة" color="bg-amber-500/10 text-amber-700 dark:text-amber-300" onClick={() => goToTab("printing-report")} />
-        <QuickAction icon={Receipt} label="فاتورة" color="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" onClick={() => goToTab("invoice")} />
-        <QuickAction icon={Calculator} label="كشف الحساب" color="bg-rose-500/10 text-rose-700 dark:text-rose-300" onClick={() => goToTab("account-statement")} />
+      {/* Quick Actions — premium icon tiles */}
+      <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
+        <QuickAction icon={Plus} label="طلب جديد" gradient="from-primary to-secondary" solid onClick={() => goToTab("add-order")} />
+        <QuickAction icon={ShoppingCart} label="إدارة الطلبات" gradient="from-blue-500 to-cyan-500" onClick={() => goToTab("orders-management")} />
+        <QuickAction icon={Package} label="المنتجات" gradient="from-violet-500 to-fuchsia-500" onClick={() => goToTab("products")} />
+        <QuickAction icon={Printer} label="تقرير الطباعة" gradient="from-amber-500 to-orange-500" onClick={() => goToTab("printing-report")} />
+        <QuickAction icon={Receipt} label="فاتورة" gradient="from-emerald-500 to-teal-500" onClick={() => goToTab("invoice")} />
+        <QuickAction icon={Calculator} label="كشف الحساب" gradient="from-rose-500 to-pink-500" onClick={() => goToTab("account-statement")} />
       </div>
 
       {/* Today snapshot */}
