@@ -338,52 +338,67 @@ const EnhancedAdminDashboard = () => {
 
   return (
     <div className="space-y-6">
-      {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-l from-primary via-primary to-secondary text-primary-foreground shadow-lg">
-        <div className="absolute inset-0 opacity-10 pointer-events-none">
-          <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-white blur-3xl" />
-          <div className="absolute -bottom-16 -left-16 w-64 h-64 rounded-full bg-accent blur-3xl" />
-        </div>
-        <div className="relative p-5 sm:p-7 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 text-xs sm:text-sm opacity-90 mb-1">
-              <Sparkles className="h-4 w-4" />
-              <span>
-                {now.toLocaleDateString("ar-EG", {
-                  weekday: "long",
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                })}
+      {/* Hero Header — refined luxury look */}
+      <div className="relative overflow-hidden rounded-3xl text-primary-foreground shadow-xl">
+        {/* Layered gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-tl from-primary via-primary to-secondary" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.25),transparent_55%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(0,0,0,0.35),transparent_60%)]" />
+        {/* Soft grid pattern */}
+        <div
+          className="absolute inset-0 opacity-[0.08] pointer-events-none"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(255,255,255,.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.6) 1px, transparent 1px)",
+            backgroundSize: "36px 36px",
+          }}
+        />
+        {/* Glow orbs */}
+        <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-white/25 blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-28 -left-24 w-80 h-80 rounded-full bg-accent/40 blur-3xl pointer-events-none" />
+
+        <div className="relative p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
+          <div className="min-w-0">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-[11px] sm:text-xs mb-3">
+              <Sparkles className="h-3.5 w-3.5" />
+              <span dir="ltr" className="font-mono tracking-wide">
+                {now.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+              </span>
+              <span className="opacity-60">•</span>
+              <span dir="ltr" className="font-mono tabular-nums">
+                {now.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold mb-1">{greeting} 👋</h1>
-            <p className="text-sm sm:text-base opacity-90">
-              نظرة شاملة على أداء مشروعك في لمحة سريعة
+            <h1 className="text-2xl sm:text-4xl font-extrabold mb-1.5 tracking-tight drop-shadow-sm">
+              {greeting}
+              <span className="inline-block mr-2 animate-pulse">✨</span>
+            </h1>
+            <p className="text-sm sm:text-base opacity-90 max-w-lg leading-relaxed">
+              نظرة أنيقة وشاملة على أداء مشروعك — كل الأرقام المهمة في مكان واحد.
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
             <Button
               onClick={handleRefresh}
               variant="secondary"
               size="sm"
-              className="bg-white/15 hover:bg-white/25 text-primary-foreground border-white/20 backdrop-blur"
+              className="bg-white/15 hover:bg-white/25 text-primary-foreground border border-white/25 backdrop-blur-md shadow-sm rounded-xl"
             >
               <RefreshCw className="h-4 w-4 ml-2" />
-              تحديث
+              تحديث اللوحة
             </Button>
           </div>
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
-        <QuickAction icon={Plus} label="طلب جديد" color="bg-primary text-primary-foreground" onClick={() => goToTab("add-order")} />
-        <QuickAction icon={ShoppingCart} label="إدارة الطلبات" color="bg-blue-500/10 text-blue-700 dark:text-blue-300" onClick={() => goToTab("orders-management")} />
-        <QuickAction icon={Package} label="المنتجات" color="bg-violet-500/10 text-violet-700 dark:text-violet-300" onClick={() => goToTab("products")} />
-        <QuickAction icon={Printer} label="تقرير الطباعة" color="bg-amber-500/10 text-amber-700 dark:text-amber-300" onClick={() => goToTab("printing-report")} />
-        <QuickAction icon={Receipt} label="فاتورة" color="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" onClick={() => goToTab("invoice")} />
-        <QuickAction icon={Calculator} label="كشف الحساب" color="bg-rose-500/10 text-rose-700 dark:text-rose-300" onClick={() => goToTab("account-statement")} />
+      {/* Quick Actions — premium icon tiles */}
+      <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
+        <QuickAction icon={Plus} label="طلب جديد" gradient="from-primary to-secondary" solid onClick={() => goToTab("add-order")} />
+        <QuickAction icon={ShoppingCart} label="إدارة الطلبات" gradient="from-blue-500 to-cyan-500" onClick={() => goToTab("orders-management")} />
+        <QuickAction icon={Package} label="المنتجات" gradient="from-violet-500 to-fuchsia-500" onClick={() => goToTab("products")} />
+        <QuickAction icon={Printer} label="تقرير الطباعة" gradient="from-amber-500 to-orange-500" onClick={() => goToTab("printing-report")} />
+        <QuickAction icon={Receipt} label="فاتورة" gradient="from-emerald-500 to-teal-500" onClick={() => goToTab("invoice")} />
+        <QuickAction icon={Calculator} label="كشف الحساب" gradient="from-rose-500 to-pink-500" onClick={() => goToTab("account-statement")} />
       </div>
 
       {/* Today snapshot */}
@@ -819,21 +834,29 @@ interface KpiCardProps {
 const KpiCard = ({ label, value, trend, icon: Icon, accent, bg, ring, subtitle }: KpiCardProps) => {
   const positive = (trend ?? 0) >= 0;
   return (
-    <Card className={`relative overflow-hidden border-border/60 shadow-sm hover:shadow-md transition-all bg-gradient-to-br ${bg} ring-1 ${ring}`}>
-      <CardContent className="p-4">
+    <Card
+      className={`group relative overflow-hidden border-border/60 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all bg-gradient-to-br ${bg} ring-1 ${ring} rounded-2xl`}
+    >
+      {/* Corner glow */}
+      <div className="absolute -top-10 -left-10 w-32 h-32 rounded-full bg-white/20 dark:bg-white/5 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+      <CardContent className="relative p-4 sm:p-5">
         <div className="flex items-start justify-between mb-3">
           <p className="text-xs sm:text-sm font-medium text-muted-foreground">{label}</p>
-          <div className={`p-2 rounded-lg bg-background/60 ${accent}`}>
+          <div className={`p-2.5 rounded-xl bg-background/80 shadow-sm ring-1 ring-border/40 ${accent}`}>
             <Icon className="h-4 w-4" />
           </div>
         </div>
-        <p className="text-lg sm:text-2xl font-bold tracking-tight">{value}</p>
-        <div className="flex items-center justify-between mt-2 min-h-[18px]">
-          {subtitle && <span className="text-[11px] text-muted-foreground">{subtitle}</span>}
+        <p className="text-xl sm:text-3xl font-extrabold tracking-tight tabular-nums" dir="ltr" style={{ textAlign: "right" }}>
+          {value}
+        </p>
+        <div className="flex items-center justify-between mt-2.5 min-h-[20px]">
+          {subtitle && <span className="text-[11px] text-muted-foreground font-medium">{subtitle}</span>}
           {trend !== undefined && (
             <span
-              className={`inline-flex items-center gap-0.5 text-[11px] font-semibold ml-auto ${
-                positive ? "text-emerald-600" : "text-red-600"
+              className={`inline-flex items-center gap-0.5 text-[11px] font-bold px-2 py-0.5 rounded-full ml-auto ${
+                positive
+                  ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
+                  : "bg-red-500/15 text-red-700 dark:text-red-400"
               }`}
             >
               {positive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
@@ -891,22 +914,31 @@ const StatusBadge = ({ status }: { status: string }) => {
 const QuickAction = ({
   icon: Icon,
   label,
-  color,
+  gradient,
+  solid,
   onClick,
 }: {
   icon: React.ElementType;
   label: string;
-  color: string;
+  gradient: string;
+  solid?: boolean;
   onClick: () => void;
 }) => (
   <button
     onClick={onClick}
-    className={`group flex items-center gap-2 sm:gap-3 p-3 sm:p-3.5 rounded-xl border border-border/60 bg-card hover:shadow-md hover:-translate-y-0.5 transition-all text-right`}
+    className="group relative flex flex-col items-center justify-center gap-2 p-3 sm:p-4 rounded-2xl border border-border/60 bg-card hover:shadow-lg hover:-translate-y-0.5 hover:border-primary/30 transition-all overflow-hidden"
   >
-    <span className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${color}`}>
-      <Icon className="h-4 w-4" />
+    <span
+      className={`relative w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br ${gradient} text-white shadow-md group-hover:scale-110 transition-transform`}
+    >
+      <Icon className="h-5 w-5" />
     </span>
-    <span className="text-xs sm:text-sm font-semibold truncate">{label}</span>
+    <span className="text-[11px] sm:text-sm font-semibold text-center leading-tight">{label}</span>
+    {solid && (
+      <span className="absolute top-1.5 left-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">
+        سريع
+      </span>
+    )}
   </button>
 );
 
