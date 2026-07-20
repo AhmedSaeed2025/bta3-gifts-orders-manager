@@ -166,72 +166,109 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
     } finally { setIsSubmitting(false); }
   };
 
+  const steps = [
+    { n: 1, label: "بيانات العميل", done: customerData.clientName.trim().length > 0 && phoneRegex.test(customerData.phone) },
+    { n: 2, label: "الأصناف", done: items.length > 0 },
+    { n: 3, label: "المراجعة", done: items.length > 0 && canSubmit },
+    { n: 4, label: "الحفظ", done: false },
+  ];
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-4">
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-4">
       {/* Main form column */}
-      <Card className="border-0 shadow-lg">
-        <CardContent className="p-4 sm:p-6">
-          {/* Header */}
-          <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border">
-            <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <FileText size={20} className="text-primary" />
+      <div className="space-y-4">
+        {/* Hero header */}
+        <div className="relative overflow-hidden rounded-2xl text-primary-foreground shadow-lg">
+          <div className="absolute inset-0 bg-gradient-to-tl from-primary via-primary to-secondary" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(255,255,255,0.22),transparent_55%)]" />
+          <div className="absolute -bottom-16 -right-16 w-56 h-56 rounded-full bg-white/15 blur-3xl pointer-events-none" />
+          <div className="relative p-5 sm:p-6 flex items-center gap-4">
+            <div className="h-12 w-12 rounded-2xl bg-white/15 border border-white/25 backdrop-blur-md flex items-center justify-center shadow-sm">
+              <FileText size={22} />
             </div>
-            <div>
-              <h2 className="font-bold text-lg">
-                {editingOrder ? `تعديل الطلب - ${editingOrder.serial}` : "طلب جديد"}
+            <div className="flex-1 min-w-0">
+              <h2 className="font-extrabold text-lg sm:text-xl tracking-tight">
+                {editingOrder ? `تعديل الطلب` : "إنشاء طلب جديد"}
               </h2>
-              <p className="text-xs text-muted-foreground">
-                {editingOrder ? "قم بتعديل بيانات الطلب" : "أدخل بيانات الطلب الجديد"}
+              <p className="text-xs sm:text-sm opacity-90">
+                {editingOrder
+                  ? <>رقم الفاتورة: <span dir="ltr" className="font-mono">{editingOrder.serial}</span></>
+                  : "املأ بيانات العميل والأصناف لإتمام الطلب"}
               </p>
+            </div>
+            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 border border-white/25 backdrop-blur-md text-[11px]">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 animate-pulse" />
+              مسودة مباشرة
             </div>
           </div>
 
-          <form id="order-form" onSubmit={handleSubmit} className="space-y-5">
-            {/* Step 1: Customer */}
-            <SectionWrapper step={1} title="بيانات العميل والتوصيل">
-              <CustomerDataForm
-                customerData={customerData}
-                onCustomerDataChange={handleCustomerDataChange}
-                onSelectChange={handleCustomerSelectChange}
-              />
-            </SectionWrapper>
+          {/* Steps bar */}
+          <div className="relative px-5 sm:px-6 pb-5 flex items-center gap-2">
+            {steps.map((s, idx) => (
+              <React.Fragment key={s.n}>
+                <div className={`flex items-center gap-2 px-2.5 py-1 rounded-lg text-[11px] font-medium border transition-all ${
+                  s.done
+                    ? "bg-white/20 border-white/30"
+                    : "bg-white/5 border-white/15 opacity-80"
+                }`}>
+                  <span className={`h-4 w-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                    s.done ? "bg-emerald-400 text-emerald-950" : "bg-white/25"
+                  }`}>{s.done ? "✓" : s.n}</span>
+                  <span>{s.label}</span>
+                </div>
+                {idx < steps.length - 1 && (
+                  <div className="flex-1 h-px bg-white/20" />
+                )}
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
 
-            {/* Step 2: Add items */}
-            <SectionWrapper step={2} title="إضافة الأصناف">
-              <ImprovedItemAddForm
-                currentItem={currentItem}
-                onItemChange={handleItemChange}
-                onProductSelectionChange={handleProductSelectionChange}
-                onAddItem={addItem}
-              />
-            </SectionWrapper>
+        <Card className="border-0 shadow-md">
+          <CardContent className="p-4 sm:p-6">
+            <form id="order-form" onSubmit={handleSubmit} className="space-y-4">
+              <SectionWrapper step={1} title="بيانات العميل والتوصيل" subtitle="اسم العميل، رقم التليفون، وطريقة التوصيل">
+                <CustomerDataForm
+                  customerData={customerData}
+                  onCustomerDataChange={handleCustomerDataChange}
+                  onSelectChange={handleCustomerSelectChange}
+                />
+              </SectionWrapper>
 
-            {/* Step 3: Items list */}
-            <SectionWrapper step={3} title="الأصناف المضافة">
-              <ItemsTable
-                items={items}
-                onRemoveItem={removeItem}
-                onUpdateItem={updateItem}
-                subtotal={subtotal}
-                shippingCost={customerData.shippingCost}
-                discount={customerData.discount}
-                deposit={customerData.deposit}
-                totalAmount={totalAmount}
-                remainingAmount={remainingAmount}
-                products={[]}
-                editMode={!!editingOrder}
-                totalCost={totalCost}
-                netProfit={netProfit}
-              />
-            </SectionWrapper>
+              <SectionWrapper step={2} title="إضافة الأصناف" subtitle="ابحث عن المنتج واختر المقاس والكمية">
+                <ImprovedItemAddForm
+                  currentItem={currentItem}
+                  onItemChange={handleItemChange}
+                  onProductSelectionChange={handleProductSelectionChange}
+                  onAddItem={addItem}
+                />
+              </SectionWrapper>
 
-            {/* Step 4: Notes */}
-            <SectionWrapper step={4} title="ملاحظات">
-              <NotesField notes={notes} onNotesChange={setNotes} />
-            </SectionWrapper>
-          </form>
-        </CardContent>
-      </Card>
+              <SectionWrapper step={3} title="الأصناف المضافة" subtitle="راجع الأسعار والكميات قبل الحفظ">
+                <ItemsTable
+                  items={items}
+                  onRemoveItem={removeItem}
+                  onUpdateItem={updateItem}
+                  subtotal={subtotal}
+                  shippingCost={customerData.shippingCost}
+                  discount={customerData.discount}
+                  deposit={customerData.deposit}
+                  totalAmount={totalAmount}
+                  remainingAmount={remainingAmount}
+                  products={[]}
+                  editMode={!!editingOrder}
+                  totalCost={totalCost}
+                  netProfit={netProfit}
+                />
+              </SectionWrapper>
+
+              <SectionWrapper step={4} title="ملاحظات" subtitle="أي ملاحظة داخلية أو تعليمات خاصة بالطلب">
+                <NotesField notes={notes} onNotesChange={setNotes} />
+              </SectionWrapper>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Sidebar column */}
       <OrderSummarySidebar
@@ -255,18 +292,26 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
 const SectionWrapper = ({
   step,
   title,
+  subtitle,
   children,
 }: {
   step: number;
   title: string;
+  subtitle?: string;
   children: React.ReactNode;
 }) => (
-  <div className="bg-card border border-border rounded-xl p-4">
-    <div className="flex items-center gap-2 mb-4">
-      <div className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">
-        {step}
+  <div className="group relative bg-gradient-to-br from-card to-muted/20 border border-border/70 rounded-2xl p-4 sm:p-5 hover:border-primary/30 hover:shadow-sm transition-all">
+    <div className="flex items-start gap-3 mb-4 pb-3 border-b border-dashed border-border">
+      <div className="relative flex-shrink-0">
+        <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-secondary text-primary-foreground flex items-center justify-center text-sm font-extrabold shadow-md">
+          {step}
+        </div>
+        <span className="absolute -inset-1 rounded-2xl bg-primary/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity -z-10" />
       </div>
-      <h3 className="font-bold text-sm">{title}</h3>
+      <div className="min-w-0">
+        <h3 className="font-bold text-sm sm:text-base leading-tight">{title}</h3>
+        {subtitle && <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
+      </div>
     </div>
     {children}
   </div>
