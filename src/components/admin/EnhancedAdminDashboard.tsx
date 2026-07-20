@@ -834,21 +834,29 @@ interface KpiCardProps {
 const KpiCard = ({ label, value, trend, icon: Icon, accent, bg, ring, subtitle }: KpiCardProps) => {
   const positive = (trend ?? 0) >= 0;
   return (
-    <Card className={`relative overflow-hidden border-border/60 shadow-sm hover:shadow-md transition-all bg-gradient-to-br ${bg} ring-1 ${ring}`}>
-      <CardContent className="p-4">
+    <Card
+      className={`group relative overflow-hidden border-border/60 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all bg-gradient-to-br ${bg} ring-1 ${ring} rounded-2xl`}
+    >
+      {/* Corner glow */}
+      <div className="absolute -top-10 -left-10 w-32 h-32 rounded-full bg-white/20 dark:bg-white/5 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+      <CardContent className="relative p-4 sm:p-5">
         <div className="flex items-start justify-between mb-3">
           <p className="text-xs sm:text-sm font-medium text-muted-foreground">{label}</p>
-          <div className={`p-2 rounded-lg bg-background/60 ${accent}`}>
+          <div className={`p-2.5 rounded-xl bg-background/80 shadow-sm ring-1 ring-border/40 ${accent}`}>
             <Icon className="h-4 w-4" />
           </div>
         </div>
-        <p className="text-lg sm:text-2xl font-bold tracking-tight">{value}</p>
-        <div className="flex items-center justify-between mt-2 min-h-[18px]">
-          {subtitle && <span className="text-[11px] text-muted-foreground">{subtitle}</span>}
+        <p className="text-xl sm:text-3xl font-extrabold tracking-tight tabular-nums" dir="ltr" style={{ textAlign: "right" }}>
+          {value}
+        </p>
+        <div className="flex items-center justify-between mt-2.5 min-h-[20px]">
+          {subtitle && <span className="text-[11px] text-muted-foreground font-medium">{subtitle}</span>}
           {trend !== undefined && (
             <span
-              className={`inline-flex items-center gap-0.5 text-[11px] font-semibold ml-auto ${
-                positive ? "text-emerald-600" : "text-red-600"
+              className={`inline-flex items-center gap-0.5 text-[11px] font-bold px-2 py-0.5 rounded-full ml-auto ${
+                positive
+                  ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
+                  : "bg-red-500/15 text-red-700 dark:text-red-400"
               }`}
             >
               {positive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
