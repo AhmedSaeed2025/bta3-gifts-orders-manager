@@ -906,22 +906,31 @@ const StatusBadge = ({ status }: { status: string }) => {
 const QuickAction = ({
   icon: Icon,
   label,
-  color,
+  gradient,
+  solid,
   onClick,
 }: {
   icon: React.ElementType;
   label: string;
-  color: string;
+  gradient: string;
+  solid?: boolean;
   onClick: () => void;
 }) => (
   <button
     onClick={onClick}
-    className={`group flex items-center gap-2 sm:gap-3 p-3 sm:p-3.5 rounded-xl border border-border/60 bg-card hover:shadow-md hover:-translate-y-0.5 transition-all text-right`}
+    className="group relative flex flex-col items-center justify-center gap-2 p-3 sm:p-4 rounded-2xl border border-border/60 bg-card hover:shadow-lg hover:-translate-y-0.5 hover:border-primary/30 transition-all overflow-hidden"
   >
-    <span className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${color}`}>
-      <Icon className="h-4 w-4" />
+    <span
+      className={`relative w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br ${gradient} text-white shadow-md group-hover:scale-110 transition-transform`}
+    >
+      <Icon className="h-5 w-5" />
     </span>
-    <span className="text-xs sm:text-sm font-semibold truncate">{label}</span>
+    <span className="text-[11px] sm:text-sm font-semibold text-center leading-tight">{label}</span>
+    {solid && (
+      <span className="absolute top-1.5 left-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">
+        سريع
+      </span>
+    )}
   </button>
 );
 
