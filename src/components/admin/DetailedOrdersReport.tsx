@@ -1000,6 +1000,34 @@ const DetailedOrdersReport = () => {
                       );
                     })()
                   ) : null}
+
+                  {/* NEW: Address + Additional Phone ONLY (minimal courier field) */}
+                  {(selectedOrder.address && selectedOrder.address !== '-') && selectedOrder.phone2 ? (
+                    (() => {
+                      const minimal = `${selectedOrder.address}\n${selectedOrder.phone2}`;
+                      return (
+                        <div className="rounded-xl border-2 border-amber-300/60 dark:border-amber-700/50 bg-gradient-to-l from-amber-50 via-transparent to-amber-50 dark:from-amber-950/30 dark:to-amber-950/30 p-3">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 mb-1 flex items-center gap-1.5">
+                                <MapPin className="h-3.5 w-3.5" />
+                                العنوان + الموبايل الإضافي
+                              </p>
+                              <pre className="text-xs font-medium leading-relaxed whitespace-pre-wrap text-foreground/90 font-sans">{minimal}</pre>
+                            </div>
+                            <button
+                              onClick={() => copyToClipboard(minimal, 'addr-phone2')}
+                              className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500 text-white text-xs font-semibold hover:opacity-90 transition"
+                              title="نسخ العنوان والموبايل الإضافي"
+                            >
+                              {copiedField === 'addr-phone2' ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                              {copiedField === 'addr-phone2' ? 'تم النسخ' : 'نسخ'}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })()
+                  ) : null}
                 </CardContent>
               </Card>
 
