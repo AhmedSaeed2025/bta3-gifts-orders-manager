@@ -1176,4 +1176,62 @@ const DetailedOrdersReport = () => {
   );
 };
 
+interface InfoTileProps {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  badge?: string;
+  valueDir?: 'ltr' | 'rtl';
+  mono?: boolean;
+  multiline?: boolean;
+  accent?: 'primary' | 'amber';
+  onCopy?: () => void;
+  copied?: boolean;
+}
+
+const InfoTile: React.FC<InfoTileProps> = ({
+  icon, label, value, badge, valueDir, mono, multiline, accent = 'primary', onCopy, copied,
+}) => {
+  const accentClasses =
+    accent === 'amber'
+      ? 'border-amber-200 dark:border-amber-900/50 bg-amber-50/60 dark:bg-amber-950/20'
+      : 'border-border/70 bg-background';
+  const iconWrap =
+    accent === 'amber'
+      ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
+      : 'bg-primary/10 text-primary';
+  return (
+    <div className={`group rounded-xl border px-3 py-2.5 flex items-start gap-2.5 hover:shadow-sm transition ${accentClasses}`}>
+      <span className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${iconWrap}`}>
+        {icon}
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-1.5 mb-0.5">
+          <p className="text-[11px] font-medium text-muted-foreground">{label}</p>
+          {badge && (
+            <Badge variant="secondary" className="text-[9px] h-4 px-1.5">
+              {badge}
+            </Badge>
+          )}
+        </div>
+        <p
+          dir={valueDir}
+          className={`text-sm font-semibold text-foreground ${mono ? 'font-mono tabular-nums tracking-wide' : ''} ${multiline ? 'leading-relaxed whitespace-pre-wrap break-words' : 'truncate'}`}
+        >
+          {value}
+        </p>
+      </div>
+      {onCopy && (
+        <button
+          onClick={onCopy}
+          className="shrink-0 p-1.5 rounded-md hover:bg-muted transition-colors opacity-70 group-hover:opacity-100"
+          title="نسخ"
+        >
+          {copied ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Copy className="h-3.5 w-3.5 text-muted-foreground" />}
+        </button>
+      )}
+    </div>
+  );
+};
+
 export default DetailedOrdersReport;
