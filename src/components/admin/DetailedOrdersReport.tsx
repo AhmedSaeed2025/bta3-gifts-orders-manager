@@ -893,73 +893,113 @@ const DetailedOrdersReport = () => {
                 </div>
               </div>
 
-              {/* Customer Info */}
-              <Card className="border-2 border-primary/10">
-                <CardHeader className="py-3 px-4 bg-primary/5 rounded-t-lg">
+              {/* Customer Info — Professional layout */}
+              <Card className="border-2 border-primary/15 shadow-sm overflow-hidden">
+                <CardHeader className="py-3 px-4 bg-gradient-to-l from-primary/10 to-primary/5 border-b">
                   <CardTitle className="text-base font-semibold flex items-center gap-2">
-                    <User className="h-4 w-4 text-primary" />
+                    <span className="w-7 h-7 rounded-lg bg-primary/15 text-primary flex items-center justify-center">
+                      <User className="h-4 w-4" />
+                    </span>
                     بيانات العميل
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="p-4">
-                  <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-0.5">الاسم</p>
-                      <div className="flex items-center gap-1">
-                        <p className="font-semibold text-sm">{selectedOrder.client_name}</p>
-                        <button onClick={() => copyToClipboard(selectedOrder.client_name, 'name')} className="p-1 rounded hover:bg-muted transition-colors" title="نسخ">
-                          {copiedField === 'name' ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3 text-muted-foreground" />}
-                        </button>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-0.5">الهاتف</p>
-                      <div className="flex flex-col gap-0.5">
-                        <span className="font-semibold text-sm flex items-center gap-1">
-                          <Phone className="h-3 w-3 text-primary" />
-                          {selectedOrder.phone}
-                          <button onClick={() => copyToClipboard(selectedOrder.phone, 'phone')} className="p-1 rounded hover:bg-muted transition-colors" title="نسخ">
-                            {copiedField === 'phone' ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3 text-muted-foreground" />}
-                          </button>
-                        </span>
-                        {selectedOrder.phone2 && (
-                          <span className="font-semibold text-sm flex items-center gap-1 text-muted-foreground">
-                            <Phone className="h-3 w-3 text-muted-foreground" />
-                            {selectedOrder.phone2}
-                            <button onClick={() => copyToClipboard(selectedOrder.phone2, 'phone2')} className="p-1 rounded hover:bg-muted transition-colors" title="نسخ">
-                              {copiedField === 'phone2' ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3 text-muted-foreground" />}
-                            </button>
-                            <Badge variant="secondary" className="text-[10px] h-4 px-1">إضافي</Badge>
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                <CardContent className="p-4 space-y-3">
+                  {/* Row: Name + Governorate */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <InfoTile
+                      icon={<User className="h-4 w-4" />}
+                      label="الاسم"
+                      value={selectedOrder.client_name}
+                      onCopy={() => copyToClipboard(selectedOrder.client_name, 'name')}
+                      copied={copiedField === 'name'}
+                    />
                     {selectedOrder.governorate && selectedOrder.governorate !== '-' && (
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-0.5">المحافظة</p>
-                        <div className="flex items-center gap-1">
-                          <p className="font-semibold text-sm flex items-center gap-1">
-                            <MapPin className="h-3 w-3 text-primary" />
-                            {selectedOrder.governorate}
-                          </p>
-                          <button onClick={() => copyToClipboard(selectedOrder.governorate, 'gov')} className="p-1 rounded hover:bg-muted transition-colors" title="نسخ">
-                            {copiedField === 'gov' ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3 text-muted-foreground" />}
-                          </button>
-                        </div>
-                      </div>
+                      <InfoTile
+                        icon={<MapPin className="h-4 w-4" />}
+                        label="المحافظة"
+                        value={selectedOrder.governorate}
+                        onCopy={() => copyToClipboard(selectedOrder.governorate, 'gov')}
+                        copied={copiedField === 'gov'}
+                      />
                     )}
-                    {selectedOrder.address && selectedOrder.address !== '-' && (
-                      <div className={!selectedOrder.governorate || selectedOrder.governorate === '-' ? 'col-span-2' : ''}>
-                        <p className="text-xs text-muted-foreground mb-0.5">العنوان</p>
-                        <div className="flex items-start gap-1">
-                          <p className="font-semibold text-sm leading-relaxed">{selectedOrder.address}</p>
-                          <button onClick={() => copyToClipboard(selectedOrder.address, 'address')} className="p-1 rounded hover:bg-muted transition-colors shrink-0" title="نسخ">
-                            {copiedField === 'address' ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3 text-muted-foreground" />}
-                          </button>
-                        </div>
+                  </div>
+
+                  {/* Row: Primary Phone + Additional Phone */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <InfoTile
+                      icon={<Phone className="h-4 w-4" />}
+                      label="الهاتف الأساسي"
+                      value={selectedOrder.phone}
+                      valueDir="ltr"
+                      mono
+                      onCopy={() => copyToClipboard(selectedOrder.phone, 'phone')}
+                      copied={copiedField === 'phone'}
+                    />
+                    {selectedOrder.phone2 ? (
+                      <InfoTile
+                        icon={<Phone className="h-4 w-4" />}
+                        label="رقم إضافي"
+                        badge="إضافي"
+                        value={selectedOrder.phone2}
+                        valueDir="ltr"
+                        mono
+                        accent="amber"
+                        onCopy={() => copyToClipboard(selectedOrder.phone2, 'phone2')}
+                        copied={copiedField === 'phone2'}
+                      />
+                    ) : (
+                      <div className="rounded-xl border border-dashed border-border/60 bg-muted/20 px-3 py-2.5 flex items-center gap-2 text-xs text-muted-foreground">
+                        <Phone className="h-3.5 w-3.5" />
+                        لا يوجد رقم موبايل إضافي
                       </div>
                     )}
                   </div>
+
+                  {/* Full Address */}
+                  {selectedOrder.address && selectedOrder.address !== '-' && (
+                    <InfoTile
+                      icon={<MapPin className="h-4 w-4" />}
+                      label="العنوان بالتفصيل"
+                      value={selectedOrder.address}
+                      multiline
+                      onCopy={() => copyToClipboard(selectedOrder.address, 'address')}
+                      copied={copiedField === 'address'}
+                    />
+                  )}
+
+                  {/* NEW: Address + Additional Phone combined (courier-ready) */}
+                  {(selectedOrder.address && selectedOrder.address !== '-') || selectedOrder.phone2 ? (
+                    (() => {
+                      const combined = [
+                        selectedOrder.client_name,
+                        selectedOrder.governorate && selectedOrder.governorate !== '-' ? `المحافظة: ${selectedOrder.governorate}` : null,
+                        selectedOrder.address && selectedOrder.address !== '-' ? `العنوان: ${selectedOrder.address}` : null,
+                        `موبايل: ${selectedOrder.phone}`,
+                        selectedOrder.phone2 ? `موبايل إضافي: ${selectedOrder.phone2}` : null,
+                      ].filter(Boolean).join('\n');
+                      return (
+                        <div className="rounded-xl border-2 border-primary/20 bg-gradient-to-l from-primary/5 via-transparent to-primary/5 p-3">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-[11px] font-semibold text-primary mb-1 flex items-center gap-1.5">
+                                <Truck className="h-3.5 w-3.5" />
+                                بيانات الشحن الكاملة (العنوان + الموبايل الإضافي)
+                              </p>
+                              <pre className="text-xs font-medium leading-relaxed whitespace-pre-wrap text-foreground/90 font-sans">{combined}</pre>
+                            </div>
+                            <button
+                              onClick={() => copyToClipboard(combined, 'ship-bundle')}
+                              className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition"
+                              title="نسخ بيانات الشحن كاملة"
+                            >
+                              {copiedField === 'ship-bundle' ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                              {copiedField === 'ship-bundle' ? 'تم النسخ' : 'نسخ الكل'}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })()
+                  ) : null}
                 </CardContent>
               </Card>
 
@@ -1132,6 +1172,64 @@ const DetailedOrdersReport = () => {
           )}
         </DialogContent>
       </Dialog>
+    </div>
+  );
+};
+
+interface InfoTileProps {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  badge?: string;
+  valueDir?: 'ltr' | 'rtl';
+  mono?: boolean;
+  multiline?: boolean;
+  accent?: 'primary' | 'amber';
+  onCopy?: () => void;
+  copied?: boolean;
+}
+
+const InfoTile: React.FC<InfoTileProps> = ({
+  icon, label, value, badge, valueDir, mono, multiline, accent = 'primary', onCopy, copied,
+}) => {
+  const accentClasses =
+    accent === 'amber'
+      ? 'border-amber-200 dark:border-amber-900/50 bg-amber-50/60 dark:bg-amber-950/20'
+      : 'border-border/70 bg-background';
+  const iconWrap =
+    accent === 'amber'
+      ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
+      : 'bg-primary/10 text-primary';
+  return (
+    <div className={`group rounded-xl border px-3 py-2.5 flex items-start gap-2.5 hover:shadow-sm transition ${accentClasses}`}>
+      <span className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${iconWrap}`}>
+        {icon}
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-1.5 mb-0.5">
+          <p className="text-[11px] font-medium text-muted-foreground">{label}</p>
+          {badge && (
+            <Badge variant="secondary" className="text-[9px] h-4 px-1.5">
+              {badge}
+            </Badge>
+          )}
+        </div>
+        <p
+          dir={valueDir}
+          className={`text-sm font-semibold text-foreground ${mono ? 'font-mono tabular-nums tracking-wide' : ''} ${multiline ? 'leading-relaxed whitespace-pre-wrap break-words' : 'truncate'}`}
+        >
+          {value}
+        </p>
+      </div>
+      {onCopy && (
+        <button
+          onClick={onCopy}
+          className="shrink-0 p-1.5 rounded-md hover:bg-muted transition-colors opacity-70 group-hover:opacity-100"
+          title="نسخ"
+        >
+          {copied ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Copy className="h-3.5 w-3.5 text-muted-foreground" />}
+        </button>
+      )}
     </div>
   );
 };
