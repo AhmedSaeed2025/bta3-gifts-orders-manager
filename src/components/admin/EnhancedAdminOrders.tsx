@@ -12,6 +12,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useOrderStatuses } from '@/hooks/useOrderStatuses';
 import { useDateFilter } from '@/components/tabs/StyledIndexTabs';
 import { toast } from 'sonner';
+import { exportOrdersToExcel } from '@/lib/ordersExport';
 import { 
   Edit, 
   Search, 
@@ -23,6 +24,7 @@ import {
   CheckCircle2,
   XCircle,
   DollarSign,
+  Download,
   AlertTriangle
 } from 'lucide-react';
 
