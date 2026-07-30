@@ -304,7 +304,6 @@ const EnhancedAdminOrders = () => {
             </Button>
           </div>
         </CardHeader>
-        </CardHeader>
         <CardContent className="p-3 md:p-4">
           <div className="flex flex-col md:flex-row gap-3 md:gap-4">
             <div className="flex-1">
