@@ -77,7 +77,7 @@ const EnhancedAdminOrders = () => {
       
       const { data, error } = await supabase
         .from('admin_orders')
-        .select('*')
+        .select('*, admin_order_items (*)')
         .eq('user_id', user.id)
         .order('order_date', { ascending: false });
       
