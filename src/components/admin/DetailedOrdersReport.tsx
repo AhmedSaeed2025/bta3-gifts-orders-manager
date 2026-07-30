@@ -437,9 +437,18 @@ const DetailedOrdersReport = () => {
             </h1>
             <p className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-sm'}`}>تحليل شامل لجميع طلباتك</p>
           </div>
-          <Button variant="outline" size="sm" className={isMobile ? 'text-xs px-2' : ''}>
+          <Button
+            variant="outline"
+            size="sm"
+            className={isMobile ? 'text-xs px-2' : ''}
+            onClick={() => {
+              const count = exportOrdersToExcel(filteredOrders as any, 'تقرير_الطلبات', getStatusLabel);
+              if (count) toast.success(`تم تصدير ${count} طلب إلى Excel`);
+              else toast.error('لا توجد طلبات للتصدير');
+            }}
+          >
             <Download className="h-4 w-4 ml-1" />
-            {!isMobile && 'تصدير'}
+            {!isMobile && 'تصدير Excel'}
           </Button>
         </div>
 
