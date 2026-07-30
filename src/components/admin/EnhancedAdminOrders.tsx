@@ -12,6 +12,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useOrderStatuses } from '@/hooks/useOrderStatuses';
 import { useDateFilter } from '@/components/tabs/StyledIndexTabs';
 import { toast } from 'sonner';
+import { exportOrdersToExcel } from '@/lib/ordersExport';
 import { 
   Edit, 
   Search, 
@@ -23,6 +24,7 @@ import {
   CheckCircle2,
   XCircle,
   DollarSign,
+  Download,
   AlertTriangle
 } from 'lucide-react';
 
@@ -75,7 +77,7 @@ const EnhancedAdminOrders = () => {
       
       const { data, error } = await supabase
         .from('admin_orders')
-        .select('*')
+        .select('*, admin_order_items (*)')
         .eq('user_id', user.id)
         .order('order_date', { ascending: false });
       
@@ -285,7 +287,22 @@ const EnhancedAdminOrders = () => {
       {/* العنوان والفلاتر */}
       <Card>
         <CardHeader className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-3 md:p-6">
-          <CardTitle className={`text-center font-bold ${isMobile ? 'text-base' : 'text-xl'}`}>إدارة الطلبات</CardTitle>
+          <div className="flex items-center justify-between gap-2">
+            <CardTitle className={`font-bold ${isMobile ? 'text-base' : 'text-xl'}`}>إدارة الطلبات</CardTitle>
+            <Button
+              size="sm"
+              variant="secondary"
+              className="gap-1.5"
+              onClick={() => {
+                const count = exportOrdersToExcel(filteredOrders as any, 'الطلبات', getStatusLabel);
+                if (count) toast.success(`تم تصدير ${count} طلب إلى Excel`);
+                else toast.error('لا توجد طلبات للتصدير');
+              }}
+            >
+              <Download className="h-4 w-4" />
+              {!isMobile && 'تصدير Excel'}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="p-3 md:p-4">
           <div className="flex flex-col md:flex-row gap-3 md:gap-4">
