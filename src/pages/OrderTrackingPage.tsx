@@ -29,53 +29,26 @@ const OrderTrackingPage = () => {
     queryFn: async () => {
       if (!searchSerial) return null;
       const q = searchSerial.trim();
-      const usingToken = isToken(q);
 
-      // Public-safe columns only
-      const adminCols = 'serial, customer_name, status, order_date, total_amount, governorate, delivery_method, payment_method, estimated_delivery_date, tracking_token';
-      const ordersCols = 'serial, client_name, status, date_created, total, governorate, delivery_method, payment_method, estimated_delivery_date, tracking_token';
+      // Public, privacy-safe lookup (works for guests via QR link or serial)
+      const { data, error } = await supabase.rpc('track_order', { _token: q });
+      if (error) throw error;
+      if (!data) return null;
 
-      const adminQ = supabase.from('admin_orders').select(adminCols);
-      const { data: adminOrder } = usingToken
-        ? await adminQ.eq('tracking_token', q).maybeSingle()
-        : await adminQ.eq('serial', q.toUpperCase()).maybeSingle();
-
-      if (adminOrder) {
-        return {
-          serial: adminOrder.serial,
-          customer_name: adminOrder.customer_name,
-          shipping_address: null,
-          governorate: adminOrder.governorate,
-          payment_method: adminOrder.payment_method,
-          delivery_method: adminOrder.delivery_method,
-          total_amount: adminOrder.total_amount,
-          status: adminOrder.status,
-          order_date: adminOrder.order_date,
-          estimated_delivery_date: (adminOrder as any).estimated_delivery_date,
-        };
-      }
-
-      const ordersQ = supabase.from('orders').select(ordersCols);
-      const { data: regularOrder } = usingToken
-        ? await ordersQ.eq('tracking_token', q).maybeSingle()
-        : await ordersQ.eq('serial', q.toUpperCase()).maybeSingle();
-
-      if (regularOrder) {
-        return {
-          serial: regularOrder.serial,
-          customer_name: regularOrder.client_name,
-          shipping_address: null,
-          governorate: regularOrder.governorate,
-          payment_method: regularOrder.payment_method,
-          delivery_method: regularOrder.delivery_method,
-          total_amount: regularOrder.total,
-          status: regularOrder.status,
-          order_date: regularOrder.date_created,
-          estimated_delivery_date: (regularOrder as any).estimated_delivery_date,
-        };
-      }
-
-      return null;
+      const o = data as any;
+      return {
+        serial: o.serial,
+        customer_name: o.customer_name,
+        shipping_address: null,
+        governorate: o.governorate,
+        payment_method: o.payment_method,
+        delivery_method: o.delivery_method,
+        total_amount: o.total_amount,
+        status: o.status,
+        order_date: o.order_date,
+        estimated_delivery_date: o.estimated_delivery_date,
+        items: o.items || [],
+      };
     },
     enabled: !!searchSerial
   });
