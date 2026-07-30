@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { formatCurrency } from "@/lib/utils";
 import { calculateOrderFinancials } from "@/lib/orderFinancials";
+import { exportOrdersToExcel } from "@/lib/ordersExport";
 import { useOrderStatuses } from "@/hooks/useOrderStatuses";
 import { useDateFilter } from "@/components/tabs/StyledIndexTabs";
 import { 
