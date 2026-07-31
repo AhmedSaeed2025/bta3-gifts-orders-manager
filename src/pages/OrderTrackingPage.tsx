@@ -173,14 +173,27 @@ const OrderTrackingPage = () => {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-600">تاريخ الطلب:</span>
-                          <span className="font-medium">
-                            {new Date(order.order_date).toLocaleDateString('ar-EG')}
+                          <span className="font-medium font-mono" dir="ltr">
+                            {new Date(order.order_date).toLocaleDateString('en-GB')}
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-600">إجمالي المبلغ:</span>
-                          <span className="font-medium">{order.total_amount} جنيه</span>
+                          <span className="text-gray-600">إجمالي الطلب:</span>
+                          <span className="font-medium font-mono tabular-nums">{fmt(order.total_amount)} جنيه</span>
                         </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">العربون / المدفوع:</span>
+                          <span className="font-medium font-mono tabular-nums text-green-600">
+                            {fmt(order.paid_amount || order.deposit)} جنيه
+                          </span>
+                        </div>
+                        <div className="flex justify-between border-t pt-3">
+                          <span className="text-gray-600 font-semibold">المتبقي:</span>
+                          <span className="font-bold font-mono tabular-nums text-orange-600">
+                            {fmt(order.remaining_amount)} جنيه
+                          </span>
+                        </div>
+
                         <div className="flex justify-between items-center">
                           <span className="text-gray-600">الحالة:</span>
                           <Badge className={getStatusInfo(order.status).color}>
