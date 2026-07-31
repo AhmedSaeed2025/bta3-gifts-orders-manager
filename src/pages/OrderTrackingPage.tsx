@@ -43,7 +43,10 @@ const OrderTrackingPage = () => {
         governorate: o.governorate,
         payment_method: o.payment_method,
         delivery_method: o.delivery_method,
-        total_amount: o.total_amount,
+        total_amount: Number(o.total_amount ?? 0),
+        deposit: Number(o.deposit ?? 0),
+        paid_amount: Number(o.paid_amount ?? 0),
+        remaining_amount: Number(o.remaining_amount ?? 0),
         status: o.status,
         order_date: o.order_date,
         estimated_delivery_date: o.estimated_delivery_date,
@@ -59,43 +62,44 @@ const OrderTrackingPage = () => {
     }
   };
 
+  const fmt = (n: number) =>
+    new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 }).format(Number(n || 0));
+
   const getStatusInfo = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return { label: 'قيد المراجعة', color: 'bg-yellow-500', icon: Clock };
-      case 'confirmed':
-        return { label: 'تم التأكيد', color: 'bg-blue-500', icon: Package };
-      case 'processing':
-        return { label: 'قيد التحضير', color: 'bg-orange-500', icon: Package };
-      case 'shipped':
-        return { label: 'تم الشحن', color: 'bg-purple-500', icon: Truck };
-      case 'delivered':
-        return { label: 'تم التوصيل', color: 'bg-green-500', icon: CheckCircle };
-      case 'cancelled':
-        return { label: 'ملغي', color: 'bg-red-500', icon: Clock };
-      default:
-        return { label: 'غير معروف', color: 'bg-gray-500', icon: Clock };
-    }
+    const map: Record<string, { label: string; color: string; icon: any }> = {
+      pending: { label: ORDER_STATUS_LABELS.pending, color: 'bg-yellow-500', icon: Clock },
+      confirmed: { label: ORDER_STATUS_LABELS.confirmed, color: 'bg-blue-500', icon: Package },
+      processing: { label: ORDER_STATUS_LABELS.processing, color: 'bg-orange-500', icon: Package },
+      sentToPrinter: { label: ORDER_STATUS_LABELS.sentToPrinter, color: 'bg-indigo-500', icon: Package },
+      readyForDelivery: { label: ORDER_STATUS_LABELS.readyForDelivery, color: 'bg-teal-500', icon: Package },
+      shipped: { label: ORDER_STATUS_LABELS.shipped, color: 'bg-purple-500', icon: Truck },
+      delivered: { label: ORDER_STATUS_LABELS.delivered, color: 'bg-green-500', icon: CheckCircle },
+      cancelled: { label: ORDER_STATUS_LABELS.cancelled, color: 'bg-red-500', icon: Clock },
+    };
+    return map[status] || { label: status || 'غير معروف', color: 'bg-gray-500', icon: Clock };
   };
 
   const getOrderSteps = (currentStatus: string) => {
     const steps = [
       { key: 'pending', label: 'تم استلام الطلب', description: 'تم تسجيل طلبكم بنجاح' },
       { key: 'confirmed', label: 'تم تأكيد الطلب', description: 'تم مراجعة وتأكيد طلبكم' },
-      { key: 'processing', label: 'قيد التحضير', description: 'جاري تحضير طلبكم للشحن' },
+      { key: 'processing', label: 'قيد التحضير', description: 'جاري تحضير طلبكم' },
+      { key: 'sentToPrinter', label: 'تم الإرسال للمطبعة', description: 'جاري تنفيذ التصنيع/الطباعة' },
+      { key: 'readyForDelivery', label: 'تحت التسليم', description: 'الطلب جاهز للتسليم' },
       { key: 'shipped', label: 'تم الشحن', description: 'تم شحن طلبكم وهو في الطريق إليكم' },
       { key: 'delivered', label: 'تم التوصيل', description: 'تم توصيل طلبكم بنجاح' }
     ];
 
-    const statusOrder = ['pending', 'confirmed', 'processing', 'shipped', 'delivered'];
+    const statusOrder = steps.map((s) => s.key);
     const currentIndex = statusOrder.indexOf(currentStatus);
 
     return steps.map((step, index) => ({
       ...step,
-      completed: index <= currentIndex,
+      completed: currentIndex >= 0 && index <= currentIndex,
       current: index === currentIndex
     }));
   };
+
 
   return (
     <div className="min-h-screen bg-background">
