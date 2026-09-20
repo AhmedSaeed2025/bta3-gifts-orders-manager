@@ -194,12 +194,14 @@ const OrderForm = ({ editingOrder, duplicateFrom }: OrderFormProps) => {
             </div>
             <div className="flex-1 min-w-0">
               <h2 className="font-extrabold text-lg sm:text-xl tracking-tight">
-                {editingOrder ? `تعديل الطلب` : "إنشاء طلب جديد"}
+                {editingOrder ? `تعديل الطلب` : duplicateFrom ? "إعادة طلب لعميل سابق" : "إنشاء طلب جديد"}
               </h2>
               <p className="text-xs sm:text-sm opacity-90">
                 {editingOrder
                   ? <>رقم الفاتورة: <span dir="ltr" className="font-mono">{editingOrder.serial}</span></>
-                  : "املأ بيانات العميل والأصناف لإتمام الطلب"}
+                  : duplicateFrom
+                    ? <>نسخة من الطلب: <span dir="ltr" className="font-mono">{duplicateFrom.serial}</span> — عدّل ما تريد ثم احفظ كطلب جديد</>
+                    : "املأ بيانات العميل والأصناف لإتمام الطلب"}
               </p>
             </div>
             <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 border border-white/25 backdrop-blur-md text-[11px]">
