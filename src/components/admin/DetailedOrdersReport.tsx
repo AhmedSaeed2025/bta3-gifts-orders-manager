@@ -38,7 +38,8 @@ import {
   Trash2,
   Printer,
   Copy,
-  Check
+  Check,
+  RefreshCw
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate, useLocation } from "react-router-dom";
