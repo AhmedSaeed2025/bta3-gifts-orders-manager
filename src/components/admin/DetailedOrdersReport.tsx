@@ -843,6 +843,9 @@ const DetailedOrdersReport = () => {
                       <Button variant="outline" size="sm" onClick={() => handleEditOrder(order)} className="text-xs h-7 gap-1">
                         <Edit className="h-3 w-3" /> تعديل
                       </Button>
+                      <Button variant="outline" size="sm" onClick={() => handleReorder(order)} className="text-xs h-7 gap-1 border-amber-200 text-amber-600 hover:bg-amber-50 dark:border-amber-800 dark:text-amber-400 dark:hover:bg-amber-950/50">
+                        <RefreshCw className="h-3 w-3" /> إعادة الطلب
+                      </Button>
                       <Button variant="outline" size="sm" onClick={() => setInvoiceOrder(order)} className="text-xs h-7 gap-1 border-indigo-200 text-indigo-600 hover:bg-indigo-50 dark:border-indigo-800 dark:text-indigo-400 dark:hover:bg-indigo-950/50">
                         <Printer className="h-3 w-3" /> فاتورة
                       </Button>
