@@ -32,6 +32,7 @@ import AdminFinance from "./pages/admin/AdminFinance";
 import OrderPage from "./pages/OrderPage";
 import OrderDetails from "./pages/OrderDetails";
 import EditOrder from "./pages/EditOrder";
+import ReorderPage from "./pages/ReorderPage";
 
 // Contexts
 import { OrderProvider } from "./context/OrderContext";
