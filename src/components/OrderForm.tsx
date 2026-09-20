@@ -14,27 +14,31 @@ import { toast } from "sonner";
 
 interface OrderFormProps {
   editingOrder?: Order;
+  /** نسخة من طلب سابق: تملأ البيانات لكن تُحفظ كطلب جديد */
+  duplicateFrom?: Order;
 }
 
 const phoneRegex = /^01[0-2,5]\d{8}$/;
 
-const OrderForm = ({ editingOrder }: OrderFormProps) => {
+const OrderForm = ({ editingOrder, duplicateFrom }: OrderFormProps) => {
   const { addOrder, updateOrder } = useSupabaseOrders();
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
 
+  const source = editingOrder ?? duplicateFrom;
+
   const [customerData, setCustomerData] = useState({
-    paymentMethod: editingOrder?.paymentMethod || "",
-    clientName: editingOrder?.clientName || "",
-    phone: editingOrder?.phone || "",
-    phone2: editingOrder?.phone2 || "",
-    deliveryMethod: editingOrder?.deliveryMethod || "",
-    address: editingOrder?.address || "",
-    governorate: editingOrder?.governorate || "",
-    shippingCost: editingOrder?.shippingCost || 0,
+    paymentMethod: source?.paymentMethod || "",
+    clientName: source?.clientName || "",
+    phone: source?.phone || "",
+    phone2: source?.phone2 || "",
+    deliveryMethod: source?.deliveryMethod || "",
+    address: source?.address === "-" ? "" : (source?.address || ""),
+    governorate: source?.governorate === "-" ? "" : (source?.governorate || ""),
+    shippingCost: source?.shippingCost || 0,
     deposit: editingOrder?.deposit || 0,
-    discount: editingOrder?.discount || 0,
+    discount: source?.discount || 0,
   });
 
   const [currentItem, setCurrentItem] = useState({
@@ -46,8 +50,10 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
     itemDiscount: 0,
   });
 
-  const [items, setItems] = useState<OrderItem[]>(editingOrder?.items || []);
-  const [notes, setNotes] = useState<string>(editingOrder?.notes || "");
+  const [items, setItems] = useState<OrderItem[]>(
+    source?.items ? source.items.map(i => ({ ...i })) : []
+  );
+  const [notes, setNotes] = useState<string>(source?.notes || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const subtotal = items.reduce((sum, item) => {
