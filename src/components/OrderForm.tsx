@@ -162,9 +162,13 @@ const OrderForm = ({ editingOrder, duplicateFrom }: OrderFormProps) => {
         await addOrder(orderData);
         invalidateAll();
         toast.success("تم إضافة الطلب بنجاح");
-        setCustomerData({ paymentMethod: "", clientName: "", phone: "", phone2: "", deliveryMethod: "", address: "", governorate: "", shippingCost: 0, deposit: 0, discount: 0 });
-        setItems([]);
-        setNotes("");
+        if (duplicateFrom) {
+          navigate("/legacy-admin?tab=orders-report", { replace: true });
+        } else {
+          setCustomerData({ paymentMethod: "", clientName: "", phone: "", phone2: "", deliveryMethod: "", address: "", governorate: "", shippingCost: 0, deposit: 0, discount: 0 });
+          setItems([]);
+          setNotes("");
+        }
       }
     } catch (error) {
       console.error('Error submitting order:', error);
