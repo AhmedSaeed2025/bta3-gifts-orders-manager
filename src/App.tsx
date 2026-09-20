@@ -130,6 +130,7 @@ function App() {
                 <Route path="/order/:serial" element={<OrderDetails />} />
                 <Route path="/order/:id/edit" element={<EditOrder />} />
                 <Route path="/edit-order/:serial" element={<EditOrder />} />
+                <Route path="/reorder/:serial" element={<ReorderPage />} />
                                 
                                 {/* Catch all */}
                                 <Route path="*" element={<NotFound />} />
