@@ -154,6 +154,10 @@ const OrdersTable = () => {
     navigate(`/edit-order/${serial}`);
   };
 
+  const handleReorder = (serial: string) => {
+    navigate(`/reorder/${serial}`);
+  };
+
   const handleViewOrder = (serial: string) => {
     console.log('Navigating to order details for serial:', serial);
     navigate(`/order/${serial}`);
@@ -696,6 +700,14 @@ const OrdersTable = () => {
                       </Button>
                       <Button
                         size="sm"
+                        onClick={() => handleReorder(order.serial)}
+                        className="flex-1 bg-amber-500 hover:bg-amber-600 text-white h-8 text-xs"
+                      >
+                        <RefreshCw className="h-3 w-3 mr-1" />
+                        إعادة
+                      </Button>
+                      <Button
+                        size="sm"
                         variant="destructive"
                         onClick={() => handleDeleteOrder(index)}
                         className="h-8 px-2"
@@ -864,6 +876,14 @@ const OrdersTable = () => {
                               title="تعديل الطلب"
                             >
                               <Edit className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => handleReorder(order.serial)}
+                              className="bg-amber-500 hover:bg-amber-600 text-white h-6 text-xs px-1"
+                              title="إعادة الطلب بنفس البيانات"
+                            >
+                              <RefreshCw className="h-3 w-3" />
                             </Button>
                             <Button
                               size="sm"

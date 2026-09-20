@@ -14,27 +14,31 @@ import { toast } from "sonner";
 
 interface OrderFormProps {
   editingOrder?: Order;
+  /** نسخة من طلب سابق: تملأ البيانات لكن تُحفظ كطلب جديد */
+  duplicateFrom?: Order;
 }
 
 const phoneRegex = /^01[0-2,5]\d{8}$/;
 
-const OrderForm = ({ editingOrder }: OrderFormProps) => {
+const OrderForm = ({ editingOrder, duplicateFrom }: OrderFormProps) => {
   const { addOrder, updateOrder } = useSupabaseOrders();
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
 
+  const source = editingOrder ?? duplicateFrom;
+
   const [customerData, setCustomerData] = useState({
-    paymentMethod: editingOrder?.paymentMethod || "",
-    clientName: editingOrder?.clientName || "",
-    phone: editingOrder?.phone || "",
-    phone2: editingOrder?.phone2 || "",
-    deliveryMethod: editingOrder?.deliveryMethod || "",
-    address: editingOrder?.address || "",
-    governorate: editingOrder?.governorate || "",
-    shippingCost: editingOrder?.shippingCost || 0,
+    paymentMethod: source?.paymentMethod || "",
+    clientName: source?.clientName || "",
+    phone: source?.phone || "",
+    phone2: source?.phone2 || "",
+    deliveryMethod: source?.deliveryMethod || "",
+    address: source?.address === "-" ? "" : (source?.address || ""),
+    governorate: source?.governorate === "-" ? "" : (source?.governorate || ""),
+    shippingCost: source?.shippingCost || 0,
     deposit: editingOrder?.deposit || 0,
-    discount: editingOrder?.discount || 0,
+    discount: source?.discount || 0,
   });
 
   const [currentItem, setCurrentItem] = useState({
@@ -46,8 +50,10 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
     itemDiscount: 0,
   });
 
-  const [items, setItems] = useState<OrderItem[]>(editingOrder?.items || []);
-  const [notes, setNotes] = useState<string>(editingOrder?.notes || "");
+  const [items, setItems] = useState<OrderItem[]>(
+    source?.items ? source.items.map(i => ({ ...i })) : []
+  );
+  const [notes, setNotes] = useState<string>(source?.notes || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const subtotal = items.reduce((sum, item) => {
@@ -156,9 +162,13 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
         await addOrder(orderData);
         invalidateAll();
         toast.success("تم إضافة الطلب بنجاح");
-        setCustomerData({ paymentMethod: "", clientName: "", phone: "", phone2: "", deliveryMethod: "", address: "", governorate: "", shippingCost: 0, deposit: 0, discount: 0 });
-        setItems([]);
-        setNotes("");
+        if (duplicateFrom) {
+          navigate("/legacy-admin?tab=orders-report", { replace: true });
+        } else {
+          setCustomerData({ paymentMethod: "", clientName: "", phone: "", phone2: "", deliveryMethod: "", address: "", governorate: "", shippingCost: 0, deposit: 0, discount: 0 });
+          setItems([]);
+          setNotes("");
+        }
       }
     } catch (error) {
       console.error('Error submitting order:', error);
@@ -188,12 +198,14 @@ const OrderForm = ({ editingOrder }: OrderFormProps) => {
             </div>
             <div className="flex-1 min-w-0">
               <h2 className="font-extrabold text-lg sm:text-xl tracking-tight">
-                {editingOrder ? `تعديل الطلب` : "إنشاء طلب جديد"}
+                {editingOrder ? `تعديل الطلب` : duplicateFrom ? "إعادة طلب لعميل سابق" : "إنشاء طلب جديد"}
               </h2>
               <p className="text-xs sm:text-sm opacity-90">
                 {editingOrder
                   ? <>رقم الفاتورة: <span dir="ltr" className="font-mono">{editingOrder.serial}</span></>
-                  : "املأ بيانات العميل والأصناف لإتمام الطلب"}
+                  : duplicateFrom
+                    ? <>نسخة من الطلب: <span dir="ltr" className="font-mono">{duplicateFrom.serial}</span> — عدّل ما تريد ثم احفظ كطلب جديد</>
+                    : "املأ بيانات العميل والأصناف لإتمام الطلب"}
               </p>
             </div>
             <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 border border-white/25 backdrop-blur-md text-[11px]">

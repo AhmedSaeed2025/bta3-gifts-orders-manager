@@ -32,6 +32,7 @@ import AdminFinance from "./pages/admin/AdminFinance";
 import OrderPage from "./pages/OrderPage";
 import OrderDetails from "./pages/OrderDetails";
 import EditOrder from "./pages/EditOrder";
+import ReorderPage from "./pages/ReorderPage";
 
 // Contexts
 import { OrderProvider } from "./context/OrderContext";
@@ -129,6 +130,7 @@ function App() {
                 <Route path="/order/:serial" element={<OrderDetails />} />
                 <Route path="/order/:id/edit" element={<EditOrder />} />
                 <Route path="/edit-order/:serial" element={<EditOrder />} />
+                <Route path="/reorder/:serial" element={<ReorderPage />} />
                                 
                                 {/* Catch all */}
                                 <Route path="*" element={<NotFound />} />
