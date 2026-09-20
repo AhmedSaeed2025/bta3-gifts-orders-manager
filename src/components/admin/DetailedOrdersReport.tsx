@@ -324,6 +324,10 @@ const DetailedOrdersReport = () => {
     });
   };
 
+  const handleReorder = (order: any) => {
+    navigate(`/reorder/${order.serial}`);
+  };
+
   const handlePayment = async (amount: number, notes?: string, updateOrderCost?: boolean) => {
     if (!selectedOrder) return;
 
