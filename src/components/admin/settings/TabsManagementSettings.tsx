@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { LayoutList, GripVertical, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react';
 import { 
   BarChart3, Package, ShoppingCart, Plus, Receipt, FileText, 
-  Truck, Calculator, Settings, Printer, FileBarChart 
+  Truck, Calculator, Settings, Printer, FileBarChart, Users
 } from 'lucide-react';
 
 const TABS_SETTINGS_KEY = 'app_tabs_settings';
@@ -34,11 +34,12 @@ const defaultTabs: TabConfig[] = [
   { id: 'summary-report', label: 'كشف ملخص', defaultLabel: 'كشف ملخص', icon: 'Calculator', visible: true, order: 8 },
   { id: 'printing-report', label: 'المطبعة', defaultLabel: 'المطبعة', icon: 'Printer', visible: true, order: 9 },
   { id: 'invoice', label: 'الفاتورة', defaultLabel: 'الفاتورة', icon: 'Receipt', visible: true, order: 10 },
+  { id: 'customers', label: 'العملاء', defaultLabel: 'العملاء', icon: 'Users', visible: true, order: 12 },
   { id: 'settings', label: 'الإعدادات', defaultLabel: 'الإعدادات', icon: 'Settings', visible: true, order: 11 },
 ];
 
 const iconMap: Record<string, React.ElementType> = {
-  BarChart3, Plus, ShoppingCart, Package, FileText, Truck, FileBarChart, Calculator, Printer, Receipt, Settings
+  BarChart3, Plus, ShoppingCart, Package, FileText, Truck, FileBarChart, Calculator, Printer, Receipt, Settings, Users
 };
 
 export const getTabsSettings = (): TabConfig[] => {

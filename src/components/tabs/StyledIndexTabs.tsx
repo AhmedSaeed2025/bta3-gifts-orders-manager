@@ -13,7 +13,8 @@ import {
   Settings,
   Printer,
   FileBarChart,
-  Calendar
+  Calendar,
+  Users
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,7 @@ import ModernAccountStatement from "@/components/admin/ModernAccountStatement";
 import ImprovedInvoiceTab from "@/components/ImprovedInvoiceTab";
 import AdminSettings from "@/pages/admin/AdminSettings";
 import PrintingReport from "@/components/admin/PrintingReport";
+import CustomersTab from "@/components/admin/CustomersTab";
 import SummaryAccountReport from "@/components/admin/SummaryAccountReport";
 import { getTabsSettings } from "@/components/admin/settings/TabsManagementSettings";
 import { useLocation } from "react-router-dom";
@@ -221,6 +223,7 @@ const StyledIndexTabs = () => {
   // Component map for tab content
   const componentMap: Record<string, { icon: React.ElementType; component: React.ReactNode }> = {
     "settings": { icon: Settings, component: <AdminSettings /> },
+    "customers": { icon: Users, component: <CustomersTab /> },
     "invoice": { icon: Receipt, component: <ImprovedInvoiceTab /> },
     "printing-report": { icon: Printer, component: <PrintingReport /> },
     "summary-report": { icon: Calculator, component: <SummaryAccountReport /> },
