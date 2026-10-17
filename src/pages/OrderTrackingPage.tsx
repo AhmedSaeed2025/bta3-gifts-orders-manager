@@ -298,6 +298,11 @@ const OrderTrackingPage = () => {
                           <Package className="h-12 w-12 text-red-600 mx-auto mb-4" />
                           <h3 className="font-semibold text-red-800 mb-2">تم إلغاء الطلب</h3>
                           <p className="text-red-600">تم إلغاء هذا الطلب. للاستفسار يرجى التواصل معنا.</p>
+                          {order.status_history?.find((h) => h.status === 'cancelled') && (
+                            <p className="text-xs font-mono tabular-nums text-red-500 mt-2" dir="ltr">
+                              {fmtDateTime(order.status_history.find((h) => h.status === 'cancelled')!.changed_at)}
+                            </p>
+                          )}
                         </div>
                       </div>
                     </CardContent>
