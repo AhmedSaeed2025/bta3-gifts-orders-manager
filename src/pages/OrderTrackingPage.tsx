@@ -51,6 +51,7 @@ const OrderTrackingPage = () => {
         order_date: o.order_date,
         estimated_delivery_date: o.estimated_delivery_date,
         items: o.items || [],
+        status_history: (o.status_history || []) as { status: string; changed_at: string }[],
       };
     },
     enabled: !!searchSerial
