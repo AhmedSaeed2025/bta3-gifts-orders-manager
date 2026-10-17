@@ -51,6 +51,7 @@ const OrderTrackingPage = () => {
         order_date: o.order_date,
         estimated_delivery_date: o.estimated_delivery_date,
         items: o.items || [],
+        status_history: (o.status_history || []) as { status: string; changed_at: string }[],
       };
     },
     enabled: !!searchSerial
@@ -79,7 +80,7 @@ const OrderTrackingPage = () => {
     return map[status] || { label: status || 'غير معروف', color: 'bg-gray-500', icon: Clock };
   };
 
-  const getOrderSteps = (currentStatus: string) => {
+  const getOrderSteps = (currentStatus: string, history: { status: string; changed_at: string }[] = []) => {
     const steps = [
       { key: 'pending', label: 'تم استلام الطلب', description: 'تم تسجيل طلبكم بنجاح' },
       { key: 'confirmed', label: 'تم تأكيد الطلب', description: 'تم مراجعة وتأكيد طلبكم' },
@@ -93,11 +94,23 @@ const OrderTrackingPage = () => {
     const statusOrder = steps.map((s) => s.key);
     const currentIndex = statusOrder.indexOf(currentStatus);
 
+    // Latest timestamp recorded for each status
+    const timeByStatus: Record<string, string> = {};
+    history.forEach((h) => { timeByStatus[h.status] = h.changed_at; });
+
     return steps.map((step, index) => ({
       ...step,
       completed: currentIndex >= 0 && index <= currentIndex,
-      current: index === currentIndex
+      current: index === currentIndex,
+      timestamp: timeByStatus[step.key] || null
     }));
+  };
+
+  const fmtDateTime = (iso: string) => {
+    const d = new Date(iso);
+    const date = d.toLocaleDateString('en-GB');
+    const time = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    return `${date} - ${time}`;
   };
 
 
@@ -235,7 +248,7 @@ const OrderTrackingPage = () => {
                     <CardContent className="p-6">
                       <h3 className="font-semibold mb-6">تتبع مراحل الطلب</h3>
                       <div className="space-y-6">
-                        {getOrderSteps(order.status).map((step, index) => {
+                        {getOrderSteps(order.status, order.status_history).map((step, index) => {
                           const Icon = getStatusInfo(step.key).icon;
                           return (
                             <div key={step.key} className="flex items-start gap-4">
@@ -255,6 +268,12 @@ const OrderTrackingPage = () => {
                                 <p className={`text-sm ${step.completed ? 'text-gray-600' : 'text-gray-400'}`}>
                                   {step.description}
                                 </p>
+                                {step.timestamp && (
+                                  <p className="text-xs font-mono tabular-nums text-gray-500 mt-1 flex items-center gap-1" dir="ltr">
+                                    <Clock className="h-3 w-3" />
+                                    {fmtDateTime(step.timestamp)}
+                                  </p>
+                                )}
                                 {step.current && (
                                   <p className="text-sm text-blue-600 mt-1">المرحلة الحالية</p>
                                 )}
@@ -279,6 +298,11 @@ const OrderTrackingPage = () => {
                           <Package className="h-12 w-12 text-red-600 mx-auto mb-4" />
                           <h3 className="font-semibold text-red-800 mb-2">تم إلغاء الطلب</h3>
                           <p className="text-red-600">تم إلغاء هذا الطلب. للاستفسار يرجى التواصل معنا.</p>
+                          {order.status_history?.find((h) => h.status === 'cancelled') && (
+                            <p className="text-xs font-mono tabular-nums text-red-500 mt-2" dir="ltr">
+                              {fmtDateTime(order.status_history.find((h) => h.status === 'cancelled')!.changed_at)}
+                            </p>
+                          )}
                         </div>
                       </div>
                     </CardContent>
