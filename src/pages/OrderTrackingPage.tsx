@@ -80,7 +80,7 @@ const OrderTrackingPage = () => {
     return map[status] || { label: status || 'غير معروف', color: 'bg-gray-500', icon: Clock };
   };
 
-  const getOrderSteps = (currentStatus: string) => {
+  const getOrderSteps = (currentStatus: string, history: { status: string; changed_at: string }[] = []) => {
     const steps = [
       { key: 'pending', label: 'تم استلام الطلب', description: 'تم تسجيل طلبكم بنجاح' },
       { key: 'confirmed', label: 'تم تأكيد الطلب', description: 'تم مراجعة وتأكيد طلبكم' },
@@ -94,11 +94,23 @@ const OrderTrackingPage = () => {
     const statusOrder = steps.map((s) => s.key);
     const currentIndex = statusOrder.indexOf(currentStatus);
 
+    // Latest timestamp recorded for each status
+    const timeByStatus: Record<string, string> = {};
+    history.forEach((h) => { timeByStatus[h.status] = h.changed_at; });
+
     return steps.map((step, index) => ({
       ...step,
       completed: currentIndex >= 0 && index <= currentIndex,
-      current: index === currentIndex
+      current: index === currentIndex,
+      timestamp: timeByStatus[step.key] || null
     }));
+  };
+
+  const fmtDateTime = (iso: string) => {
+    const d = new Date(iso);
+    const date = d.toLocaleDateString('en-GB');
+    const time = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    return `${date} - ${time}`;
   };
 
 
