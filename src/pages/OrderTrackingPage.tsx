@@ -248,7 +248,7 @@ const OrderTrackingPage = () => {
                     <CardContent className="p-6">
                       <h3 className="font-semibold mb-6">تتبع مراحل الطلب</h3>
                       <div className="space-y-6">
-                        {getOrderSteps(order.status).map((step, index) => {
+                        {getOrderSteps(order.status, order.status_history).map((step, index) => {
                           const Icon = getStatusInfo(step.key).icon;
                           return (
                             <div key={step.key} className="flex items-start gap-4">
@@ -268,6 +268,12 @@ const OrderTrackingPage = () => {
                                 <p className={`text-sm ${step.completed ? 'text-gray-600' : 'text-gray-400'}`}>
                                   {step.description}
                                 </p>
+                                {step.timestamp && (
+                                  <p className="text-xs font-mono tabular-nums text-gray-500 mt-1 flex items-center gap-1" dir="ltr">
+                                    <Clock className="h-3 w-3" />
+                                    {fmtDateTime(step.timestamp)}
+                                  </p>
+                                )}
                                 {step.current && (
                                   <p className="text-sm text-blue-600 mt-1">المرحلة الحالية</p>
                                 )}
