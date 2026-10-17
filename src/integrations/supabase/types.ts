@@ -394,6 +394,30 @@ export type Database = {
           },
         ]
       }
+      order_status_history: {
+        Row: {
+          changed_at: string
+          id: string
+          order_id: string
+          source: string
+          status: string
+        }
+        Insert: {
+          changed_at?: string
+          id?: string
+          order_id: string
+          source?: string
+          status: string
+        }
+        Update: {
+          changed_at?: string
+          id?: string
+          order_id?: string
+          source?: string
+          status?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           address: string | null
