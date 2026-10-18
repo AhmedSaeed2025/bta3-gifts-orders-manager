@@ -279,13 +279,13 @@ const OrderTrackingPage = () => {
                         {order.items.map((item: any, idx: number) => (
                           <div key={idx} className="py-3 flex items-center justify-between gap-3">
                             <div className="min-w-0">
-                              <p className="font-medium truncate">{item.product_name || item.name}</p>
-                              <p className="text-xs text-muted-foreground font-mono tabular-nums" dir="ltr">
-                                {item.quantity} × {fmt(item.price ?? item.unit_price ?? 0)} جنيه
-                              </p>
+                              <p className="font-medium truncate">{item.product_type || item.product_name || item.name || 'منتج'}</p>
+                              {item.size && (
+                                <p className="text-xs text-muted-foreground">المقاس: {item.size}</p>
+                              )}
                             </div>
                             <span className="font-mono tabular-nums font-semibold shrink-0" dir="ltr">
-                              {fmt((item.quantity || 0) * (item.price ?? item.unit_price ?? 0))} جنيه
+                              × {item.quantity}
                             </span>
                           </div>
                         ))}
