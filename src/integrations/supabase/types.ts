@@ -343,6 +343,36 @@ export type Database = {
         }
         Relationships: []
       }
+      governorates: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          shipping_cost: number
+          sort_order: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          shipping_cost?: number
+          sort_order?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          shipping_cost?: number
+          sort_order?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           cost: number
