@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Settings, Palette, Truck, CreditCard, FileText, Save, Star, ImageIcon, ListOrdered, PackageCheck, Receipt, LayoutList } from 'lucide-react';
+import { Loader2, Settings, Palette, Truck, CreditCard, FileText, Save, Star, ImageIcon, ListOrdered, PackageCheck, Receipt, LayoutList, MapPin } from 'lucide-react';
 import { Facebook } from 'lucide-react';
 
 // Import the component modules
@@ -20,6 +20,7 @@ import OrderStatusSettings from '@/components/admin/settings/OrderStatusSettings
 import DeliveryMethodsSettings from '@/components/admin/settings/DeliveryMethodsSettings';
 import InvoicePolicySettings from '@/components/admin/settings/InvoicePolicySettings';
 import TabsManagementSettings from '@/components/admin/settings/TabsManagementSettings';
+import GovernoratesSettings from '@/components/admin/settings/GovernoratesSettings';
 
 // Import the custom hooks
 import { useAdminSettings } from '@/hooks/useAdminSettings';
@@ -106,7 +107,7 @@ const AdminSettings = () => {
       </div>
 
       <Tabs defaultValue="general" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-12">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 h-auto">
           <TabsTrigger value="general" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             عام
@@ -122,6 +123,10 @@ const AdminSettings = () => {
           <TabsTrigger value="shipping" className="flex items-center gap-2">
             <Truck className="h-4 w-4" />
             الشحن
+          </TabsTrigger>
+          <TabsTrigger value="governorates" className="flex items-center gap-2">
+            <MapPin className="h-4 w-4" />
+            المحافظات
           </TabsTrigger>
           <TabsTrigger value="payment" className="flex items-center gap-2">
             <CreditCard className="h-4 w-4" />
@@ -225,6 +230,10 @@ const AdminSettings = () => {
 
         <TabsContent value="delivery-methods">
           <DeliveryMethodsSettings />
+        </TabsContent>
+
+        <TabsContent value="governorates">
+          <GovernoratesSettings />
         </TabsContent>
 
         <TabsContent value="invoice-policy">
