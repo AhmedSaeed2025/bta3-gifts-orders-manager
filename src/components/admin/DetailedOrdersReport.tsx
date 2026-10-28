@@ -45,6 +45,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate, useLocation } from "react-router-dom";
 import OrderPaymentDialog from "./OrderPaymentDialog";
 import InvoiceTemplateSelector from "@/components/invoice/InvoiceTemplateSelector";
+import { useStoreSettings } from '@/hooks/useStoreSettings';
 import { toast } from "sonner";
 
 const DetailedOrdersReport = () => {
@@ -67,6 +68,7 @@ const DetailedOrdersReport = () => {
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [paymentType, setPaymentType] = useState<'collection' | 'shipping' | 'cost'>('collection');
   const [invoiceOrder, setInvoiceOrder] = useState<any>(null);
+  const { data: storeSettings } = useStoreSettings();
 
   const selectedFinancials = selectedOrder ? calculateOrderFinancials(selectedOrder) : null;
   const statusOptions = getStatusOptions();
@@ -1193,7 +1195,8 @@ const DetailedOrdersReport = () => {
       <Dialog open={!!invoiceOrder} onOpenChange={(open) => !open && setInvoiceOrder(null)}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
           {invoiceOrder && (
-            <InvoiceTemplateSelector 
+            <InvoiceTemplateSelector
+              storeSettings={storeSettings}
               order={{
                 ...invoiceOrder,
                 clientName: invoiceOrder.client_name,
