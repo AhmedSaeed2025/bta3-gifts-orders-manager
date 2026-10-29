@@ -8,6 +8,7 @@ export interface GovernorateOption {
   id?: string;
   name: string;
   shipping_cost: number;
+  sort_order?: number;
 }
 
 export const useGovernorates = () => {
