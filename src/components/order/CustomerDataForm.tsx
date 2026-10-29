@@ -1,12 +1,17 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { useDeliveryMethods } from "@/components/admin/settings/DeliveryMethodsSettings";
 import { useShippingRates } from "@/hooks/useShippingRates";
-import { User, Phone, CreditCard, Truck, MapPin, DollarSign, AlertCircle } from "lucide-react";
+import { useGovernorates } from "@/hooks/useGovernorates";
+import { User, Phone, CreditCard, Truck, MapPin, DollarSign, AlertCircle, ChevronDown, Check } from "lucide-react";
+
 
 interface CustomerDataFormProps {
   customerData: {
@@ -37,6 +42,12 @@ const CustomerDataForm: React.FC<CustomerDataFormProps> = ({
 }) => {
   const { methods: deliveryMethods } = useDeliveryMethods();
   const { shippingRates } = useShippingRates();
+  const { options: governorateOptions } = useGovernorates();
+  const [govOpen, setGovOpen] = useState(false);
+  const [govQuery, setGovQuery] = useState("");
+  const filteredGovernorates = governorateOptions.filter((g) =>
+    g.name.includes(govQuery.trim())
+  );
   const selectedMethod = deliveryMethods.find(m => m.name === customerData.deliveryMethod);
   const showAddress = selectedMethod?.requiresAddress ?? false;
 
@@ -77,6 +88,21 @@ const CustomerDataForm: React.FC<CustomerDataFormProps> = ({
       }
     }
   };
+
+  // Pick a governorate: fills the default shipping cost saved for it in Settings
+  const handleGovernorateSelect = (name: string) => {
+    onSelectChange("governorate", name);
+    const gov = governorateOptions.find((g) => g.name === name);
+    if (gov && Number(gov.shipping_cost) > 0) {
+      const synthetic = {
+        target: { name: "shippingCost", value: String(gov.shipping_cost), type: "number" },
+      } as unknown as React.ChangeEvent<HTMLInputElement>;
+      onCustomerDataChange(synthetic);
+    }
+    setGovOpen(false);
+    setGovQuery("");
+  };
+
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const converted = arabicToEnglishDigits(e.target.value).replace(/\D/g, "").slice(0, 11);
