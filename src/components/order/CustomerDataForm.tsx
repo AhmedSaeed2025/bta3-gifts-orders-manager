@@ -57,6 +57,20 @@ const CustomerDataForm: React.FC<CustomerDataFormProps> = ({
   const phone2Invalid =
     !!customerData.phone2 && customerData.phone2.length > 0 && !phoneRegex.test(customerData.phone2);
 
+  // Auto-fill shipping when the governorate is set programmatically (e.g. default governorate of a delivery method)
+  useEffect(() => {
+    if (!customerData.governorate) return;
+    const gov = governorateOptions.find(
+      g => g.name === customerData.governorate && Number(g.shipping_cost) > 0
+    );
+    if (!gov) return;
+    const synthetic = {
+      target: { name: "shippingCost", value: String(gov.shipping_cost), type: "number" },
+    } as unknown as React.ChangeEvent<HTMLInputElement>;
+    onCustomerDataChange(synthetic);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customerData.governorate, governorateOptions]);
+
   // Auto-fetch shipping cost based on governorate (uses average across product types when multiple match)
   useEffect(() => {
     if (!customerData.governorate || shippingRates.length === 0) return;
