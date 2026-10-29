@@ -58,8 +58,10 @@ const CustomerDataForm: React.FC<CustomerDataFormProps> = ({
     !!customerData.phone2 && customerData.phone2.length > 0 && !phoneRegex.test(customerData.phone2);
 
   // Auto-fill shipping when the governorate is set programmatically (e.g. default governorate of a delivery method)
+  // Only fills an empty shipping cost — never overwrites a manually set value (e.g. when editing an existing order)
   useEffect(() => {
     if (!customerData.governorate) return;
+    if (Number(customerData.shippingCost || 0) !== 0) return;
     const gov = governorateOptions.find(
       g => g.name === customerData.governorate && Number(g.shipping_cost) > 0
     );
