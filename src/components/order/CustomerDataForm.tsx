@@ -1,12 +1,17 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { useDeliveryMethods } from "@/components/admin/settings/DeliveryMethodsSettings";
 import { useShippingRates } from "@/hooks/useShippingRates";
-import { User, Phone, CreditCard, Truck, MapPin, DollarSign, AlertCircle } from "lucide-react";
+import { useGovernorates } from "@/hooks/useGovernorates";
+import { User, Phone, CreditCard, Truck, MapPin, DollarSign, AlertCircle, ChevronDown, Check } from "lucide-react";
+
 
 interface CustomerDataFormProps {
   customerData: {
@@ -37,6 +42,12 @@ const CustomerDataForm: React.FC<CustomerDataFormProps> = ({
 }) => {
   const { methods: deliveryMethods } = useDeliveryMethods();
   const { shippingRates } = useShippingRates();
+  const { options: governorateOptions } = useGovernorates();
+  const [govOpen, setGovOpen] = useState(false);
+  const [govQuery, setGovQuery] = useState("");
+  const filteredGovernorates = governorateOptions.filter((g) =>
+    g.name.includes(govQuery.trim())
+  );
   const selectedMethod = deliveryMethods.find(m => m.name === customerData.deliveryMethod);
   const showAddress = selectedMethod?.requiresAddress ?? false;
 
@@ -45,6 +56,22 @@ const CustomerDataForm: React.FC<CustomerDataFormProps> = ({
   const phoneInvalid = customerData.phone.length > 0 && !phoneRegex.test(customerData.phone);
   const phone2Invalid =
     !!customerData.phone2 && customerData.phone2.length > 0 && !phoneRegex.test(customerData.phone2);
+
+  // Auto-fill shipping when the governorate is set programmatically (e.g. default governorate of a delivery method)
+  // Only fills an empty shipping cost — never overwrites a manually set value (e.g. when editing an existing order)
+  useEffect(() => {
+    if (!customerData.governorate) return;
+    if (Number(customerData.shippingCost || 0) !== 0) return;
+    const gov = governorateOptions.find(
+      g => g.name === customerData.governorate && Number(g.shipping_cost) > 0
+    );
+    if (!gov) return;
+    const synthetic = {
+      target: { name: "shippingCost", value: String(gov.shipping_cost), type: "number" },
+    } as unknown as React.ChangeEvent<HTMLInputElement>;
+    onCustomerDataChange(synthetic);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customerData.governorate, governorateOptions]);
 
   // Auto-fetch shipping cost based on governorate (uses average across product types when multiple match)
   useEffect(() => {
@@ -77,6 +104,21 @@ const CustomerDataForm: React.FC<CustomerDataFormProps> = ({
       }
     }
   };
+
+  // Pick a governorate: fills the default shipping cost saved for it in Settings
+  const handleGovernorateSelect = (name: string) => {
+    onSelectChange("governorate", name);
+    const gov = governorateOptions.find((g) => g.name === name);
+    if (gov && Number(gov.shipping_cost) > 0) {
+      const synthetic = {
+        target: { name: "shippingCost", value: String(gov.shipping_cost), type: "number" },
+      } as unknown as React.ChangeEvent<HTMLInputElement>;
+      onCustomerDataChange(synthetic);
+    }
+    setGovOpen(false);
+    setGovQuery("");
+  };
+
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const converted = arabicToEnglishDigits(e.target.value).replace(/\D/g, "").slice(0, 11);
@@ -229,16 +271,54 @@ const CustomerDataForm: React.FC<CustomerDataFormProps> = ({
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="governorate" className="text-xs text-muted-foreground">المحافظة</Label>
-                <Input
-                  type="text"
-                  id="governorate"
-                  name="governorate"
-                  value={customerData.governorate}
-                  onChange={onCustomerDataChange}
-                  className="h-9 text-sm"
-                  placeholder="المحافظة"
-                />
+                <Label className="text-xs text-muted-foreground">المحافظة</Label>
+                <Popover open={govOpen} onOpenChange={setGovOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={govOpen}
+                      className={`w-full justify-between h-9 text-sm font-normal ${customerData.governorate ? "" : "text-muted-foreground"}`}
+                    >
+                      <span className="flex items-center gap-2 truncate">
+                        <MapPin size={14} className="text-muted-foreground shrink-0" />
+                        {customerData.governorate || "اختر المحافظة أو اكتب جزءًا من اسمها"}
+                      </span>
+                      <ChevronDown size={14} className="text-muted-foreground shrink-0" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-72 p-0" align="start">
+                    <Command shouldFilter={false}>
+                      <CommandInput
+                        placeholder="اكتب جزءًا من اسم المحافظة..."
+                        value={govQuery}
+                        onValueChange={setGovQuery}
+                      />
+                      <CommandList className="max-h-56">
+                        <CommandEmpty>لا توجد محافظة بهذا الاسم</CommandEmpty>
+                        {filteredGovernorates.map((g) => (
+                          <CommandItem
+                            key={g.name}
+                            value={g.name}
+                            onSelect={() => handleGovernorateSelect(g.name)}
+                            className="text-sm"
+                          >
+                            <Check
+                              size={14}
+                              className={`shrink-0 ${customerData.governorate === g.name ? "opacity-100 text-primary" : "opacity-0"}`}
+                            />
+                            <span className="flex-1 truncate">{g.name}</span>
+                            {Number(g.shipping_cost) > 0 && (
+                              <span className="text-[11px] font-mono tabular-nums text-muted-foreground">
+                                {Number(g.shipping_cost)} ج.م
+                              </span>
+                            )}
+                          </CommandItem>
+                        ))}
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
           </div>
