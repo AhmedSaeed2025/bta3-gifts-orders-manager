@@ -255,16 +255,54 @@ const CustomerDataForm: React.FC<CustomerDataFormProps> = ({
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="governorate" className="text-xs text-muted-foreground">المحافظة</Label>
-                <Input
-                  type="text"
-                  id="governorate"
-                  name="governorate"
-                  value={customerData.governorate}
-                  onChange={onCustomerDataChange}
-                  className="h-9 text-sm"
-                  placeholder="المحافظة"
-                />
+                <Label className="text-xs text-muted-foreground">المحافظة</Label>
+                <Popover open={govOpen} onOpenChange={setGovOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={govOpen}
+                      className={`w-full justify-between h-9 text-sm font-normal ${customerData.governorate ? "" : "text-muted-foreground"}`}
+                    >
+                      <span className="flex items-center gap-2 truncate">
+                        <MapPin size={14} className="text-muted-foreground shrink-0" />
+                        {customerData.governorate || "اختر المحافظة أو اكتب جزءًا من اسمها"}
+                      </span>
+                      <ChevronDown size={14} className="text-muted-foreground shrink-0" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-72 p-0" align="start">
+                    <Command shouldFilter={false}>
+                      <CommandInput
+                        placeholder="اكتب جزءًا من اسم المحافظة..."
+                        value={govQuery}
+                        onValueChange={setGovQuery}
+                      />
+                      <CommandList className="max-h-56">
+                        <CommandEmpty>لا توجد محافظة بهذا الاسم</CommandEmpty>
+                        {filteredGovernorates.map((g) => (
+                          <CommandItem
+                            key={g.name}
+                            value={g.name}
+                            onSelect={() => handleGovernorateSelect(g.name)}
+                            className="text-sm"
+                          >
+                            <Check
+                              size={14}
+                              className={`shrink-0 ${customerData.governorate === g.name ? "opacity-100 text-primary" : "opacity-0"}`}
+                            />
+                            <span className="flex-1 truncate">{g.name}</span>
+                            {Number(g.shipping_cost) > 0 && (
+                              <span className="text-[11px] font-mono tabular-nums text-muted-foreground">
+                                {Number(g.shipping_cost)} ج.م
+                              </span>
+                            )}
+                          </CommandItem>
+                        ))}
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
           </div>
