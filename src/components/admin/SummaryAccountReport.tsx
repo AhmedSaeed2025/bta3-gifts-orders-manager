@@ -375,8 +375,9 @@ const SummaryAccountReport = () => {
     addExpenseMutation.mutate({
       category: newExpense.category,
       description: newExpense.description,
-      amount: parseFloat(newExpense.amount)
-    });
+      amount: parseFloat(newExpense.amount),
+      transactionDate: newExpense.transactionDate
+    } as any);
   };
 
   const handleAddIncome = () => {
@@ -387,8 +388,9 @@ const SummaryAccountReport = () => {
     addIncomeMutation.mutate({
       category: newIncome.category,
       description: newIncome.description,
-      amount: parseFloat(newIncome.amount)
-    });
+      amount: parseFloat(newIncome.amount),
+      transactionDate: newIncome.transactionDate
+    } as any);
   };
 
   const handleEditTransaction = () => {
@@ -396,7 +398,8 @@ const SummaryAccountReport = () => {
     updateTransactionMutation.mutate({
       id: editingTransaction.id,
       amount: parseFloat(editingTransaction.amount),
-      description: editingTransaction.description
+      description: editingTransaction.description,
+      transactionDate: editingTransaction.transactionDate
     });
   };
 
@@ -409,7 +412,10 @@ const SummaryAccountReport = () => {
   const openEditDialog = (transaction: any) => {
     setEditingTransaction({
       ...transaction,
-      amount: transaction.amount.toString()
+      amount: transaction.amount.toString(),
+      transactionDate: transaction.transaction_date
+        ? new Date(transaction.transaction_date).toISOString().slice(0, 16)
+        : new Date(transaction.created_at).toISOString().slice(0, 16)
     });
     setIsEditOpen(true);
   };
@@ -431,9 +437,9 @@ const SummaryAccountReport = () => {
 
   const formatCurrency = (amount: number) => `${amount.toLocaleString()} ج.م`;
 
-  // Separate transactions by type
+  // Separate transactions by type (income records are saved as 'other_income')
   const expenseTransactions = transactions.filter(t => t.transaction_type === 'expense');
-  const incomeTransactions = transactions.filter(t => t.transaction_type === 'income');
+  const incomeTransactions = transactions.filter(t => t.transaction_type === 'income' || t.transaction_type === 'other_income');
 
   return (
     <div className="space-y-6" dir="rtl">
