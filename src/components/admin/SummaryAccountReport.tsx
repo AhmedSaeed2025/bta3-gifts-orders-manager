@@ -943,10 +943,18 @@ const SummaryAccountReport = () => {
               </div>
               <div className="space-y-2">
                 <Label>المبلغ (ج.م)</Label>
-                <Input 
+                <Input
                   type="number"
                   value={editingTransaction.amount}
                   onChange={(e) => setEditingTransaction((prev: any) => ({ ...prev, amount: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>تاريخ المعاملة</Label>
+                <Input
+                  type="datetime-local"
+                  value={editingTransaction.transactionDate || ''}
+                  onChange={(e) => setEditingTransaction((prev: any) => ({ ...prev, transactionDate: e.target.value }))}
                 />
               </div>
               <DialogFooter className="gap-2">
