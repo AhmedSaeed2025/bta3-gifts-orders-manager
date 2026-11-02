@@ -60,14 +60,19 @@ const SummaryAccountReport = () => {
   const [newExpense, setNewExpense] = useState({
     category: 'cost' as keyof typeof EXPENSE_CATEGORIES,
     description: '',
-    amount: ''
+    amount: '',
+    transactionDate: ''
   });
 
   const [newIncome, setNewIncome] = useState({
     category: 'other' as keyof typeof INCOME_CATEGORIES,
     description: '',
-    amount: ''
+    amount: '',
+    transactionDate: ''
   });
+
+  // Effective transaction date: custom date if set, otherwise record creation date
+  const getTxDate = (t: any) => new Date(t.transaction_date || t.created_at);
 
   // Fetch orders for sales calculation - includes full order total (shipping + discount)
   const { data: orders = [] } = useQuery({
