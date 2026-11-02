@@ -167,7 +167,8 @@ const SummaryAccountReport = () => {
         order_serial: `EXP-${Date.now()}`,
         transaction_type: 'expense',
         amount: expense.amount,
-        description: `[${expense.category}] ${expense.description}`
+        description: `[${expense.category}] ${expense.description}`,
+        transaction_date: (expense.transactionDate ? new Date(expense.transactionDate) : new Date()).toISOString()
       });
 
       if (error) throw error;
@@ -195,7 +196,8 @@ const SummaryAccountReport = () => {
         order_serial: `INC-${Date.now()}`,
         transaction_type: 'other_income',
         amount: income.amount,
-        description: `[${income.category}] ${income.description}`
+        description: `[${income.category}] ${income.description}`,
+        transaction_date: (income.transactionDate ? new Date(income.transactionDate) : new Date()).toISOString()
       });
 
       if (error) throw error;
@@ -214,10 +216,10 @@ const SummaryAccountReport = () => {
 
   // Update transaction mutation
   const updateTransactionMutation = useMutation({
-    mutationFn: async ({ id, amount, description }: { id: string; amount: number; description: string }) => {
+    mutationFn: async ({ id, amount, description, transactionDate }: { id: string; amount: number; description: string; transactionDate?: string }) => {
       const { error } = await supabase
         .from('transactions')
-        .update({ amount, description })
+        .update({ amount, description, ...(transactionDate ? { transaction_date: new Date(transactionDate).toISOString() } : {}) })
         .eq('id', id);
       if (error) throw error;
     },
