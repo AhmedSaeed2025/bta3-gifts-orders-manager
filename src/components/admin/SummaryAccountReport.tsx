@@ -497,12 +497,21 @@ const SummaryAccountReport = () => {
                 </div>
                 <div className="space-y-2">
                   <Label>المبلغ (ج.م)</Label>
-                  <Input 
+                  <Input
                     type="number"
                     placeholder="0"
                     value={newIncome.amount}
                     onChange={(e) => setNewIncome(prev => ({ ...prev, amount: e.target.value }))}
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label>تاريخ المعاملة</Label>
+                  <Input
+                    type="datetime-local"
+                    value={newIncome.transactionDate}
+                    onChange={(e) => setNewIncome(prev => ({ ...prev, transactionDate: e.target.value }))}
+                  />
+                  <p className="text-xs text-muted-foreground">اتركه فارغًا ليُسجَّل بتاريخ اليوم</p>
                 </div>
                 <Button 
                   onClick={handleAddIncome} 
@@ -554,12 +563,21 @@ const SummaryAccountReport = () => {
                 </div>
                 <div className="space-y-2">
                   <Label>المبلغ (ج.م)</Label>
-                  <Input 
+                  <Input
                     type="number"
                     placeholder="0"
                     value={newExpense.amount}
                     onChange={(e) => setNewExpense(prev => ({ ...prev, amount: e.target.value }))}
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label>تاريخ المعاملة</Label>
+                  <Input
+                    type="datetime-local"
+                    value={newExpense.transactionDate}
+                    onChange={(e) => setNewExpense(prev => ({ ...prev, transactionDate: e.target.value }))}
+                  />
+                  <p className="text-xs text-muted-foreground">اتركه فارغًا ليُسجَّل بتاريخ اليوم</p>
                 </div>
                 <Button 
                   onClick={handleAddExpense} 
