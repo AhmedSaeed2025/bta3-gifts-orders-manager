@@ -60,14 +60,19 @@ const SummaryAccountReport = () => {
   const [newExpense, setNewExpense] = useState({
     category: 'cost' as keyof typeof EXPENSE_CATEGORIES,
     description: '',
-    amount: ''
+    amount: '',
+    transactionDate: ''
   });
 
   const [newIncome, setNewIncome] = useState({
     category: 'other' as keyof typeof INCOME_CATEGORIES,
     description: '',
-    amount: ''
+    amount: '',
+    transactionDate: ''
   });
+
+  // Effective transaction date: custom date if set, otherwise record creation date
+  const getTxDate = (t: any) => new Date(t.transaction_date || t.created_at);
 
   // Fetch orders for sales calculation - includes full order total (shipping + discount)
   const { data: orders = [] } = useQuery({
@@ -95,31 +100,34 @@ const SummaryAccountReport = () => {
     }
   });
 
-  // Fetch all transactions (expenses and income)
-  const { data: transactions = [] } = useQuery({
-    queryKey: ['summary-transactions', startDate?.toISOString(), endDate?.toISOString()],
+  // Fetch all transactions (expenses and income) — date filtering happens client-side
+  // using the effective transaction date (transaction_date || created_at)
+  const { data: allTransactions = [] } = useQuery({
+    queryKey: ['summary-transactions'],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return [];
 
-      let query = supabase
+      const { data, error } = await supabase
         .from('transactions')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (startDate) {
-        query = query.gte('created_at', startDate.toISOString());
-      }
-      if (endDate) {
-        query = query.lte('created_at', endDate.toISOString());
-      }
-
-      const { data, error } = await query;
       if (error) throw error;
       return data || [];
     }
   });
+
+  // Keep only transactions whose effective date falls inside the selected period
+  const transactions = useMemo(() => {
+    return allTransactions
+      .filter((t: any) => {
+        const d = getTxDate(t);
+        return (!startDate || d >= startDate) && (!endDate || d <= endDate);
+      })
+      .sort((a: any, b: any) => getTxDate(b).getTime() - getTxDate(a).getTime());
+  }, [allTransactions, startDate, endDate]);
 
   // Fetch paid workshop/shipping records (system source of truth for production + shipping costs)
   const { data: workshopPayments = [] } = useQuery({
@@ -159,7 +167,8 @@ const SummaryAccountReport = () => {
         order_serial: `EXP-${Date.now()}`,
         transaction_type: 'expense',
         amount: expense.amount,
-        description: `[${expense.category}] ${expense.description}`
+        description: `[${expense.category}] ${expense.description}`,
+        transaction_date: (expense.transactionDate ? new Date(expense.transactionDate) : new Date()).toISOString()
       });
 
       if (error) throw error;
@@ -169,7 +178,7 @@ const SummaryAccountReport = () => {
       queryClient.invalidateQueries({ queryKey: ['comprehensive-transactions'] });
       toast.success('تم إضافة المصروف بنجاح');
       setIsAddExpenseOpen(false);
-      setNewExpense({ category: 'cost', description: '', amount: '' });
+      setNewExpense({ category: 'cost', description: '', amount: '', transactionDate: '' });
     },
     onError: () => {
       toast.error('حدث خطأ أثناء إضافة المصروف');
@@ -187,7 +196,8 @@ const SummaryAccountReport = () => {
         order_serial: `INC-${Date.now()}`,
         transaction_type: 'other_income',
         amount: income.amount,
-        description: `[${income.category}] ${income.description}`
+        description: `[${income.category}] ${income.description}`,
+        transaction_date: (income.transactionDate ? new Date(income.transactionDate) : new Date()).toISOString()
       });
 
       if (error) throw error;
@@ -197,7 +207,7 @@ const SummaryAccountReport = () => {
       queryClient.invalidateQueries({ queryKey: ['comprehensive-transactions'] });
       toast.success('تم إضافة الإيراد بنجاح');
       setIsAddIncomeOpen(false);
-      setNewIncome({ category: 'other', description: '', amount: '' });
+      setNewIncome({ category: 'other', description: '', amount: '', transactionDate: '' });
     },
     onError: () => {
       toast.error('حدث خطأ أثناء إضافة الإيراد');
@@ -206,10 +216,10 @@ const SummaryAccountReport = () => {
 
   // Update transaction mutation
   const updateTransactionMutation = useMutation({
-    mutationFn: async ({ id, amount, description }: { id: string; amount: number; description: string }) => {
+    mutationFn: async ({ id, amount, description, transactionDate }: { id: string; amount: number; description: string; transactionDate?: string }) => {
       const { error } = await supabase
         .from('transactions')
-        .update({ amount, description })
+        .update({ amount, description, ...(transactionDate ? { transaction_date: new Date(transactionDate).toISOString() } : {}) })
         .eq('id', id);
       if (error) throw error;
     },
@@ -365,8 +375,9 @@ const SummaryAccountReport = () => {
     addExpenseMutation.mutate({
       category: newExpense.category,
       description: newExpense.description,
-      amount: parseFloat(newExpense.amount)
-    });
+      amount: parseFloat(newExpense.amount),
+      transactionDate: newExpense.transactionDate
+    } as any);
   };
 
   const handleAddIncome = () => {
@@ -377,8 +388,9 @@ const SummaryAccountReport = () => {
     addIncomeMutation.mutate({
       category: newIncome.category,
       description: newIncome.description,
-      amount: parseFloat(newIncome.amount)
-    });
+      amount: parseFloat(newIncome.amount),
+      transactionDate: newIncome.transactionDate
+    } as any);
   };
 
   const handleEditTransaction = () => {
@@ -386,7 +398,8 @@ const SummaryAccountReport = () => {
     updateTransactionMutation.mutate({
       id: editingTransaction.id,
       amount: parseFloat(editingTransaction.amount),
-      description: editingTransaction.description
+      description: editingTransaction.description,
+      transactionDate: editingTransaction.transactionDate
     });
   };
 
@@ -399,7 +412,10 @@ const SummaryAccountReport = () => {
   const openEditDialog = (transaction: any) => {
     setEditingTransaction({
       ...transaction,
-      amount: transaction.amount.toString()
+      amount: transaction.amount.toString(),
+      transactionDate: transaction.transaction_date
+        ? new Date(transaction.transaction_date).toISOString().slice(0, 16)
+        : new Date(transaction.created_at).toISOString().slice(0, 16)
     });
     setIsEditOpen(true);
   };
@@ -421,9 +437,9 @@ const SummaryAccountReport = () => {
 
   const formatCurrency = (amount: number) => `${amount.toLocaleString()} ج.م`;
 
-  // Separate transactions by type
+  // Separate transactions by type (income records are saved as 'other_income')
   const expenseTransactions = transactions.filter(t => t.transaction_type === 'expense');
-  const incomeTransactions = transactions.filter(t => t.transaction_type === 'income');
+  const incomeTransactions = transactions.filter(t => t.transaction_type === 'income' || t.transaction_type === 'other_income');
 
   return (
     <div className="space-y-6" dir="rtl">
@@ -481,12 +497,21 @@ const SummaryAccountReport = () => {
                 </div>
                 <div className="space-y-2">
                   <Label>المبلغ (ج.م)</Label>
-                  <Input 
+                  <Input
                     type="number"
                     placeholder="0"
                     value={newIncome.amount}
                     onChange={(e) => setNewIncome(prev => ({ ...prev, amount: e.target.value }))}
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label>تاريخ المعاملة</Label>
+                  <Input
+                    type="datetime-local"
+                    value={newIncome.transactionDate}
+                    onChange={(e) => setNewIncome(prev => ({ ...prev, transactionDate: e.target.value }))}
+                  />
+                  <p className="text-xs text-muted-foreground">اتركه فارغًا ليُسجَّل بتاريخ اليوم</p>
                 </div>
                 <Button 
                   onClick={handleAddIncome} 
@@ -538,12 +563,21 @@ const SummaryAccountReport = () => {
                 </div>
                 <div className="space-y-2">
                   <Label>المبلغ (ج.م)</Label>
-                  <Input 
+                  <Input
                     type="number"
                     placeholder="0"
                     value={newExpense.amount}
                     onChange={(e) => setNewExpense(prev => ({ ...prev, amount: e.target.value }))}
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label>تاريخ المعاملة</Label>
+                  <Input
+                    type="datetime-local"
+                    value={newExpense.transactionDate}
+                    onChange={(e) => setNewExpense(prev => ({ ...prev, transactionDate: e.target.value }))}
+                  />
+                  <p className="text-xs text-muted-foreground">اتركه فارغًا ليُسجَّل بتاريخ اليوم</p>
                 </div>
                 <Button 
                   onClick={handleAddExpense} 
@@ -777,7 +811,7 @@ const SummaryAccountReport = () => {
                         <div>
                           <p className="font-medium text-sm">{cleanDescription || EXPENSE_CATEGORIES[category]?.label}</p>
                           <p className="text-xs text-muted-foreground">
-                            {format(new Date(t.created_at), 'dd/MM/yyyy', { locale: ar })}
+                            {format(getTxDate(t), 'dd/MM/yyyy', { locale: ar })}
                           </p>
                         </div>
                       </div>
@@ -854,7 +888,7 @@ const SummaryAccountReport = () => {
                         <div>
                           <p className="font-medium text-sm">{cleanDescription || INCOME_CATEGORIES[category]?.label}</p>
                           <p className="text-xs text-muted-foreground">
-                            {format(new Date(t.created_at), 'dd/MM/yyyy', { locale: ar })}
+                            {format(getTxDate(t), 'dd/MM/yyyy', { locale: ar })}
                           </p>
                         </div>
                       </div>
@@ -909,10 +943,18 @@ const SummaryAccountReport = () => {
               </div>
               <div className="space-y-2">
                 <Label>المبلغ (ج.م)</Label>
-                <Input 
+                <Input
                   type="number"
                   value={editingTransaction.amount}
                   onChange={(e) => setEditingTransaction((prev: any) => ({ ...prev, amount: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>تاريخ المعاملة</Label>
+                <Input
+                  type="datetime-local"
+                  value={editingTransaction.transactionDate || ''}
+                  onChange={(e) => setEditingTransaction((prev: any) => ({ ...prev, transactionDate: e.target.value }))}
                 />
               </div>
               <DialogFooter className="gap-2">

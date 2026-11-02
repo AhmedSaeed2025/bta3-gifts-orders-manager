@@ -149,7 +149,7 @@ const ImprovedComprehensiveAccountStatement = () => {
   }), [allOrders, startDate, endDate]);
 
   const transactions = useMemo(() => allTransactions.filter(t => {
-    const d = new Date(t.created_at);
+    const d = new Date(t.transaction_date || t.created_at);
     return (!startDate || d >= startDate) && (!endDate || d <= endDate);
   }), [allTransactions, startDate, endDate]);
 
