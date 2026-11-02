@@ -178,7 +178,7 @@ const SummaryAccountReport = () => {
       queryClient.invalidateQueries({ queryKey: ['comprehensive-transactions'] });
       toast.success('تم إضافة المصروف بنجاح');
       setIsAddExpenseOpen(false);
-      setNewExpense({ category: 'cost', description: '', amount: '' });
+      setNewExpense({ category: 'cost', description: '', amount: '', transactionDate: '' });
     },
     onError: () => {
       toast.error('حدث خطأ أثناء إضافة المصروف');
@@ -207,7 +207,7 @@ const SummaryAccountReport = () => {
       queryClient.invalidateQueries({ queryKey: ['comprehensive-transactions'] });
       toast.success('تم إضافة الإيراد بنجاح');
       setIsAddIncomeOpen(false);
-      setNewIncome({ category: 'other', description: '', amount: '' });
+      setNewIncome({ category: 'other', description: '', amount: '', transactionDate: '' });
     },
     onError: () => {
       toast.error('حدث خطأ أثناء إضافة الإيراد');
@@ -811,7 +811,7 @@ const SummaryAccountReport = () => {
                         <div>
                           <p className="font-medium text-sm">{cleanDescription || EXPENSE_CATEGORIES[category]?.label}</p>
                           <p className="text-xs text-muted-foreground">
-                            {format(new Date(t.created_at), 'dd/MM/yyyy', { locale: ar })}
+                            {format(getTxDate(t), 'dd/MM/yyyy', { locale: ar })}
                           </p>
                         </div>
                       </div>
@@ -888,7 +888,7 @@ const SummaryAccountReport = () => {
                         <div>
                           <p className="font-medium text-sm">{cleanDescription || INCOME_CATEGORIES[category]?.label}</p>
                           <p className="text-xs text-muted-foreground">
-                            {format(new Date(t.created_at), 'dd/MM/yyyy', { locale: ar })}
+                            {format(getTxDate(t), 'dd/MM/yyyy', { locale: ar })}
                           </p>
                         </div>
                       </div>
