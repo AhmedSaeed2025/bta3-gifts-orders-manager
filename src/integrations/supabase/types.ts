@@ -85,6 +85,7 @@ export type Database = {
           profit: number | null
           remaining_amount: number | null
           serial: string
+          shipment_number: string | null
           shipping_address: string | null
           shipping_cost: number | null
           shipping_status: string | null
@@ -114,6 +115,7 @@ export type Database = {
           profit?: number | null
           remaining_amount?: number | null
           serial: string
+          shipment_number?: string | null
           shipping_address?: string | null
           shipping_cost?: number | null
           shipping_status?: string | null
@@ -143,6 +145,7 @@ export type Database = {
           profit?: number | null
           remaining_amount?: number | null
           serial?: string
+          shipment_number?: string | null
           shipping_address?: string | null
           shipping_cost?: number | null
           shipping_status?: string | null
@@ -469,6 +472,7 @@ export type Database = {
           profit: number
           remaining_amount: number | null
           serial: string
+          shipment_number: string | null
           shipping_cost: number | null
           status: string
           total: number
@@ -496,6 +500,7 @@ export type Database = {
           profit: number
           remaining_amount?: number | null
           serial: string
+          shipment_number?: string | null
           shipping_cost?: number | null
           status?: string
           total: number
@@ -523,6 +528,7 @@ export type Database = {
           profit?: number
           remaining_amount?: number | null
           serial?: string
+          shipment_number?: string | null
           shipping_cost?: number | null
           status?: string
           total?: number
@@ -977,6 +983,7 @@ export type Database = {
           description: string | null
           id: string
           order_serial: string
+          transaction_date: string | null
           transaction_type: string
           user_id: string
         }
@@ -986,6 +993,7 @@ export type Database = {
           description?: string | null
           id?: string
           order_serial: string
+          transaction_date?: string | null
           transaction_type: string
           user_id: string
         }
@@ -995,6 +1003,7 @@ export type Database = {
           description?: string | null
           id?: string
           order_serial?: string
+          transaction_date?: string | null
           transaction_type?: string
           user_id?: string
         }
