@@ -100,31 +100,34 @@ const SummaryAccountReport = () => {
     }
   });
 
-  // Fetch all transactions (expenses and income)
-  const { data: transactions = [] } = useQuery({
-    queryKey: ['summary-transactions', startDate?.toISOString(), endDate?.toISOString()],
+  // Fetch all transactions (expenses and income) — date filtering happens client-side
+  // using the effective transaction date (transaction_date || created_at)
+  const { data: allTransactions = [] } = useQuery({
+    queryKey: ['summary-transactions'],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return [];
 
-      let query = supabase
+      const { data, error } = await supabase
         .from('transactions')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (startDate) {
-        query = query.gte('created_at', startDate.toISOString());
-      }
-      if (endDate) {
-        query = query.lte('created_at', endDate.toISOString());
-      }
-
-      const { data, error } = await query;
       if (error) throw error;
       return data || [];
     }
   });
+
+  // Keep only transactions whose effective date falls inside the selected period
+  const transactions = useMemo(() => {
+    return allTransactions
+      .filter((t: any) => {
+        const d = getTxDate(t);
+        return (!startDate || d >= startDate) && (!endDate || d <= endDate);
+      })
+      .sort((a: any, b: any) => getTxDate(b).getTime() - getTxDate(a).getTime());
+  }, [allTransactions, startDate, endDate]);
 
   // Fetch paid workshop/shipping records (system source of truth for production + shipping costs)
   const { data: workshopPayments = [] } = useQuery({
