@@ -892,6 +892,14 @@ const DetailedOrdersReport = () => {
                       <Button variant="outline" size="sm" onClick={() => setInvoiceOrder(order)} className="text-xs h-7 gap-1 border-indigo-200 text-indigo-600 hover:bg-indigo-50 dark:border-indigo-800 dark:text-indigo-400 dark:hover:bg-indigo-950/50">
                         <Printer className="h-3 w-3" /> فاتورة
                       </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openShipmentDialog(order)}
+                        className={`text-xs h-7 gap-1 ${order.shipment_number ? 'border-sky-300 text-sky-600 hover:bg-sky-50 dark:border-sky-800 dark:text-sky-400 dark:hover:bg-sky-950/50' : 'border-slate-300 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-900/50'}`}
+                      >
+                        <Truck className="h-3 w-3" /> {order.shipment_number ? 'الشحنة ✓' : 'رقم الشحنة'}
+                      </Button>
                       <Button variant="outline" size="sm" onClick={() => openPaymentDialog(order, 'collection')} className="text-xs h-7 gap-1 border-emerald-200 text-emerald-600 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950/50">
                         <Receipt className="h-3 w-3" /> تحصيل
                       </Button>
@@ -1230,6 +1238,42 @@ const DetailedOrdersReport = () => {
         paymentType={paymentType}
         onConfirm={handlePayment}
       />
+
+      {/* Shipment Number Dialog */}
+      <Dialog open={!!shipmentOrder} onOpenChange={(open) => !open && setShipmentOrder(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-lg">
+              <Truck className="h-5 w-5 text-sky-600" />
+              رقم شحنة الطلب {shipmentOrder?.serial ? `#${shipmentOrder.serial}` : ''}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">رقم الشحنة (من شركة الشحن)</label>
+              <Input
+                dir="ltr"
+                className="font-mono text-center"
+                placeholder="مثال: 8871654321"
+                value={shipmentNumber}
+                onChange={(e) => setShipmentNumber(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleSaveShipment(); }}
+              />
+              <p className="text-xs text-muted-foreground">
+                بعد الحفظ يظهر رقم الشحنة تلقائيًا في الفاتورة وفي صفحة تتبع العميل.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={handleSaveShipment} className="flex-1 bg-sky-600 hover:bg-sky-700" disabled={saveShipmentMutation.isPending}>
+                {saveShipmentMutation.isPending ? 'جاري الحفظ...' : 'حفظ'}
+              </Button>
+              <Button variant="outline" onClick={() => setShipmentOrder(null)} className="flex-1">
+                إلغاء
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Invoice Dialog */}
       <Dialog open={!!invoiceOrder} onOpenChange={(open) => !open && setInvoiceOrder(null)}>
