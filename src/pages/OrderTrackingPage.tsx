@@ -47,6 +47,7 @@ const OrderTrackingPage = () => {
         status: o.status,
         order_date: o.order_date,
         estimated_delivery_date: o.estimated_delivery_date,
+        shipment_number: o.shipment_number || null,
         items: o.items || [],
         status_history: (o.status_history || []) as { status: string; changed_at: string }[],
       };
@@ -205,6 +206,12 @@ const OrderTrackingPage = () => {
                       </h3>
                       <div className="space-y-3">
                         <InfoRow label="رقم الطلب:" value={<span className="font-mono" dir="ltr">{order.serial}</span>} />
+                        {order.shipment_number && (
+                          <InfoRow
+                            label="رقم الشحنة:"
+                            value={<span className="font-mono font-bold text-sky-600" dir="ltr">{order.shipment_number}</span>}
+                          />
+                        )}
                         <InfoRow
                           label="تاريخ الطلب:"
                           value={<span className="font-mono" dir="ltr">{new Date(order.order_date).toLocaleDateString('en-GB')}</span>}

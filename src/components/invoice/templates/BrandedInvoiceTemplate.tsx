@@ -31,6 +31,7 @@ type InvoiceItem = {
 type InvoiceOrder = {
   serial?: string | number | null;
   tracking_token?: string | null;
+  shipment_number?: string | null;
   date_created?: string | null;
   order_date?: string | null;
   status?: string | null;
@@ -296,6 +297,9 @@ const BrandedInvoiceTemplate: React.FC<Props> = ({ order, storeSettings }) => {
               )}
               <Row label="المحافظة" value={order.governorate} />
               <Row label="العنوان" value={order.address || order.shipping_address} multiline />
+              {order.shipment_number && (
+                <Row label="رقم الشحنة" value={<span style={{ ...num, fontWeight: 900, color: red }}>{toEnDigits(order.shipment_number)}</span>} />
+              )}
               <Row label="حالة الطلب" value={<span style={{ background: '#dcfce7', color: '#15803d', padding: '3px 10px', borderRadius: '999px', fontSize: fs.xs, fontWeight: 900 }}>{currentStatusLabel}</span>} />
             </InfoCard>
 
