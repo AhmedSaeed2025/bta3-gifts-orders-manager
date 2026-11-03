@@ -158,7 +158,7 @@ const SummaryAccountReport = () => {
 
   // Add expense mutation
   const addExpenseMutation = useMutation({
-    mutationFn: async (expense: { category: string; description: string; amount: number }) => {
+    mutationFn: async (expense: { category: string; description: string; amount: number; transactionDate?: string }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
@@ -187,7 +187,7 @@ const SummaryAccountReport = () => {
 
   // Add income mutation
   const addIncomeMutation = useMutation({
-    mutationFn: async (income: { category: string; description: string; amount: number }) => {
+    mutationFn: async (income: { category: string; description: string; amount: number; transactionDate?: string }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
