@@ -377,7 +377,7 @@ const SummaryAccountReport = () => {
       description: newExpense.description,
       amount: parseFloat(newExpense.amount),
       transactionDate: newExpense.transactionDate
-    } as any);
+    });
   };
 
   const handleAddIncome = () => {
@@ -390,7 +390,7 @@ const SummaryAccountReport = () => {
       description: newIncome.description,
       amount: parseFloat(newIncome.amount),
       transactionDate: newIncome.transactionDate
-    } as any);
+    });
   };
 
   const handleEditTransaction = () => {
