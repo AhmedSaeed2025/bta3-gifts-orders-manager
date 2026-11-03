@@ -254,6 +254,46 @@ const DetailedOrdersReport = () => {
     }
   };
 
+  // Shipment number dialog state + save mutation
+  const [shipmentOrder, setShipmentOrder] = useState<any>(null);
+  const [shipmentNumber, setShipmentNumber] = useState("");
+
+  const openShipmentDialog = (order: any) => {
+    setShipmentOrder(order);
+    setShipmentNumber(order.shipment_number || "");
+  };
+
+  const saveShipmentMutation = useMutation({
+    mutationFn: async ({ orderId, shipmentNumber }: { orderId: string; shipmentNumber: string }) => {
+      if (!user) throw new Error('يجب تسجيل الدخول أولاً');
+      const { error } = await supabase
+        .from('orders')
+        .update({ shipment_number: shipmentNumber })
+        .eq('id', orderId)
+        .eq('user_id', user.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['detailed-orders-report'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-orders-enhanced'] });
+      toast.success('تم حفظ رقم الشحنة — سيظهر في الفاتورة وصفحة التتبع');
+      setShipmentOrder(null);
+    },
+    onError: (error) => {
+      console.error('Error updating shipment number:', error);
+      toast.error('حدث خطأ في حفظ رقم الشحنة');
+    }
+  });
+
+  const handleSaveShipment = () => {
+    if (!shipmentOrder) return;
+    if (!shipmentNumber.trim()) {
+      toast.error('يرجى إدخال رقم الشحنة');
+      return;
+    }
+    saveShipmentMutation.mutate({ orderId: shipmentOrder.id, shipmentNumber: shipmentNumber.trim() });
+  };
+
   // Delete order mutation with sync
   const deleteOrderMutation = useMutation({
     mutationFn: async ({ orderId, serial }: { orderId: string; serial: string }) => {
