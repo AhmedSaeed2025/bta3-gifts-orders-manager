@@ -47,6 +47,7 @@ const OrderTrackingPage = () => {
         status: o.status,
         order_date: o.order_date,
         estimated_delivery_date: o.estimated_delivery_date,
+        shipment_number: o.shipment_number || null,
         items: o.items || [],
         status_history: (o.status_history || []) as { status: string; changed_at: string }[],
       };
