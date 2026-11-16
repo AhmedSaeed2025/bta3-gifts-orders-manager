@@ -318,6 +318,33 @@ const BrandedInvoiceTemplate: React.FC<Props> = ({ order, storeSettings }) => {
         <div style={{ padding: isMobile ? '0 14px 13px' : '0 24px 18px' }}>
           <div style={{ border: `1px solid ${line}`, borderRadius: '12px', overflow: 'hidden', background: '#fff' }}>
             <SectionTitle icon="🛒" title="تفاصيل الطلب" red={red} dark={dark} redSoft={redSoft} redBorder={redBorder} />
+            {isMobile ? (
+              <div style={{ display: 'grid', gap: '8px', padding: '9px' }}>
+                {invoiceItems.length > 0 ? invoiceItems.map((it, i) => {
+                  const price = Number(it.price || it.unit_price || 0);
+                  const qty = Number(it.quantity || 1);
+                  const itemTotal = price * qty;
+                  const productName = it.product_name || it.name || it.product_type || 'منتج';
+                  const productSize = it.size || it.product_size || it.description || '';
+                  return (
+                    <div key={i} style={{ border: `1px solid ${line}`, borderRadius: '9px', padding: '9px', background: i % 2 === 0 ? '#fff' : '#fcfcfc', direction: 'rtl' }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                        <span style={{ ...num, flexShrink: 0, minWidth: '22px', height: '22px', borderRadius: '50%', background: redSoft, color: red, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: fs.xs, fontWeight: 900 }}>{toEnDigits(i + 1)}</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: fs.md, fontWeight: 900, color: dark, lineHeight: 1.5, overflowWrap: 'anywhere' }}>{productName}</div>
+                          {productSize && <span style={{ marginTop: '3px', background: redSoft, color: redDark, padding: '2px 7px', borderRadius: '6px', fontSize: fs.xs, fontWeight: 800, border: `1px solid ${redBorder}`, display: 'inline-block', lineHeight: 1.4, overflowWrap: 'anywhere' }}>{toEnDigits(productSize)}</span>}
+                        </div>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '0.7fr 1fr 1fr', gap: '5px', marginTop: '9px', paddingTop: '8px', borderTop: `1px solid ${line}`, textAlign: 'center' }}>
+                        <div style={{ minWidth: 0 }}><div style={{ color: gray, fontSize: fs.xs, marginBottom: '3px' }}>الكمية</div><div style={{ ...num, fontWeight: 900, fontSize: fs.base }}>{toEnDigits(qty)}</div></div>
+                        <div style={{ minWidth: 0 }}><div style={{ color: gray, fontSize: fs.xs, marginBottom: '3px' }}>سعر الوحدة</div><div style={{ ...num, fontSize: fs.sm, overflowWrap: 'anywhere' }}>{money(price)}</div></div>
+                        <div style={{ minWidth: 0 }}><div style={{ color: gray, fontSize: fs.xs, marginBottom: '3px' }}>الإجمالي</div><div style={{ ...num, color: red, fontWeight: 900, fontSize: fs.sm, overflowWrap: 'anywhere' }}>{money(itemTotal)}</div></div>
+                      </div>
+                    </div>
+                  );
+                }) : <div style={{ padding: '16px', textAlign: 'center', color: gray, fontSize: fs.base }}>لا توجد أصناف</div>}
+              </div>
+            ) : (
             <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', direction: 'rtl' }}>
               <thead>
                 <tr style={{ background: `linear-gradient(180deg, ${red} 0%, ${redDark} 100%)`, color: '#fff' }}>
@@ -351,6 +378,7 @@ const BrandedInvoiceTemplate: React.FC<Props> = ({ order, storeSettings }) => {
                 )}
               </tbody>
             </table>
+            )}
           </div>
         </div>
 

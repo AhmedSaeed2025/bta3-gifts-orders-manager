@@ -1277,7 +1277,7 @@ const DetailedOrdersReport = () => {
 
       {/* Invoice Dialog */}
       <Dialog open={!!invoiceOrder} onOpenChange={(open) => !open && setInvoiceOrder(null)}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
+        <DialogContent className="w-[calc(100vw-1rem)] max-w-4xl max-h-[94dvh] overflow-y-auto p-2 sm:p-0">
           {invoiceOrder && (
             <InvoiceTemplateSelector
               storeSettings={storeSettings}

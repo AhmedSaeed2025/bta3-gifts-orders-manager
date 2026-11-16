@@ -88,7 +88,7 @@ const InvoiceTemplateSelector: React.FC<InvoiceTemplateSelectorProps> = ({
           </Button>
           {onClose && <Button variant="outline" onClick={onClose}>إغلاق</Button>}
         </div>
-        <div ref={invoiceRef} className="overflow-x-auto flex justify-center">{renderTemplate()}</div>
+        <div ref={invoiceRef} className="w-full overflow-x-auto flex justify-center px-1">{renderTemplate()}</div>
       </div>
     );
   }
