@@ -47,13 +47,47 @@ const InvoiceTemplateSelector: React.FC<InvoiceTemplateSelectorProps> = ({
     content: () => invoiceRef.current,
     documentTitle: `فاتورة-${order.serial}`,
     pageStyle: `
-      @page { size: A4; margin: 0; }
+      @page { size: A4 portrait; margin: 8mm; }
       @media print {
+        html, body {
+          width: 100% !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          background: #fff !important;
+        }
         body {
           direction: rtl !important;
           font-family: 'Tajawal', 'Cairo', 'Amiri', Arial, sans-serif !important;
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
+        }
+        .invoice-print-root {
+          width: 100% !important;
+          max-width: none !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+        .invoice-print-root .print\\:hidden {
+          display: none !important;
+        }
+        .invoice-print-root [data-invoice-ref="true"] {
+          width: 100% !important;
+          max-width: 100% !important;
+          margin: 0 !important;
+          border-radius: 0 !important;
+          box-shadow: none !important;
+          overflow: visible !important;
+        }
+        .invoice-print-root table {
+          page-break-inside: auto;
+        }
+        .invoice-print-root thead {
+          display: table-header-group;
+        }
+        .invoice-print-root tr,
+        .invoice-print-root img {
+          page-break-inside: avoid;
+          break-inside: avoid;
         }
       }
     `
@@ -88,7 +122,7 @@ const InvoiceTemplateSelector: React.FC<InvoiceTemplateSelectorProps> = ({
           </Button>
           {onClose && <Button variant="outline" onClick={onClose}>إغلاق</Button>}
         </div>
-        <div ref={invoiceRef} className="w-full overflow-x-auto flex justify-center px-1">{renderTemplate()}</div>
+        <div ref={invoiceRef} className="invoice-print-root w-full overflow-x-auto flex justify-center px-1">{renderTemplate()}</div>
       </div>
     );
   }
