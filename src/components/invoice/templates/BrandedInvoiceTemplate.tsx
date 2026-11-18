@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import QRCode from 'qrcode';
-import { Camera, Share2, Printer } from 'lucide-react';
+import { Camera, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/utils';
 import { calculateOrderFinancials } from '@/lib/orderFinancials';
@@ -132,7 +132,6 @@ const BrandedInvoiceTemplate: React.FC<Props> = ({ order, storeSettings }) => {
     const txt = `فاتورة #${orderSerial}\n${window.location.origin}/track/${encodeURIComponent(token)}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`, '_blank');
   };
-  const handlePrint = () => window.print();
 
   const currentIdx = statusConfigs.findIndex(c => c.status === orderStatus);
   const timeline = statusConfigs.filter(c => c.enabled).slice(0, 6);
@@ -156,7 +155,7 @@ const BrandedInvoiceTemplate: React.FC<Props> = ({ order, storeSettings }) => {
   const line = '#e5e7eb';
   const dark = '#111827';
   const fs = { xs: isMobile ? '9px' : '10px', sm: isMobile ? '10px' : '11px', base: isMobile ? '11px' : '12px', md: isMobile ? '12px' : '13px', lg: isMobile ? '15px' : '16px', xl: isMobile ? '20px' : '25px', xxl: isMobile ? '24px' : '31px' };
-  const containerWidth = isMobile ? 360 : 780;
+  const containerWidth = isMobile ? 420 : 780;
 
   const socialLinks = [
     { key: 'facebook', label: 'Facebook', value: socialHandle(storeSettings?.facebook_url, 'Facebook'), color: '#1877f2', icon: <FB /> },
@@ -177,9 +176,6 @@ const BrandedInvoiceTemplate: React.FC<Props> = ({ order, storeSettings }) => {
         <Button onClick={handleScreenshot} variant="outline" size="sm" className="gap-2">
           <Camera className="w-4 h-4" /> حفظ صورة
         </Button>
-        <Button onClick={handlePrint} variant="outline" size="sm" className="gap-2">
-          <Printer className="w-4 h-4" /> طباعة
-        </Button>
         <Button onClick={handleWhatsApp} variant="outline" size="sm" className="gap-2">
           <Share2 className="w-4 h-4" /> مشاركة واتساب
         </Button>
@@ -194,29 +190,29 @@ const BrandedInvoiceTemplate: React.FC<Props> = ({ order, storeSettings }) => {
           color: dark,
           fontFamily: 'Tajawal, Cairo, Arial, sans-serif',
           direction: 'rtl',
-          width: '100%',
-          maxWidth: `${containerWidth}px`,
+          width: isMobile ? 'calc(100% - 12px)' : '100%',
+          maxWidth: isMobile ? '420px' : `${containerWidth}px`,
           margin: '0 auto',
           boxSizing: 'border-box',
           border: '1px solid #f1f5f9',
-          borderRadius: isMobile ? '12px' : '16px',
+          borderRadius: isMobile ? '14px' : '16px',
           overflow: 'hidden',
           boxShadow: '0 18px 45px rgba(15, 23, 42, 0.08)',
           background: '#ffffff',
         }}
       >
         {/* HEADER */}
-        <div style={{ padding: isMobile ? '14px' : '18px 24px', borderBottom: `1px solid ${line}`, background: 'linear-gradient(180deg, #ffffff 0%, #fffafa 100%)' }}>
-          <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '14px' : '22px', alignItems: 'stretch', direction: 'ltr' }}>
-            <div style={{ flex: 1, direction: 'rtl', display: 'flex', alignItems: 'center', justifyContent: isMobile ? 'center' : 'flex-start', gap: isMobile ? '10px' : '14px', textAlign: 'right' }}>
+        <div style={{ padding: isMobile ? '14px 14px 12px' : '18px 24px', borderBottom: `1px solid ${line}`, background: 'linear-gradient(180deg, #ffffff 0%, #fffafa 100%)' }}>
+          <div style={{ display: 'flex', flexDirection: 'row', gap: isMobile ? '8px' : '22px', alignItems: 'center', direction: 'ltr' }}>
+            <div style={{ flex: '1 1 0', minWidth: 0, direction: 'rtl', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: isMobile ? '8px' : '14px', textAlign: 'right' }}>
               {storeSettings?.logo_url ? (
                 <img
                   src={storeSettings.logo_url}
                   alt={storeName}
                   crossOrigin="anonymous"
                   style={{
-                    width: isMobile ? '62px' : '82px',
-                    height: isMobile ? '62px' : '82px',
+                    width: isMobile ? '46px' : '82px',
+                    height: isMobile ? '46px' : '82px',
                     objectFit: 'cover',
                     borderRadius: '14px',
                     border: `2px solid ${redBorder}`,
@@ -227,14 +223,14 @@ const BrandedInvoiceTemplate: React.FC<Props> = ({ order, storeSettings }) => {
                   }}
                 />
               ) : (
-                <div style={{ width: isMobile ? '62px' : '82px', height: isMobile ? '62px' : '82px', borderRadius: '14px', background: redSoft, border: `2px solid ${redBorder}`, flexShrink: 0 }} />
+                <div style={{ width: isMobile ? '46px' : '82px', height: isMobile ? '46px' : '82px', borderRadius: '14px', background: redSoft, border: `2px solid ${redBorder}`, flexShrink: 0 }} />
               )}
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: fs.xl, fontWeight: 900, color: dark, lineHeight: 1.15 }}>{storeName}</div>
-                {tagline && <div style={{ fontSize: fs.md, color: red, marginTop: '5px', fontWeight: 800 }}>{tagline}</div>}
-                {(city || country) && <div style={{ fontSize: fs.sm, color: gray, marginTop: '4px' }}>{[city, country].filter(Boolean).join('، ')}</div>}
-                {socialLinks.length > 0 && (
-                  <div style={{ display: 'flex', gap: '5px', marginTop: '9px', justifyContent: isMobile ? 'center' : 'flex-start', flexWrap: 'wrap' }}>
+                <div style={{ fontSize: isMobile ? fs.md : fs.xl, fontWeight: 900, color: dark, lineHeight: 1.3, overflowWrap: 'anywhere' }}>{storeName}</div>
+                {tagline && <div style={{ fontSize: isMobile ? fs.xs : fs.md, color: red, marginTop: isMobile ? '2px' : '5px', fontWeight: 800, lineHeight: 1.4 }}>{tagline}</div>}
+                {!isMobile && (city || country) && <div style={{ fontSize: fs.sm, color: gray, marginTop: '4px' }}>{[city, country].filter(Boolean).join('، ')}</div>}
+                {!isMobile && socialLinks.length > 0 && (
+                  <div style={{ display: 'flex', gap: '5px', marginTop: '9px', justifyContent: 'flex-start', flexWrap: 'wrap' }}>
                     {socialLinks.slice(0, 6).map(link => (
                       <span key={link.key} style={{ width: '22px', height: '22px', borderRadius: '50%', background: link.color, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{link.icon}</span>
                     ))}
@@ -243,12 +239,12 @@ const BrandedInvoiceTemplate: React.FC<Props> = ({ order, storeSettings }) => {
               </div>
             </div>
 
-            <div style={{ direction: 'rtl', width: isMobile ? '100%' : '238px', borderRight: isMobile ? 'none' : `1px solid ${line}`, paddingRight: isMobile ? 0 : '20px', textAlign: isMobile ? 'center' : 'right', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: isMobile ? 'center' : 'flex-start' }}>
-                <span style={{ fontSize: fs.xxl, fontWeight: 900, color: red, lineHeight: 1 }}>فاتورة</span>
-                <span style={{ width: isMobile ? '30px' : '36px', height: isMobile ? '30px' : '36px', borderRadius: '50%', background: redSoft, border: `1.5px solid ${redBorder}`, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: red, fontSize: isMobile ? '14px' : '17px' }}>📋</span>
+            <div style={{ direction: 'rtl', flex: isMobile ? '0 0 43%' : '0 0 238px', minWidth: 0, borderRight: isMobile ? `1px solid ${line}` : `1px solid ${line}`, paddingRight: isMobile ? '8px' : '20px', textAlign: 'right', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '5px' : '8px', justifyContent: 'flex-start' }}>
+                <span style={{ fontSize: isMobile ? fs.lg : fs.xxl, fontWeight: 900, color: red, lineHeight: 1 }}>فاتورة</span>
+                <span style={{ width: isMobile ? '24px' : '36px', height: isMobile ? '24px' : '36px', borderRadius: '50%', background: redSoft, border: `1.5px solid ${redBorder}`, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: red, fontSize: isMobile ? '12px' : '17px' }}>📋</span>
               </div>
-              <div style={{ marginTop: '10px', display: 'grid', gap: '7px' }}>
+              <div style={{ marginTop: '7px', display: 'grid', gap: '5px' }}>
                 <InfoPill label="رقم الفاتورة" value={orderSerial} numStyle={num} red={red} />
                 <InfoPill label="تاريخ الفاتورة" value={formatDateEn(order.date_created || order.order_date)} numStyle={num} />
               </div>
@@ -257,12 +253,12 @@ const BrandedInvoiceTemplate: React.FC<Props> = ({ order, storeSettings }) => {
         </div>
 
         {/* QR + TRACKING */}
-        <div style={{ padding: isMobile ? '12px 14px' : '14px 24px', borderBottom: `1px solid ${line}`, background: softGray }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '10px' : '16px', justifyContent: 'space-between', direction: 'rtl' }}>
+        <div style={{ padding: isMobile ? '11px 14px' : '14px 24px', borderBottom: `1px solid ${line}`, background: softGray }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '9px' : '16px', justifyContent: 'space-between', direction: 'rtl' }}>
             <div style={{ flex: '0 0 auto' }}>
               {qr && (
-                <div style={{ padding: '6px', background: '#fff', border: `1.5px solid ${redBorder}`, borderRadius: '12px', boxShadow: '0 8px 20px rgba(220,38,38,0.10)' }}>
-                  <img src={qr} alt="QR" style={{ width: isMobile ? '72px' : '92px', height: isMobile ? '72px' : '92px', display: 'block' }} />
+                <div style={{ padding: '5px', background: '#fff', border: `1.5px solid ${redBorder}`, borderRadius: '10px', boxShadow: '0 8px 20px rgba(220,38,38,0.10)' }}>
+                  <img src={qr} alt="QR" style={{ width: isMobile ? '62px' : '92px', height: isMobile ? '62px' : '92px', display: 'block' }} />
                 </div>
               )}
             </div>
@@ -271,7 +267,7 @@ const BrandedInvoiceTemplate: React.FC<Props> = ({ order, storeSettings }) => {
                 <span style={{ fontSize: fs.lg, fontWeight: 900, color: dark }}>تتبع طلبك</span>
                 <span style={{ background: '#dcfce7', color: '#15803d', padding: '4px 11px', borderRadius: '999px', fontSize: fs.xs, fontWeight: 900 }}>{currentStatusLabel}</span>
               </div>
-              <div style={{ fontSize: fs.base, color: gray, lineHeight: 1.7 }}>امسح الكود لمتابعة حالة طلبك أول بأول من صفحة التتبع الآمنة.</div>
+              <div style={{ fontSize: isMobile ? fs.xs : fs.base, color: gray, lineHeight: 1.6 }}>امسح الكود لمتابعة حالة طلبك أول بأول من صفحة التتبع الآمنة.</div>
               <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '5px', justifyContent: 'flex-start', flexWrap: 'wrap' }}>
                 {timeline.slice(0, 5).map((s, idx) => {
                   const active = currentIdx >= 0 && idx <= currentIdx;
@@ -290,7 +286,7 @@ const BrandedInvoiceTemplate: React.FC<Props> = ({ order, storeSettings }) => {
 
         {/* CUSTOMER + DELIVERY */}
         <div style={{ padding: isMobile ? '13px 14px' : '18px 24px' }}>
-          <div style={{ display: 'flex', flexDirection: isMobile ? 'column-reverse' : 'row', gap: '12px', direction: 'ltr' }}>
+          <div style={{ display: 'flex', flexDirection: isMobile ? 'column-reverse' : 'row', gap: '10px', direction: 'ltr' }}>
             <InfoCard title="عنوان التوصيل" icon="📍" border="#e5e7eb" bg="#ffffff" titleColor={dark}>
               {(order.delivery_method || (order as any).deliveryMethod) && (
                 <Row label="طريقة الاستلام" value={order.delivery_method || (order as any).deliveryMethod} />
@@ -318,8 +314,7 @@ const BrandedInvoiceTemplate: React.FC<Props> = ({ order, storeSettings }) => {
         <div style={{ padding: isMobile ? '0 14px 13px' : '0 24px 18px' }}>
           <div style={{ border: `1px solid ${line}`, borderRadius: '12px', overflow: 'hidden', background: '#fff' }}>
             <SectionTitle icon="🛒" title="تفاصيل الطلب" red={red} dark={dark} redSoft={redSoft} redBorder={redBorder} />
-            {isMobile ? (
-              <div style={{ display: 'grid', gap: '8px', padding: '9px' }}>
+            <div className="invoice-items-mobile" style={{ display: isMobile ? 'grid' : 'none', gap: '7px', padding: '8px' }}>
                 {invoiceItems.length > 0 ? invoiceItems.map((it, i) => {
                   const price = Number(it.price || it.unit_price || 0);
                   const qty = Number(it.quantity || 1);
@@ -327,7 +322,7 @@ const BrandedInvoiceTemplate: React.FC<Props> = ({ order, storeSettings }) => {
                   const productName = it.product_name || it.name || it.product_type || 'منتج';
                   const productSize = it.size || it.product_size || it.description || '';
                   return (
-                    <div key={i} style={{ border: `1px solid ${line}`, borderRadius: '9px', padding: '9px', background: i % 2 === 0 ? '#fff' : '#fcfcfc', direction: 'rtl' }}>
+                    <div key={i} style={{ border: `1px solid ${line}`, borderRadius: '8px', padding: '10px', background: i % 2 === 0 ? '#fff' : '#fcfcfc', direction: 'rtl' }}>
                       <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
                         <span style={{ ...num, flexShrink: 0, minWidth: '22px', height: '22px', borderRadius: '50%', background: redSoft, color: red, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: fs.xs, fontWeight: 900 }}>{toEnDigits(i + 1)}</span>
                         <div style={{ flex: 1, minWidth: 0 }}>
@@ -335,7 +330,7 @@ const BrandedInvoiceTemplate: React.FC<Props> = ({ order, storeSettings }) => {
                           {productSize && <span style={{ marginTop: '3px', background: redSoft, color: redDark, padding: '2px 7px', borderRadius: '6px', fontSize: fs.xs, fontWeight: 800, border: `1px solid ${redBorder}`, display: 'inline-block', lineHeight: 1.4, overflowWrap: 'anywhere' }}>{toEnDigits(productSize)}</span>}
                         </div>
                       </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '0.7fr 1fr 1fr', gap: '5px', marginTop: '9px', paddingTop: '8px', borderTop: `1px solid ${line}`, textAlign: 'center' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '0.65fr 1fr 1fr', gap: '5px', marginTop: '8px', paddingTop: '8px', borderTop: `1px solid ${line}`, textAlign: 'center' }}>
                         <div style={{ minWidth: 0 }}><div style={{ color: gray, fontSize: fs.xs, marginBottom: '3px' }}>الكمية</div><div style={{ ...num, fontWeight: 900, fontSize: fs.base }}>{toEnDigits(qty)}</div></div>
                         <div style={{ minWidth: 0 }}><div style={{ color: gray, fontSize: fs.xs, marginBottom: '3px' }}>سعر الوحدة</div><div style={{ ...num, fontSize: fs.sm, overflowWrap: 'anywhere' }}>{money(price)}</div></div>
                         <div style={{ minWidth: 0 }}><div style={{ color: gray, fontSize: fs.xs, marginBottom: '3px' }}>الإجمالي</div><div style={{ ...num, color: red, fontWeight: 900, fontSize: fs.sm, overflowWrap: 'anywhere' }}>{money(itemTotal)}</div></div>
@@ -343,8 +338,8 @@ const BrandedInvoiceTemplate: React.FC<Props> = ({ order, storeSettings }) => {
                     </div>
                   );
                 }) : <div style={{ padding: '16px', textAlign: 'center', color: gray, fontSize: fs.base }}>لا توجد أصناف</div>}
-              </div>
-            ) : (
+            </div>
+            <div className="invoice-items-table" style={{ display: isMobile ? 'none' : 'block' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', direction: 'rtl' }}>
               <thead>
                 <tr style={{ background: `linear-gradient(180deg, ${red} 0%, ${redDark} 100%)`, color: '#fff' }}>
@@ -378,7 +373,7 @@ const BrandedInvoiceTemplate: React.FC<Props> = ({ order, storeSettings }) => {
                 )}
               </tbody>
             </table>
-            )}
+            </div>
           </div>
         </div>
 

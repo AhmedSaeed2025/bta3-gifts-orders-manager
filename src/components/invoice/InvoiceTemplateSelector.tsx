@@ -66,8 +66,10 @@ const InvoiceTemplateSelector: React.FC<InvoiceTemplateSelectorProps> = ({
           max-width: none !important;
           margin: 0 !important;
           padding: 0 !important;
+          display: block !important;
+          overflow: visible !important;
         }
-        .invoice-print-root .print\\:hidden {
+        .invoice-print-root [class~="print:hidden"] {
           display: none !important;
         }
         .invoice-print-root [data-invoice-ref="true"] {
@@ -77,6 +79,12 @@ const InvoiceTemplateSelector: React.FC<InvoiceTemplateSelectorProps> = ({
           border-radius: 0 !important;
           box-shadow: none !important;
           overflow: visible !important;
+        }
+        .invoice-print-root .invoice-items-mobile {
+          display: none !important;
+        }
+        .invoice-print-root .invoice-items-table {
+          display: block !important;
         }
         .invoice-print-root table {
           page-break-inside: auto;
@@ -122,7 +130,7 @@ const InvoiceTemplateSelector: React.FC<InvoiceTemplateSelectorProps> = ({
           </Button>
           {onClose && <Button variant="outline" onClick={onClose}>إغلاق</Button>}
         </div>
-        <div ref={invoiceRef} className="invoice-print-root w-full overflow-x-auto flex justify-center px-1">{renderTemplate()}</div>
+        <div ref={invoiceRef} className="invoice-print-root flex w-full min-w-0 justify-center overflow-x-auto px-1">{renderTemplate()}</div>
       </div>
     );
   }
@@ -152,11 +160,9 @@ const InvoiceTemplateSelector: React.FC<InvoiceTemplateSelectorProps> = ({
 
           {templates.map(t => (
             <TabsContent key={t.key} value={t.key} className="mt-0">
-              <div className="border-2 border-border rounded-lg overflow-x-auto">
-                <div className="flex justify-center">
-                  <div style={{ transform: isMobile ? 'scale(0.85)' : 'scale(0.9)', transformOrigin: 'top center', maxWidth: '100%' }}>
-                    {renderTemplate()}
-                  </div>
+              <div className="min-w-0 overflow-x-auto rounded-lg border-2 border-border">
+                <div className="flex min-w-0 justify-center px-1 py-2">
+                  {renderTemplate()}
                 </div>
               </div>
             </TabsContent>
