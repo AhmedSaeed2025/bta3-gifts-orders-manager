@@ -86,6 +86,17 @@ const InvoiceTemplateSelector: React.FC<InvoiceTemplateSelectorProps> = ({
         .invoice-print-root .invoice-items-table {
           display: block !important;
         }
+        .invoice-print-root .invoice-print-customer-layout,
+        .invoice-print-root .invoice-print-summary-layout,
+        .invoice-print-root .invoice-print-footer-layout {
+          flex-direction: row !important;
+        }
+        .invoice-print-root .invoice-print-customer-layout > *,
+        .invoice-print-root .invoice-print-summary-layout > *,
+        .invoice-print-root .invoice-print-footer-layout > * {
+          flex: 1 1 0 !important;
+          min-width: 0 !important;
+        }
         .invoice-print-root table {
           page-break-inside: auto;
         }

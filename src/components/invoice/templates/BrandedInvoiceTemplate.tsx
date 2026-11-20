@@ -286,7 +286,7 @@ const BrandedInvoiceTemplate: React.FC<Props> = ({ order, storeSettings }) => {
 
         {/* CUSTOMER + DELIVERY */}
         <div style={{ padding: isMobile ? '13px 14px' : '18px 24px' }}>
-          <div style={{ display: 'flex', flexDirection: isMobile ? 'column-reverse' : 'row', gap: '10px', direction: 'ltr' }}>
+          <div className="invoice-print-customer-layout" style={{ display: 'flex', flexDirection: isMobile ? 'column-reverse' : 'row', gap: '10px', direction: 'ltr' }}>
             <InfoCard title="عنوان التوصيل" icon="📍" border="#e5e7eb" bg="#ffffff" titleColor={dark}>
               {(order.delivery_method || (order as any).deliveryMethod) && (
                 <Row label="طريقة الاستلام" value={order.delivery_method || (order as any).deliveryMethod} />
@@ -379,7 +379,7 @@ const BrandedInvoiceTemplate: React.FC<Props> = ({ order, storeSettings }) => {
 
         {/* SUMMARY + STATUS TIMELINE */}
         <div style={{ padding: isMobile ? '0 14px 14px' : '0 24px 18px' }}>
-          <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '12px', direction: 'ltr' }}>
+          <div className="invoice-print-summary-layout" style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '12px', direction: 'ltr' }}>
             <div style={{ flex: 1, direction: 'rtl', border: `1px solid ${line}`, borderRadius: '12px', padding: '12px', background: '#fff' }}>
               <SectionTitle icon="⚙️" title="مسار حالة الطلب" red={red} dark={dark} redSoft={redSoft} redBorder={redBorder} compact />
               <div style={{ display: 'grid', gap: '7px', marginTop: '8px' }}>
@@ -463,7 +463,7 @@ const BrandedInvoiceTemplate: React.FC<Props> = ({ order, storeSettings }) => {
 
         {/* FOOTER */}
         <div style={{ padding: isMobile ? '14px' : '17px 24px', background: softGray, borderTop: `1px solid ${line}` }}>
-          <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '12px', direction: 'ltr' }}>
+          <div className="invoice-print-footer-layout" style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '12px', direction: 'ltr' }}>
             <div style={{ flex: 1, direction: 'rtl' }}>
               <div style={{ fontSize: fs.md, fontWeight: 900, color: dark, marginBottom: '8px' }}>تواصل معنا</div>
               {phone && <FooterContactLine icon="📞" text={<span style={num}>{toEnDigits(phone)}</span>} />}
