@@ -18,6 +18,7 @@ interface InvoiceTemplateSelectorProps {
   order: any;
   storeSettings?: any;
   onClose?: () => void;
+  initialPreview?: boolean;
 }
 
 type TemplateType = 'branded' | 'royal' | 'professional' | 'minimal' | 'compact' | 'classic' | 'modern' | 'elegant';
@@ -36,10 +37,11 @@ const templates: { key: TemplateType; label: string; desc: string }[] = [
 const InvoiceTemplateSelector: React.FC<InvoiceTemplateSelectorProps> = ({
   order,
   storeSettings,
-  onClose
+  onClose,
+  initialPreview = false,
 }) => {
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateType>('branded');
-  const [previewMode, setPreviewMode] = useState(false);
+  const [previewMode, setPreviewMode] = useState(initialPreview);
   const invoiceRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
 
